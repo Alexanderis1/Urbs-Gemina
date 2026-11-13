@@ -113,9 +113,7 @@ class ToolRuntime:
             if factory is None:
                 continue
             try:
-                # WS3's registry adds build_provider (factories that take Settings); fall back to a bare call.
-                builder = getattr(_registry, "build_provider", None)
-                active[layer] = builder(provider_id) if builder is not None else factory()
+                active[layer] = _registry.build_provider(provider_id)  # WS3 factories take Settings
             except ProviderNotConfigured:
                 continue
         return active
