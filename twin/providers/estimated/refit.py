@@ -55,6 +55,41 @@ def mast_height(roof_m: float | None, on_building: bool) -> float:
     return tower_height_m()
 
 
+def lidar_mast_heights(lons: np.ndarray[Any, Any], lats: np.ndarray[Any, Any]) -> tuple[np.ndarray[Any, Any], int]:
+    """Mast height per site from the LiDAR-corrected roof of the building it stands on (else a tower)."""
+    import pyarrow.parquet as pq  # type: ignore[import-untyped]
+
+    from twin.physics.buildings import buildings_path, parse_wkb
+    from twin.scenarios.geometry import contains
+
+    heights = np.full(lons.size, tower_height_m())
+    path = buildings_path()
+    if path is None:
+        return heights, 0
+    t = pq.read_table(path, columns=["height_m", "bbox"])
+    bb = t.column("bbox").combine_chunks()
+    x0, y0 = bb.field("xmin").to_numpy(), bb.field("ymin").to_numpy()
+    x1, y1 = bb.field("xmax").to_numpy(), bb.field("ymax").to_numpy()
+    h = t.column("height_m").to_numpy()
+    cand: dict[int, list[int]] = {}
+    for k, (lon, lat) in enumerate(zip(lons, lats)):
+        hit = np.nonzero((x0 <= lon) & (x1 >= lon) & (y0 <= lat) & (y1 >= lat))[0]
+        if hit.size:
+            cand[k] = hit.tolist()
+    rows = sorted({r for v in cand.values() for r in v})
+    geoms = pq.read_table(path, columns=["geometry"]).column("geometry").take(rows).to_pylist() if rows else []
+    geom_of = dict(zip(rows, geoms))
+    on_roof = 0
+    for k, hits in cand.items():
+        for r in hits:
+            polys = parse_wkb(bytes(geom_of[r]))
+            if any(contains({"type": "Polygon", "coordinates": poly}, float(lons[k]), float(lats[k])) for poly in polys):
+                heights[k] = mast_height(float(h[r]), True)
+                on_roof += 1
+                break
+    return heights, on_roof
+
+
 def offset_index(offset_deg: float) -> int:
     return int(np.argmin(np.abs(OFFSETS_DEG - (offset_deg % 120.0))))
 

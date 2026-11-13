@@ -68,6 +68,8 @@ estimated:
     # path-loss model plus terrain diffraction, fed by the operators' real azimuth, tilt, gain and height.
     # So the fit uses an empirical path-loss exponent and tri-sector patterns, not free space.
     refit:
+      enabled: {value: true, basis: "v2 beat v1 on held-out Cartoradio cells: 9.17 -> 7.24 dB (docs/register_refit.md, 13 Nov 2026)"}
+      runtime_exponent: {value: 2.0, basis: "exponent chosen on held-out cells among 2.0-4.0 (docs/register_refit.md)"}
       exponents: {value: [2.0, 2.5, 3.0, 3.5, 4.0], basis: "range of urban path-loss exponents (free space = 2; Hata urban about 3.5)"}
       reference_distance_m: {value: 100.0, basis: "one Cartoradio pixel; below it the field follows the 1/d^2 near law"}
       receptor_height_m: {value: 1.5, basis: "assumption: Cartoradio does not state it; the usual CEI 211-10 head height"}
