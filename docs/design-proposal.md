@@ -118,8 +118,8 @@ Why this is the right shape [inf, C=80]:
 |---|---|---|
 | Whole city (Roma Capitale boundary) | Roma GeoServer `DIPPC:210_RomaCapitale_Municipi` (dissolved) | Default extent of every layer |
 | 15 municipi | same layer | Officer scope, briefings, role-based access |
-| 155 urban zones | `DIPDIT:ZoneUrbanistiche` | Default operating area for simulations |
-| Census sections (13,656) | Roma GeoServer / ISTAT 2021 | Population exposure |
+| 155 urban zones | `DIPPC:rc_zone_urbanistiche` (code field `code_zu`) | Default operating area for simulations |
+| Census sections (23,591 in 2021; 2,749,031 residents) | ISTAT 2021 basi territoriali + population | Population exposure |
 | H3 hex grid, resolution 9 city-wide (about 0.1 km² per cell) | computed | Belief layers. Finer grid or raster only inside an operating area |
 
 Every tool takes an `area` argument: `city`, a municipio id, an urban-zone id or a polygon. Heavy tools (micro traffic simulation, ray tracing) refuse `city` and propose a district or a coarser model instead. That refusal is part of the guardrails.
