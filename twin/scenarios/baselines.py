@@ -75,7 +75,14 @@ def antenna_bbox(change: Mapping[str, Any]) -> BBox:
 
 def live_data(kind: str, area: AreaArg, change: Mapping[str, Any], provider: _Fetcher | None = None,
               **overrides: Any) -> ScenarioData:
-    """ScenarioData with the real Cartoradio baseline for the window this run needs."""
+    """ScenarioData with the live inputs this run needs (Cartoradio, discharge forecast, rainfall)."""
+    if kind == "river_flood":
+        return ScenarioData(river_discharge=river_discharge(), **overrides)
+    if kind == "rain_flood" and change.get("source") in ("radar", "forecast"):
+        bbox = resolve_area(area, lookup=overrides.get("area_lookup") or layers.default_area_lookup).bbox
+        hours = float(change.get("duration_h", 1.0))
+        return ScenarioData(rain_mm={str(change["source"]): rainfall(str(change["source"]), bbox, hours)},
+                            **overrides)
     if kind not in ("antenna", "population_exposure"):
         return ScenarioData(**overrides)
     if provider is None:
@@ -96,3 +103,53 @@ def live_data(kind: str, area: AreaArg, change: Mapping[str, Any], provider: _Fe
     snapshots = {"emf_baseline": f"cartoradio_grid@{source['data_date']}", **overrides.pop("snapshots", {})}
     return ScenarioData(baseline_field=field, baseline_kind="estimated", baseline_source=source,
                         snapshots=snapshots, **overrides)
+
+
+def _active_provider(layer: str) -> Any:
+    from twin.providers.registry import build_provider, load_config
+
+    provider_id = load_config(config.CONFIG_DIR / "providers.yaml").get(layer)
+    if provider_id is None:
+        raise LookupError(f"No provider selected for layer '{layer}' in config/providers.yaml")
+    return build_provider(provider_id)
+
+
+def river_discharge(provider: _Fetcher | None = None, days: int = 7) -> dict[str, list[tuple[str, float, float]]]:
+    """Daily discharge forecast per gauge, from the active ``river_discharge`` provider (GloFAS)."""
+    from datetime import timedelta
+
+    provider = provider or _active_provider("river_discharge")
+    now = datetime.now(timezone.utc)
+    out: dict[str, list[tuple[str, float, float]]] = {}
+    for obs in provider.fetch((12.2, 41.6, 12.9, 42.2), now - timedelta(days=1), now + timedelta(days=days)):
+        gauge = obs.entity_id.rsplit("glofas-", 1)[-1]
+        out.setdefault(gauge, []).append((obs.observed_at.date().isoformat(), float(obs.values["discharge_m3s"]),
+                                          float(obs.sigma.get("discharge_m3s", 0.0))))
+    for series in out.values():
+        series.sort()
+    return out
+
+
+def rainfall(source: str, bbox: BBox, hours: float,
+             provider: _Fetcher | None = None) -> list[tuple[float, float, float]]:
+    """Rain depth (mm) per cell: the radar over the last ``hours`` or the forecast over the next ``hours``."""
+    from datetime import timedelta
+
+    layer = "rain" if source == "radar" else "rain_forecast"
+    provider = provider or _active_provider(layer)
+    now = datetime.now(timezone.utc)
+    start, end = (now - timedelta(hours=hours), now) if source == "radar" else (now, now + timedelta(hours=hours))
+    frames: dict[tuple[float, float], list[tuple[datetime, float]]] = {}
+    for obs in provider.fetch(bbox, start, end):
+        frames.setdefault((obs.lon, obs.lat), []).append((obs.observed_at, float(obs.values["precipitation"])))
+    out: list[tuple[float, float, float]] = []
+    for (lon, lat), series in frames.items():
+        series.sort()
+        if source == "radar":
+            # intensity frames (mm/h): integrate over the window, frame by frame
+            step_h = hours / max(len(series), 1)
+            depth = sum(rate * step_h for _, rate in series)
+        else:
+            depth = sum(mm for _, mm in series)  # hourly totals
+        out.append((lon, lat, round(depth, 2)))
+    return out

@@ -49,6 +49,8 @@ class ScenarioData:
     rivers: Mapping[str, Any] | None = None
     #: Live river gauge readings: gauge id -> (level m, sigma m). Real.
     river_levels: Mapping[str, tuple[float, float]] = field(default_factory=dict)
+    #: River discharge forecast per gauge: list of (ISO date, m3/s, sigma m3/s). Estimated (GloFAS).
+    river_discharge: Mapping[str, Sequence[tuple[str, float, float]]] = field(default_factory=dict)
     #: Rainfall in mm over the scenario duration as (lon, lat, mm) cells, keyed "radar" (real) or "forecast".
     rain_mm: Mapping[str, Sequence[tuple[float, float, float]]] = field(default_factory=dict)
     #: Boundary lookup for named areas (municipi, urban zones).
@@ -73,7 +75,8 @@ class ScenarioData:
             out["loop_counts"] = _json_hash(self.loop_counts_veh_per_h)
         if self.observed_speeds_m_per_s and "observed_speeds" not in out:
             out["observed_speeds"] = _json_hash(self.observed_speeds_m_per_s)
-        for key, value in (("rivers", self.rivers), ("river_levels", self.river_levels), ("rain_mm", self.rain_mm)):
+        for key, value in (("rivers", self.rivers), ("river_levels", self.river_levels), ("rain_mm", self.rain_mm),
+                           ("river_discharge", self.river_discharge)):
             if value and key not in out:
                 out[key] = _json_hash(value)
         if self.dtm is not None and "dtm" not in out:

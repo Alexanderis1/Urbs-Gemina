@@ -11,10 +11,12 @@ drain capacity and infiltration gives each hotspot's P5 / P50 / P95 depth.
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import numpy as np
+import numpy.typing as npt
 
 from twin.providers.base import BBox
 from twin.scenarios import config, impacts, layers
@@ -40,7 +42,7 @@ def terrain_for(area: Area | None, data: ScenarioData, margin_m: float = 0.0) ->
         return data.dtm
     if area is None:
         bbox_city = tuple(float(v) for v in config.load("areas.yaml")["city"]["bbox"])
-        return _cached_dtm(bbox_city, float(config.value(config.load("scenarios.yaml")["terrain"], "cell_m")))  # type: ignore[arg-type]
+        return _cached_dtm(bbox_city, float(config.value(config.load("scenarios.yaml")["terrain"], "cell_m")))
     w, s, e, n = area.bbox
     dlat = margin_m / 111_195.0
     dlon = dlat / max(math.cos(math.radians((s + n) / 2)), 0.2)
@@ -107,28 +109,93 @@ def _accumulation(grid: Grid) -> FloatArray:
     return _ACC[key]
 
 
-def _rise(change: Mapping[str, Any], data: ScenarioData, warnings: list[str]) -> tuple[str, float, float, str]:
-    """(river, rise above ordinary level in m, sigma m, kind of the level)."""
+@dataclass(frozen=True)
+class Stage:
+    river: str
+    rise_m: float
+    sigma_m: float
+    kind: str  # hypothetical | real | estimated
+    gauge: str | None = None
+    level_m: dict[str, float] | None = None  # P5 / P50 / P95 on the gauge
+    discharge_m3s: float | None = None
+    alerts: dict[str, float] | None = None  # probability of reaching each official alert level
+
+
+def _rating(gauge: Mapping[str, Any], discharge: FloatArray) -> FloatArray:
+    curve = np.asarray(gauge["rating"], dtype=np.float64)
+    out: FloatArray = np.interp(discharge, curve[:, 0], curve[:, 1],
+                                left=float(curve[0, 1]), right=None)
+    # beyond the last point: extend the last slope
+    slope = (curve[-1, 1] - curve[-2, 1]) / (curve[-1, 0] - curve[-2, 0])
+    high = discharge > curve[-1, 0]
+    out[high] = curve[-1, 1] + slope * (discharge[high] - curve[-1, 0])
+    return out
+
+
+def _alerts(gauge_id: str, levels: FloatArray) -> dict[str, float] | None:
+    stations = config.load("thresholds.yaml").get("river_gauges", {}).get("stations", {})
+    station = stations.get(gauge_id)
+    if not station:
+        return None
+    return {key.removesuffix("_m"): round(float((levels >= float(v)).mean()), 3)
+            for key, v in station.items() if key.endswith("_m")}
+
+
+def _pick_forecast(series: Sequence[tuple[str, float, float]], day: str) -> tuple[str, float, float]:
+    if not series:
+        raise LookupError("No discharge forecast available")
+    if day == "peak":
+        return max(series, key=lambda item: item[1])
+    for item in series:
+        if item[0][:10] == day[:10]:
+            return item
+    raise LookupError(f"No discharge forecast for {day}; available: {', '.join(i[0][:10] for i in series)}")
+
+
+def _stage(change: Mapping[str, Any], data: ScenarioData, warnings: list[str]) -> Stage:
     cfg = _cfg("river_flood")
     gauges: Mapping[str, Any] = cfg["gauges"]
-    gauge = change.get("gauge")
-    if gauge is not None and gauge not in gauges:
-        raise ValueError(f"Unknown gauge {gauge!r}; known: {', '.join(sorted(gauges))}")
-    river = str(change.get("river") or (gauges[gauge]["river"] if gauge else "tevere"))
+    gauge_id = change.get("gauge")
+    if gauge_id is not None and gauge_id not in gauges:
+        raise ValueError(f"Unknown gauge {gauge_id!r}; known: {', '.join(sorted(gauges))}")
+    river = str(change.get("river") or (gauges[gauge_id]["river"] if gauge_id else "tevere"))
+    stage_sigma = float(cfg["stage_sigma_m"])
     if "rise_m" in change:
-        return river, float(change["rise_m"]), float(cfg["stage_sigma_m"]), "hypothetical"
-    if gauge is None:
-        raise ValueError("river_flood change needs 'rise_m', or 'gauge' with 'level_m' or 'live': true")
-    normal = float(gauges[gauge]["normal_level_m"])
-    warnings.append(f"Ordinary level at {gauge} taken as {normal} m ({gauges[gauge]['basis']}).")
-    if "level_m" in change:
-        return river, float(change["level_m"]) - normal, float(cfg["stage_sigma_m"]), "hypothetical"
-    if change.get("live"):
-        reading = data.river_levels.get(str(gauge))
-        if reading is None:
-            raise LookupError(f"No live reading for gauge {gauge}")
-        return river, float(reading[0]) - normal, float(reading[1]), "real"
-    raise ValueError("river_flood change needs 'rise_m', or 'gauge' with 'level_m' or 'live': true")
+        return Stage(river, float(change["rise_m"]), stage_sigma, "hypothetical")
+    if gauge_id is None:
+        raise ValueError("river_flood change needs 'rise_m', or 'gauge' with 'level_m', 'discharge_m3s', "
+                         "'forecast_day' (YYYY-MM-DD or 'peak') or 'live': true")
+    gauge = gauges[gauge_id]
+    normal = float(gauge["normal_level_m"])
+    warnings.append(f"Ordinary level at {gauge_id} taken as {normal} m ({gauge['basis']}).")
+    rng = np.random.default_rng(11)
+    if "level_m" in change or change.get("live"):
+        if change.get("live"):
+            reading = data.river_levels.get(str(gauge_id))
+            if reading is None:
+                raise LookupError(f"No live reading for gauge {gauge_id}: the Region's real-time gauges need a login")
+            level, sigma, kind = float(reading[0]), float(reading[1]), "real"
+        else:
+            level, sigma, kind = float(change["level_m"]), stage_sigma, "hypothetical"
+        levels = rng.normal(level, max(sigma, 1e-6), 400)
+        return Stage(river, level - normal, sigma, kind, str(gauge_id), impacts.quantiles(levels.tolist()),
+                     None, _alerts(str(gauge_id), levels))
+    if "discharge_m3s" in change or "forecast_day" in change:
+        if "discharge_m3s" in change:
+            q, q_sigma, kind = float(change["discharge_m3s"]), 0.1 * float(change["discharge_m3s"]), "hypothetical"
+        else:
+            day, q, q_sigma = _pick_forecast(data.river_discharge.get(str(gauge_id), []), str(change["forecast_day"]))
+            kind = "estimated"
+            warnings.append(f"Discharge {q:.0f} +/- {q_sigma:.0f} m3/s on {day[:10]} from the GloFAS forecast (estimated).")
+        flows = np.clip(rng.normal(q, max(q_sigma, 1e-6), 400), 0.0, None)
+        levels = _rating(gauge, flows)
+        warnings.append(f"Discharge turned into a level with a rough rating curve ({gauge['basis']}).")
+        rise = float(np.median(levels)) - normal
+        sigma = math.hypot(float(np.std(levels)), stage_sigma)
+        return Stage(river, rise, sigma, kind, str(gauge_id), impacts.quantiles(levels.tolist()), q,
+                     _alerts(str(gauge_id), levels))
+    raise ValueError("river_flood change needs 'rise_m', or 'gauge' with 'level_m', 'discharge_m3s', "
+                     "'forecast_day' (YYYY-MM-DD or 'peak') or 'live': true")
 
 
 def _official(grid: Grid, data: ScenarioData) -> dict[str, BoolArray] | None:
@@ -144,39 +211,114 @@ def _official(grid: Grid, data: ScenarioData) -> dict[str, BoolArray] | None:
     return {cls: rasterize_mask(grid, geoms, all_touched=False) for cls, geoms in sorted(by_class.items())}
 
 
+def _sea_taper(grid: Grid, river: str, river_mask: BoolArray, nearest: npt.NDArray[np.int64],
+               warnings: list[str]) -> FloatArray:
+    """Share of the gauge's rise felt at each cell: 1 upstream of the gauge, falling to 0 at sea level."""
+    cfg = _cfg("river_flood")
+    gauge_id = cfg["sea_taper"].get(river)
+    if gauge_id is None:
+        return np.ones(grid.shape)
+    gauge = cfg["gauges"][gauge_id]
+    rows, cols = grid.rowcol([float(gauge["lon"])], [float(gauge["lat"])])
+    if rows[0] < 0:
+        return np.ones(grid.shape)
+    from scipy import ndimage  # type: ignore[import-untyped]
+
+    _, (ri, ci) = ndimage.distance_transform_edt(~river_mask, return_indices=True)
+    z_ref = float(grid.z[ri[rows[0], cols[0]], ci[rows[0], cols[0]]])
+    if not z_ref > 0:
+        return np.ones(grid.shape)
+    river_z = np.nan_to_num(grid.z.ravel()[nearest].reshape(grid.shape), nan=z_ref)
+    warnings.append(f"Towards the sea the rise shrinks with the river's height above sea level "
+                    f"(full at {gauge_id}, none at the mouth; assumption C=50).")
+    out: FloatArray = np.clip(river_z / z_ref, 0.0, 1.0)
+    return out
+
+
+def _normal_level(river: str) -> float:
+    cfg = _cfg("river_flood")
+    for gauge in cfg["gauges"].values():
+        if gauge["river"] == river:
+            return float(gauge["normal_level_m"])
+    return 0.0
+
+
+def _defended_river(grid: Grid, river: str, river_mask: BoolArray) -> tuple[list[tuple[BoolArray, float]], list[str]]:
+    """River cells behind embankment walls, with the gauge level at which the walls are overtopped."""
+    out: list[tuple[BoolArray, float]] = []
+    notes: list[str] = []
+    for name, d in _cfg("river_flood")["defences"].items():
+        if d["river"] != river:
+            continue
+        w, s_, e, n = (float(v) for v in d["reach_bbox"])
+        rows, cols = grid.rowcol([w, e], [n, s_])
+        if rows.min() < 0:
+            continue
+        reach = np.zeros(grid.shape, dtype=bool)
+        reach[rows[0]:rows[1] + 1, cols[0]:cols[1] + 1] = True
+        out.append((river_mask & reach, float(d["crest_level_m"])))
+        notes.append(f"Defence '{name}': the walled reach only spills above {d['crest_level_m']} m at "
+                     f"{d['gauge']} (assumption C=40); below that, water reaches land only from unwalled reaches.")
+    return out, notes
+
+
+def _channel(river_mask: BoolArray, seeds: BoolArray) -> BoolArray:
+    """River cells that cannot spill (behind walls): water may not travel along them to the floodplain."""
+    out: BoolArray = river_mask & ~seeds
+    return out
+
+
 def run_river_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) -> dict[str, Any]:
     warnings: list[str] = []
     try:
-        river, rise, stage_sigma, level_kind = _rise(change, data, warnings)
+        stage = _stage(change, data, warnings)
     except LookupError as exc:
         return _not_available(str(exc), {"river_level": "not_available"})
+    river, rise, stage_sigma, level_kind = stage.river, stage.rise_m, stage.sigma_m, stage.kind
     cfg = _cfg("river_flood")
     grid = terrain_for(None, data)
     river_mask, river_kind = _river_cells(grid, river, data, warnings)
     if not river_mask.any():
         return _not_available(f"No river cells for '{river}' inside this area.", {"rivers": "not_available"})
-    hand, _ = hydro.height_above_river(grid.z, river_mask)
-    from scipy import ndimage  # type: ignore[import-untyped]
+    hand, nearest = hydro.height_above_river(grid.z, river_mask)
+    from scipy import ndimage
 
     distance = ndimage.distance_transform_edt(~river_mask) * grid.cell
     near = (distance <= float(cfg["max_distance_from_river_m"])) & ~np.isnan(grid.z)
     in_area = _area_mask(grid, area)
     sigma = math.hypot(float(grid.source.get("vertical_sigma_m", 2.0)), stage_sigma)
 
-    def extent(stage: float) -> BoolArray:
-        wet = near & (np.nan_to_num(hand, nan=np.inf) <= stage)
-        return hydro.connected_to(wet, river_mask) & in_area
-
     z95 = 1.6448536269514722
+    defended, defence_notes = _defended_river(grid, river, river_mask)
+    normal = _normal_level(river)
+    taper = _sea_taper(grid, river, river_mask, nearest, warnings)
+
+    def extent(stage: float) -> BoolArray:
+        seeds = river_mask.copy()
+        for mask, crest in defended:
+            if normal + stage < crest:
+                seeds &= ~mask
+        holding = _channel(river_mask, seeds)
+        # land whose nearest river cell is behind holding walls stays dry: HAND has no water slope,
+        # so without this rule the upstream floodplain would 'flow' behind the walls at the same height
+        protected = holding.ravel()[nearest].reshape(grid.shape)
+        wet = near & (np.nan_to_num(hand, nan=np.inf) <= stage * taper) & ~protected
+        return hydro.connected_to(wet & ~holding, seeds) & in_area | (river_mask & in_area)
+
     footprints = {"p5": extent(rise - z95 * sigma), "p50": extent(rise), "p95": extent(rise + z95 * sigma)}
-    probability = np.where(near & in_area, _normal_cdf((rise - np.nan_to_num(hand, nan=1e6)) / sigma), 0.0)
-    probability = np.where(footprints["p95"], probability, 0.0)
-    baseline = extent(0.0)  # ordinary flow: the river itself and the ground at its level
+    probability = np.where(near & in_area, _normal_cdf((rise * taper - np.nan_to_num(hand, nan=1e6)) / sigma), 0.0)
+    probability = np.where(footprints["p95"] & ~river_mask, probability, 0.0)
+    baseline = river_mask & in_area  # ordinary flow: the river channel only
+    for k in footprints:
+        footprints[k] = footprints[k] & ~river_mask
+    warnings += defence_notes
 
     result: dict[str, Any] = {
         "model": "height_above_nearest_river",
         "calibration": "uncalibrated",
         "river": river, "rise_m": round(rise, 2), "sigma_m": round(sigma, 2),
+        "gauge": stage.gauge, "gauge_level_m": stage.level_m, "discharge_m3s": stage.discharge_m3s,
+        "alert_probability": stage.alerts,
         "flooded_km2": {k: round(float(m.sum()) * grid.cell_area / 1e6, 3) for k, m in footprints.items()},
         "baseline_flooded_km2": round(float(baseline.sum()) * grid.cell_area / 1e6, 3),
         "footprint_p50": mask_to_geojson(grid, footprints["p50"]),
@@ -197,7 +339,7 @@ def run_river_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) -
              "official_hazard": "real" if official is not None else "not_available"}
     if people is None:
         warnings.append("Census sections not available: residents not counted.")
-    if official is None:
+    if official is None:  # noqa: SIM102
         warnings.append("Official PGRA flood hazard areas not loaded yet: no comparison with the official maps.")
     warnings.append(str(cfg["walls_note"]))
     warnings.append(f"Terrain {grid.source.get('id')}: vertical error about {grid.source.get('vertical_sigma_m')} m; "
@@ -306,7 +448,12 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
         breaks = grid.cell_area * (n * zs - np.concatenate([[0.0], np.cumsum(zs)[:-1]]))
         hollows.append({"label": k, "cells": idx, "zs": zs, "breaks": breaks, "level": level,
                         "capacity": capacity})
-    keep = {h["label"]: i for i, h in enumerate(hollows)}
+    channels = np.nan_to_num(_accumulation(grid), nan=0.0) >= float(cfg["channel_min_area_km2"]) * 1e6
+    channel_flat = channels.ravel()
+    before = len(hollows)
+    hollows = [h for h in hollows if not channel_flat[h["cells"]].any()]
+    if before > len(hollows):
+        warnings.append(f"{before - len(hollows)} hollows on river or stream beds were left to the river scenario.")
 
     rng = np.random.default_rng(int(cfg["seed"]))
     members = int(cfg["members"])
@@ -366,6 +513,8 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
                          "max_depth_m": q, "flooded_m2": impacts.quantiles(wet_area[:, i].tolist()),
                          "overflow_m3_p50": round(float(np.percentile(overflow[:, i], 50)), 1),
                          "probability_over_30cm": round(float((depth[:, i] > 0.3).mean()), 3),
+                         "check": ("deep hollow: may be a railway cutting, quarry or terrain error"
+                                   if float(h["level"] - h["zs"][0]) > float(cfg["deep_hollow_m"]) else None),
                          "underpasses": _near(under, lons[0], lats[0], 150.0)})
     hotspots.sort(key=lambda h: -h["max_depth_m"]["p50"])
     wet_p50 &= in_area

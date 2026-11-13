@@ -7,7 +7,7 @@ dependencies = ["PyYAML>=6"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "mypy>=1.10", "types-PyYAML"]
-scenarios = ["eclipse-sumo>=1.20"]   # WS6: road closure micro-simulation
+scenarios = ["eclipse-sumo>=1.20", "numpy>=1.24", "scipy>=1.10", "rasterio>=1.3"]   # WS6: SUMO traffic; terrain, floods, plumes
 # WS3 live providers: GTFS-RT protobuf, EEA parquet, radar and Cartoradio GeoTIFF reads
 providers = ["gtfs-realtime-bindings>=1.0", "protobuf>=4", "pyarrow>=14", "rasterio>=1.3", "numpy>=1.24", "scipy>=1.10"]
 # WS3 seed building only (python -m twin.providers.simulated.build_seeds sites).

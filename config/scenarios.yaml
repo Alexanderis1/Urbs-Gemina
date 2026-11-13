@@ -122,23 +122,44 @@ river_flood:
     basis: "OSM names of the two rivers that cross Rome"
   derived_rivers:
     value:
-      tevere: {min_km2: 800, max_km2: 1.0e9, gauge: ripetta}
-      aniene: {min_km2: 150, max_km2: 800, gauge: lunghezza}
+      tevere: {min_km2: 800, max_km2: 1.0e9, gauge: tevere_ripetta}
+      aniene: {min_km2: 150, max_km2: 800, gauge: aniene_lunghezza}
     basis: "without the rivers layer, the river is the terrain channel draining min..max km2 inside the city window that passes its gauge (Tiber about 1,300 km2, Aniene about 375 km2 on the 30 m DTM)"
   max_distance_from_river_m:
     value: 5000
     basis: "assumption: the floodplain model is not applied further than 5 km from the river"
   gauges:
-    # normal_level_m: typical level at the gauge in ordinary flow, so 'rise' = level - normal.
-    ripetta: {river: tevere, lon: 12.4757, lat: 41.9058, normal_level_m: 6.0,
-              basis: "assumption (C=50): ordinary level at Roma Ripetta about 6 m on the gauge; check with the Centro Funzionale"}
-    ponte_milvio: {river: tevere, lon: 12.4672, lat: 41.9355, normal_level_m: 6.0,
-                   basis: "assumption (C=40), as Ripetta"}
-    lunghezza: {river: aniene, lon: 12.6467, lat: 41.9214, normal_level_m: 1.5,
-                basis: "assumption (C=40): Aniene gauge ordinary level"}
+    # Ids match config/thresholds.yaml river_gauges.stations (alert levels) and the glofas_flood points.
+    # normal_level_m: ordinary level on the gauge, so 'rise' = level - normal.
+    # rating: discharge (m3/s) -> level (m) points, interpolated linearly.
+    tevere_ripetta:
+      river: tevere
+      lon: 12.4757
+      lat: 41.9058
+      normal_level_m: 5.5
+      rating: [[150, 5.5], [500, 7.0], [1000, 9.0], [1500, 10.8], [2000, 12.3], [2500, 13.6], [3000, 14.8]]
+      basis: "assumption (C=35): rough stage-discharge curve placed between the alert levels (7 / 11 / 13 m); replace with the Centro Funzionale's official rating curve"
+    aniene_lunghezza:
+      river: aniene
+      lon: 12.6467
+      lat: 41.9214
+      normal_level_m: 1.5
+      rating: [[20, 1.5], [100, 2.5], [200, 3.5], [300, 4.5], [500, 6.0]]
+      basis: "assumption (C=30): rough curve placed between the alert levels (3 / 4.5 / 5 m); replace with the official rating curve"
   stage_sigma_m:
     value: 0.3
     basis: "assumption: uncertainty of a hypothetical or forecast level; measured levels use the gauge's own sigma"
+  sea_taper:
+    value: {tevere: tevere_ripetta}
+    basis: "assumption (C=50): towards the mouth the water surface is pinned to sea level, so the rise measured at the gauge shrinks in proportion to the river's height above the sea (river surface at the gauge = full rise, at the sea = none)"
+  defences:
+    value:
+      tevere_muraglioni:
+        river: tevere
+        gauge: tevere_ripetta
+        crest_level_m: 16.5
+        reach_bbox: [12.440, 41.850, 12.500, 41.935]
+    basis: "assumption (C=40): the 19th-century embankment walls of the urban Tiber (Ponte Milvio to Ponte Marconi) were built above the 1870 flood (17.22 m at Ripetta); taken as overtopped from 16.5 m on the gauge. The walls are thinner than a 30 m cell, so they enter the model as this rule, not as terrain"
   hazard_file:
     value: flood_hazard_pgra.geojson
     basis: "WS1: official PGRA hazard polygons, field 'hazard' = P1 | P2 | P3"
@@ -177,6 +198,12 @@ rain_flood:
   min_depth_m:
     value: 0.1
     basis: "assumption: depressions shallower than 10 cm are terrain noise at 30 m"
+  deep_hollow_m:
+    value: 2.0
+    basis: "assumption: a hollow deeper than 2 m on a 30 m terrain is usually a railway cutting, quarry, excavation or terrain error; it is flagged for a check"
+  channel_min_area_km2:
+    value: 2
+    basis: "assumption: hollows on a stream draining 2 km2 or more are river or stream beds, not street flooding; they are left to the river scenario"
   min_capacity_m3:
     value: 500
     basis: "assumption: smaller hollows are below what a 30 m model resolves"
