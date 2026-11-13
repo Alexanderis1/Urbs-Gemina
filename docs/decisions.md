@@ -1,4 +1,4 @@
-# Open decisions: 3D viewer and hosting
+# Decisions: 3D viewer, hosting and build organisation
 
 C=NN is a confidence score from 1 to 100. No time estimates.
 
@@ -52,3 +52,13 @@ Lovable hosts the front end and a built-in backend ("Cloud") on Supabase technol
 | H3. Lovable only | Everything in edge functions and SQL | Simplest | No belief layers beyond trivial ones, no simulation: the permit check works, the "twin" part does not |
 
 Recommended: **H1**, with H2 as the fallback for GPU jobs if Modal credit runs out. Whatever is chosen, heavy results (grids, scenario outputs) are precomputed and cached so the live demo never waits on a cold GPU.
+
+## 3. Build organisation (decided 13 Nov 2026)
+
+Decided by Alessandro: no time-based scope cuts. The elements are built in parallel, one agent thread per workstream (WS1 to WS10, see `docs/workstreams.md`). The design hub owns the shared interfaces and records each workstream's final choices here.
+
+## 4. Workstream decisions
+
+| Workstream | Decision | Status |
+|---|---|---|
+| (filled in as each workstream decides) | | |

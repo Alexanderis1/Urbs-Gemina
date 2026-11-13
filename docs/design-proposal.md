@@ -445,7 +445,11 @@ urbs-gemina/
 
 ---
 
-## 17. Open decisions for you
+## 17. How the build is organised (decided 13 Nov 2026)
+
+No scope is cut for time. The build runs as 10 parallel workstreams, one agent thread each, so every element can be brainstormed, validated and inspected on its own. Briefs, file ownership and the shared interfaces are in `docs/workstreams.md`. Shared interfaces change only through the design hub; final choices from each workstream are recorded in `docs/decisions.md`.
+
+## 17b. Open decisions for you
 
 1. Package A, B or C. All three need no data purchase now that the stereo buy is dropped.
 2. Viewer: MapLibre-first or Cesium-first.
