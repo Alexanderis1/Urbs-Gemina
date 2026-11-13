@@ -156,3 +156,22 @@ class Facility:
             "synthetic": self.synthetic,
         }
         return {"type": "Feature", "id": self.facility_id, "geometry": geometry, "properties": props}
+
+
+def _fv(d: Mapping[str, Any]) -> FieldValue:
+    return FieldValue(value=d.get("value"), status=d.get("status", "not_known"),
+                      provenance=tuple(Provenance(**src) for src in d.get("sources", [])), label=d.get("label"))
+
+
+def facility_from_feature(feature: Mapping[str, Any]) -> Facility:
+    """Inverse of :meth:`Facility.to_feature` (for the API reading data/processed/sports/facilities.geojson)."""
+    props = feature["properties"]
+    coords = (feature.get("geometry") or {}).get("coordinates")
+    return Facility(
+        facility_id=str(props["facility_id"]),
+        lon=float(coords[0]) if coords else None, lat=float(coords[1]) if coords else None,
+        fields={k: _fv(v) for k, v in props["fields"].items()},
+        disciplines={k: _fv(v) for k, v in props["discipline_details"].items()},
+        members=tuple(props["members"]), synthetic=bool(props.get("synthetic", False)),
+        extra={k: _fv(v) for k, v in props.get("extra", {}).items()},
+    )

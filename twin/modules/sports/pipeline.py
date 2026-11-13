@@ -29,7 +29,7 @@ from typing import Any
 from twin.modules.sports.config import SportsConfig, load_config
 from twin.modules.sports.manager import ManagerUpdate, apply_manager_update
 from twin.modules.sports.matching import build_facilities
-from twin.modules.sports.model import Candidate, Facility
+from twin.modules.sports.model import Candidate, Facility, facility_from_feature
 from twin.modules.sports.sources import from_geoserver_pools, from_geoserver_sports, from_osm, from_rows
 from twin.modules.sports.web_fields import apply_enrichment, scout_candidates, validate_enrichment
 from twin.providers.base import ROME_BBOX
@@ -185,6 +185,12 @@ def build(config: SportsConfig | None = None, raw: Path = RAW, out: Path = OUT) 
     (out / "match_report.json").write_text(json.dumps({**summary, "match": report.to_dict()}, ensure_ascii=False,
                                                       indent=1), encoding="utf-8")
     return summary
+
+
+def load_facilities(path: Path = OUT / "facilities.geojson") -> list[Facility]:
+    """Read the built layer back as Facility objects (what the tool API passes to the tools)."""
+    layer = json.loads(path.read_text(encoding="utf-8"))
+    return [facility_from_feature(f) for f in layer["features"]]
 
 
 def main(argv: list[str]) -> int:

@@ -43,3 +43,16 @@ def test_build_merges_enriches_confirms_and_reports_missing(tmp_path: Path) -> N
     assert bern["properties"]["disciplines"] == ["football", "padel"]
     assert bern["properties"]["fields"]["hours"]["label"] == "from the web, unverified"
     assert any("IC Anagni" in f["properties"]["name"] for f in layer["features"])
+
+
+def test_load_facilities_round_trips(tmp_path: Path) -> None:
+    from twin.modules.sports.config import load_config
+    from twin.modules.sports.matching import build_facilities
+    from twin.modules.sports.pipeline import load_facilities
+    from twin.modules.sports.sources import from_geoserver_sports
+
+    facilities, _ = build_facilities(from_geoserver_sports(geoserver_sports(), load_config(), "x"), load_config())
+    path = tmp_path / "f.geojson"
+    path.write_text(json.dumps({"type": "FeatureCollection", "features": [f.to_feature() for f in facilities]}))
+    loaded = load_facilities(path)
+    assert [f.to_feature() for f in loaded] == [f.to_feature() for f in facilities]
