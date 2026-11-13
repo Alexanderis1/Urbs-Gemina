@@ -183,6 +183,7 @@ def main(argv: list[str] | None = None) -> int:
             model.loc[rest, "height_m"] = np.clip(fit.apply(hx[rest]), hc.clamp[0], hc.clamp[1])
             model.loc[rest, "height_sd_m"] = np.hypot(model.loc[rest, "height_sd_m"].fillna(0).to_numpy(), fit.sd_m)
             model["height_corrected"] = rest
+            model.loc[rest, "data_kind"] = "estimated"  # a corrected height is no longer a direct measurement
             lidar_stats["correction"] = fit.as_dict()
             log(f"LiDAR correction applied to {int(rest.sum()):,} buildings: {fit.as_dict()}")
         g = model["ground_lidar_m"].astype("float64")
@@ -249,6 +250,16 @@ def main(argv: list[str] | None = None) -> int:
             f"their height is now the LiDAR one (real, +-0.5 m). 'lidar' rows score every other source against it. "
             f"{lidar_stats['newer_than_survey']:,} footprints look newer than the survey and keep the fused height."
         ))
+        hc_ = lidar_stats.get("correction_holdout", {})
+        if "correction" in lidar_stats:
+            c = lidar_stats["correction"]
+            notes.insert(1, (
+                f"Buildings LiDAR did not see are corrected with a straight line fitted on the LiDAR buildings "
+                f"(height = {c['intercept_m']:.1f} m + {c['slope']:.2f} x fused height, spread {c['sd_m']:.1f} m): the other "
+                f"sources under-estimate taller buildings. Spatial hold-out (fit on half the 2 km cells, test on the other "
+                f"half): mean error {hc_['mae_before_m']:.1f} m -> {hc_['mae_after_m']:.1f} m, within 3 m "
+                f"{hc_['within3_before']:.0%} -> {hc_['within3_after']:.0%}."
+            ))
     report = render_report(len(model), shares, agreements, notes)
     (args.out / "height_check.md").write_text(report, encoding="utf-8")
 
