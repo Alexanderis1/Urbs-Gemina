@@ -59,10 +59,11 @@ export function parseMapActions(raw: unknown): MapAction[] {
   return raw.map(parseMapAction).filter((a): a is MapAction => a !== null);
 }
 
-/** "city" | "municipio:<id>" | "zone:<id>" -> Area. */
+/** "city" | "municipio:<1..15>" | "zone:<CODE>" -> Area. */
 export function areaFromId(id: string): Area | null {
   if (id === "city") return { type: "city" };
-  const m = /^(municipio|zone):(.+)$/.exec(id);
-  if (!m) return null;
-  return m[1] === "municipio" ? { type: "municipio", id: m[2]! } : { type: "zone", id: m[2]! };
+  const mun = /^municipio:([1-9]|1[0-5])$/.exec(id);
+  if (mun) return { type: "municipio", id: mun[1]! };
+  const zone = /^zone:([A-Z0-9]+)$/.exec(id);
+  return zone ? { type: "zone", id: zone[1]! } : null;
 }

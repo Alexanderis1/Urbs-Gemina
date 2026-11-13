@@ -5,7 +5,7 @@ describe("orchestrator hand-over (TwinQuestion / TwinAnswer)", () => {
   it("never sends a tier from the browser", () => {
     const q = buildTwinQuestion("Is the air good in Prati?", { language: "en", area: "municipio:I", conversationId: "c1" });
     expect(q).not.toHaveProperty("tier");
-    expect(q).toMatchObject({ question: "Is the air good in Prati?", language: "en", area: "municipio:I", mode: "question", conversation_id: "c1" });
+    expect(q).toMatchObject({ question: "Is the air good in Prati?", language: "en", area: "municipio:I", mode: "question", conversation_id: "c1", channel: "chat" });
   });
 
   it("fails safe: unverified and synthetic unless stated", () => {

@@ -17,7 +17,7 @@ const KINDS = [
 export default function ScenarioLab() {
   const { run } = useSession();
   const [kind, setKind] = useState<(typeof KINDS)[number]["id"]>("antenna_add");
-  const [area, setArea] = useState<Area>({ type: "municipio", id: "I" });
+  const [area, setArea] = useState<Area>({ type: "municipio", id: "1" });
   const [change, setChange] = useState<Record<string, string>>({ lat: "41.9009", lon: "12.4833", height_m: "30" });
   const [env, setEnv] = useState<Envelope<ScenarioResult> | null>(null);
   const [busy, setBusy] = useState(false);

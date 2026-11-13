@@ -51,7 +51,7 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
     case "resolve_place":
       if (typeof inputs.lat === "number" && typeof inputs.lon === "number")
         return { label: `Point ${inputs.lat.toFixed(5)}, ${inputs.lon.toFixed(5)}`, lat: inputs.lat, lon: inputs.lon };
-      return { label: String(inputs.query ?? "Piazza Venezia, Roma"), lat: 41.8959, lon: 12.4823, municipio: "I" };
+      return { label: String(inputs.query ?? "Piazza Venezia, Roma"), lat: 41.8959, lon: 12.4823, municipio: "1" };
     case "context_check": {
       const cats = ["school", "hospital", "care home", "playground", "heritage constraint", "existing antenna site"];
       const lat0 = num(inputs.lat, 41.8959);

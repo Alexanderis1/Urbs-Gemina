@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { CityMap } from "@/map/CityMap";
+import { roman } from "@/lib/area";
 import { KindBadge } from "@/components/Badge";
 import { RangeBar } from "@/components/RangeBar";
 import { RunMeta } from "@/components/RunMeta";
@@ -113,7 +114,7 @@ export default function PermitCheck() {
         {place && (
           <div className="card space-y-1">
             <div className="font-medium">{place.result.label}</div>
-            {place.result.municipio && <div className="text-xs text-stone-500">Municipio {place.result.municipio}</div>}
+            {place.result.municipio && <div className="text-xs text-stone-500">Municipio {roman(Number(place.result.municipio))}</div>}
             <RunMeta env={place} compact />
           </div>
         )}

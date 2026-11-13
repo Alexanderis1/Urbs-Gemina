@@ -1,4 +1,4 @@
-import { MUNICIPI, areaLabel, type Area } from "@/lib/area";
+import { MUNICIPI, areaLabel, roman, type Area } from "@/lib/area";
 
 export function AreaPicker({
   area,
@@ -28,7 +28,7 @@ export function AreaPicker({
         <option value="city">Whole city</option>
         {MUNICIPI.map((m) => (
           <option key={m} value={`m:${m}`}>
-            Municipio {m}
+            Municipio {roman(Number(m))}
           </option>
         ))}
         <option value="zone">Urban zone…</option>
@@ -37,9 +37,9 @@ export function AreaPicker({
       {area.type === "zone" && (
         <input
           className="input"
-          placeholder="Urban zone id, e.g. 1A"
+          placeholder="Urban zone code, e.g. 1A"
           value={area.id}
-          onChange={(e) => onChange({ type: "zone", id: e.target.value.trim() })}
+          onChange={(e) => onChange({ type: "zone", id: e.target.value.trim().toUpperCase() })}
         />
       )}
       {onDraw && (

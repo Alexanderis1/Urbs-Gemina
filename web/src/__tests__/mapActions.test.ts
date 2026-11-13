@@ -34,8 +34,10 @@ describe("map actions (shared with the voice agent's client tools)", () => {
 
   it("turns area ids into areas", () => {
     expect(areaFromId("city")).toEqual({ type: "city" });
-    expect(areaFromId("municipio:I")).toEqual({ type: "municipio", id: "I" });
+    expect(areaFromId("municipio:1")).toEqual({ type: "municipio", id: "1" });
     expect(areaFromId("zone:1A")).toEqual({ type: "zone", id: "1A" });
     expect(areaFromId("nonsense")).toBeNull();
+    expect(areaFromId("municipio:16")).toBeNull();
+    expect(areaFromId("municipio:I")).toBeNull();
   });
 });

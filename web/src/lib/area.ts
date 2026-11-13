@@ -1,7 +1,8 @@
 import type { PolygonGeometry } from "@/api/types";
 
 // Shared interface 2: `area` = "city", a municipio id, an urban-zone id, or a GeoJSON polygon.
-// The "municipio:<id>" / "zone:<id>" prefixes are provisional until WS4 publishes the schema.
+// Ids fixed by the hub: "city", "municipio:<1..15>", "zone:<CODE>" (DIPDIT:ZoneUrbanistiche code, upper case),
+// or a GeoJSON Polygon (drawn area or the 300 m circle).
 export type Area =
   | { type: "city" }
   | { type: "municipio"; id: string }
@@ -17,7 +18,7 @@ export function areaToArg(a: Area): AreaArg {
     case "municipio":
       return `municipio:${a.id}`;
     case "zone":
-      return `zone:${a.id}`;
+      return `zone:${a.id.toUpperCase()}`;
     case "polygon":
       return a.geometry;
   }
@@ -28,7 +29,7 @@ export function areaLabel(a: Area): string {
     case "city":
       return "Whole city";
     case "municipio":
-      return `Municipio ${a.id}`;
+      return `Municipio ${roman(Number(a.id))}`;
     case "zone":
       return a.name ? `Zone ${a.id} ${a.name}` : `Zone ${a.id}`;
     case "polygon":
@@ -36,5 +37,11 @@ export function areaLabel(a: Area): string {
   }
 }
 
-/** Rome's 15 municipi, by their official Roman-numeral ids. Geometry comes from the WFS layer at runtime. */
-export const MUNICIPI = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
+
+/** Municipi are numbered 1..15 in ids and shown in Roman numerals, as Roma Capitale does. */
+export function roman(n: number): string {
+  return ROMAN[n] ?? String(n);
+}
+
+export const MUNICIPI = Array.from({ length: 15 }, (_, i) => String(i + 1));
