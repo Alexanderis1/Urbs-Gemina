@@ -171,7 +171,8 @@ _STORES: dict[str, LayerStore] = {}
 def default_store(settings: Settings) -> LayerStore:
     key = str(settings.paths.raw)
     if key not in _STORES:
-        _STORES[key] = LayerStore(raw_dir=settings.paths.raw, manifest_path=settings.paths.manifest)
+        _STORES[key] = LayerStore(raw_dir=settings.paths.raw, manifest_path=settings.paths.manifest,
+                               processed_dir=settings.paths.data / "processed")
     return _STORES[key]
 
 

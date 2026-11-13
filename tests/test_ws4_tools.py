@@ -366,3 +366,14 @@ def test_only_traffic_loops_may_be_simulated(runtime: ToolRuntime) -> None:
     assert "air_quality" in status["result"]["simulation_violations"]
     assert "traffic_flow" not in status["result"]["simulation_violations"]
     assert not runtime.simulation_allowed("emf_baseline", SimLoopsProvider(seed=1, n_stations=1))
+
+
+def test_layer_store_falls_back_to_processed(tmp_path: Path) -> None:
+    import json as _json
+
+    (tmp_path / "processed").mkdir()
+    zone = {"type": "FeatureCollection", "features": [feat(square(400), code_zu="1A", denominazione="Centro Storico")]}
+    (tmp_path / "processed" / "urban_zones.geojson").write_text(_json.dumps(zone))
+    store = LayerStore(raw_dir=tmp_path / "raw", processed_dir=tmp_path / "processed")
+    area = resolve_area("zone:1a", store, Settings.load())
+    assert area.id == "zone:1A" and area.name == "Centro Storico"

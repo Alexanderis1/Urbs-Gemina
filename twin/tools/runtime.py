@@ -67,7 +67,8 @@ class ToolRuntime:
     @classmethod
     def default(cls, settings: Settings | None = None) -> "ToolRuntime":
         settings = settings or default_settings()
-        store = LayerStore(raw_dir=settings.paths.raw, manifest_path=settings.paths.manifest)
+        store = LayerStore(raw_dir=settings.paths.raw, manifest_path=settings.paths.manifest,
+                               processed_dir=settings.paths.data / "processed")
         geo = settings.tools.get("geocoder", {})
         geocoder = Nominatim(base_url=str(geo.get("nominatim_url", "https://nominatim.openstreetmap.org/search")),
                              user_agent=str(geo.get("user_agent", "urbs-gemina/0.1")),

@@ -83,6 +83,8 @@ class LayerSnapshot:
 class LayerStore:
     raw_dir: Path
     manifest_path: Path | None = None
+    #: Searched after ``raw_dir``: cleaned layers WS1 writes to ``data/processed`` (e.g. urban_zones).
+    processed_dir: Path | None = None
     _cache: dict[str, LayerSnapshot | None] = field(default_factory=dict)
 
     def add(self, key: str, collection: Mapping[str, Any], **meta: Any) -> LayerSnapshot:
@@ -103,8 +105,11 @@ class LayerStore:
         return data
 
     def _load(self, key: str) -> LayerSnapshot | None:
-        path = self.raw_dir / f"{key}.geojson"
-        if not path.exists():
+        candidates = [self.raw_dir / f"{key}.geojson"]
+        if self.processed_dir is not None:
+            candidates.append(self.processed_dir / f"{key}.geojson")
+        path = next((c for c in candidates if c.exists()), None)
+        if path is None:
             return None
         payload = path.read_bytes()
         manifest = self._manifest()
