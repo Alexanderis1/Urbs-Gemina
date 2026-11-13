@@ -82,3 +82,112 @@ road_closure:
   demand_scale_bounds:
     value: [0.2, 5.0]
     basis: "assumption: loop counts may rescale the synthetic demand at most 5x either way, to stop one bad station dominating"
+
+# ---------------------------------------------------------------------------
+# Physical scenarios (v2). The twin's terrain, live sensors and static layers
+# are read at run time; every parameter below is a source or an assumption.
+
+terrain:
+  cell_m:
+    value: 30
+    basis: "native resolution of Copernicus GLO-30; finer cells add no information"
+  search_dirs:
+    value: [data/processed, data/model, /mnt/project-files/data/processed, /mnt/project-files/model]
+    basis: "WS1 / WS2 output folders, local or on the shared project folder"
+  files:
+    # first file found wins
+    - id: dtm_glo30_ground
+      file: dtm_glo30_ground.tif
+      kind: estimated
+      vertical_sigma_m: 2.4
+      is_surface_model: false
+      basis: "WS2 build: GLO-30 with buildings removed (10th percentile over 150 m, then 150 m mean). LE90 < 4 m in open ground -> sigma about 4 / 1.645 = 2.4 m; worse in dense blocks"
+  fallback:
+    id: copernicus_glo30_dsm
+    kind: estimated
+    url: https://copernicus-dem-30m.s3.amazonaws.com
+    tiles:
+      - /vsicurl/https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N41_00_E012_00_DEM/Copernicus_DSM_COG_10_N41_00_E012_00_DEM.tif
+      - /vsicurl/https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N42_00_E012_00_DEM/Copernicus_DSM_COG_10_N42_00_E012_00_DEM.tif
+    vertical_sigma_m: 3.0
+    basis: "raw GLO-30 surface model (includes buildings and trees), read by byte range; only when no ground DTM is available"
+
+river_flood:
+  heavy: false
+  rivers_file:
+    value: rivers_osm.geojson
+    basis: "WS1 OSM waterway lines (fields name, waterway)"
+  river_names:
+    value: {tevere: ["Tevere", "Fiume Tevere"], aniene: ["Aniene", "Fiume Aniene"]}
+    basis: "OSM names of the two rivers that cross Rome"
+  derived_rivers:
+    value:
+      tevere: {min_km2: 800, max_km2: 1.0e9, gauge: ripetta}
+      aniene: {min_km2: 150, max_km2: 800, gauge: lunghezza}
+    basis: "without the rivers layer, the river is the terrain channel draining min..max km2 inside the city window that passes its gauge (Tiber about 1,300 km2, Aniene about 375 km2 on the 30 m DTM)"
+  max_distance_from_river_m:
+    value: 5000
+    basis: "assumption: the floodplain model is not applied further than 5 km from the river"
+  gauges:
+    # normal_level_m: typical level at the gauge in ordinary flow, so 'rise' = level - normal.
+    ripetta: {river: tevere, lon: 12.4757, lat: 41.9058, normal_level_m: 6.0,
+              basis: "assumption (C=50): ordinary level at Roma Ripetta about 6 m on the gauge; check with the Centro Funzionale"}
+    ponte_milvio: {river: tevere, lon: 12.4672, lat: 41.9355, normal_level_m: 6.0,
+                   basis: "assumption (C=40), as Ripetta"}
+    lunghezza: {river: aniene, lon: 12.6467, lat: 41.9214, normal_level_m: 1.5,
+                basis: "assumption (C=40): Aniene gauge ordinary level"}
+  stage_sigma_m:
+    value: 0.3
+    basis: "assumption: uncertainty of a hypothetical or forecast level; measured levels use the gauge's own sigma"
+  hazard_file:
+    value: flood_hazard_pgra.geojson
+    basis: "WS1: official PGRA hazard polygons, field 'hazard' = P1 | P2 | P3"
+  walls_note:
+    value: "The Tiber embankment walls (muraglioni) are thinner than a 30 m cell and are not in the terrain: inside the walls the model overstates flooding."
+    basis: "known limit of a 30 m terrain model in central Rome"
+
+rain_flood:
+  heavy: false
+  members:
+    value: 40
+    basis: "ensemble size: enough for a stable P5 / P95 of hotspot depth"
+  seed:
+    value: 7
+    basis: "fixed so the same run id gives the same numbers"
+  rain_relative_sigma:
+    value: 0.5
+    basis: "radar rainfall error, same as the dpc_radar provider (relative_sigma); applied to hypothetical totals too"
+  drainage_capacity_mm_h:
+    value: 20
+    sigma_ln: 0.4
+    basis: "assumption (C=40): urban sewers drain about 20 mm/h over sealed surfaces; Roma's network design return period is not published"
+  infiltration_mm_h:
+    value: 10
+    sigma_ln: 0.5
+    basis: "assumption (C=40): typical infiltration of urban green and soil under heavy rain"
+  impervious_file:
+    value: imperviousness_2018.tif
+    basis: "WS1: Copernicus HRL Imperviousness Density 2018, 0-100 %"
+  impervious_fallback:
+    value: {urban: 0.75, other: 0.15}
+    basis: "assumption: sealed share inside the PTPR 'aree urbanizzate' polygons and outside them, used until the HRL raster is loaded"
+  urban_file:
+    value: ptpr_b_aree_urbanizzate.geojson
+    basis: "WS1 PTPR Tavola B urbanised areas"
+  min_depth_m:
+    value: 0.1
+    basis: "assumption: depressions shallower than 10 cm are terrain noise at 30 m"
+  min_capacity_m3:
+    value: 500
+    basis: "assumption: smaller hollows are below what a 30 m model resolves"
+  hotspots_listed:
+    value: 25
+    basis: "how many hotspots are listed; totals cover all"
+  underpasses_file:
+    value: road_underpasses_osm.geojson
+    basis: "WS1 OSM tunnels and underpasses, used to point out underpasses inside flooded hollows"
+
+impacts:
+  sensitive_sites_file:
+    value: sensitive_sites.geojson
+    basis: "WS1 merged sensitive sites (schools, hospitals, care homes...), 6,414 places"

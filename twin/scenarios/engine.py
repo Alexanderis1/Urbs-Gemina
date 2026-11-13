@@ -11,6 +11,7 @@ from twin.scenarios.area import Area, AreaArg, AreaNotAvailable, AreaTooLarge, c
 from twin.scenarios.data import ScenarioData
 from twin.scenarios.envelope import envelope, run_id
 from twin.scenarios.exposure import run_population_exposure
+from twin.scenarios.flood import run_rain_flood, run_river_flood
 from twin.scenarios.traffic import run_road_closure
 
 TOOL = "run_scenario"
@@ -32,6 +33,16 @@ KINDS: dict[str, Kind] = {
     "population_exposure": Kind(run_population_exposure, False,
                                 "Residents in census sections above the EMF thresholds, baseline vs variant",
                                 ("census_sections.geojson",)),
+    "river_flood": Kind(run_river_flood, False,
+                        "Tiber / Aniene rises by X m: flooded area, residents and sensitive sites (P5/P50/P95), "
+                        "beside the official PGRA hazard areas",
+                        ("dtm_glo30_ground.tif", "rivers_osm.geojson", "flood_hazard_pgra.geojson",
+                         "census_sections.geojson", "sensitive_sites.geojson")),
+    "rain_flood": Kind(run_rain_flood, False,
+                       "Heavy rain: where water collects (hotspots with P5/P50/P95 depth), residents and sensitive "
+                       "sites affected",
+                       ("dtm_glo30_ground.tif", "imperviousness_2018.tif", "ptpr_b_aree_urbanizzate.geojson",
+                        "road_underpasses_osm.geojson", "census_sections.geojson", "sensitive_sites.geojson")),
     "road_closure": Kind(run_road_closure, True,
                          "Close roads on one district: SUMO travel time and delay, baseline vs variant (synthetic demand)"),
 }
