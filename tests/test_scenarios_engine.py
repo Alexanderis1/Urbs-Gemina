@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from twin.scenarios import engine
+from twin.scenarios import engine, layers
 from twin.scenarios.area import AreaNotAvailable, AreaTooLarge, check_heavy, polygon_area_km2, resolve_area
 from twin.scenarios.data import ScenarioData
 
@@ -97,7 +97,22 @@ def test_kinds_are_listed() -> None:
     assert {"antenna", "population_exposure"} <= set(engine.kinds())
 
 
-def test_named_area_without_boundaries_is_not_available(tmp_path: Path) -> None:
+def test_named_area_without_boundaries_is_not_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(layers, "search_dirs", lambda: [tmp_path / "empty"])
     out = engine.run("antenna", "municipio:1", ADD, cache_dir=tmp_path)
     assert out["status"] == "not_available"
     assert not list(tmp_path.glob("*.json"))
+
+
+def test_named_areas_come_from_ws1_boundary_layers(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    feature = {"type": "Feature", "geometry": square(1000.0), "properties": {"municipio": 1}}
+    zone = {"type": "Feature", "geometry": square(500.0), "properties": {"code_zu": "1A"}}
+    (tmp_path / "municipi.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": [feature]}))
+    (tmp_path / "urban_zones.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": [zone]}))
+    monkeypatch.setattr(layers, "search_dirs", lambda: [tmp_path])
+    out = engine.run("antenna", "municipio:1", ADD, cache_dir=tmp_path / "c")
+    assert out["status"] == "ok"
+    assert out["result"]["area"]["area_km2"] == pytest.approx(1.0, rel=0.01)
+    assert engine.run("antenna", "zone:1a", ADD, cache_dir=tmp_path / "c")["status"] == "ok"
+    with pytest.raises(ValueError):
+        engine.run("antenna", "municipio:2", ADD, cache_dir=tmp_path / "c")

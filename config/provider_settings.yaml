@@ -104,6 +104,17 @@ open:
     free_vehicles_url: https://mds.bird.co/gbfs/v2/public/rome/free_bike_status.json
     timeout_s: 30
 
+  roma_wifi:
+    # Daily anonymised session CSVs, one CKAN dataset per year.
+    dataset: "wifi{year}"
+    hotspot_kml_urls:  # D.192 hotspot maps, read only by build_seeds
+      - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/4d5a48eb-afba-4cf4-8ca5-78295554b9ff/download/digitsecure_apchh202624032026_epgs10780_dim4e5kml.kml
+      - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/01157881-3b0c-4362-8516-8c2b4619972e/download/digit_secure_map_hhc_160226_epgs10780lml.kml
+      - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/84215020-e3c6-4989-b7b4-ca6a955a6646/download/ed140725_digit_mappa_c_hhc_140525_epgs3035_kml.kml
+    max_site_spread_m: {value: 300, basis: "access points of one site sit in one building or square; wider spread means an ambiguous address"}
+    sigma_floor: {value: 1.0, basis: "Poisson counting noise, sqrt(n), never below one session"}
+    timeout_s: 120
+
   sensor_community:
     api_url: https://data.sensor.community/airrohr/v1/filter
     relative_sigma: {value: 0.4, basis: "low-cost SDS011 sensors agree with reference PM within about 30-50% in dry air (C=60)"}

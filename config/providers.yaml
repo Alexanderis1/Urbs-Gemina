@@ -15,4 +15,5 @@ air_quality_citizen: sensor_community  # real, open: citizen PM sensors (noisier
 air_quality_model: cams_open_meteo # estimated: CAMS model background for the belief layer
 rain: dpc_radar                    # real, open
 micromobility: bird_gbfs           # real, open: available shared e-scooters
+activity_wifi: roma_wifi           # real, open: public Wi-Fi sessions per hotspot and hour (crowd proxy)
 context_layers: roma_wfs           # real, open (see scripts/fetch_static_layers.py)

@@ -19,6 +19,7 @@ from twin.providers.open.eea import EeaHourlyProvider
 from twin.providers.open.gbfs import GbfsProvider
 from twin.providers.open.gtfs_rt import RomaGtfsRtProvider
 from twin.providers.open.open_meteo import CamsOpenMeteoProvider
+from twin.providers.open.roma_wifi import RomaWifiProvider
 from twin.providers.open.sensor_community import SensorCommunityProvider
 from twin.providers.pa.register_file import PaRegisterFileProvider
 from twin.providers.restricted.cartoradio import CartoradioGridProvider
@@ -49,6 +50,7 @@ FACTORIES: dict[str, Factory] = {
     "arpa_points": ArpaPointsProvider,
     "bird_gbfs": GbfsProvider,
     "sensor_community": SensorCommunityProvider,
+    "roma_wifi": RomaWifiProvider,
     "cams_open_meteo": CamsOpenMeteoProvider,
     # restricted: runtime read only
     "cartoradio_grid": CartoradioGridProvider,
@@ -67,6 +69,7 @@ DATA_KIND: dict[str, DataKind] = {
     "dpc_radar": "real",
     "bird_gbfs": "real",
     "sensor_community": "real",
+    "roma_wifi": "real",
     "cams_open_meteo": "estimated",
     "cartoradio_grid": "estimated",
     "roma_wfs": "real",

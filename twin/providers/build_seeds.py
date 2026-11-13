@@ -3,6 +3,7 @@
     python -m twin.providers.build_seeds            # both seeds
     python -m twin.providers.build_seeds loops      # simulated loop station positions
     python -m twin.providers.build_seeds sites      # estimated antenna site positions
+    python -m twin.providers.build_seeds wifi       # public Wi-Fi hotspot gazetteer
 
 Loop stations: Roma Capitale's own traffic-signal register (``DIPMOB:Semafori``)
 gives the signalised junctions. Junctions run by a central traffic-control
@@ -14,7 +15,10 @@ stations out with a minimum spacing. Road class and name come from the road.
 Antenna sites: OpenCelliD cells inside Roma Capitale (tokenless PMTiles mirror,
 zoom 14), clustered into sites as in ``estimated.sites.cluster_sites``.
 
-Both outputs are small GeoJSON files under ``simulated/seed_data/`` and
+Wi-Fi hotspots: the DigitRoma hotspot maps of dataset D.192 (KML, CC BY 4.0),
+reduced to an address -> point gazetteer used by ``open.roma_wifi``.
+
+The outputs are small GeoJSON files under ``simulated/seed_data/`` and
 ``estimated/seed_data/``, committed so runs are
 reproducible offline. Licences: Roma Capitale GeoPortale (credit, CC BY assumed
 C=60), road geometry derived from OSM (ODbL), OpenCelliD (CC BY-SA 4.0).
@@ -254,7 +258,7 @@ def _write(path: Path, data: Mapping[str, Any]) -> None:
 def main(argv: Sequence[str]) -> int:
     from twin.providers.open.roma_wfs import fetch_layer
 
-    what = set(argv) or {"loops", "sites"}
+    what = set(argv) or {"loops", "sites", "wifi"}
     settings = Settings.load()
     if "loops" in what:
         config = settings.section("simulators", "loops")
@@ -270,7 +274,28 @@ def main(argv: Sequence[str]) -> int:
 
         cells = fetch_opencellid_cells(ROME_BBOX, mcc=integer(config, "mcc", 222))
         _write(SITES_FILE, sites_geojson(cells, polygons, shifts, number(config, "merge_distance_m", 150.0)))
+    if "wifi" in what:
+        from twin.providers.open.roma_wifi import SITES_FILE, parse_hotspot_kml
+
+        config = settings.section("open", "roma_wifi")
+        urls = [str(u) for u in config.get("hotspot_kml_urls", []) or []]
+        kml = "\n".join(_get(url).decode("utf-8") for url in urls)
+        sites = parse_hotspot_kml(kml, max_spread_m=number(config, "max_site_spread_m", 300.0))
+        SITES_FILE.parent.mkdir(parents=True, exist_ok=True)
+        SITES_FILE.write_text(json.dumps({
+            "source": "dati.comune.roma.it dataset D.192 (DigitRoma Wi-Fi hotspot maps), CC BY 4.0",
+            "urls": urls,
+            "sites": {k: list(v) for k, v in sorted(sites.items())},
+        }, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
+        print(f"wrote {SITES_FILE} ({len(sites)} address keys)")
     return 0
+
+
+def _get(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=300) as response:
+        data: bytes = response.read()
+    return data
 
 
 if __name__ == "__main__":

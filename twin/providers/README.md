@@ -20,6 +20,7 @@ uses real sensors, or estimates fused from real sources with a physical model.
 | air_quality_model | `cams_open_meteo` | estimated (CAMS model) | `AirQualityForecast`: no2 / pm10 / pm25 |
 | rain | `dpc_radar` | real | `WeatherObserved`: precipitation (mm/h) |
 | micromobility | `bird_gbfs` | real | `MicromobilityVehicle`: availableVehicles, rangeKm (weak activity proxy, C=40) |
+| activity_wifi | `roma_wifi` | real (Roma Capitale public Wi-Fi sessions, about one day behind) | `CrowdFlowObserved`: peopleCount (sessions active in the hour, a lower bound on people) |
 | context_layers | `roma_wfs` | real | static GeoJSON, read at ingest |
 
 Every value has a matching `sigma` (one standard deviation). Simulated records
@@ -41,6 +42,12 @@ rows; `registry.DATA_KIND` gives the real / estimated / simulated label.
   grid misfit (about 9 dB city-wide on 13 Nov: the isotropic model is crude, so the
   register is "uncalibrated"). Computed at runtime, never stored.
 
+- **Wi-Fi hotspots**: the city's daily anonymised session files (dataset `wifi<year>`) give
+  start, end and hotspot address. Only counts per hotspot and hour are kept; DOMAIN,
+  LOGINCOUNT, traffic and language are dropped at parse. Addresses are matched to the
+  hotspot maps of dataset D.192 (`open/seed_data/wifi_sites.json`, about 99.7% of sessions
+  matched on 12 Nov 2026).
+
 Seeds are committed (`simulated/seed_data/`, `estimated/seed_data/`) so runs are
 reproducible offline. Rebuild them with `python -m twin.providers.build_seeds`.
 
@@ -54,7 +61,7 @@ code changes (Gate C, see `tests/test_ws3_registry_status.py`).
 
 `open/gtfs_rt.parse_vehicle_positions`, `open/gtfs_rt.parse_trip_delays`,
 `open/eea.read_parquet_rows` + `parse_rows`, `open/sensor_community.parse_readings`,
-`open/gbfs.parse_free_vehicles` and `raster.read_cells` are pure functions over
+`open/gbfs.parse_free_vehicles`, `open/roma_wifi.parse_sessions` + `hourly_counts` and `raster.read_cells` are pure functions over
 stored snapshots.
 
 ## Cartoradio

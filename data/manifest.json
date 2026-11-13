@@ -246,6 +246,15 @@
       "redistribution": true,
       "status": "verified 2026-11-13"
     },
+    "roma_wifi": {
+      "kind": "real",
+      "what": "Roma Capitale public Wi-Fi (DigitRoma) anonymised sessions, counted per hotspot and hour",
+      "endpoint": "https://dati.comune.roma.it (CKAN datasets wifi<year>, hotspot maps D.192)",
+      "access": "no key; one CSV per day, about one day behind",
+      "licence": "CC BY 4.0, Roma Capitale",
+      "redistribution": true,
+      "status": "verified 2026-11-13; DOMAIN, LOGINCOUNT, traffic and language dropped at parse"
+    },
     "mim_school_buildings": {
       "kind": "real",
       "what": "School building register (which school buildings have a gym), for the sports add-on",
