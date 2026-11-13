@@ -1,0 +1,14 @@
+# Spatial units of the twin. Every tool accepts one of these as its "area".
+city:
+  name: Roma Capitale
+  bbox: [12.234, 41.655, 12.856, 42.141]   # approximate
+municipi:
+  layer: "DIPPC:210_RomaCapitale_Municipi"   # 15 features, Roma Capitale GeoServer
+urban_zones:
+  layer: "DIPDIT:ZoneUrbanistiche"           # 155 features
+census_sections:
+  layer: "ISTAT 2021 basi territoriali (R12_21.zip)"
+grid:
+  system: h3
+  city_resolution: 9
+heavy_tools_max_area_km2: 40   # micro traffic simulation and ray tracing refuse larger areas

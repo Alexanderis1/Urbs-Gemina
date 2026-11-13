@@ -1,0 +1,177 @@
+{
+  "note": "Every data source of the twin. kind: real | estimated | simulated | restricted. Endpoints were tested on 2026-11-13 unless status says otherwise.",
+  "sources": {
+    "roma_geoserver": {
+      "kind": "real",
+      "what": "PRG, Carta per la Qualita, Rete Ecologica, UNESCO, schools, hospitals, municipi, sports facilities",
+      "endpoint": "https://geoportale.comune.roma.it/geoserver/ows",
+      "access": "WFS/WMS, no login",
+      "licence": "not stated in capabilities; credit Roma Capitale - GeoPortale (CC BY assumed, confidence 60)",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "lazio_geoserver": {
+      "kind": "real",
+      "what": "PTPR Tavola A/B, Natura 2000, AGEA orthophotos",
+      "endpoint": "https://geoportale.regione.lazio.it/geoserver/ows",
+      "access": "WFS/WMS, no login",
+      "licence": "not read",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "sitap": {
+      "kind": "real",
+      "what": "Landscape constraints art. 136/142 D.Lgs. 42/2004",
+      "endpoint": "https://sitap.cultura.gov.it/geoserver/ows",
+      "access": "WFS",
+      "licence": "not stated",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "overture_buildings": {
+      "kind": "real",
+      "what": "Building footprints with some heights",
+      "endpoint": "https://docs.overturemaps.org/guides/buildings",
+      "access": "download (overturemaps CLI)",
+      "licence": "ODbL (share-alike)",
+      "redistribution": true,
+      "status": "catalogue verified"
+    },
+    "osm": {
+      "kind": "real",
+      "what": "Roads, POIs, playgrounds, care homes, masts, private sports venues",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "access": "Overpass",
+      "licence": "ODbL (share-alike)",
+      "redistribution": true,
+      "status": "not tested from the research sandbox"
+    },
+    "mase_lidar": {
+      "kind": "real",
+      "what": "1 m surface and terrain models (2008-2011), about a third of the centre along the Tiber",
+      "endpoint": "https://sim.mase.gov.it/portalediaccesso/mappe/#/viewer/new",
+      "access": "Download Banca Dati PST app",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "coverage verified, download not tested"
+    },
+    "megascenes": {
+      "kind": "real",
+      "what": "About 896 Rome landmark photo scenes with camera poses",
+      "endpoint": "s3://megascenes",
+      "access": "public S3",
+      "licence": "CC BY 4.0 + per-photo Wikimedia licences",
+      "redistribution": "derived models with attribution; not raw photos",
+      "status": "verified"
+    },
+    "roma_gtfs_rt": {
+      "kind": "real",
+      "what": "Bus/tram positions, delays, alerts",
+      "endpoint": "https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb",
+      "access": "no key; follow redirects",
+      "licence": "CC BY-SA",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "eea_hourly": {
+      "kind": "real",
+      "what": "Hourly air quality, 13 Rome NO2 points",
+      "endpoint": "https://eeadmz1-downloads-api-appservice.azurewebsites.net/ParquetFile/urls",
+      "access": "POST, no key",
+      "licence": "EEA open",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "arpa_lazio_hourly": {
+      "kind": "real",
+      "what": "Hourly station values 1999-2025",
+      "endpoint": "https://www.arpalazio.net/main/aria/sci/basedati/chimici/BDchimici/RM/DatiOrari/RM_NO2_2025.txt",
+      "access": "no key",
+      "licence": "not stated",
+      "redistribution": true,
+      "status": "verified (2026 file not found)"
+    },
+    "open_meteo": {
+      "kind": "estimated",
+      "what": "Weather and CAMS air-quality model",
+      "endpoint": "https://air-quality-api.open-meteo.com/v1/air-quality",
+      "access": "no key, non-commercial free tier",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "dpc_radar": {
+      "kind": "real",
+      "what": "Rain radar every 5 minutes",
+      "endpoint": "https://radar-api.protezionecivile.it/findLastProductByType?type=VMI",
+      "access": "no key",
+      "licence": "CC BY (confidence 75)",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "bird_gbfs": {
+      "kind": "real",
+      "what": "Shared e-scooter positions",
+      "endpoint": "https://mds.bird.co/gbfs/v2/public/rome/gbfs.json",
+      "access": "no key",
+      "licence": "operator terms",
+      "redistribution": "check terms",
+      "status": "verified"
+    },
+    "roma_ckan": {
+      "kind": "real",
+      "what": "365 open datasets (Wi-Fi sessions, accidents, sports centres 2018...)",
+      "endpoint": "https://dati.comune.roma.it/catalog/api/3/action/package_list",
+      "access": "CKAN API (slow, use 60 s timeout)",
+      "licence": "mostly CC BY; exclude the 11 non-commercial ones",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "opencellid": {
+      "kind": "estimated",
+      "what": "Estimated cell positions (centroids, not masts)",
+      "endpoint": "https://opencellid.org/downloads.php",
+      "access": "free token; tokenless mirror at https://data.source.coop/smartmaps/opencellid/cellid.pmtiles",
+      "licence": "CC BY-SA 4.0",
+      "redistribution": true,
+      "status": "mirror verified"
+    },
+    "cartoradio_grid": {
+      "kind": "restricted",
+      "what": "National estimated E-field grid in V/m, 100 m cells (EPSG:3857), float32, nodata -9999",
+      "endpoint": "https://d3r7svb6d8d7og.cloudfront.net/tiles/tiles/cartoradio.tiff",
+      "access": "cloud-optimised GeoTIFF, read the Rome window by byte range at runtime",
+      "licence": "legal notes forbid reuse; written consent from MIMIT/FUB pending (cartoradio@fub.it)",
+      "redistribution": false,
+      "status": "verified (header and one tile inspected)"
+    },
+    "sim_loops": {
+      "kind": "simulated",
+      "what": "Road loop stations (flow, speed, occupancy)",
+      "endpoint": "twin/providers/simulated/loops.py",
+      "access": "generated",
+      "licence": "none",
+      "redistribution": true,
+      "status": "implemented"
+    },
+    "sim_register": {
+      "kind": "simulated",
+      "what": "Antenna installation register seeded from OpenCelliD and OSM",
+      "endpoint": "planned",
+      "access": "generated",
+      "licence": "inherits CC BY-SA / ODbL from its seeds",
+      "redistribution": true,
+      "status": "planned"
+    },
+    "sim_emf_points": {
+      "kind": "simulated",
+      "what": "EMF monitoring points",
+      "endpoint": "planned",
+      "access": "generated",
+      "licence": "none",
+      "redistribution": true,
+      "status": "planned"
+    }
+  },
+  "snapshots": {}
+}

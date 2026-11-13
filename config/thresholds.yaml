@@ -1,0 +1,20 @@
+# Legal thresholds. Code and prompts must read them from here, never hard-code them.
+as_of: "2026-11-13"
+
+emf:
+  exposure_limit_v_per_m:
+    value: 20.0
+    applies_to: "3 MHz - 3 GHz, general public"
+    source: "DPCM 8 luglio 2003, art. 3"
+  attention_value_v_per_m:
+    value: 15.0
+    averaging: "24 hours"
+    applies_to: "buildings with prolonged stay and their outdoor pertinences"
+    source: "Legge 30 dicembre 2023, n. 214, art. 10 (raised from 6 V/m)"
+    confidence: 85
+    note: "The MIMIT decree of 30 July 2026 on emission-limit calculation was not read in full. Re-check."
+
+antenna_context:
+  radius_m: 300
+  source: "Application form (Modello A, D.Lgs. 259/2003)"
+  meaning: "Context information only. Not a prohibition (Consiglio di Stato, Sez. IV, 2021)."

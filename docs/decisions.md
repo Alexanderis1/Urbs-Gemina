@@ -1,0 +1,54 @@
+# Open decisions: 3D viewer and hosting
+
+C=NN is a confidence score from 1 to 100. No time estimates.
+
+## 1. 3D viewer: MapLibre-first, Cesium-first, or both
+
+| | MapLibre GL + deck.gl | CesiumJS |
+|---|---|---|
+| What it is | 2.5D vector map: buildings are extruded footprints from vector tiles; deck.gl draws data layers on top | True 3D globe: streams 3D Tiles (meshes, point clouds, Gaussian splats) with terrain |
+| Looks like | A clean "data map": flat-shaded block buildings, strong heatmaps, hexagons, arcs, moving dots | A "flight simulator" view: textured meshes, terrain relief, free camera |
+| Whole city of LoD1 blocks | Strong. One PMTiles file, loads by zoom | Works, but needs a 3D Tiles tiling step and more GPU memory |
+| Data overlays (belief grids, 300 m circles, live vehicles) | Its main strength | Possible, but draping vector data is reported as slow |
+| LoD2 roofs from LiDAR | Via deck.gl `Tile3DLayer` in the same view | Native |
+| Gaussian-splat landmarks | No official layer (C=55). Needs a separate splat viewer panel | Native in 3D Tiles since CesiumJS 1.139 |
+| Weight in a Lovable React app | Light (C=65, not verified inside Lovable) | Heavier bundle and asset setup (C=60) |
+| Licence | BSD / MIT | Apache 2.0. Cesium ion hosting is optional and paid for government use; self-hosting tiles avoids it |
+
+**Why not both, depending on zoom? Yes, in one of two ways.**
+
+| Way | How | Trade-off |
+|---|---|---|
+| A. One engine, two levels of detail (recommended) | MapLibre shows extruded blocks for the whole city. Past a zoom threshold, inside the LiDAR area, deck.gl's `Tile3DLayer` loads the LoD2 roof model. Same camera, no switch | Seamless. Splat landmarks open in a separate viewer panel |
+| B. Two engines with a hand-over | MapLibre for the city. A button "open 3D detail" on a landmark or district opens a Cesium view at the same position | Not a continuous zoom: two WebGL canvases, two camera models (flat Mercator vs globe), double memory. Fine as an explicit switch, fragile as an automatic blend (C=75) |
+
+Rule of thumb: if the demo is mostly **data on the city** (fields, air quality, traffic, context checks), go MapLibre-first with way A. If the demo is mostly **walking through reconstructed landmarks**, go Cesium-first. This project is the first kind, with landmarks as an accent, so the proposal is MapLibre-first, way A, plus a splat panel; upgrade to way B only if the splats turn out well enough to deserve it.
+
+Gate: all of Rome renders smoothly in the chosen viewer inside the Lovable app on the demo laptop. No-go: drop to plain deck.gl layers.
+
+## 2. Hosting: what Lovable can run and what it cannot
+
+Lovable hosts the front end and a built-in backend ("Cloud") on Supabase technology: Postgres database, authentication, file storage, secrets, scheduled jobs and edge functions. Edge functions are short Deno (TypeScript) functions with hard limits: 256 MB memory, 2 seconds of CPU time per request, 150 seconds wall-clock on the free tier (400 on paid). There is no Python, no GPU and no always-on process. When credits run out the backend pauses.
+
+| Backend part | What it needs | On Lovable? |
+|---|---|---|
+| Web app, login, citizen / office roles | Static hosting, auth, row-level security | **Yes** |
+| Context layers and the 300 m check | A few tens of MB of vector data; a spatial query | **Yes**: as PostGIS SQL if the extension can be enabled on Lovable Cloud (C=60; a Supabase project of your own supports it), otherwise in the Python worker |
+| Building tiles for the whole city | Static files of a few hundred MB served with range requests (size is a guess, C=40) | **Probably**: Cloud storage, or free object storage (Cloudflare R2) |
+| Agent orchestration, Exa calls, ElevenLabs webhook | Mostly waiting on external APIs; little CPU | **Yes** (edge functions, keys in Secrets) |
+| Cartoradio window read | Byte-range request plus decoding one small tile | **Yes** (edge function or the browser) |
+| Live ingest of small feeds (GTFS-RT about 1 MB per pull, EEA hourly) | A scheduler and light parsing | **Partly**: scheduled jobs exist; stay inside the CPU limit |
+| Belief layers (kriging / Gaussian process), rain-radar rasters | Python with NumPy/SciPy, 1-4 GB RAM, CPU for seconds to minutes | **No** |
+| Traffic simulation (SUMO) | SUMO binary, 2-8 CPU cores, 4-8 GB RAM, runs for minutes | **No** |
+| Field ray tracing (Sionna RT) | GPU with 8 GB or more (L4 / L40S class), runs for minutes | **No** |
+| City model build, tiling, splat training | Offline batch on the workstation or a rented GPU; only results are uploaded | Not a hosting question |
+
+**So: Lovable can host the app and the light backend, not the compute.** Three ways to add the compute:
+
+| Option | Setup | Good | Bad |
+|---|---|---|---|
+| H1. Lovable + Modal (recommended) | Python "worker" on Modal: a small CPU service for tools, beliefs and ingest; a GPU function started on demand for ray tracing; a multi-core function for SUMO. Edge functions call it over HTTPS | Stable public URL for judges and the voice webhook; pay per second; $30 monthly free credit; GPU only while a job runs (L4 about $0.80/h, A100-80 about $2.50/h) | One more platform; cold starts of some seconds on first call |
+| H2. Lovable + your workstation behind a tunnel | Same Python worker on the RTX 4060 Ti machine, exposed with a tunnel | Free; your own GPU | Demo depends on that machine, its network and the tunnel staying up; 8 GB VRAM caps ray-tracing size |
+| H3. Lovable only | Everything in edge functions and SQL | Simplest | No belief layers beyond trivial ones, no simulation: the permit check works, the "twin" part does not |
+
+Recommended: **H1**, with H2 as the fallback for GPU jobs if Modal credit runs out. Whatever is chosen, heavy results (grids, scenario outputs) are precomputed and cached so the live demo never waits on a cold GPU.

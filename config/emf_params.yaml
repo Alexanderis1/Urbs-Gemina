@@ -1,0 +1,15 @@
+# Parameters of the field model. Every number is marked "source" or "assumption".
+model_error_sigma_db:
+  value: 4.0
+  basis: "assumption, in line with a 2026 IEEE validation reporting 1.6-3.8 dB median deviation for ray tracing"
+
+typical_eirp_w:            # per sector; ASSUMPTIONS until real Model A data is available
+  "800":  {value: 1000, basis: assumption}
+  "1800": {value: 2000, basis: assumption}
+  "2100": {value: 2000, basis: assumption}
+  "3500": {value: 5000, basis: "assumption (5G massive MIMO, before statistical power reduction)"}
+
+simulated_register:
+  seed: 42
+  sector_azimuths_deg: [0, 120, 240]
+  mast_height_above_roof_m: {min: 3, max: 6, basis: assumption}
