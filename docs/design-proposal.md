@@ -198,7 +198,7 @@ Personal data: drop the contact fields (`ref-nome`, `ref-cell`, telephone, e-mai
 
 ## 8. Simulated sensors: specification
 
-> **Superseded on 13 Nov 2026:** only `sim_loops` stays simulated. `sim_register` becomes an *estimated* register built from OpenCelliD + OSM, with its unknown parameters (azimuths, EIRP) fitted to the Cartoradio grid by sensor fusion; `sim_emf_points` is replaced by the real ARPA station plus the fused field estimate; `sim_applications` is dropped (the officer enters an application live in the demo). See `docs/decisions.md`.
+> **Superseded on 13 Nov 2026:** only `sim_loops` stays simulated. `sim_register` becomes an *estimated* register built from OpenCelliD + OSM, with EIRP fitted to the Cartoradio grid by sensor fusion (azimuth is not fitted: it cannot be observed reliably from a 100 m grid given OpenCelliD position errors, so it stays unknown and sites are modelled as isotropic; the fit is labelled *uncalibrated*, median error about 9 dB, WS3 PR #10); `sim_emf_points` is replaced by real ARPA Lazio measurement points (needs the DTS5887 table; portal returned 502 on 13 Nov) plus the fused field estimate; `sim_applications` is dropped (the officer enters an application live in the demo). See `docs/decisions.md`.
 
 Each simulator is a provider with a fixed seed and a version, so runs are reproducible.
 
