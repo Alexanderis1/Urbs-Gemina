@@ -1,7 +1,9 @@
 """Tool registry: name -> request model + handler. Shared by the HTTP app and the schema export."""
 from __future__ import annotations
 
+import hashlib
 import importlib
+import json
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -9,8 +11,8 @@ from pydantic import BaseModel
 
 from twin.api import models as m
 from twin.modules.antennas.report import build_permit_report
-from twin.tools.area import AreaTooLarge, locate, resolve_area
-from twin.tools.layers import first_property, iter_positions
+from twin.tools.area import AreaTooLarge, resolve_area
+from twin.tools.layers import LayerSnapshot, iter_positions
 from twin.tools.data_status import data_status
 from twin.tools.envelope import ToolError, make_envelope
 from twin.tools.estimate_field import estimate_field
@@ -75,9 +77,10 @@ def _scenario_data(rt: ToolRuntime) -> Any:
         resolved = resolve_area(name, rt.store, rt.settings)
         return resolved.geometry
 
-    snapshots = {key: snap.sha256 for key in ("municipi", "urban_zones", "census_sections")
-                 if (snap := rt.store.get(key)) is not None}
-    census = rt.store.get("census_sections")
+    census = _census(rt)
+    snapshots = {key: snap.sha256 for key in ("municipi", "urban_zones") if (snap := rt.store.get(key)) is not None}
+    if census is not None:
+        snapshots["census_sections"] = census.sha256
     return data_mod.ScenarioData(
         baseline_field=baseline_field if baseline is not None else None,
         baseline_source={"id": "cartoradio_grid"} if baseline is not None else None,
@@ -151,28 +154,36 @@ def _sports_inputs(rt: ToolRuntime) -> tuple[Any, Any, Any, list[Any]]:
     return tools_mod, config_mod.load_config(), pipeline, list(pipeline.load_facilities(path))
 
 
+def _census(rt: ToolRuntime) -> LayerSnapshot | None:
+    """Census sections from WS1 (data/processed/census_sections.geojson): sez_id, residents, children_0_14,
+    municipio, zone."""
+    path = rt.settings.paths.data / "processed" / "census_sections.geojson"
+    if not path.exists():
+        return None
+    payload = path.read_bytes()
+    return LayerSnapshot.from_collection("census_sections", json.loads(payload),
+                                         sha256=hashlib.sha256(payload).hexdigest())
+
+
 def _population(rt: ToolRuntime) -> list[Any]:
-    """Census sections -> WS10 PopulationPoint (centroid, residents, children); empty when not loaded."""
+    """Census sections -> WS10 PopulationPoint at the section centroid; empty when not built."""
     deserts = importlib.import_module("twin.modules.sports.deserts")
-    cfg = rt.settings.tools.get("sports", {})
-    snapshot = rt.store.get(str(cfg.get("census_layer", "census_sections")))
-    if snapshot is None:
+    census = _census(rt)
+    if census is None:
         return []
     points = []
-    for index, feature in enumerate(snapshot.features):
+    for feature in census.features:
         props = feature.get("properties") or {}
-        residents = first_property(props, list(cfg.get("residents_fields", [])))
-        if residents is None:
+        if props.get("residents") is None:
             continue
-        children = first_property(props, list(cfg.get("children_fields", []))) or 0
         positions = list(iter_positions(feature["geometry"]["coordinates"]))
-        lon = sum(float(p[0]) for p in positions) / len(positions)
-        lat = sum(float(p[1]) for p in positions) / len(positions)
-        where = locate(lon, lat, rt.store, rt.settings)
         points.append(deserts.PopulationPoint(
-            point_id=str(first_property(props, list(cfg.get("section_id_fields", []))) or index),
-            lon=lon, lat=lat, residents=float(residents), children=float(children),
-            zone=where["urban_zone"].get("id"), municipio=where["municipio"].get("id")))
+            point_id=str(props.get("sez_id")),
+            lon=sum(float(p[0]) for p in positions) / len(positions),
+            lat=sum(float(p[1]) for p in positions) / len(positions),
+            residents=float(props["residents"]), children=float(props.get("children_0_14") or 0),
+            zone=None if props.get("zone") is None else str(props["zone"]),
+            municipio=None if props.get("municipio") is None else str(props["municipio"])))
     return points
 
 

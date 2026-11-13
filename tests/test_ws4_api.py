@@ -136,3 +136,21 @@ def test_sports_tools_are_mounted_and_honest_when_missing(client: TestClient) ->
     assert r.status_code == 200 and r.json()["status"] == "not_available"  # module or built layer missing here
     r = client.post("/tools/sport_coverage", json={"discipline": "swimming", "max_minutes": 90})
     assert r.status_code == 422
+
+
+def test_census_sections_are_read_from_processed(tmp_path: Path) -> None:
+    from twin.api.tools import _census
+    from twin.tools.settings import Paths
+
+    settings = Settings.load()
+    rt = ToolRuntime(settings=Settings(**{**settings.__dict__,
+                                          "paths": Paths(root=tmp_path, config=settings.paths.config, data=tmp_path)}),
+                     store=LayerStore(raw_dir=tmp_path))
+    assert _census(rt) is None
+    (tmp_path / "processed").mkdir()
+    ring = [[12.48, 41.89], [12.49, 41.89], [12.49, 41.90], [12.48, 41.89]]
+    (tmp_path / "processed" / "census_sections.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [ring]},
+         "properties": {"sez_id": "1", "residents": 120, "children_0_14": 15, "municipio": "1", "zone": "1A"}}]}))
+    census = _census(rt)
+    assert census is not None and len(census.features) == 1 and census.sha256
