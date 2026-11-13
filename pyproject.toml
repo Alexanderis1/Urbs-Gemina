@@ -7,6 +7,7 @@ dependencies = ["PyYAML>=6"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "mypy>=1.10", "types-PyYAML"]
+beliefs = ["numpy>=1.26", "h3>=4"]
 
 [tool.setuptools.packages.find]
 include = ["twin*"]

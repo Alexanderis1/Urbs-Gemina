@@ -1,0 +1,134 @@
+# Belief layers: per H3 cell a mean, a variance and the time of the last update.
+# The grid resolution comes from config/areas.yaml (grid.city_resolution).
+#
+# Field meanings, the same for every layer:
+#   entity_types / value_key   which Observation records feed the layer and which value to read
+#   prior                      what we believe with no readings at all (constant, or one mean per hour, Rome local time)
+#   correlation_length_km      how far one reading spreads to neighbouring cells (e^-1 of its weight at this distance)
+#   relax_tau_hours            how fast a cell forgets a reading and drifts back to the prior when the feed is silent
+#   min_value                  physical lower bound, used to clip the shown range (p5)
+#   calibration                "loso" = leave-one-station-out check on real stations; "none" = always "uncalibrated"
+# Every number below is an assumption until checked against data, and says so in "basis".
+
+layers:
+  road_speed:
+    unit: km/h
+    entity_types: [TrafficFlowObserved]
+    value_key: averageVehicleSpeed
+    prior:
+      # City-wide average speed by hour; to be replaced by free-flow speed per road class
+      # once the road graph is ingested.
+      mean_by_hour: [42, 44, 45, 45, 44, 40, 33, 26, 22, 25, 29, 30,
+                     29, 29, 30, 29, 27, 24, 22, 24, 29, 34, 38, 40]
+      sd: 12
+      basis: "assumption: typical urban arterial speeds with two rush-hour dips; sd covers road-class spread"
+    correlation_length_km: 0.8
+    relax_tau_hours: 0.5
+    min_value: 0
+    calibration: {method: loso, note: "only meaningful once real loop data (pa_datex) replaces sim_loops"}
+    basis: "assumption: congestion is correlated along about one km of street network; it changes within half an hour"
+
+  air_no2:
+    unit: ug/m3
+    entity_types: [AirQualityObserved]
+    value_key: no2
+    prior:
+      mean: 30
+      sd: 15
+      basis: "assumption: Rome annual NO2 is around 20-45 ug/m3 at urban stations; to be replaced by the Open-Meteo/CAMS forecast"
+    correlation_length_km: 3.0
+    relax_tau_hours: 3.0
+    min_value: 0
+    calibration: {method: loso, note: ""}
+    basis: "assumption: urban NO2 background varies over a few km; hourly values persist a few hours"
+
+  air_pm10:
+    unit: ug/m3
+    entity_types: [AirQualityObserved]
+    value_key: pm10
+    prior:
+      mean: 25
+      sd: 12
+      basis: "assumption: Rome annual PM10 is around 20-30 ug/m3; to be replaced by the CAMS forecast"
+    correlation_length_km: 6.0
+    relax_tau_hours: 6.0
+    min_value: 0
+    calibration: {method: loso, note: ""}
+    basis: "assumption: PM10 is more regional than NO2, so it spreads further and lasts longer"
+
+  air_pm25:
+    unit: ug/m3
+    entity_types: [AirQualityObserved]
+    value_key: pm25
+    prior:
+      mean: 14
+      sd: 7
+      basis: "assumption: Rome annual PM2.5 is around 10-18 ug/m3; to be replaced by the CAMS forecast"
+    correlation_length_km: 8.0
+    relax_tau_hours: 6.0
+    min_value: 0
+    calibration: {method: loso, note: ""}
+    basis: "assumption: PM2.5 is largely regional background"
+
+  transit_delay:
+    unit: s
+    entity_types: [PublicTransportDelayObserved]
+    value_key: delay
+    prior:
+      mean: 120
+      sd: 180
+      basis: "assumption: a few minutes of typical bus delay in Rome; to be replaced by delay by line and hour once history exists"
+    correlation_length_km: 0.6
+    relax_tau_hours: 0.5
+    min_value: -600
+    calibration: {method: loso, note: ""}
+    basis: "assumption: delays are shared by buses on the same few streets; they change within half an hour"
+
+  rain:
+    unit: mm/h
+    entity_types: [WeatherObserved]
+    value_key: precipitation
+    prior:
+      mean: 0.2
+      sd: 1.0
+      basis: "assumption: dry most hours; to be replaced by the forecast"
+    correlation_length_km: 5.0
+    relax_tau_hours: 0.5
+    min_value: 0
+    calibration: {method: loso, note: "needs rain gauges as held-out stations; radar alone cannot be checked this way"}
+    basis: "assumption: rain cells are several km wide and move within half an hour"
+
+  emf:
+    unit: V/m
+    entity_types: [ElectromagneticFieldObserved]
+    value_key: electricField
+    prior:
+      mean: 0.6
+      sd: 1.0
+      basis: "assumption: Cartoradio's central-Rome median is about 0.6 V/m (inspected 13 Nov 2026); the Cartoradio grid replaces this prior at runtime"
+    correlation_length_km: 0.15
+    relax_tau_hours: 168
+    min_value: 0
+    calibration: {method: none, note: "uncalibrated: no real EMF measurements yet, only simulated points (sim_emf_points)"}
+    basis: "assumption: the field changes within a block of an antenna; it is stable over days"
+
+  activity:
+    unit: people/cell
+    entity_types: [CrowdFlowObserved]
+    value_key: peopleCount
+    prior:
+      mean: 250
+      sd: 250
+      basis: "assumption: about 2,300 residents per km2 in Roma Capitale gives about 250 per 0.11 km2 cell; to be replaced by the census population grid plus POIs"
+    correlation_length_km: 0.4
+    relax_tau_hours: 1.0
+    min_value: 0
+    calibration: {method: none, note: "uncalibrated: no ground-truth counts available"}
+    basis: "assumption: crowds cluster around a few blocks; they change within the hour"
+
+calibration_rules:
+  interval: 0.90            # we check the 90% range
+  coverage_ok: [0.80, 0.97] # share of held-out readings inside that range for the layer to count as calibrated
+  z_sd_ok: [0.7, 1.4]       # spread of the standardised errors (1.0 = perfectly honest uncertainty)
+  min_stations: 5
+  basis: "assumption: loose bands because Rome has only about 13 air-quality stations, so the check is noisy"
