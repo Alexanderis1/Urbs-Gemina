@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEnvelope, envelopeBadge, layerBadges } from "@/api/envelope";
+import { parseEnvelope, envelopeBadge, layerBadges, badgeText } from "@/api/envelope";
 
 const good = {
   run_id: "a".repeat(64),
@@ -55,5 +55,13 @@ describe("envelope additions (status, reason, cached, not_available)", () => {
   it("rejects an unknown status or a non-ok status without reason", () => {
     expect(() => parseEnvelope({ ...good, status: "maybe" })).toThrow(/status/);
     expect(() => parseEnvelope({ ...good, status: "refused" })).toThrow(/reason/);
+  });
+});
+
+describe("badge wording", () => {
+  it("calls a hypothetical change what-if, and loops simulated", () => {
+    expect(badgeText(parseEnvelope({ ...good, data_kinds: { what_if: "simulated", emf: "estimated" } }))).toBe("what-if");
+    expect(badgeText(parseEnvelope({ ...good, data_kinds: { traffic_loops: "simulated" } }))).toBe("simulated");
+    expect(badgeText(parseEnvelope({ ...good, synthetic: false, data_kinds: { emf: "estimated" } }))).toBe("estimated");
   });
 });

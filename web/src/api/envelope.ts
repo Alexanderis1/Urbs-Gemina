@@ -48,3 +48,9 @@ export function layerBadges(env: Envelope): [string, DataKind][] {
 
 /** True when the tool produced a usable result. */
 export const isOk = (env: Envelope) => (env.status ?? "ok") === "ok";
+
+/** Badge text: a hypothetical change is a "what-if", not a sensor; otherwise the kind. */
+export function badgeText(env: Envelope): string {
+  if (env.data_kinds.what_if === "simulated") return "what-if";
+  return envelopeBadge(env).replace("_", " ");
+}

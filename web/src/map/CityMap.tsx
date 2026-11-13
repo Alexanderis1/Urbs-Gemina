@@ -12,7 +12,11 @@ const STYLE_URL =
 const G0_ATTRIBUTION =
   (import.meta.env.VITE_BUILDINGS_ATTRIBUTION as string | undefined) ||
   "Buildings © OpenStreetMap contributors / Overture (ODbL). Heights: GlobalBuildingAtlas, TUM (CC BY-NC 4.0, non-commercial); Copernicus Urban Atlas. Terrain: Copernicus DEM.";
-const G0_RAW = (import.meta.env.VITE_BUILDINGS_PMTILES_URL as string | undefined) ?? "";
+// Public copy on Cloudflare R2 (byte ranges + CORS for Lovable domains and localhost 5173/8080/4173).
+const G0_DEFAULT = "https://pub-92f3b81279724b93b2c580e6b7c1cb37.r2.dev/buildings.pmtiles";
+const G0_ENV = import.meta.env.VITE_BUILDINGS_PMTILES_URL as string | undefined;
+// Unset = the R2 copy. Set to "osm" to use the base map's OpenStreetMap buildings instead.
+const G0_RAW = G0_ENV === undefined || G0_ENV === "" ? G0_DEFAULT : G0_ENV === "osm" ? "" : G0_ENV;
 // The pmtiles protocol needs an absolute URL; a relative one (e.g. /buildings.pmtiles) is resolved against the page.
 const G0_PMTILES = G0_RAW && typeof window !== "undefined" ? new URL(G0_RAW, window.location.href).href : G0_RAW;
 

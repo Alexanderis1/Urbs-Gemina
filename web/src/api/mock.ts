@@ -1,6 +1,7 @@
 // Sample-data mode: used when no tool API is configured, so the UI can be built and demoed
-// before the back end is live. Every response is synthetic=true, every layer "simulated",
-// and carries a "sample data" warning, so the UI shows SIMULATED badges throughout.
+// before the back end is live. Data kinds mirror what the real tools will return under the
+// project rule "only traffic loops are simulated" (plus hypothetical what-if inputs), and every
+// response carries a "sample data" warning; the UI shows a SAMPLE marker on top of the kind.
 // No legal threshold is produced here: thresholds only come from config/thresholds.yaml via the real tools.
 import { polygonToCells, cellToLatLng } from "h3-js";
 import type { Envelope, ToolName } from "./types";
@@ -54,6 +55,7 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
       return { label: String(inputs.query ?? "Piazza Venezia, Roma"), lat: 41.8959, lon: 12.4823, municipio: "1" };
     case "context_check": {
       const cats = ["school", "hospital", "care home", "playground", "heritage constraint", "existing antenna site"];
+      const kindOf = (c: string) => (c === "existing antenna site" ? "estimated" : "real");
       const pt = Array.isArray(inputs.point) ? (inputs.point as unknown[]) : [];
       const lon0 = num(pt[0], 12.4823);
       const lat0 = num(pt[1], 41.8959);
@@ -64,7 +66,7 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
           category,
           name: `Sample ${category} ${i + 1}`,
           distance_m: d,
-          data_kind: "simulated",
+          data_kind: kindOf(category),
           lat: lat0 + (d * Math.cos(bearing)) / 111_320,
           lon: lon0 + (d * Math.sin(bearing)) / (111_320 * Math.cos((lat0 * Math.PI) / 180)),
         };
@@ -106,16 +108,16 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
     case "data_status":
       return {
         layers: [
-          ["3D buildings (G0)", "OSM via base map"],
-          ["Context layers (schools, hospitals...)", "Roma Capitale GeoServer"],
-          ["Antenna sites register", "sim_register"],
-          ["EMF field", "cartoradio + twin model"],
-          ["Traffic loops", "sim_loops"],
-          ["Air quality", "EEA hourly"],
-          ["Transit delay", "Roma GTFS-RT"],
-        ].map(([layer, provider]) => ({
+          ["3D buildings (G0)", "OSM / Overture + GlobalBuildingAtlas heights", "estimated"],
+          ["Context layers (schools, hospitals...)", "Roma Capitale GeoServer", "real"],
+          ["Antenna sites", "OpenCelliD + OSM, power from Cartoradio", "estimated"],
+          ["EMF field", "Cartoradio + twin model", "estimated"],
+          ["Traffic loops", "sim_loops", "simulated"],
+          ["Air quality", "EEA stations + model", "estimated"],
+          ["Transit delay", "Roma GTFS-RT", "real"],
+        ].map(([layer, provider, kind]) => ({
           layer,
-          kind: "simulated",
+          kind,
           provider: `${provider} (sample)`,
           licence: "n/a",
           last_update: NOW,
@@ -125,27 +127,50 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
   }
 }
 
-const LAYER_FOR: Record<ToolName, string> = {
-  resolve_place: "geocoder",
-  context_check: "context_layers",
-  estimate_field: "emf_field",
-  query_layer: "belief_layer",
-  run_scenario: "scenario",
-  legal_lookup: "legal_sources",
-  find_dataset: "catalogue",
-  data_status: "status",
-};
+type Kinds = Record<string, "real" | "estimated" | "simulated">;
+
+/** Data kinds per tool under the rule "only traffic loops are simulated". */
+function kindsFor(tool: ToolName, inputs: Record<string, unknown>): Kinds {
+  switch (tool) {
+    case "resolve_place":
+      return { geocoder: "real" };
+    case "context_check":
+      return { context_layers: "real", antenna_sites: "estimated" };
+    case "estimate_field":
+      return { emf_field: "estimated", antenna_sites: "estimated" };
+    case "query_layer": {
+      const layer = String(inputs.layer ?? "air_quality");
+      if (layer === "road_speed") return { road_speed: "estimated", traffic_loops: "simulated" };
+      if (layer === "rain" || layer === "transit_delay") return { [layer]: "real" };
+      return { [layer]: "estimated" };
+    }
+    case "run_scenario": {
+      const k: Kinds = { what_if: "simulated", baseline: "estimated" };
+      if (inputs.kind === "road_closure") k.traffic_loops = "simulated";
+      return k;
+    }
+    case "legal_lookup":
+      return { legal_sources: "real" };
+    case "find_dataset":
+      return { catalogue: "real" };
+    case "data_status":
+      return { status: "real" };
+  }
+}
 
 export async function mockTool(tool: ToolName, inputs: Record<string, unknown>): Promise<Envelope> {
-  const run_id = await sha256(`${tool}|${JSON.stringify(inputs)}|sample-v1`);
+  const run_id = await sha256(`${tool}|${JSON.stringify(inputs)}|sample-v2`);
+  const data_kinds = kindsFor(tool, inputs);
   return {
     run_id,
     tool,
     inputs,
     result: result(tool, inputs),
-    data_kinds: { [LAYER_FOR[tool]]: "simulated" },
+    data_kinds,
     sources: [SAMPLE_SOURCE],
-    synthetic: true,
+    synthetic: Object.values(data_kinds).includes("simulated"),
     warnings: [SAMPLE_WARNING],
+    status: "ok",
+    cached: false,
   };
 }

@@ -1,19 +1,21 @@
-import { envelopeBadge, layerBadges } from "@/api/envelope";
+import { badgeText, envelopeBadge, layerBadges } from "@/api/envelope";
+import { isSampleMode } from "@/api/client";
 import type { Envelope } from "@/api/types";
 import { shortId } from "@/lib/format";
-import { KindBadge } from "./Badge";
+import { KindBadge, SampleBadge } from "./Badge";
 
 /** Tool trace for one run: badge, run id, layer kinds, sources, warnings. */
 export function RunMeta({ env, compact = false }: { env: Envelope; compact?: boolean }) {
   return (
     <div className="space-y-1 text-xs text-stone-600">
       <div className="flex flex-wrap items-center gap-2">
-        <KindBadge kind={envelopeBadge(env)} />
+        <KindBadge kind={envelopeBadge(env)} text={badgeText(env)} />
+        {isSampleMode && <SampleBadge />}
         <code className="rounded bg-stone-100 px-1" title={env.run_id}>
           {env.tool} · run {shortId(env.run_id)}
         </code>
         {env.cached && <span className="text-stone-400">cached</span>}
-        {!compact && layerBadges(env).map(([l, k]) => <KindBadge key={l} kind={k} label={l} />)}
+        {!compact && layerBadges(env).map(([l, k]) => <KindBadge key={l} kind={k} label={l} text={l === "what_if" ? "what-if" : undefined} />)}
       </div>
       {env.status && env.status !== "ok" && (
         <p className="font-medium text-red-700">

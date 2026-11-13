@@ -49,13 +49,14 @@ describe("sport screen helpers", () => {
 });
 
 describe("sport tools in sample mode", () => {
-  it("sports_facilities returns a synthetic FeatureCollection", async () => {
+  it("sports_facilities returns a FeatureCollection that is not simulated", async () => {
     const env = parseEnvelope(await mockSportTool("sports_facilities", { area: "city", discipline: null }));
-    expect(env.synthetic).toBe(true);
+    expect(env.synthetic).toBe(false);
+    expect(env.warnings.join(" ")).toMatch(/sample data/i);
     const r = env.result as { type: string; features: SportFeature[] };
     expect(r.type).toBe("FeatureCollection");
     expect(r.features.length).toBeGreaterThan(5);
-    expect(r.features.every((x) => x.properties.synthetic)).toBe(true);
+    expect(r.features.some((x) => x.properties.synthetic)).toBe(false);
   });
   it("sport_deserts what-if returns baseline, variant and delta", async () => {
     const env = await mockSportTool("sport_coverage", {
@@ -63,6 +64,8 @@ describe("sport tools in sample mode", () => {
       discipline: "football",
       open_facilities: [{ name: "Scuola", lon: 12.49, lat: 41.9 }],
     });
+    expect(env.synthetic).toBe(true);
+    expect(env.data_kinds.what_if).toBe("simulated");
     const r = env.result as { baseline: unknown; variant: unknown; delta: { residents_newly_covered: number } };
     expect(r.baseline).toBeDefined();
     expect(r.variant).toBeDefined();

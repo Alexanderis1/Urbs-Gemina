@@ -19,7 +19,7 @@ marked `synthetic: true`, and the whole UI shows SIMULATED badges. Copy `.env.ex
 |---|---|
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | Set by Lovable Cloud. Turns on sign-in and routes calls through the `tools` edge function |
 | `VITE_TOOL_PROXY_URL` | Override for the edge function URL (default `<supabase>/functions/v1/tools`) |
-| `VITE_BUILDINGS_PMTILES_URL` | G0 block model (`buildings.pmtiles` from the city-model workstream, about 144 MB, not committed). Locally: copy it to `web/public/` and set `/buildings.pmtiles`. Empty = OSM buildings from the base map |
+| `VITE_BUILDINGS_PMTILES_URL` | G0 block model (`buildings.pmtiles`, 144 MB, not committed). Empty = the public copy on Cloudflare R2; `osm` = base-map OSM buildings; `/buildings.pmtiles` = a local copy in `web/public/` |
 | `VITE_BASEMAP_STYLE` | Base map style (OpenFreeMap, no key). If unreachable the map falls back to a plain background |
 
 ## Screens

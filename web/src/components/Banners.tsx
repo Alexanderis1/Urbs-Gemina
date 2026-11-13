@@ -12,8 +12,9 @@ export function AiDisclosure() {
 export function SampleModeBanner() {
   if (!isSampleMode) return null;
   return (
-    <div className="border-b border-simulated/40 bg-simulated/10 px-4 py-1 text-center text-xs font-medium text-simulated">
-      SIMULATED · Sample-data mode: the tool API is not connected, so every value on screen is a placeholder.
+    <div className="border-b border-amber-300 bg-amber-50 px-4 py-1 text-center text-xs font-medium text-amber-800">
+      SAMPLE DATA · The tool API is not connected, so every value on screen is a placeholder. Labels show the kind each
+      layer will have: real, estimated, or simulated (traffic loops only).
     </div>
   );
 }

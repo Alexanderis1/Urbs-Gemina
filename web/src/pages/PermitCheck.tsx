@@ -7,7 +7,7 @@ import { isOk } from "@/api/envelope";
 import { KindBadge } from "@/components/Badge";
 import { RangeBar } from "@/components/RangeBar";
 import { RunMeta } from "@/components/RunMeta";
-import { buildCitedReport } from "@/lib/report";
+import { buildCitedReport, type Application } from "@/lib/report";
 import { useSession } from "@/lib/runlog";
 import type { ContextCheckResult, ContextItem, Envelope, EstimateFieldResult, ResolvePlaceResult } from "@/api/types";
 
@@ -29,6 +29,8 @@ export default function PermitCheck() {
   const [ctx, setCtx] = useState<Envelope<ContextCheckResult> | null>(null);
   const [field, setField] = useState<Envelope<EstimateFieldResult> | null>(null);
   const [site, setSite] = useState<{ lon: number; lat: number; label: string } | null>(null);
+  // The application is typed in by the officer (there is no synthetic permit inbox).
+  const [app, setApp] = useState<Application>({ operator: "", height_m: "", technology: "", reference: "" });
 
   async function check(input: { text: string } | { lat: number; lon: number }) {
     setBusy(true);
@@ -56,7 +58,12 @@ export default function PermitCheck() {
       setCtx(c);
       if (!isOk(c)) return;
       // The field estimate covers the same circle, sent as the hub's 64-vertex polygon.
-      setField(await run<EstimateFieldResult>("estimate_field", { area: circlePolygon(lon, lat, c.result.radius_m) }));
+      // The proposed installation is the variant: the estimate covers the field with it added.
+      const variant: Record<string, unknown> = { point: [lon, lat] };
+      if (app.height_m && Number.isFinite(Number(app.height_m))) variant.height_m = Number(app.height_m);
+      if (app.technology) variant.technology = app.technology;
+      if (app.operator) variant.operator = app.operator;
+      setField(await run<EstimateFieldResult>("estimate_field", { area: circlePolygon(lon, lat, c.result.radius_m), variant }));
     } catch (e) {
       setError(String(e));
     } finally {
@@ -119,8 +126,14 @@ export default function PermitCheck() {
             void check({ text: query });
           }}
         >
-          <div className="label">Proposed antenna site</div>
-          <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Address or lat, lon" />
+          <div className="label">New application</div>
+          <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Site address" />
+          <div className="grid grid-cols-2 gap-2">
+            <input className="input" placeholder="Operator" value={app.operator} onChange={(e) => setApp({ ...app, operator: e.target.value })} />
+            <input className="input" placeholder="Height above ground (m)" inputMode="decimal" value={app.height_m} onChange={(e) => setApp({ ...app, height_m: e.target.value })} />
+            <input className="input" placeholder="Technology, e.g. 5G 3.6 GHz" value={app.technology} onChange={(e) => setApp({ ...app, technology: e.target.value })} />
+            <input className="input" placeholder="File reference" value={app.reference} onChange={(e) => setApp({ ...app, reference: e.target.value })} />
+          </div>
           <button className="btn w-full" disabled={busy}>
             {busy ? "Checking…" : "Check context"}
           </button>
@@ -162,7 +175,7 @@ export default function PermitCheck() {
         {field && !isOk(field) && <RunMeta env={field} />}
         {field && isOk(field) && (
           <div className="card space-y-2">
-            <div className="label">Estimated electric field at the site</div>
+            <div className="label">Estimated electric field within the circle, with the new antenna</div>
             <RangeBar e={field.result.estimate} unit={field.result.unit} max={Math.max(field.result.estimate.p95 * 1.2, 1)} />
             {field.result.exceedance_probability != null && (
               <p className="text-sm">
@@ -176,7 +189,7 @@ export default function PermitCheck() {
         {site && ctx && field && (
           <button
             className="btn-ghost w-full"
-            onClick={() => download("permit-context-report.md", buildCitedReport(site.label, place ? [place, ctx, field] : [ctx, field]))}
+            onClick={() => download("permit-context-report.md", buildCitedReport(site.label, place ? [place, ctx, field] : [ctx, field], app))}
           >
             Download cited report
           </button>

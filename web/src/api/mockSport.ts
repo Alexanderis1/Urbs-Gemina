@@ -26,7 +26,7 @@ function facilities(): SportFeature[] {
     const kind = KINDS[Math.floor(r() * KINDS.length)]!;
     const ds = SAMPLE_DISCIPLINES.filter(() => r() < 0.3);
     const disciplines = ds.length ? ds : [SAMPLE_DISCIPLINES[i % SAMPLE_DISCIPLINES.length]!];
-    const sample = (value: unknown) => ({ value, status: "simulated" as const, sources: [{ source: "ui_sample_data" }], label: "sample data" });
+    const sample = (value: unknown) => ({ value, status: "open_data" as const, sources: [{ source: "ui_sample_data" }], label: "sample data" });
     const id = `sample_${String(i).padStart(3, "0")}`;
     return {
       type: "Feature",
@@ -47,7 +47,7 @@ function facilities(): SportFeature[] {
           contact: { value: null, status: "not_known", sources: [] },
         },
         discipline_details: Object.fromEntries(disciplines.map((d) => [d, sample(true)])),
-        synthetic: true,
+        synthetic: false,
       },
     } satisfies SportFeature;
   });
@@ -103,6 +103,7 @@ async function sha(text: string) {
 }
 
 export async function mockSportTool(tool: SportTool, inputs: Record<string, unknown>): Promise<Envelope> {
+  const whatIf = Array.isArray(inputs.open_facilities) && inputs.open_facilities.length > 0;
   let result: Record<string, unknown>;
   if (tool === "sports_facilities") {
     const fs = facilities().filter((f) => !inputs.discipline || f.properties.disciplines.includes(String(inputs.discipline)));
@@ -125,13 +126,17 @@ export async function mockSportTool(tool: SportTool, inputs: Record<string, unkn
     } else result = { ...base };
   }
   return {
-    run_id: await sha(`${tool}|${JSON.stringify(inputs)}|sample-v1`),
+    run_id: await sha(`${tool}|${JSON.stringify(inputs)}|sample-v2`),
     tool,
     inputs,
     result,
-    data_kinds: { facilities: "simulated", population: "simulated", reach: "simulated" },
+    data_kinds: whatIf
+      ? { facilities: "real", population: "real", reach: "estimated", what_if: "simulated" }
+      : tool === "sports_facilities"
+        ? { facilities: "real" }
+        : { facilities: "real", population: "real", reach: "estimated" },
     sources: [{ id: "ui_sample_data", retrieved_at: NOW }],
-    synthetic: true,
+    synthetic: whatIf,
     warnings: [WARN],
   };
 }
