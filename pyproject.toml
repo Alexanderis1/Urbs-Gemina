@@ -7,6 +7,7 @@ dependencies = ["PyYAML>=6"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "mypy>=1.10", "types-PyYAML"]
+agents = ["anthropic>=2.8"]
 
 [tool.setuptools.packages.find]
 include = ["twin*"]
@@ -17,4 +18,4 @@ pythonpath = ["."]
 
 [tool.mypy]
 strict = true
-files = ["twin", "scripts"]
+files = ["twin", "scripts", "agents", "eval"]

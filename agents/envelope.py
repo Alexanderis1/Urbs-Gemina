@@ -1,0 +1,80 @@
+"""The shared tool response envelope (workstreams.md, shared interface 3).
+
+Every tool, local or remote, returns this shape. ``run_id`` is the SHA-256 of the tool name,
+its inputs and the data snapshot hashes, so the same question on the same data gives the same id.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from typing import Any, Mapping, Sequence
+
+
+def canonical_json(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), default=str)
+
+
+def sha256_of(value: Any) -> str:
+    return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def compute_run_id(tool: str, inputs: Mapping[str, Any], snapshot_hashes: Sequence[str]) -> str:
+    return sha256_of({"tool": tool, "inputs": dict(inputs), "snapshots": sorted(snapshot_hashes)})
+
+
+def make_envelope(
+    *,
+    tool: str,
+    inputs: Mapping[str, Any],
+    result: Mapping[str, Any],
+    data_kinds: Mapping[str, str],
+    sources: Sequence[Mapping[str, Any]],
+    synthetic: bool = False,
+    warnings: Sequence[str] = (),
+    snapshot_hashes: Sequence[str] | None = None,
+    status: str = "ok",
+    reason: str | None = None,
+    cached: bool = False,
+) -> dict[str, Any]:
+    """Build an envelope. Without explicit snapshot hashes, the result itself is hashed."""
+    snaps = list(snapshot_hashes) if snapshot_hashes is not None else [sha256_of(result)]
+    env: dict[str, Any] = {
+        "run_id": compute_run_id(tool, inputs, snaps),
+        "tool": tool,
+        "inputs": dict(inputs),
+        "result": dict(result),
+        "data_kinds": dict(data_kinds),
+        "sources": [dict(s) for s in sources],
+        "synthetic": synthetic,
+        "warnings": list(warnings),
+        "status": status,
+        "cached": cached if status == "ok" else False,
+    }
+    if status != "ok":
+        env["reason"] = reason or status
+    return env
+
+
+REQUIRED_KEYS = ("run_id", "tool", "inputs", "result", "data_kinds", "sources", "synthetic", "warnings")
+STATUSES = ("ok", "not_available", "refused")
+DATA_KINDS = ("real", "estimated", "simulated", "not_available")
+
+
+def is_ok(env: Mapping[str, Any]) -> bool:
+    """Envelopes without a status (older tools) count as ok; anything else must say "ok"."""
+    return env.get("status", "ok") == "ok" and "error" not in dict(env.get("result", {}))
+
+
+def check_envelope(env: Mapping[str, Any]) -> list[str]:
+    """Return the problems with an envelope received from a tool (empty list if fine)."""
+    problems = [f"missing key '{k}'" for k in REQUIRED_KEYS if k not in env]
+    for layer, kind in dict(env.get("data_kinds", {})).items():
+        if kind not in DATA_KINDS:
+            problems.append(f"layer '{layer}' has data kind '{kind}'")
+    if env.get("status", "ok") not in STATUSES:
+        problems.append(f"status '{env.get('status')}' is not one of {STATUSES}")
+    if env.get("status", "ok") != "ok" and not env.get("reason"):
+        problems.append("a result that is not ok must give a reason")
+    if "simulated" in dict(env.get("data_kinds", {})).values() and env.get("synthetic") is not True:
+        problems.append("simulated layer but synthetic is not true")
+    return problems

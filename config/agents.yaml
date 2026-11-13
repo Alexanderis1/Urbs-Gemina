@@ -1,0 +1,130 @@
+# Agent layer settings (WS7). Code reads everything here; nothing below is hard-coded.
+# Legal thresholds are NOT here: they live in config/thresholds.yaml only.
+
+models:
+  # Which Claude model each agent uses. Chosen by Alessandro on 13 Nov 2026: Opus 5.5, Sonnet 5.5 for voice.
+  orchestrator: claude-opus-5-5
+  permit: claude-opus-5-5
+  scenario: claude-opus-5-5
+  voice: claude-sonnet-5-5
+  effort: medium            # low | medium | high | xhigh | max
+  max_tokens: 16000
+  basis: "Opus 5.5 is the current default Claude model; Sonnet 5.5 for the voice line where latency matters."
+
+loop:
+  max_tool_rounds: 8        # the agent stops and answers 'insufficient data' after this many tool rounds
+  verifier_retries: 1       # one rewrite attempt after the verifier rejects a draft
+  basis: "Permit flow needs 4 tool calls; 8 leaves room for clarifying lookups without letting a loop run away."
+
+tool_api:
+  base_url_env: URBS_TOOL_API_URL   # e.g. the Modal URL; read from the environment, never committed
+  timeout_s: 60
+
+disclosure:
+  en: "I am an AI assistant of the Urbs Gemina digital twin. I support decisions; the official decides."
+  it: "Sono un assistente di intelligenza artificiale del gemello digitale Urbs Gemina. Supporto le decisioni; decide il funzionario."
+  basis: "AI Act art. 50 (transparency), Legge 132/2025 art. 14."
+
+exa:
+  api_key_env: EXA_API_KEY
+  endpoint: https://api.exa.ai/search
+  num_results: 5
+  max_characters: 2000
+  legal_domains:
+    - normattiva.it
+    - gazzettaufficiale.it
+    - agid.gov.it
+    - garanteprivacy.it
+    - arpalazio.it
+    - arpalazio.gov.it
+    - comune.roma.it
+    - giustizia-amministrativa.it
+    - mimit.gov.it
+    - mase.gov.it
+    - regione.lazio.it
+    - eur-lex.europa.eu
+  legal_basis: "Design proposal section 11 list, plus the Consiglio di Stato site (distance-ban ruling), the two ministries that issue EMF decrees, Regione Lazio and EUR-Lex (AI Act)."
+  dataset_domains:
+    - dati.gov.it
+    - dati.comune.roma.it
+    - comune.roma.it
+    - geoportale.regione.lazio.it
+    - dati.lazio.it
+    - istat.it
+    - eea.europa.eu
+    - data.europa.eu
+    - copernicus.eu
+    - isprambiente.gov.it
+    - arpalazio.it
+    - romamobilita.it
+    - cartoradio.it
+    - openstreetmap.org
+  dataset_basis: "Official Italian, regional, municipal and EU open-data portals already used in docs/data-inventory.md."
+  news_domains:
+    - comune.roma.it
+    - romamobilita.it
+    - atac.roma.it
+    - muoversiaroma.it
+    - romatoday.it
+    - ansa.it
+    - roma.repubblica.it
+  news_basis: "Municipal and transport-agency notices first; two regional news outlets for strikes and demonstrations. News is a 'text sensor': unverified until an officer confirms."
+
+monitors:
+  - id: roadworks
+    query: "lavori stradali Roma chiusura strada"
+  - id: strikes
+    query: "sciopero trasporti Roma ATAC"
+  - id: demonstrations
+    query: "manifestazione corteo Roma percorso deviazioni"
+  - id: new_datasets
+    query: "nuovo dataset open data Roma Capitale"
+    kind: dataset
+
+verifier:
+  # Words that turn context into a decision. The system never approves, rejects or bans.
+  banned_phrases:
+    - prohibited
+    - forbidden
+    - not allowed
+    - is banned
+    - approved
+    - rejected
+    - must be denied
+    - vietat
+    - proibit
+    - non consentit
+    - approvat
+    - respint
+    - autorizzazione negata
+  banned_basis: "Guardrail 1 (decision support only) and 5 (distance is context, not a ban; Consiglio di Stato 2021)."
+  # Tokens that look like numbers but are names, not figures.
+  exempt_patterns:
+    - '\b[2-6]G\b'
+    - '\bP(5|50|95)\b'
+    - '\bMunicipio [0-9IVXLC]+\b'
+  calibration_words: [calibrated, uncalibrated, calibrato, non calibrato]
+  estimate_words: [estimate, stima]
+  simulated_words: [simulated, simulato, simulata, synthetic, sintetico]
+
+injection:
+  # Phrases that suggest a web page is trying to give the agent orders. Flag only; never trusted anyway.
+  patterns:
+    - 'ignore (all |any )?(previous|prior|above) instructions'
+    - 'disregard (the |your )?(system|previous) (prompt|instructions)'
+    - 'you are now'
+    - 'system prompt'
+    - 'call the tool'
+    - 'switch (the )?provider'
+    - 'approve (the|this) (application|permit)'
+    - 'ignora (le )?istruzioni'
+  basis: "OWASP LLM01 examples; flagged text is still delivered as quoted data so the officer sees it."
+
+permit:
+  # Legal questions the permit-context agent always looks up (answers are quoted with URL and date).
+  legal_questions:
+    - "valore di attenzione campi elettromagnetici legge 214/2023 articolo 10"
+    - "Consiglio di Stato distanza antenne scuole divieto illegittimo"
+    - "procedura autorizzazione impianti radioelettrici D.Lgs. 259/2003 articolo 44"
+  circle_vertices: 64
+  basis: "Challenge 02 asks for the legal frame of the 300 m context; these three cover the limit, the distance case law and the procedure."
