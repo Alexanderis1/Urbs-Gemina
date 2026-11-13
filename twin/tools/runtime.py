@@ -75,11 +75,19 @@ class ToolRuntime:
         runtime = cls(settings=settings, store=store, geocoder=geocoder)
         runtime.providers = runtime._build_providers()
         layer = str(settings.tool("estimate_field", "baseline_layer"))
-        if layer in runtime.providers:
+        if layer in runtime.providers and runtime.simulation_allowed(layer, runtime.providers[layer]):
             runtime.baseline = ProviderBaseline(runtime.providers[layer],
                                                 list(settings.tool("estimate_field", "baseline_value_keys")),
                                                 float(settings.tool("estimate_field", "baseline_search_radius_m")))
         return runtime
+
+    def simulation_allowed(self, layer: str, provider: Provider) -> bool:
+        """False when the provider generates data for a layer that must not be simulated."""
+        try:
+            synthetic = provider.describe().synthetic
+        except ProviderNotConfigured:
+            return True
+        return not synthetic or layer in self.settings.tools.get("allowed_simulated_layers", [])
 
     def envelope(self, tool: str, inputs: Mapping[str, Any], result: Any, data_kinds: Mapping[str, str],
                  sources: Iterable[Source] = (), warnings: Iterable[str] = (), **kwargs: Any) -> dict[str, Any]:

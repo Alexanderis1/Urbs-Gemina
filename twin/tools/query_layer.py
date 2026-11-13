@@ -127,6 +127,10 @@ def _provider_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, 
         return runtime.envelope(TOOL, inputs, {"type": "observations", "provider": provider_id},
                                 {layer: "not_available"}, sources, status="not_available",
                                 reason=f"Provider '{provider_id}' for layer '{layer}' is not implemented or configured yet.")
+    if not runtime.simulation_allowed(layer, provider):
+        return runtime.envelope(TOOL, inputs, None, {layer: "simulated"}, sources, status="refused",
+                                reason=f"Layer '{layer}' may not be served from simulated data "
+                                       f"(provider '{provider_id}'); only {runtime.settings.tools.get('allowed_simulated_layers', [])} may.")
     try:
         info = provider.describe()
         window = int(runtime.settings.tool("query_layer", "window_minutes"))

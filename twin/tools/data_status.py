@@ -22,6 +22,8 @@ def data_status(runtime: ToolRuntime) -> dict[str, Any]:
     layers: list[dict[str, Any]] = []
     kinds: dict[str, str] = {}
     synthetic_any = False
+    allowed_sim = set(settings.tools.get("allowed_simulated_layers", []))
+    violations: list[str] = []
     for layer, provider_id in settings.providers.items():
         entry: dict[str, Any] = {"layer": layer, "provider": provider_id}
         provider = runtime.providers.get(layer)
@@ -42,6 +44,9 @@ def data_status(runtime: ToolRuntime) -> dict[str, Any]:
             entry.update(synthetic=data_kind == "simulated", licence=meta.get("licence"),
                          redistribution=meta.get("redistribution"))
         entry["data_kind"] = data_kind
+        if data_kind == "simulated" and layer not in allowed_sim:
+            entry["violation"] = "only traffic loops may be simulated: switch this layer to a real or estimated provider"
+            violations.append(layer)
         synthetic_any = synthetic_any or bool(entry.get("synthetic"))
         kinds[layer] = data_kind
         layers.append(entry)
@@ -60,8 +65,12 @@ def data_status(runtime: ToolRuntime) -> dict[str, Any]:
         "context_layers": context_rows,
         "counts": {kind: sum(1 for k in kinds.values() if k == kind) for kind in ("real", "estimated", "simulated")},
         "thresholds_as_of": settings.thresholds.get("as_of"),
+        "allowed_simulated_layers": sorted(allowed_sim),
+        "simulation_violations": violations,
     }
-    return runtime.envelope(TOOL, {}, result, kinds, warnings=[], synthetic=synthetic_any)
+    warnings = [f"Layer '{v}' is configured with a simulated provider; only traffic loops may be simulated."
+                for v in violations]
+    return runtime.envelope(TOOL, {}, result, kinds, warnings=warnings, synthetic=synthetic_any)
 
 
 def _manifest_kind(meta: dict[str, Any]) -> str:

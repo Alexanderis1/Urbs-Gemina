@@ -352,3 +352,17 @@ def test_nominatim_precision_labels() -> None:
     assert nominatim_precision({"category": "place", "type": "house", "addresstype": "place"}) == "house"
     assert nominatim_precision({"category": "building", "type": "yes", "addresstype": "building"}) == "house"
     assert nominatim_precision({"category": "highway", "type": "residential", "addresstype": "road"}) == "road"
+
+
+def test_only_traffic_loops_may_be_simulated(runtime: ToolRuntime) -> None:
+    from twin.providers.simulated.loops import SimLoopsProvider
+
+    assert runtime.settings.tools["allowed_simulated_layers"] == ["traffic_flow"]
+    runtime.settings.providers["air_quality"] = "sim_loops"  # pretend a simulator feeds air quality
+    runtime.providers["air_quality"] = SimLoopsProvider(seed=1, n_stations=3)
+    env = query_layer(runtime, "air_quality", time="2026-11-13T08:00:00Z")
+    assert env["status"] == "refused"
+    status = data_status(runtime)
+    assert "air_quality" in status["result"]["simulation_violations"]
+    assert "traffic_flow" not in status["result"]["simulation_violations"]
+    assert not runtime.simulation_allowed("emf_baseline", SimLoopsProvider(seed=1, n_stations=1))

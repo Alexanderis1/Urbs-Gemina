@@ -7,6 +7,10 @@ data_kind_by_provider_kind:
   simulated: simulated
   restricted: estimated
 
+# Rule from Alessandro (13 Nov 2026): only traffic loop sensors may be simulated.
+# Any other layer whose active provider is synthetic is refused by the tools and flagged in data_status.
+allowed_simulated_layers: [traffic_flow]
+
 estimate_field:
   baseline_layer: emf_baseline              # layer name in config/providers.yaml
   baseline_value_keys: [electricField, e_field_v_per_m, field_v_per_m, value]   # electricField = WS5 / Smart Data Models key
