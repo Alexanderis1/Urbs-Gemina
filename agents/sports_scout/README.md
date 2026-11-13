@@ -6,6 +6,6 @@ deterministic code in `twin/modules/sports/web_fields.py` decides what is kept, 
 labelled "from the web, unverified" until a manager confirms it.
 
 - `prompt.md`: instructions (system prompt), `schema.json`: output schema
-- `run.py VII`: runs it, writes `data/raw/sports_web/scout_VII.json`
+- `run.py municipio:7`: runs it, writes `data/raw/sports_web/scout_VII.json`
 - `exa_agent.py`: small client for `POST https://api.exa.ai/agent/runs`, shared with `sports_enrich`
 - Effort: `low` by default (decision in the WS10 thread).

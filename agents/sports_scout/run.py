@@ -1,6 +1,6 @@
 """Run the sports scout for one municipio and save the raw result for the pipeline.
 
-    EXA_API_KEY=... python agents/sports_scout/run.py VII [--effort low]
+    EXA_API_KEY=... python agents/sports_scout/run.py municipio:7 [--effort low]
 
 Writes data/raw/sports_web/scout_<municipio>.json. Nothing is trusted yet:
 twin.modules.sports.web_fields validates it when the pipeline builds the layer.
@@ -19,16 +19,18 @@ sys.path.insert(0, str(HERE))
 
 from exa_agent import run_agent, structured  # noqa: E402
 
-ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"}
+ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("municipio", help="Roman numeral, e.g. VII")
+    parser.add_argument("area", help='shared area id, e.g. "municipio:7"')
     parser.add_argument("--effort", default="low")
     args = parser.parse_args()
-    if args.municipio not in ROMAN:
-        parser.error("municipio must be a Roman numeral I-XV")
+    kind, _, n = args.area.partition(":")
+    if kind != "municipio" or not n.isdigit() or not 1 <= int(n) <= 15:
+        parser.error('area must be "municipio:<1-15>"')
+    args.municipio = ROMAN[int(n) - 1]
     prompt = (HERE / "prompt.md").read_text(encoding="utf-8").replace("{municipio}", args.municipio)
     schema = json.loads((HERE / "schema.json").read_text(encoding="utf-8"))
     run = run_agent(f"Places to play sport in Municipio {args.municipio} of Roma Capitale, Italy",

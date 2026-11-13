@@ -57,7 +57,15 @@ def coverage(points: Sequence[PopulationPoint], facilities: Sequence[Facility], 
     totals = {"residents": 0.0, "children": 0.0, "res_unc": 0.0, "chi_unc": 0.0}
     for p in points:
         covered = next(iter(index.near(p.lon, p.lat, radius_m)), None) is not None
-        z = zones.setdefault(p.zone or "unknown", {"residents": 0.0, "children": 0.0, "res_unc": 0.0, "chi_unc": 0.0})
+        z = zones.setdefault(p.zone or "unknown", {"residents": 0.0, "children": 0.0, "res_unc": 0.0, "chi_unc": 0.0,
+                                                    "wlon": 0.0, "wlat": 0.0, "w": 0.0, "slon": 0.0, "slat": 0.0,
+                                                    "n": 0.0})
+        z["wlon"] += p.lon * p.residents
+        z["wlat"] += p.lat * p.residents
+        z["w"] += p.residents
+        z["slon"] += p.lon
+        z["slat"] += p.lat
+        z["n"] += 1
         for bucket in (z, totals):
             bucket["residents"] += p.residents
             bucket["children"] += p.children
@@ -70,8 +78,10 @@ def coverage(points: Sequence[PopulationPoint], facilities: Sequence[Facility], 
     zone_rows = []
     for zone, z in sorted(zones.items()):
         share = z["res_unc"] / z["residents"] if z["residents"] else 0.0
+        # Population-weighted centre, for drawing the zone on the map (plain mean if nobody lives there).
+        lon, lat = ((z["wlon"] / z["w"], z["wlat"] / z["w"]) if z["w"] else (z["slon"] / z["n"], z["slat"] / z["n"]))
         zone_rows.append({
-            "zone": zone, "residents": round(z["residents"], 1), "children": round(z["children"], 1),
+            "zone": zone, "centroid": [round(lon, 6), round(lat, 6)], "residents": round(z["residents"], 1), "children": round(z["children"], 1),
             "residents_uncovered": round(z["res_unc"], 1), "children_uncovered": round(z["chi_unc"], 1),
             "uncovered_share": round(share, 4),
             "desert": share >= min_share and z["residents"] >= min_res,

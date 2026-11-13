@@ -90,7 +90,7 @@ disciplines:
   cycling: {it: ciclismo, words: [ciclismo, cycling, bmx]}
   bocce: {it: bocce, words: [bocce, boules, bocciofila]}
   rowing: {it: canottaggio, words: [canottaggio, canoa, rowing, canoe, kayak]}
-  equestrian: {it: equitazione, words: [equitazione, equestrian, maneggio]}
+  equestrian: {it: equitazione, words: [equitazione, equestr, maneggi, ippodromo, ippic]}
   golf: {it: golf, words: [golf]}
   table_tennis: {it: tennistavolo, words: [tennistavolo, ping pong, table_tennis]}
   climbing: {it: arrampicata, words: [arrampicata, climbing, boulder]}
@@ -116,7 +116,10 @@ school_gym_basis: >-
 # official source. The real names of DIPPC:243_ServiziSportivi were not visible
 # from the build sandbox, so these are guesses to check on the first real download.
 source_fields:
-  basis: "Unverified guesses (C=50); the adapter reports which keys it found."
+  basis: >-
+    Checked on the real layers on 2026-11-13: DIPPC:243 uses nome, tipologia, indirizzo, mun,
+    attivo, scadenza_, concessio, lat, lon (tel1-3 and email1 are dropped as possibly personal);
+    GABSIN:piscine uses nome, indirizzo, municipio, giorni_ap7, orario_70, sito_web.
   common:
     id: [fid, id, objectid, gid, codice]
     name: [denominazione, nome, name, denominaz, impianto]
@@ -125,8 +128,9 @@ source_fields:
     municipio: [municipio, mun]
     active: [attivo, stato, attiva]
     concession_expiry: [scadenza, scad]
-    manager: [concessionario, gestore, affidatario]
+    manager: [concessio, concessionario, gestore, affidatario]
     hours: [orario, orari]
-    opening_period: [periodo, apertura]
+    opening_period: [periodo, apertura, giorni]
+    website: [sito_web, website, sito]
     lon: [lon, longitudine, x]
     lat: [lat, latitudine, y]

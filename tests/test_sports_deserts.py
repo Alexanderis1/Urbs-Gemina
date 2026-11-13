@@ -55,6 +55,7 @@ def test_coverage_finds_the_desert_zone() -> None:
     zones = {z["zone"]: z for z in result["zones"]}
     assert zones["Z2"]["uncovered_share"] == 1.0
     assert zones["Z2"]["desert"] is True
+    assert zones["Z2"]["centroid"] == [round(c, 6) for c in at(0, 3000)]
     assert zones["Z1"]["desert"] is False
 
 
@@ -74,14 +75,16 @@ def test_school_gym_default_disciplines_come_from_config() -> None:
 
 
 def test_tool_envelopes_follow_the_contract() -> None:
-    env = sport_deserts(area="VII", discipline="football", facilities=facilities(), population=POINTS, config=CFG,
+    env = sport_deserts(area="municipio:7", discipline="football", facilities=facilities(), population=POINTS, config=CFG,
                         snapshot_hashes={"roma_sports_municipal": "abc"})
-    for key in ("run_id", "tool", "inputs", "result", "data_kinds", "sources", "synthetic", "warnings"):
+    for key in ("run_id", "tool", "inputs", "result", "data_kinds", "sources", "synthetic", "warnings", "status",
+                "cached"):
         assert key in env
+    assert env["status"] == "ok" and env["cached"] is False
     assert env["tool"] == "sport_deserts"
     assert len(env["run_id"]) == 64
     assert env["data_kinds"]["reach"] == "estimated"
-    again = sport_deserts(area="VII", discipline="football", facilities=facilities(), population=POINTS, config=CFG,
+    again = sport_deserts(area="municipio:7", discipline="football", facilities=facilities(), population=POINTS, config=CFG,
                           snapshot_hashes={"roma_sports_municipal": "abc"})
     assert again["run_id"] == env["run_id"]
 
@@ -93,7 +96,7 @@ def test_tool_envelopes_follow_the_contract() -> None:
 
 
 def test_sports_facilities_tool_filters_by_area_and_discipline() -> None:
-    env = sports_facilities(area="VII", discipline="swimming", facilities=facilities(), config=CFG)
+    env = sports_facilities(area="municipio:7", discipline="swimming", facilities=facilities(), config=CFG)
     feats = env["result"]["features"]
     assert len(feats) == 1
     assert feats[0]["properties"]["name"] == "Piscina Comunale Quadraro"
@@ -104,4 +107,21 @@ def test_sports_facilities_tool_filters_by_area_and_discipline() -> None:
     names = sorted(f["properties"]["name"] for f in env["result"]["features"])
     assert names == ["Campo Bocce Cinecitta", "Centro Sportivo Fulvio Bernardini"]
     with pytest.raises(ValueError):
-        sports_facilities(area="VII", discipline="quidditch", facilities=facilities(), config=CFG)
+        sports_facilities(area="municipio:7", discipline="quidditch", facilities=facilities(), config=CFG)
+
+
+def test_area_ids_follow_the_shared_contract() -> None:
+    from twin.modules.sports.tools import parse_area
+
+    assert parse_area("city") == ("city", None)
+    assert parse_area("municipio:7") == ("municipio", "VII")
+    assert parse_area("zone:6A") == ("zone", "6A")
+    for bad in ("VII", "municipio:16", "zone:6a", {"type": "Point", "coordinates": [0, 0]}):
+        with pytest.raises(ValueError):
+            parse_area(bad)  # type: ignore[arg-type]
+    zone = sport_deserts(area="zone:Z2", discipline="football", facilities=facilities(), population=POINTS, config=CFG)
+    assert zone["result"]["residents_total"] == 2000
+    env = sports_facilities(area="zone:Z2", discipline=None, facilities=facilities(), config=CFG)
+    assert env["status"] == "not_available" and env["reason"]
+    empty = sport_deserts(area="city", discipline="football", facilities=facilities(), population=[], config=CFG)
+    assert empty["status"] == "not_available" and empty["data_kinds"]["population"] == "not_available"

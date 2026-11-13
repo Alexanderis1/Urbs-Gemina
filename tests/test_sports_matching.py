@@ -98,3 +98,27 @@ def test_web_candidate_disciplines_are_labelled_unverified() -> None:
     assert padel.status == "web_unverified"
     assert padel.label == "from the web, unverified"
     assert padel.provenance[0].url == "https://municipio7.example/sport"
+
+
+def test_real_geoserver_field_names() -> None:
+    """Property names as served by DIPPC:243 and GABSIN:piscine on 2026-11-13."""
+    from twin.modules.sports.sources import from_geoserver_pools
+
+    sports = {"type": "FeatureCollection", "features": [{
+        "type": "Feature", "id": "243_ServiziSportivi.1",
+        "geometry": {"type": "Point", "coordinates": [12.473733, 41.91746804]},
+        "properties": {"id_pec": 9, "mun": "2", "tipologia": "Sport equestri, maneggi", "indirizzo": "Via Flaminia, 158",
+                       "nome": "Circolo Belle Arti", "concessio": "A.S.D. CIRCOLO BELLE ARTI", "attivo": "SI",
+                       "scadenza_": "31/12/2021", "tel1": "06 3226529", "email1": "info@example.it"}}]}
+    c = from_geoserver_sports(sports, CFG, "x")[0]
+    assert (c.record_id, c.municipio, c.address) == ("243_ServiziSportivi.1", "II", "Via Flaminia, 158")
+    assert c.attributes == {"active": "SI", "concession_expiry": "31/12/2021", "manager": "A.S.D. CIRCOLO BELLE ARTI"}
+    assert c.disciplines == frozenset({"equestrian"})
+    pools = {"type": "FeatureCollection", "features": [{
+        "type": "Feature", "id": "piscine.1", "geometry": {"type": "Point", "coordinates": [12.49, 41.93]},
+        "properties": {"nome": "Circolo Montecitorio", "municipio": "II", "giorni_ap7": "22 giu - 31 ago",
+                       "orario_70": "10-19", "sito_web": "<a href=https://www.circolomontecitorio.it target=_blank >sito</a>"}}]}
+    p = from_geoserver_pools(pools, CFG, "x")[0]
+    assert p.attributes == {"hours": "10-19", "opening_period": "22 giu - 31 ago",
+                            "website": "https://www.circolomontecitorio.it"}
+    assert p.disciplines == frozenset({"swimming"})

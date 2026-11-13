@@ -58,6 +58,14 @@ def pick(props: Mapping[str, Any], role: str, config: SportsConfig) -> Any:
     return None
 
 
+def _url(value: Any) -> str | None:
+    """Plain URL, or the href of an HTML link as GeoServer sometimes stores it."""
+    if not value:
+        return None
+    match = re.search(r"https?://[^\s\"'<>]+", str(value))
+    return match.group(0) if match else None
+
+
 def _kind_from_text(text: str) -> str:
     folded = fold(text)
     if "piscin" in folded:
@@ -79,6 +87,9 @@ def _from_props(source: str, record_id: str, props: Mapping[str, Any], lon: floa
         value = pick(clean, role, config)
         if value not in (None, ""):
             attributes[role] = value
+    website = _url(pick(clean, "website", config))
+    if website:
+        attributes["website"] = website
     holder = pick(clean, "manager", config)
     if holder and is_organisation(str(holder), config):
         attributes["manager"] = str(holder).strip()
