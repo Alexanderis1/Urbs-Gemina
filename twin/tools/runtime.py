@@ -4,10 +4,11 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Iterable, Mapping, Protocol
+from typing import Any, Callable, Iterable, Mapping, Protocol
 
 from twin.providers.base import Provider, ProviderNotConfigured
-from twin.providers.registry import FACTORIES, build_provider
+from twin.providers import registry as _registry
+from twin.providers.registry import FACTORIES
 from twin.tools.context_check import distance_to_geometry_m
 from twin.tools.envelope import Source, make_envelope, utc_now
 from twin.tools.geocode import Nominatim
@@ -64,6 +65,8 @@ class ToolRuntime:
     baseline: BaselineSource | None = None
     #: Real field measurements (ARPA points), reported next to the estimate as a reference.
     measurements: BaselineSource | None = None
+    #: HTTP fetcher for live point queries (PRG WMS); ``None`` = real network. Tests inject a fake.
+    prg_fetcher: Callable[[str], Any] | None = None
     providers: dict[str, Provider] = field(default_factory=dict)
 
     @classmethod
@@ -106,10 +109,13 @@ class ToolRuntime:
     def _build_providers(self) -> dict[str, Provider]:
         active: dict[str, Provider] = {}
         for layer, provider_id in self.settings.providers.items():
-            if provider_id not in FACTORIES:
+            factory = FACTORIES.get(provider_id)
+            if factory is None:
                 continue
             try:
-                active[layer] = build_provider(provider_id)
+                # WS3's registry adds build_provider (factories that take Settings); fall back to a bare call.
+                builder = getattr(_registry, "build_provider", None)
+                active[layer] = builder(provider_id) if builder is not None else factory()
             except ProviderNotConfigured:
                 continue
         return active

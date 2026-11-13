@@ -31,6 +31,7 @@ def client(tmp_path: Path) -> TestClient:
          "properties": {"nome": "Scuola", "codice": "RM123"}}]})
     rt = ToolRuntime(settings=settings, store=store)
     rt.providers = rt._build_providers()
+    rt.prg_fetcher = lambda url: {"type": "FeatureCollection", "features": []}  # no live calls in tests
     return TestClient(create_app(rt, api_keys={"office-key": "office", "citizen-key": "citizen"}))
 
 
@@ -178,3 +179,35 @@ def test_in_process_gateway_uses_the_given_tier(tmp_path: Path) -> None:
     assert env["status"] == "ok"
     bad = gw.call("resolve_place", {"text": "x", "tier": "office"})
     assert bad["status"] == "refused" and "invalid arguments" in bad["reason"]
+
+
+def test_scenario_data_prefers_ws6_live_baseline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """With WS6's baselines.live_data present, the real Cartoradio grid replaces our point baseline."""
+    import sys
+    import types
+
+    from twin.api import tools as api_tools
+
+    data_mod = types.ModuleType("twin.scenarios.data")
+    data_mod.ScenarioData = lambda **kw: ("ours", kw)  # type: ignore[attr-defined]
+    data_mod.FieldSample = lambda v, s: (v, s)  # type: ignore[attr-defined]
+    calls: list[tuple[Any, ...]] = []
+    live = types.ModuleType("twin.scenarios.baselines")
+
+    def live_data(kind: str, area: Any, change: Any, **overrides: Any) -> Any:
+        calls.append((kind, area, change, overrides))
+        return ("live", overrides)
+
+    live.live_data = live_data  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "twin.scenarios.data", data_mod)
+    monkeypatch.setitem(sys.modules, "twin.scenarios.baselines", live)
+    rt = ToolRuntime(settings=Settings.load(), store=LayerStore(tmp_path, tmp_path / "m.json"))
+    out = api_tools._scenario_data(rt, "antenna", None, {"site": {"lon": 12.48, "lat": 41.89}})
+    assert out[0] == "live"
+    assert "baseline_field" not in calls[0][3] and "area_lookup" in calls[0][3]
+
+    def broken(*args: Any, **kw: Any) -> Any:
+        raise RuntimeError("cartoradio down")
+
+    live.live_data = broken  # type: ignore[attr-defined]
+    assert api_tools._scenario_data(rt, "antenna", None, {})[0] == "ours"

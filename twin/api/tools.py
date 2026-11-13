@@ -5,7 +5,7 @@ import hashlib
 import importlib
 import json
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from pydantic import BaseModel
 
@@ -63,8 +63,12 @@ def _delegate(tool: str, module_name: str, function: str, owner: str, inputs: di
                              reason=f"{type(error).__name__}: {error}")
 
 
-def _scenario_data(rt: ToolRuntime) -> Any:
-    """Inputs the WS6 engine reads, built from this runtime (baseline, boundaries, snapshot hashes)."""
+def _scenario_data(rt: ToolRuntime, kind: str, area: Any, change: Mapping[str, Any]) -> Any:
+    """Inputs the WS6 engine reads, built from this runtime (baseline, boundaries, snapshot hashes).
+
+    When WS6 ships ``twin.scenarios.baselines.live_data`` its real Cartoradio grid is the baseline
+    and ours only adds boundaries and census; if that call fails we fall back to our point baseline.
+    """
     data_mod = importlib.import_module("twin.scenarios.data")
     sigma_db = float(rt.settings.tool("estimate_field", "baseline_sigma_db"))
     baseline = rt.baseline
@@ -81,13 +85,25 @@ def _scenario_data(rt: ToolRuntime) -> Any:
     snapshots = {key: snap.sha256 for key in ("municipi", "urban_zones") if (snap := rt.store.get(key)) is not None}
     if census is not None:
         snapshots["census_sections"] = census.sha256
+    common: dict[str, Any] = {
+        "census": {"type": "FeatureCollection", "features": census.features} if census is not None else None,
+        "census_source": census.source().to_dict() if census is not None else None,
+        "area_lookup": area_lookup,
+        "snapshots": snapshots,
+    }
+    try:
+        live = importlib.import_module("twin.scenarios.baselines").live_data
+    except (ImportError, AttributeError):
+        live = None
+    if live is not None:
+        try:
+            return live(kind, area, change, **{**common, "snapshots": dict(snapshots)})
+        except Exception:  # noqa: BLE001 - city/Cartoradio server down: use our own baseline instead
+            pass
     return data_mod.ScenarioData(
         baseline_field=baseline_field if baseline is not None else None,
         baseline_source={"id": "cartoradio_grid"} if baseline is not None else None,
-        census={"type": "FeatureCollection", "features": census.features} if census is not None else None,
-        census_source=census.source().to_dict() if census is not None else None,
-        area_lookup=area_lookup,
-        snapshots=snapshots,
+        **common,
     )
 
 
@@ -102,7 +118,7 @@ def _run_scenario(rt: ToolRuntime, req: m.RunScenarioIn, role: str) -> dict[str,
     if req.kind not in engine.kinds():
         raise ToolError(f"unknown scenario kind '{req.kind}'. Known: {', '.join(sorted(engine.kinds()))}")
     try:
-        out: dict[str, Any] = engine.run(req.kind, area, req.change, data=_scenario_data(rt))
+        out: dict[str, Any] = engine.run(req.kind, area, req.change, data=_scenario_data(rt, req.kind, area, req.change))
     except (area_mod.AreaTooLarge, AreaTooLarge) as error:
         return make_envelope("run_scenario", inputs, None, {}, status="refused", reason=str(error),
                              config_hashes=rt.settings.config_hashes())

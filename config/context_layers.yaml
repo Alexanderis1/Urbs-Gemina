@@ -1,5 +1,5 @@
 # Layers checked by context_check for Challenge 02 (antenna permits).
-# Keys match the files written by scripts/fetch_static_layers.py (data/raw/<key>.geojson).
+# Keys match WS1's config/ingest.yaml (files data/processed/<key>.geojson, or data/raw/<key>.geojson).
 # A layer that is listed here but not downloaded yet is reported "not_available", never as empty.
 basis: "Challenge 02 brief and docs/data-inventory.md (300 m context: sensitive sites and constraints)"
 
@@ -10,6 +10,7 @@ name_fields: [denominazione, DESCRIZION, denom, nome, NOME, denominazione, DENOM
 groups:
   sensitive_site: "Sensitive sites (schools, care, health, play areas)"
   constraint: "Planning, landscape and heritage constraints"
+  existing_infrastructure: "Existing radio infrastructure"
 
 layers:
   schools_state:        {label: "State schools", group: sensitive_site, data_kind: real}
@@ -29,8 +30,31 @@ layers:
   cpq_preesistenze:     {label: "Carta per la Qualita: archaeological and historic remains", group: constraint, data_kind: real}
   cpq_spazi_aperti:     {label: "Carta per la Qualita: open spaces", group: constraint, data_kind: real}
   cpq_edilizia_speciale: {label: "Carta per la Qualita: special buildings", group: constraint, data_kind: real}
-  ptpr_tavola_a:        {label: "PTPR Tavola A (landscape systems)", group: constraint, data_kind: real}
-  ptpr_tavola_b:        {label: "PTPR Tavola B (landscape constraints)", group: constraint, data_kind: real}
-  sitap_art136:         {label: "Landscape constraint art. 136 D.Lgs. 42/2004", group: constraint, data_kind: real}
-  sitap_art142:         {label: "Landscape constraint art. 142 D.Lgs. 42/2004", group: constraint, data_kind: real}
-  prg_sistemi_regole:   {label: "PRG component (Sistemi e Regole)", group: constraint, data_kind: real}
+  ptpr_paesaggi_roma:   {label: "PTPR Tavola A: landscape systems", group: constraint, data_kind: real}
+  ptpr_a_aree_tutela_dm: {label: "PTPR Tavola A: areas protected by ministerial decree", group: constraint, data_kind: real}
+  ptpr_b_ex_1497_ab:    {label: "PTPR Tavola B: scenic beauty (ex L. 1497, a-b)", group: constraint, data_kind: real}
+  ptpr_b_ex_1497_cd:    {label: "PTPR Tavola B: scenic beauty (ex L. 1497, c-d)", group: constraint, data_kind: real}
+  ptpr_b_boschi:        {label: "PTPR Tavola B: woods", group: constraint, data_kind: real}
+  ptpr_b_acque_pubbliche: {label: "PTPR Tavola B: public waters", group: constraint, data_kind: real}
+  ptpr_b_aree_archeologiche: {label: "PTPR Tavola B: archaeological areas", group: constraint, data_kind: real}
+  ptpr_b_decreti_archeologici: {label: "PTPR Tavola B: archaeological decrees", group: constraint, data_kind: real}
+  ptpr_b_punti_archeologici: {label: "PTPR Tavola B: archaeological points", group: constraint, data_kind: real}
+  ptpr_b_centri_storici: {label: "PTPR Tavola B: historic centres", group: constraint, data_kind: real}
+  ptpr_b_aree_naturali_protette: {label: "PTPR Tavola B: protected natural areas", group: constraint, data_kind: real}
+  ptpr_b_usi_civici:    {label: "PTPR Tavola B: civic-use land", group: constraint, data_kind: real}
+  sitap_art136_ab:      {label: "Landscape constraint art. 136 a-b D.Lgs. 42/2004 (SITAP)", group: constraint, data_kind: real}
+  sitap_art136_cd:      {label: "Landscape constraint art. 136 c-d D.Lgs. 42/2004 (SITAP)", group: constraint, data_kind: real}
+  masts_osm:            {label: "Existing masts (OpenStreetMap)", group: existing_infrastructure, data_kind: real}
+  prg_sistemi_regole:
+    label: "PRG component (Sistemi e Regole), sampled"
+    group: constraint
+    data_kind: real
+    # No WFS exists: read live with WMS GetFeatureInfo at the centre and at 8 bearings on 2 rings.
+    live: wms_point
+    url: "https://geoportale.comune.roma.it/geoserver/ows"
+    layer: "DIPAU:PrgSistemiRegole10000"
+    half_deg: 0.0002          # about 20 m query window around each sample point
+    sample_rings: [0.5, 1.0]  # fractions of the radius (150 m and 300 m for the default 300 m)
+    sample_bearings: 8
+    timeout_s: 10
+    basis: "WS1 checked the point query on 2026-11-13; sampled, not exhaustive"
