@@ -93,6 +93,8 @@ class LayerSpec:
     #: "none": readings are values. "count": readings are items (e.g. parked scooters) counted per cell.
     aggregate: str = "none"
     aggregate_window_minutes: float = 5.0
+    #: Plain-language limits of the layer, repeated in every answer's warnings.
+    caveats: tuple[str, ...] = ()
 
     @property
     def source_layers(self) -> tuple[str, ...]:
@@ -147,6 +149,7 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
             allow_simulated=bool(entry.get("allow_simulated", False)),
             aggregate=str(entry.get("aggregate", "none")),
             aggregate_window_minutes=float(entry.get("aggregate_window_minutes", 5.0)),
+            caveats=tuple(str(c) for c in entry.get("caveats", [])),
         )
     return specs
 

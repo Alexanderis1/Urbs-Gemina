@@ -28,6 +28,7 @@ Project rule (Alessandro, 13 Nov 2026): only traffic loops may be simulated. Eve
 | rain | generic prior | `rain`: Civil Protection radar |
 | emf | **Cartoradio grid** (`prior_field: emf_baseline`) | `emf_measurements`, real ARPA points only |
 | activity (proxy, C=40) | ~1 per cell | `micromobility`: parked Bird scooters counted per cell (empty covered cells count as 0). Not a people count |
+| wifi_sessions | 0 | `activity_wifi`: City Wi-Fi sessions per hotspot and hour (real, a lower bound on people, one day behind) |
 
 Sensor fusion: a layer can list several `sources` (a source can read a related value, e.g. bus speed, with `scale`/`offset`/`extra_sd`/`drop_below`); every reading is weighted by its own `sigma`, so a precise station counts more than a low-cost sensor. `api.layer_payload(name, cells, start, end, providers)` picks the sources from the config and returns `not_available` when none is connected.
 

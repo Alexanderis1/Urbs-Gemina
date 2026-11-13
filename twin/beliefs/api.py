@@ -177,6 +177,7 @@ def query(layer: BeliefLayer, cells: Sequence[str] | None = None, threshold: flo
         missing = [c for c in cells if c not in layer.index]
         if missing:
             warnings.append(f"{len(missing)} requested cells are not in layer '{layer.spec.name}' and were skipped")
+    warnings.extend(layer.spec.caveats)
     calibration = calibration_of(layer)
     if calibration.status == "uncalibrated":
         warnings.append(f"uncertainty is uncalibrated: {calibration.reason}")
