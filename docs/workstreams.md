@@ -110,3 +110,11 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
 - **Owns**: `twin/modules/sports/**`, `agents/sports_scout/**`, `agents/sports_enrich/**`; the "Sport" screen is requested from WS8.
 - **Respects**: web-derived fields labelled "from the web, unverified" until a manager confirms; organisational contacts only; accessibility "not known" unless a source states it.
 - **Open choices**: Exa agent effort level; matching thresholds (name similarity, distance); which municipio for the first pass.
+
+---
+
+## Merge notes (hub)
+
+- `pyproject.toml` `[tool.mypy] files`: after WS7 (#6) and WS9 (#2) merge, the value is `["twin", "scripts", "agents", "eval", "voice"]`.
+- `.gitignore`: PR #1 and WS2 (#9) both add one; keep the union.
+- Tier: `/ask` and `/voice/ask_twin` take the tier from the API key or agent secret, never from the request; orchestrator tool calls run in-process at the caller's tier (WS4, #8).
