@@ -127,6 +127,7 @@ export function CityMap({
   focus,
   buildingView = "plain",
   showTrees = false,
+  onZoom,
 }: {
   layers: Layer[];
   buildingView?: BuildingView;
@@ -134,6 +135,8 @@ export function CityMap({
   /** Camera target set by the screen itself (local, not through the shared map-action bus). */
   focus?: { lon: number; lat: number; zoom: number } | null;
   onClick?: (lngLat: { lat: number; lon: number }) => void;
+  /** Called with the zoom level after each zoom ends. */
+  onZoom?: (zoom: number) => void;
   initialZoom?: number;
   pitch?: number;
 }) {
@@ -142,6 +145,8 @@ export function CityMap({
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const clickRef = useRef(onClick);
   clickRef.current = onClick;
+  const zoomRef = useRef(onZoom);
+  zoomRef.current = onZoom;
 
   useEffect(() => {
     if (!el.current) return;
@@ -175,6 +180,7 @@ export function CityMap({
       map.setStyle(style);
     });
     map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
+    map.on("zoomend", () => zoomRef.current?.(map.getZoom()));
     mapRef.current = map;
     if (import.meta.env.DEV) (window as unknown as { __urbsMap?: MlMap }).__urbsMap = map;
     overlayRef.current = overlay;

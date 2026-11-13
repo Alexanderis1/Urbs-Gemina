@@ -1,3 +1,4 @@
+import { latLngToCell } from "h3-js";
 // Shapes and helpers for the Sport screen (Challenge 04). Shapes follow the sports workstream's
 // sports_facilities / sport_deserts tools (twin/modules/sports, PR #5).
 
@@ -34,6 +35,10 @@ export interface SportFeature {
     type?: FacilityType;
     /** true / false, or null when no source states it. */
     accessible?: boolean | null;
+    /** OSM-style access: yes / customers / private / no, or null when not known. */
+    access?: FacilityAccess | null;
+    /** true when the source marks the facility as closed or disused. */
+    closed?: boolean;
     fields: Record<string, SportField>;
     discipline_details: Record<string, SportField>;
     synthetic: boolean;
@@ -141,4 +146,50 @@ export function displayName(f: SportFeature): string {
   const addr = p.fields.address?.value;
   const kind = p.kind.replace(/_/g, " ");
   return typeof addr === "string" && addr ? `${kind}, ${addr}` : kind;
+}
+
+export type FacilityAccess = "yes" | "customers" | "private" | "no";
+
+const ACCESS_LABELS: Record<FacilityAccess, string> = {
+  yes: "open to the public",
+  customers: "customers only",
+  private: "private",
+  no: "no access",
+};
+
+export function accessLabel(a: FacilityAccess | null | undefined): string {
+  return a ? ACCESS_LABELS[a] ?? a : "access not known";
+}
+
+/** Closed, private or no-access facilities are greyed out and do not count in sport_coverage. */
+export function isInactive(f: SportFeature): boolean {
+  const p = f.properties;
+  return p.closed === true || p.access === "private" || p.access === "no";
+}
+
+export const CLUSTER_MIN_FEATURES = 1500;
+export const CLUSTER_MAX_ZOOM = 13;
+
+export function shouldCluster(count: number, zoom: number): boolean {
+  return count >= CLUSTER_MIN_FEATURES && zoom < CLUSTER_MAX_ZOOM;
+}
+
+export interface FacilityCell {
+  h3: string;
+  count: number;
+  active: number;
+}
+
+export function clusterH3(list: SportFeature[], res: number): FacilityCell[] {
+  const cells = new Map<string, FacilityCell>();
+  for (const f of list) {
+    if (!f.geometry) continue;
+    const [lon, lat] = f.geometry.coordinates;
+    const h3 = latLngToCell(lat, lon, res);
+    const c = cells.get(h3) ?? { h3, count: 0, active: 0 };
+    c.count += 1;
+    if (!isInactive(f)) c.active += 1;
+    cells.set(h3, c);
+  }
+  return [...cells.values()];
 }

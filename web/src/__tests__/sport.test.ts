@@ -89,3 +89,48 @@ describe("facility names", () => {
     expect(displayName(f())).toBe("Centro sportivo");
   });
 });
+
+describe("access and closed facilities", () => {
+  it("says access not known when the source has none", async () => {
+    const { accessLabel } = await import("@/lib/sport");
+    expect(accessLabel(null)).toBe("access not known");
+    expect(accessLabel(undefined)).toBe("access not known");
+    expect(accessLabel("customers")).toBe("customers only");
+    expect(accessLabel("yes")).toBe("open to the public");
+    expect(accessLabel("private")).toBe("private");
+  });
+
+  it("treats closed, private and no-access facilities as inactive", async () => {
+    const { isInactive } = await import("@/lib/sport");
+    expect(isInactive(f({ closed: true }))).toBe(true);
+    expect(isInactive(f({ access: "private" }))).toBe(true);
+    expect(isInactive(f({ access: "no" }))).toBe(true);
+    expect(isInactive(f({ access: "customers" }))).toBe(false);
+    expect(isInactive(f({ access: null }))).toBe(false);
+    expect(isInactive(f())).toBe(false);
+  });
+
+  it("groups many facilities into hexagons with active and inactive counts", async () => {
+    const { clusterH3 } = await import("@/lib/sport");
+    const list = [
+      f({ facility_id: "a" }),
+      f({ facility_id: "b", closed: true }),
+      { ...f({ facility_id: "c" }), geometry: { type: "Point" as const, coordinates: [12.6, 41.8] as [number, number] } },
+      { ...f({ facility_id: "d" }), geometry: null },
+    ];
+    const cells = clusterH3(list, 8);
+    expect(cells).toHaveLength(2);
+    const total = cells.reduce((s, c) => s + c.count, 0);
+    expect(total).toBe(3);
+    const first = cells.find((c) => c.count === 2)!;
+    expect(first.active).toBe(1);
+    expect(typeof first.h3).toBe("string");
+  });
+
+  it("only clusters when zoomed out and the list is large", async () => {
+    const { shouldCluster } = await import("@/lib/sport");
+    expect(shouldCluster(14062, 11.5)).toBe(true);
+    expect(shouldCluster(14062, 14)).toBe(false);
+    expect(shouldCluster(300, 11)).toBe(false);
+  });
+});

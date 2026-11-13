@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScatterplotLayer } from "@deck.gl/layers";
+import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import type { Layer } from "@deck.gl/core";
 import { CityMap } from "@/map/CityMap";
 import { KindBadge } from "@/components/Badge";
@@ -12,6 +13,11 @@ import {
   EDITABLE_FIELDS,
   FACILITY_TYPES,
   typeLabel,
+  accessLabel,
+  isInactive,
+  clusterH3,
+  shouldCluster,
+  type FacilityCell,
   type FacilityType,
   buildManagerUpdate,
   displayName,
@@ -43,6 +49,7 @@ export default function Sport() {
   const [kind, setKind] = useState("");
   const [municipio, setMunicipio] = useState("");
   const [accessibleOnly, setAccessibleOnly] = useState(false);
+  const [zoom, setZoom] = useState(11.5);
   const [ftype, setFtype] = useState("");
   const [selected, setSelected] = useState<SportFeature | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -126,23 +133,47 @@ export default function Sport() {
           }),
         );
     }
-    out.push(
-      new ScatterplotLayer({
-        id: "facilities",
-        data: pts,
-        getPosition: (f: SportFeature) => f.geometry!.coordinates,
-        getFillColor: (f: SportFeature) => (f.properties.facility_id === selected?.properties.facility_id ? [139, 30, 45] : [37, 99, 235]),
-        radiusMinPixels: 5,
-        pickable: true,
-        onClick: ({ object }) => {
-          if (object) setSelected(object as SportFeature);
-          return true;
-        },
-        updateTriggers: { getFillColor: [selected] },
-      }),
-    );
+    if (shouldCluster(pts.length, zoom)) {
+      // Zoomed out over thousands of facilities: one hexagon per ~0.7 km², coloured by how many are usable.
+      const cells = clusterH3(pts, zoom < 11 ? 7 : 8);
+      const max = Math.max(1, ...cells.map((c) => c.count));
+      out.push(
+        new H3HexagonLayer<FacilityCell>({
+          id: "facility-cells",
+          data: cells,
+          getHexagon: (c) => c.h3,
+          extruded: false,
+          getFillColor: (c) =>
+            c.active === 0 ? [150, 150, 150, 120] : [37, 99, 235, Math.round(60 + 180 * (c.count / max))],
+          getLineColor: [255, 255, 255, 160],
+          lineWidthMinPixels: 0.5,
+          pickable: false,
+        }),
+      );
+    } else {
+      out.push(
+        new ScatterplotLayer({
+          id: "facilities",
+          data: pts,
+          getPosition: (f: SportFeature) => f.geometry!.coordinates,
+          getFillColor: (f: SportFeature) =>
+            f.properties.facility_id === selected?.properties.facility_id
+              ? [139, 30, 45]
+              : isInactive(f)
+                ? [160, 160, 160, 160]
+                : [37, 99, 235],
+          radiusMinPixels: pts.length > 3000 ? 3 : 5,
+          pickable: true,
+          onClick: ({ object }) => {
+            if (object) setSelected(object as SportFeature);
+            return true;
+          },
+          updateTriggers: { getFillColor: [selected] },
+        }),
+      );
+    }
     return out;
-  }, [shown, tab, coverage, gym, selected]);
+  }, [shown, tab, coverage, gym, selected, zoom]);
 
   async function runWhatIf() {
     if (!gym) return;
@@ -177,7 +208,9 @@ export default function Sport() {
               <input type="checkbox" checked={accessibleOnly} onChange={(e) => setAccessibleOnly(e.target.checked)} />
               Accessible (stated by a source)
             </label>
-            <p className="text-xs text-stone-500">{shown.length} facilities shown. Click one on the map.</p>
+            <p className="text-xs text-stone-500">{shown.length} facilities shown
+              {shouldCluster(shown.length, zoom) ? ", grouped in hexagons: zoom in to click one" : ". Click one on the map"}. Grey means closed,
+              private or no access; those do not count in coverage.</p>
             {facEnv && <RunMeta env={facEnv} compact />}
           </div>
         )}
@@ -222,7 +255,7 @@ export default function Sport() {
         {selected && <FacilityPage f={selected} canManage={tier === "office"} onClose={() => setSelected(null)} />}
       </aside>
       <div className="flex-1">
-        <CityMap layers={layers} initialZoom={11.5} pitch={30} onClick={tab === "deserts" ? (p) => setGym({ lon: p.lon, lat: p.lat }) : undefined} />
+        <CityMap layers={layers} initialZoom={11.5} pitch={30} onZoom={setZoom} onClick={tab === "deserts" ? (p) => setGym({ lon: p.lon, lat: p.lat }) : undefined} />
       </div>
     </div>
   );
@@ -321,7 +354,8 @@ function FacilityPage({ f, canManage, onClose }: { f: SportFeature; canManage: b
           <div className="font-semibold">{displayName(f)}</div>
           <div className="text-xs text-stone-500">
             {p.kind.replace(/_/g, " ")} · {typeLabel(p.type)} · accessible:{" "}
-            {p.accessible === true ? "yes" : p.accessible === false ? "no" : "not known"}
+            {p.accessible === true ? "yes" : p.accessible === false ? "no" : "not known"} · {accessLabel(p.access)}
+            {p.closed ? " · closed" : ""}
             {p.municipio ? ` · Municipio ${roman(Number(p.municipio))}` : ""}
           </div>
         </div>

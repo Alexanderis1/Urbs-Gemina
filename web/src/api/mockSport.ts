@@ -40,6 +40,8 @@ function facilities(): SportFeature[] {
         disciplines,
         type: (["public", "school", "private", "unclassified"] as const)[Math.floor(r() * 4)]!,
         accessible: r() < 0.5 ? true : null,
+        access: (["yes", "customers", "private", null] as const)[Math.floor(r() * 4)] ?? null,
+        closed: r() < 0.05,
         fields: {
           hours: sample("Mon-Sat 9-21"),
           accessibility: r() < 0.5 ? sample("yes") : { value: null, status: "not_known", sources: [] },

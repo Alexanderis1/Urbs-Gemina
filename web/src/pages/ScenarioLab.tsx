@@ -5,12 +5,13 @@ import { RunMeta } from "@/components/RunMeta";
 import { areaToArg, type Area } from "@/lib/area";
 import { useSession } from "@/lib/runlog";
 import type { Envelope, ScenarioResult } from "@/api/types";
+import { buildScenarioChange, SCENARIO_BANDS } from "@/lib/scenario";
 
 // Scenario kinds from the design (section on the scenario engine). Ids provisional until WS6 publishes them.
 // Kinds the live run_scenario accepts: antenna, population_exposure, road_closure.
 const KINDS = [
-  { id: "antenna", label: "Add an antenna", fields: ["lat", "lon", "height_m"] },
-  { id: "population_exposure", label: "Population exposure", fields: [] },
+  { id: "antenna", label: "Add an antenna", fields: ["lat", "lon", "height_m", "band"] },
+  { id: "population_exposure", label: "Population exposure", fields: ["lat", "lon", "height_m", "band"] },
   { id: "road_closure", label: "Close a road", fields: ["street"] },
 ] as const;
 
@@ -18,7 +19,7 @@ export default function ScenarioLab() {
   const { run } = useSession();
   const [kind, setKind] = useState<(typeof KINDS)[number]["id"]>("antenna");
   const [area, setArea] = useState<Area>({ type: "municipio", id: "1" });
-  const [change, setChange] = useState<Record<string, string>>({ lat: "41.9009", lon: "12.4833", height_m: "30" });
+  const [change, setChange] = useState<Record<string, string>>({ lat: "41.9009", lon: "12.4833", height_m: "30", band: "3500" });
   const [env, setEnv] = useState<Envelope<ScenarioResult> | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,19 +29,7 @@ export default function ScenarioLab() {
     setBusy(true);
     setError(null);
     try {
-      // Antenna change in the same shape as estimate_field's variant (add_antennas).
-      const c: Record<string, unknown> =
-        kind === "antenna"
-          ? {
-              add_antennas: [
-                {
-                  lon: Number(change.lon),
-                  lat: Number(change.lat),
-                  ...(change.height_m ? { height_m: Number(change.height_m) } : {}),
-                },
-              ],
-            }
-          : change;
+      const c = buildScenarioChange(kind, change);
       setEnv(await run<ScenarioResult>("run_scenario", { kind, area: areaToArg(area), change: c }));
     } catch (e) {
       setError(String(e));
@@ -76,9 +65,19 @@ export default function ScenarioLab() {
         {spec.fields.length > 0 && (
           <div className="space-y-1">
             <div className="label">Change</div>
-            {spec.fields.map((f) => (
+            {spec.fields.map((f) =>
+              f === "band" ? (
+                <select key={f} className="input" value={change.band ?? "3500"} onChange={(e) => setChange({ ...change, band: e.target.value })}>
+                  {SCENARIO_BANDS.map((b) => (
+                    <option key={b} value={b}>
+                      {b} MHz
+                    </option>
+                  ))}
+                </select>
+              ) : (
               <input key={f} className="input" placeholder={f} value={change[f] ?? ""} onChange={(e) => setChange({ ...change, [f]: e.target.value })} />
-            ))}
+              ),
+            )}
           </div>
         )}
         <button className="btn w-full" onClick={() => void go()} disabled={busy}>
