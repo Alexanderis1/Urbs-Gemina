@@ -181,6 +181,12 @@ river_flood:
         crest_level_m: 18.45
         reach_bbox: [12.440, 41.850, 12.500, 41.935]
     basis: "Canevari design crest 18.45 m on the Ripetta zero, 1.20 m above the 1870 flood (WS1 tiber_hydraulics.json, C=75; benchmarks 18.5-19.9 m a.s.l.). The crest is not level along the reach; the LiDAR crest (WS2) will replace this single value. The walls are thinner than a 30 m cell, so they enter the model as this rule, not as terrain"
+  crests_file:
+    value: tiber_wall_crests.geojson
+    basis: "WS2: wall crests measured on the MASE LiDAR DTM every 200 m per bank (crest_m, water_m, sigma 0.3 m, real)"
+  crest_search_m:
+    value: 250
+    basis: "a river cell takes the lowest crest measured within 250 m (the weaker bank decides)"
   hazard_file:
     value: flood_hazard_pgra.geojson
     basis: "WS1: official PGRA hazard polygons, field 'hazard' = P1 | P2 | P3"
@@ -239,3 +245,67 @@ impacts:
   sensitive_sites_file:
     value: sensitive_sites.geojson
     basis: "WS1 merged sensitive sites (schools, hospitals, care homes...), 6,414 places"
+
+chemical_plume:
+  heavy: false
+  model: gaussian_plume_briggs_urban
+  members:
+    value: 60
+    basis: "ensemble size for stable P5 / P95 footprints"
+  seed:
+    value: 13
+    basis: "fixed so the same run id gives the same numbers"
+  cell_m:
+    value: 50
+    basis: "assumption: fine enough for footprints of a few hundred metres to kilometres"
+  max_distance_m:
+    value: 12000
+    basis: "Gaussian plume is not credible much beyond 10 km"
+  release_height_m:
+    value: 2
+    basis: "assumption: ground-level leak from a tank or pipe"
+  default_release_kg_s:
+    value: 5.0
+    basis: "assumption (C=30): order of magnitude of a large pipe rupture; the officer should enter the operator's safety-report scenario"
+  release_sigma_ln:
+    value: 0.7
+    basis: "assumption: the size of an accidental release is uncertain within about a factor 2"
+  wind_direction_sigma_deg:
+    value: 20
+    basis: "assumption: forecast or measured wind direction error plus meander over an hour"
+  wind_speed_sigma_ln:
+    value: 0.3
+    basis: "assumption: forecast wind speed error"
+  min_wind_ms:
+    value: 1.0
+    basis: "Gaussian plume breaks down in calm air; slower winds are raised to 1 m/s and flagged"
+  stability_weights:
+    value: {C: 0.25, D: 0.5, E: 0.25}
+    basis: "assumption: neutral conditions most likely; unstable and stable equally likely when the hour and cloud cover are unknown"
+  sites_files:
+    value: [seveso_perimeters.geojson, hazardous_sites.geojson]
+    basis: "WS1: Seveso plant perimeters (field nome) and hazardous sites (field denominaz)"
+  damage_zones_file:
+    value: seveso_damage_zones.geojson
+    basis: "WS1: official damage zones from the plants' safety reports (field origine, zona)"
+
+emergency_access:
+  heavy: true
+  facilities:
+    value:
+      ambulance: {file: emergency_hospitals.geojson, field: denominazione, filter: {}}
+      fire: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: Vigili del Fuoco}}
+      police: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: [Carabinieri, Polizia di Stato, Polizia Locale]}}
+    basis: "WS1 layers; ambulances are taken to start from emergency hospitals (118 posts are not in an open layer)"
+  speed_factor:
+    value: 0.7
+    basis: "assumption (C=45): emergency vehicles average about 70% of the road speed limit in city traffic"
+  speed_sigma_ln:
+    value: 0.2
+    basis: "assumption: spread of traffic conditions"
+  members:
+    value: 30
+    basis: "ensemble size"
+  seed:
+    value: 17
+    basis: "fixed"

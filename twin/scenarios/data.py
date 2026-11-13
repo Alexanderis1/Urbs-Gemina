@@ -51,6 +51,8 @@ class ScenarioData:
     river_levels: Mapping[str, tuple[float, float]] = field(default_factory=dict)
     #: River discharge forecast per gauge: list of (ISO date, m3/s, sigma m3/s). Estimated (GloFAS).
     river_discharge: Mapping[str, Sequence[tuple[str, float, float]]] = field(default_factory=dict)
+    #: Wind at the release point: (speed m/s, direction it blows FROM in degrees). Estimated (forecast).
+    wind: tuple[float, float] | None = None
     #: Rainfall in mm over the scenario duration as (lon, lat, mm) cells, keyed "radar" (real) or "forecast".
     rain_mm: Mapping[str, Sequence[tuple[float, float, float]]] = field(default_factory=dict)
     #: Boundary lookup for named areas (municipi, urban zones).
@@ -79,6 +81,8 @@ class ScenarioData:
                            ("river_discharge", self.river_discharge)):
             if value and key not in out:
                 out[key] = _json_hash(value)
+        if self.wind is not None and "wind" not in out:
+            out["wind"] = f"{self.wind[0]:.2f}@{self.wind[1]:.0f}"
         if self.dtm is not None and "dtm" not in out:
             z = getattr(self.dtm, "z", None)
             out["dtm"] = hashlib.sha256(z.tobytes()).hexdigest() if z is not None else "unknown"

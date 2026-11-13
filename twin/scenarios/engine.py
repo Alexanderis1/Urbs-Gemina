@@ -12,6 +12,7 @@ from twin.scenarios.data import ScenarioData
 from twin.scenarios.envelope import envelope, run_id
 from twin.scenarios.exposure import run_population_exposure
 from twin.scenarios.flood import run_rain_flood, run_river_flood
+from twin.scenarios.plume import run_chemical_plume
 from twin.scenarios.traffic import run_road_closure, run_traffic_event
 
 TOOL = "run_scenario"
@@ -45,6 +46,11 @@ KINDS: dict[str, Kind] = {
                        "sites affected",
                        ("dtm_glo30_ground.tif", "imperviousness_2018.tif", "ptpr_b_aree_urbanizzate.geojson",
                         "road_underpasses_osm.geojson", "census_sections.geojson", "sensitive_sites.geojson"), True),
+    "chemical_plume": Kind(run_chemical_plume, False,
+                           "Toxic release at a high-risk (Seveso) plant: where each health threshold is likely or "
+                           "possibly exceeded, residents and sensitive sites, beside the official damage zones",
+                           ("seveso_perimeters.geojson", "hazardous_sites.geojson", "seveso_damage_zones.geojson",
+                            "census_sections.geojson", "sensitive_sites.geojson")),
     "traffic_event": Kind(run_traffic_event, True,
                           "Roadworks, closures and big events on one district: SUMO travel time, delay and congestion "
                           "points, baseline vs variant (synthetic demand anchored to loop counts)", (), True),

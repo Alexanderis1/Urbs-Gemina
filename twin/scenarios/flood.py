@@ -243,11 +243,16 @@ def _normal_level(river: str) -> float:
     return 0.0
 
 
-def _defended_river(grid: Grid, river: str, river_mask: BoolArray) -> tuple[list[tuple[BoolArray, float]], list[str]]:
-    """River cells behind embankment walls, with the gauge level at which the walls are overtopped."""
-    out: list[tuple[BoolArray, float]] = []
+def _defended_river(grid: Grid, river: str, river_mask: BoolArray, normal: float) -> tuple[FloatArray, list[str]]:
+    """Freeboard (m above ordinary water) of each walled river cell; NaN where the bank is not walled.
+
+    Measured LiDAR crests (WS2, crest_m - water_m per point, same datum so the geoid offset cancels)
+    are used where they exist; elsewhere in the walled reach, the single design crest from config.
+    """
+    freeboard = np.full(grid.shape, np.nan)
     notes: list[str] = []
-    for name, d in _cfg("river_flood")["defences"].items():
+    cfg = _cfg("river_flood")
+    for name, d in cfg["defences"].items():
         if d["river"] != river:
             continue
         w, s_, e, n = (float(v) for v in d["reach_bbox"])
@@ -256,10 +261,42 @@ def _defended_river(grid: Grid, river: str, river_mask: BoolArray) -> tuple[list
             continue
         reach = np.zeros(grid.shape, dtype=bool)
         reach[rows[0]:rows[1] + 1, cols[0]:cols[1] + 1] = True
-        out.append((river_mask & reach, float(d["crest_level_m"])))
-        notes.append(f"Defence '{name}': the walled reach only spills above {d['crest_level_m']} m at "
-                     f"{d['gauge']} (design crest, C=75); below that, water reaches land only from unwalled reaches.")
-    return out, notes
+        cells = river_mask & reach
+        freeboard[cells] = float(d["crest_level_m"]) - normal
+        measured = _measured_crests(grid, cells, str(cfg["crests_file"]), float(cfg["crest_search_m"]))
+        if measured is not None:
+            got = ~np.isnan(measured)
+            freeboard[got] = measured[got]
+            notes.append(f"Defence '{name}': measured LiDAR wall crests on {int(got.sum())} river cells (WS2, real, "
+                         f"sigma 0.3 m); design crest {d['crest_level_m']} m on {d['gauge']} elsewhere in the reach.")
+        else:
+            notes.append(f"Defence '{name}': the walled reach only spills above {d['crest_level_m']} m at "
+                         f"{d['gauge']} (design crest, C=75); below that, water reaches land only from unwalled reaches.")
+    return freeboard, notes
+
+
+def _measured_crests(grid: Grid, cells: BoolArray, file_name: str, search_m: float) -> FloatArray | None:
+    """Lowest measured freeboard (crest - water) within ``search_m`` of each river cell."""
+    path = layers.find(file_name, dirs=config.value(config.load("scenarios.yaml")["terrain"], "search_dirs"))
+    if path is None:
+        return None
+    pts = [(float(f["geometry"]["coordinates"][0]), float(f["geometry"]["coordinates"][1]),
+            float(f["properties"]["crest_m"]) - float(f["properties"]["water_m"]))
+           for f in layers.read(path).get("features", [])
+           if f.get("geometry") and (f.get("properties") or {}).get("crest_m") is not None
+           and (f.get("properties") or {}).get("wall_detected", True)]
+    if not pts:
+        return None
+    rows, cols = grid.rowcol([p[0] for p in pts], [p[1] for p in pts])
+    out = np.full(grid.shape, np.nan)
+    rr, cc = np.nonzero(cells)
+    radius = search_m / grid.cell
+    for r_, c_ in zip(rr.tolist(), cc.tolist()):
+        d = np.hypot(rows - r_, cols - c_)
+        ok = (d <= radius) & (rows >= 0)
+        if ok.any():
+            out[r_, c_] = min(p[2] for p, flag in zip(pts, ok.tolist()) if flag)
+    return out
 
 
 def _channel(river_mask: BoolArray, seeds: BoolArray) -> BoolArray:
@@ -289,15 +326,14 @@ def run_river_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) -
     sigma = math.hypot(float(grid.source.get("vertical_sigma_m", 2.0)), stage_sigma)
 
     z95 = 1.6448536269514722
-    defended, defence_notes = _defended_river(grid, river, river_mask)
     normal = _normal_level(river)
+    freeboard, defence_notes = _defended_river(grid, river, river_mask, normal)
     taper = _sea_taper(grid, river, river_mask, nearest, warnings)
 
     def extent(stage: float) -> BoolArray:
-        seeds = river_mask.copy()
-        for mask, crest in defended:
-            if normal + stage < crest:
-                seeds &= ~mask
+        # a walled river cell holds while the local rise stays below its freeboard
+        holds = ~np.isnan(freeboard) & (stage * taper < np.nan_to_num(freeboard, nan=np.inf))
+        seeds = river_mask & ~holds
         holding = _channel(river_mask, seeds)
         # land whose nearest river cell is behind holding walls stays dry: HAND has no water slope,
         # so without this rule the upstream floodplain would 'flow' behind the walls at the same height

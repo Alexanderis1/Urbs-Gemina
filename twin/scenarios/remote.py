@@ -18,13 +18,15 @@ ENV_SWITCH = "URBS_SCENARIO_WORKER"  # "modal" sends isolated kinds to the worke
 
 #: ScenarioData fields that are plain JSON and can travel to the worker.
 PORTABLE = ("loop_counts_veh_per_h", "observed_speeds_m_per_s", "loop_counts_kind", "river_levels",
-            "river_discharge", "rain_mm", "snapshots", "baseline_kind")
+            "river_discharge", "rain_mm", "snapshots", "baseline_kind", "wind")
 
 
 def to_spec(data: ScenarioData) -> dict[str, Any]:
     spec: dict[str, Any] = {}
     for name in PORTABLE:
         value = getattr(data, name)
+        if isinstance(value, tuple):
+            value = list(value)
         if isinstance(value, Mapping):
             value = {str(k): (list(v) if isinstance(v, tuple) else v) for k, v in value.items()}
         spec[name] = value
@@ -38,6 +40,8 @@ def from_spec(spec: Mapping[str, Any]) -> ScenarioData:
     if "river_discharge" in fields:
         fields["river_discharge"] = {k: [(str(d), float(q), float(s)) for d, q, s in v]
                                      for k, v in fields["river_discharge"].items()}
+    if fields.get("wind") is not None:
+        fields["wind"] = (float(fields["wind"][0]), float(fields["wind"][1]))
     if "rain_mm" in fields:
         fields["rain_mm"] = {k: [(float(a), float(b), float(c)) for a, b, c in v] for k, v in fields["rain_mm"].items()}
     return ScenarioData(**fields)
