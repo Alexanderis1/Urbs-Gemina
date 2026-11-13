@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping
 
 from twin.scenarios import cache, config
 from twin.scenarios.antenna import run_antenna
-from twin.scenarios.area import Area, AreaArg, AreaNotAvailable, AreaTooLarge, resolve_area
+from twin.scenarios.area import Area, AreaArg, AreaNotAvailable, AreaTooLarge, check_heavy, resolve_area
 from twin.scenarios.data import ScenarioData
 from twin.scenarios.envelope import envelope, run_id
 from twin.scenarios.exposure import run_population_exposure
@@ -58,7 +58,9 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
             return {**hit, "cached": True}
 
     try:
-        resolved = resolve_area(area, heavy=spec.heavy, lookup=data.area_lookup)
+        resolved = resolve_area(area, lookup=data.area_lookup)
+        if spec.heavy:
+            check_heavy(resolved)
     except AreaTooLarge as exc:
         return _not_ok(inputs, snapshots, "refused", str(exc))
     except AreaNotAvailable as exc:

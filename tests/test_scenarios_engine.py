@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from twin.scenarios import engine
-from twin.scenarios.area import AreaTooLarge, AreaNotAvailable, polygon_area_km2, resolve_area
+from twin.scenarios.area import AreaNotAvailable, AreaTooLarge, check_heavy, polygon_area_km2, resolve_area
 from twin.scenarios.data import ScenarioData
 
 LON, LAT = 12.4823, 41.8960  # Piazza Venezia
@@ -36,15 +36,29 @@ def test_city_area_resolves_from_config() -> None:
 
 def test_heavy_runs_refuse_large_areas() -> None:
     with pytest.raises(AreaTooLarge):
-        resolve_area(square(10_000.0), heavy=True)  # 100 km2 > 40 km2
-    assert resolve_area(square(2000.0), heavy=True).area_km2 == pytest.approx(4.0, rel=0.01)
+        check_heavy(resolve_area(square(10_000.0)))  # 100 km2 > 40 km2
+    check_heavy(resolve_area(square(2000.0)))
 
 
 def test_named_area_needs_a_boundary_lookup() -> None:
     with pytest.raises(AreaNotAvailable):
         resolve_area("municipio:1")
     area = resolve_area("municipio:1", lookup=lambda _id: square(1000.0))
-    assert area.id == "municipio:1"
+    assert area.id == "municipio:1" and area.kind == "municipio"
+
+
+def test_area_has_the_hub_shape() -> None:
+    poly = resolve_area(square(2000.0))
+    assert poly.kind == "polygon" and poly.id.startswith("polygon:") and len(poly.id) == len("polygon:") + 12
+    w, s, e, n = poly.bbox
+    assert w < LON < e and s < LAT < n
+    assert resolve_area("zone:6a", lookup=lambda _id: square(500.0)).id == "zone:6A"
+
+
+@pytest.mark.parametrize("bad", ["town", "municipio:16", "municipio:0", "zone:", 42])
+def test_invalid_area_raises_value_error(bad: object) -> None:
+    with pytest.raises(ValueError):
+        resolve_area(bad)  # type: ignore[arg-type]
 
 
 def test_run_returns_the_shared_envelope(tmp_path: Path) -> None:
