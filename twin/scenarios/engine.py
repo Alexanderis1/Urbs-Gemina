@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping
 
 from twin.scenarios import cache, config
 from twin.scenarios.antenna import run_antenna
-from twin.scenarios.area import Area, AreaArg, resolve_area
+from twin.scenarios.area import Area, AreaArg, AreaNotAvailable, AreaTooLarge, resolve_area
 from twin.scenarios.data import ScenarioData
 from twin.scenarios.envelope import envelope, run_id
 from twin.scenarios.exposure import run_population_exposure
@@ -57,12 +57,26 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
         if hit is not None:
             return {**hit, "cached": True}
 
-    resolved = resolve_area(area, heavy=spec.heavy, lookup=data.area_lookup)
+    try:
+        resolved = resolve_area(area, heavy=spec.heavy, lookup=data.area_lookup)
+    except AreaTooLarge as exc:
+        return _not_ok(inputs, snapshots, "refused", str(exc))
+    except AreaNotAvailable as exc:
+        return _not_ok(inputs, snapshots, "not_available", str(exc))
     part = spec.runner(resolved, change, data)
-    status = part["result"].get("status", "ok")
-    out = envelope(TOOL, inputs, snapshots, {"status": status, **part["result"], "area": {"id": resolved.id,
-                                                                        "area_km2": round(resolved.area_km2, 3)}},
+    result = dict(part["result"])
+    status = str(result.pop("status", "ok"))
+    reason = result.pop("reason", None)
+    out = envelope(TOOL, inputs, snapshots, {**result, "area": {"id": resolved.id,
+                                                                "area_km2": round(resolved.area_km2, 3)}},
                    part["data_kinds"], part["sources"], bool(part["synthetic"]), part["warnings"])
+    out = {"status": status, **({"reason": reason} if reason else {}), **out}
     if use_cache and status == "ok":
         cache.put(directory, rid, out)
     return {**out, "cached": False}
+
+
+def _not_ok(inputs: Mapping[str, Any], snapshots: Mapping[str, str], status: str, reason: str) -> dict[str, Any]:
+    """Envelope for a run that did not happen: never cached."""
+    out = envelope(TOOL, inputs, snapshots, {}, {}, [], False, [reason])
+    return {"status": status, "reason": reason, **out, "cached": False}

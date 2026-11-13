@@ -8,7 +8,6 @@ from typing import Any
 import pytest
 
 from twin.scenarios import engine
-from twin.scenarios.area import AreaTooLarge
 from twin.scenarios.data import ScenarioData
 from twin.scenarios.traffic import sumo_binary
 
@@ -27,15 +26,19 @@ DISTRICT = square(2000.0)
 CLOSE = {"close": {"edges": ["B2C2", "C2B2"]}}
 
 
-def test_closure_refuses_the_whole_city() -> None:
-    with pytest.raises(AreaTooLarge):
-        engine.run("road_closure", "city", CLOSE, data=ScenarioData(road_network=Path("x.net.xml")), use_cache=False)
+def test_closure_refuses_the_whole_city(tmp_path: Path) -> None:
+    out = engine.run("road_closure", "city", CLOSE, data=ScenarioData(road_network=Path("x.net.xml")),
+                     cache_dir=tmp_path)
+    assert out["status"] == "refused"
+    assert "km2" in out["reason"]
+    assert not list(tmp_path.glob("*.json"))
 
 
 def test_missing_network_is_not_available_and_not_cached(tmp_path: Path) -> None:
     out = engine.run("road_closure", DISTRICT, CLOSE, data=ScenarioData(), cache_dir=tmp_path)
-    assert out["result"]["status"] == "not_available"
-    assert "network" in out["result"]["reason"]
+    assert out["status"] == "not_available"
+    assert "network" in out["reason"]
+    assert "status" not in out["result"]
     assert not list(tmp_path.glob("*.json"))
 
 
@@ -62,7 +65,7 @@ def test_closing_a_central_road_adds_delay(grid_net: Path, tmp_path: Path) -> No
     data = ScenarioData(road_network=grid_net, road_network_kind="simulated")
     out = engine.run("road_closure", DISTRICT, CLOSE, data=data, cache_dir=tmp_path)
     result = out["result"]
-    assert result["status"] == "ok"
+    assert out["status"] == "ok"
     assert result["closed_edges"] == ["B2C2", "C2B2"]
     base, variant = result["baseline"], result["variant"]
     for side in (base, variant):

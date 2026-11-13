@@ -12,8 +12,8 @@ envelope = engine.run(kind, area, change, data=ScenarioData(...))
 ```
 
 - `kind`: see `engine.kinds()`.
-- `area`: `"city"`, a named unit (needs `ScenarioData.area_lookup`) or a GeoJSON polygon. Heavy kinds refuse areas above `heavy_tools_max_area_km2` (`config/areas.yaml`).
-- Returns the shared tool envelope (`run_id`, `tool="run_scenario"`, `inputs`, `result`, `data_kinds`, `sources`, `synthetic`, `warnings`) plus `cached`. `result.status` is `ok` or `not_available` (with a `reason`).
+- `area`: `"city"`, a named unit (needs `ScenarioData.area_lookup`) or a GeoJSON polygon. Heavy kinds refuse (status `refused`) areas above `heavy_tools_max_area_km2` (`config/areas.yaml`).
+- Returns the shared tool envelope (`run_id`, `tool="run_scenario"`, `inputs`, `result`, `data_kinds`, `sources`, `synthetic`, `warnings`) plus top-level `status` (`ok` | `not_available` | `refused`, with `reason` when not ok) and `cached`. A heavy run on a too-large area is `refused`.
 - `run_id` = SHA-256 of inputs + data fingerprints + hashes of the config files that drive results. Results with status `ok` are cached in `data/cache/scenarios/<run_id>.json` (git-ignored: may contain Cartoradio-derived values).
 - Data are injected by the caller (`ScenarioData`): Cartoradio baseline function, census sections, SUMO network, boundary lookup. Missing inputs are reported as `not_available`, never filled in silently.
 

@@ -49,6 +49,7 @@ def test_named_area_needs_a_boundary_lookup() -> None:
 
 def test_run_returns_the_shared_envelope(tmp_path: Path) -> None:
     out = engine.run("antenna", "city", ADD, cache_dir=tmp_path)
+    assert out["status"] == "ok" and "reason" not in out
     assert set(out) >= {"run_id", "tool", "inputs", "result", "data_kinds", "sources", "synthetic", "warnings"}
     assert out["tool"] == "run_scenario"
     assert out["inputs"] == {"kind": "antenna", "area": "city", "change": ADD}
@@ -80,3 +81,9 @@ def test_unknown_kind_lists_the_known_ones() -> None:
 
 def test_kinds_are_listed() -> None:
     assert {"antenna", "population_exposure"} <= set(engine.kinds())
+
+
+def test_named_area_without_boundaries_is_not_available(tmp_path: Path) -> None:
+    out = engine.run("antenna", "municipio:1", ADD, cache_dir=tmp_path)
+    assert out["status"] == "not_available"
+    assert not list(tmp_path.glob("*.json"))
