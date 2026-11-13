@@ -8,6 +8,10 @@ import { onMapAction } from "@/lib/mapbus";
 
 const STYLE_URL =
   (import.meta.env.VITE_BASEMAP_STYLE as string | undefined) || "https://tiles.openfreemap.org/styles/positron";
+// Credit line for the tiles; change it together with the URL if the tile variant changes (e.g. OSM-only heights).
+const G0_ATTRIBUTION =
+  (import.meta.env.VITE_BUILDINGS_ATTRIBUTION as string | undefined) ||
+  "Buildings © OpenStreetMap contributors / Overture (ODbL). Heights: GlobalBuildingAtlas, TUM (CC BY-NC 4.0, non-commercial); Copernicus Urban Atlas. Terrain: Copernicus DEM.";
 const G0_RAW = (import.meta.env.VITE_BUILDINGS_PMTILES_URL as string | undefined) ?? "";
 // The pmtiles protocol needs an absolute URL; a relative one (e.g. /buildings.pmtiles) is resolved against the page.
 const G0_PMTILES = G0_RAW && typeof window !== "undefined" ? new URL(G0_RAW, window.location.href).href : G0_RAW;
@@ -47,8 +51,7 @@ function addBuildings(map: MlMap) {
     map.addSource("g0", {
       type: "vector",
       url: `pmtiles://${G0_PMTILES}`,
-      attribution:
-        "Buildings © OpenStreetMap contributors / Overture (ODbL). Heights: GlobalBuildingAtlas, TUM (CC BY-NC 4.0, non-commercial); Copernicus Urban Atlas. Terrain: Copernicus DEM.",
+      attribution: G0_ATTRIBUTION,
     });
     map.addLayer(
       {
