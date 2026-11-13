@@ -51,6 +51,8 @@ class ScenarioData:
     river_levels: Mapping[str, tuple[float, float]] = field(default_factory=dict)
     #: River discharge forecast per gauge: list of (ISO date, m3/s, sigma m3/s). Estimated (GloFAS).
     river_discharge: Mapping[str, Sequence[tuple[str, float, float]]] = field(default_factory=dict)
+    #: Emergency facilities override: (lon, lat, name); otherwise read from WS1 layers.
+    facilities: Sequence[tuple[float, float, str]] | None = None
     #: Wind at the release point: (speed m/s, direction it blows FROM in degrees). Estimated (forecast).
     wind: tuple[float, float] | None = None
     #: Rainfall in mm over the scenario duration as (lon, lat, mm) cells, keyed "radar" (real) or "forecast".

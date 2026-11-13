@@ -300,9 +300,15 @@ emergency_access:
   speed_factor:
     value: 0.7
     basis: "assumption (C=45): emergency vehicles average about 70% of the road speed limit in city traffic"
+  urban_speed_cap_kmh:
+    value: 50
+    basis: "Codice della Strada art. 142: 50 km/h inside built-up areas. SUMO's OSM defaults give 100 km/h to secondary roads without a maxspeed tag, so road speeds are capped here before the emergency factor"
   speed_sigma_ln:
     value: 0.2
     basis: "assumption: spread of traffic conditions"
+  off_network_detour:
+    value: 1.3
+    basis: "assumption (C=55): road distance is about 1.3 times the straight-line distance in Rome; used for the approach from stations outside the district network and the last stretch to each section"
   members:
     value: 30
     basis: "ensemble size"
