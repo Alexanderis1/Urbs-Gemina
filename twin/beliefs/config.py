@@ -46,6 +46,29 @@ class FieldSpec:
     source: str
     entity_types: tuple[str, ...]
     value_key: str
+    #: "bin" = average the map values inside each cell (fine maps like Cartoradio);
+    #: "idw" = inverse-distance interpolation to every cell (coarse maps like the CAMS lattice).
+    method: str = "bin"
+
+
+@dataclass(frozen=True)
+class SourceSpec:
+    """One real (or allowed simulated) feed of a layer, with how to read it.
+
+    ``entity_types`` / ``value_key`` default to the layer's own. A source that
+    measures something related but not identical (bus speed for road speed)
+    is converted with ``scale``/``offset`` and gets ``extra_sd`` added to its
+    error, so it counts less than a direct measurement.
+    """
+
+    layer: str
+    entity_types: tuple[str, ...] | None = None
+    value_key: str | None = None
+    scale: float = 1.0
+    offset: float = 0.0
+    extra_sd: float = 0.0
+    #: Readings below this value are dropped (e.g. a bus standing at a stop).
+    drop_below: float | None = None
 
 
 @dataclass(frozen=True)
@@ -62,11 +85,18 @@ class LayerSpec:
     calibration_method: str
     calibration_note: str
     #: Layer names in config/providers.yaml whose readings feed this layer (sensor fusion).
-    sources: tuple[str, ...] = ()
+    sources: tuple[SourceSpec, ...] = ()
     #: Optional real map that replaces the generic prior cell by cell.
     prior_field: FieldSpec | None = None
     #: Only layers explicitly allowed may use simulated readings (project rule: road loops only).
     allow_simulated: bool = False
+    #: "none": readings are values. "count": readings are items (e.g. parked scooters) counted per cell.
+    aggregate: str = "none"
+    aggregate_window_minutes: float = 5.0
+
+    @property
+    def source_layers(self) -> tuple[str, ...]:
+        return tuple(s.layer for s in self.sources)
 
 
 def grid_resolution(config_dir: Path = CONFIG_DIR) -> int:
@@ -105,17 +135,37 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
             min_value=float(entry.get("min_value", float("-inf"))),
             calibration_method=str(calibration.get("method", "loso")),
             calibration_note=str(calibration.get("note", "")),
-            sources=tuple(str(x) for x in entry.get("sources", [])),
+            sources=tuple(_source(x) for x in entry.get("sources", [])),
             prior_field=None
             if field is None
             else FieldSpec(
                 source=str(field["source"]),
                 entity_types=tuple(str(t) for t in field["entity_types"]),
                 value_key=str(field["value_key"]),
+                method=str(field.get("method", "bin")),
             ),
             allow_simulated=bool(entry.get("allow_simulated", False)),
+            aggregate=str(entry.get("aggregate", "none")),
+            aggregate_window_minutes=float(entry.get("aggregate_window_minutes", 5.0)),
         )
     return specs
+
+
+def _source(raw: Any) -> SourceSpec:
+    if isinstance(raw, str):
+        return SourceSpec(layer=raw)
+    types = raw.get("entity_types")
+    key = raw.get("value_key")
+    drop = raw.get("drop_below")
+    return SourceSpec(
+        layer=str(raw["layer"]),
+        entity_types=tuple(str(t) for t in types) if types is not None else None,
+        value_key=str(key) if key is not None else None,
+        scale=float(raw.get("scale", 1.0)),
+        offset=float(raw.get("offset", 0.0)),
+        extra_sd=float(raw.get("extra_sd", 0.0)),
+        drop_below=float(drop) if drop is not None else None,
+    )
 
 
 def load_calibration_rules(config_dir: Path = CONFIG_DIR) -> dict[str, Any]:

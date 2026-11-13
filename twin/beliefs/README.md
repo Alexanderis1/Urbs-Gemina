@@ -22,14 +22,14 @@ Project rule (Alessandro, 13 Nov 2026): only traffic loops may be simulated. Eve
 
 | Layer | Starting point | Real readings fused in |
 |---|---|---|
-| road_speed | hourly city profile | `traffic_flow` (sim_loops, the one simulated input) |
-| air_no2 / pm10 / pm25 | generic prior (CAMS forecast next) | `air_quality`: EEA / ARPA Lazio stations |
+| road_speed | hourly city profile | `traffic_flow` (sim_loops, the one simulated input) + real bus speeds from `transit` (`Vehicle.speed_kmh`, +10 km/h error, stopped buses dropped) |
+| air_no2 / pm10 / pm25 | CAMS forecast map (`air_quality_model`, interpolated to every cell) | `air_quality`: EEA stations; PM also `air_quality_citizen` (Sensor.Community, larger error) |
 | transit_delay | generic prior | `transit`: GTFS-RT trip updates |
 | rain | generic prior | `rain`: Civil Protection radar |
 | emf | **Cartoradio grid** (`prior_field: emf_baseline`) | `emf_measurements`, real ARPA points only |
-| activity | none | none yet: answers `not_available` |
+| activity (proxy, C=40) | ~1 per cell | `micromobility`: parked Bird scooters counted per cell (empty covered cells count as 0). Not a people count |
 
-Sensor fusion: a layer can list several `sources`; every reading is weighted by its own `sigma`, so a precise station counts more than a low-cost sensor. `api.layer_payload(name, cells, start, end, providers)` picks the sources from the config and returns `not_available` when none is connected.
+Sensor fusion: a layer can list several `sources` (a source can read a related value, e.g. bus speed, with `scale`/`offset`/`extra_sd`/`drop_below`); every reading is weighted by its own `sigma`, so a precise station counts more than a low-cost sensor. `api.layer_payload(name, cells, start, end, providers)` picks the sources from the config and returns `not_available` when none is connected.
 
 Labels: a layer built from any simulated reading is `simulated` and `synthetic=True`; otherwise `estimated`. EMF and activity are always `uncalibrated` until real measurements exist.
 

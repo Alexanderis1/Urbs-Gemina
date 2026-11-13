@@ -20,12 +20,13 @@ import hashlib
 import math
 from datetime import datetime, timezone
 from statistics import NormalDist
-from typing import Any, Mapping, Sequence
+from dataclasses import replace
+from typing import Any, Iterable, Iterator, Mapping, Sequence
 
 import numpy as np
 
 from twin.beliefs.calibration import CalibrationReport, CalibrationRules, leave_one_station_out
-from twin.beliefs.config import LayerSpec, load_calibration_rules, load_specs
+from twin.beliefs.config import LayerSpec, SourceSpec, load_calibration_rules, load_specs
 from twin.beliefs.grid import bbox_of_cells, cell_boundary
 from twin.beliefs.layer import BeliefLayer, assimilate, prior_layer
 from twin.providers.base import Observation, Provider, ProviderNotConfigured
@@ -46,6 +47,7 @@ def build_layer(
     observations: Sequence[Observation] | None = None,
     spec: LayerSpec | None = None,
     prior_provider: Provider | None = None,
+    sources: Sequence[SourceSpec] | None = None,
 ) -> BeliefLayer:
     """Starting map at ``start``, then every reading of the providers up to ``end``.
 
@@ -65,9 +67,33 @@ def build_layer(
     field = list(prior_provider.fetch(bbox, start, end)) if prior_provider is not None else None
     layer = prior_layer(spec, cells, start, prior_field=field)
     readings: list[Observation] = list(observations or [])
-    for p in providers:
-        readings.extend(p.fetch(bbox, start, end))
+    for i, p in enumerate(providers):
+        source = sources[i] if sources is not None else None
+        readings.extend(adapt(p.fetch(bbox, start, end), source, spec))
     return assimilate(layer, readings, until=end)
+
+
+def adapt(observations: Iterable[Observation], source: SourceSpec | None, spec: LayerSpec) -> Iterator[Observation]:
+    """Read a source in the layer's terms: pick its value, convert it, widen its error."""
+    if source is None or (source.entity_types is None and source.value_key is None and source.extra_sd == 0.0
+                          and source.scale == 1.0 and source.offset == 0.0 and source.drop_below is None):
+        yield from observations
+        return
+    types = source.entity_types or spec.entity_types
+    key = source.value_key or spec.value_key
+    for o in observations:
+        if o.entity_type not in types or key not in o.values:
+            continue
+        raw = o.values[key]
+        if source.drop_below is not None and raw < source.drop_below:
+            continue
+        sd = math.hypot(o.sigma.get(key, 0.0) * abs(source.scale), source.extra_sd)
+        yield replace(
+            o,
+            entity_type=spec.entity_types[0],
+            values={spec.value_key: raw * source.scale + source.offset},
+            sigma={spec.value_key: sd},
+        )
 
 
 def layer_payload(
@@ -86,13 +112,14 @@ def layer_payload(
     real source connected answers ``not_available`` instead of inventing values.
     """
     spec = load_specs()[name]
-    feeds = [providers[s] for s in spec.sources if s in providers]
+    pairs = [(providers[s.layer], s) for s in spec.sources if s.layer in providers]
+    feeds = [p for p, _ in pairs]
     prior = providers.get(spec.prior_field.source) if spec.prior_field is not None else None
     if not feeds and prior is None:
-        wanted = ", ".join(spec.sources) or "none configured"
+        wanted = ", ".join(spec.source_layers) or "none configured"
         return not_available(name, f"no real source is connected for this layer yet (sources: {wanted})")
     try:
-        layer = build_layer(name, cells, feeds, start, end, spec=spec, prior_provider=prior)
+        layer = build_layer(name, cells, feeds, start, end, spec=spec, prior_provider=prior, sources=[s for _, s in pairs])
     except ProviderNotConfigured as exc:
         return not_available(name, str(exc))
     return query(layer, threshold=threshold)

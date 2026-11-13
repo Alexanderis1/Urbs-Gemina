@@ -88,7 +88,7 @@ def test_layer_without_any_real_source_is_not_available() -> None:
 
 def test_layer_payload_picks_sources_from_config() -> None:
     spec = load_specs()["emf"]
-    assert spec.sources == ("emf_measurements",)
+    assert spec.source_layers == ("emf_measurements",)
     assert spec.prior_field is not None and spec.prior_field.source == "emf_baseline"
     cells = cells_in_bbox(WINDOW, 9)
     baseline = FakeProvider("cartoradio_grid", [reading("EMFEstimate", "electricField", 2.0, 0.4, "cartoradio_grid")])
@@ -97,3 +97,62 @@ def test_layer_payload_picks_sources_from_config() -> None:
     row = next(r for r in out["result"]["cells"] if r["cell"] == cell_of(*HERE, 9))
     assert row["mean"] == pytest.approx(2.0)
     assert out["data_kinds"] == {"emf": "estimated"}
+
+
+def test_bus_speeds_feed_road_speed_with_a_wider_margin() -> None:
+    spec = load_specs()["road_speed"]
+    bus = next(s for s in spec.sources if s.layer == "transit")
+    assert bus.entity_types == ("Vehicle",) and bus.value_key == "speed_kmh"
+    assert bus.extra_sd > 0
+    cells = cells_in_bbox(WINDOW, 9)
+    feed = FakeProvider("roma_gtfs_rt", [
+        reading("Vehicle", "speed_kmh", 40.0, 1.0, "roma_gtfs_rt"),
+        reading("Vehicle", "speed_kmh", 0.0, 1.0, "roma_gtfs_rt", lon=12.47),  # stopped at a stop: dropped
+    ])
+    out = layer_payload("road_speed", cells, T0, T0, providers={"transit": feed})
+    assert out["status"] == "ok"
+    assert out["result"]["n_observations"] == 1
+    row = next(r for r in out["result"]["cells"] if r["cell"] == cell_of(*HERE, 9))
+    prior = spec.prior.mean_at(T0)
+    # Moves towards 40 but less than a precise sensor would, because of the extra margin.
+    assert prior < row["mean"] < prior + 0.8 * (40.0 - prior)
+    assert out["synthetic"] is False
+
+
+def test_scooters_are_counted_per_cell_including_empty_cells() -> None:
+    spec = load_specs()["activity"]
+    assert spec.aggregate == "count"
+    cells = cells_in_bbox(WINDOW, 9)
+    scooters = [reading("MicromobilityVehicle", "availableVehicles", 1.0, 0.0, "bird_gbfs") for _ in range(6)]
+    scooters.append(reading("MicromobilityVehicle", "availableVehicles", 1.0, 0.0, "bird_gbfs", lon=12.499, lat=41.909))
+    out = layer_payload("activity", cells, T0, T0, providers={"micromobility": FakeProvider("bird_gbfs", scooters)})
+    rows = {r["cell"]: r for r in out["result"]["cells"]}
+    busy = rows[cell_of(*HERE, 9)]["mean"]
+    empty = rows[cell_of(12.49, 41.90, 9)]["mean"]  # inside the area the feed covers, no scooter there
+    assert busy > 3.0
+    assert empty < spec.prior.mean  # an empty cell inside the covered area is evidence of low activity
+    assert out["result"]["unit"] == "vehicles/cell"
+
+
+def test_coarse_forecast_map_is_interpolated_to_every_cell() -> None:
+    spec = load_specs()["air_no2"]
+    assert spec.prior_field is not None
+    assert spec.prior_field.source == "air_quality_model" and spec.prior_field.method == "idw"
+    assert "air_quality_citizen" in load_specs()["air_pm10"].source_layers  # Sensor.Community measures PM, not NO2
+    cells = cells_in_bbox(WINDOW, 9)
+    lattice = [reading("AirQualityForecast", "no2", v, 10.0, "cams_open_meteo", lon=lon, lat=41.9)
+               for lon, v in ((12.4, 20.0), (12.6, 60.0))]
+    layer = prior_layer(spec, cells, T0, prior_field=lattice)
+    west = layer.belief(cell_of(12.462, 41.895, 9)).mean
+    east = layer.belief(cell_of(12.498, 41.895, 9)).mean
+    assert 20.0 < west < east < 60.0  # every cell gets a value, increasing towards the high point
+
+
+def test_cells_outside_the_covered_area_keep_the_prior() -> None:
+    spec = load_specs()["activity"]
+    cells = cells_in_bbox(WINDOW, 9)
+    scooters = [reading("MicromobilityVehicle", "availableVehicles", 1.0, 0.0, "bird_gbfs", lon=12.48 + d, lat=41.895 + d)
+                for d in (0.0, 0.004)]
+    out = layer_payload("activity", cells, T0, T0, providers={"micromobility": FakeProvider("bird_gbfs", scooters)})
+    rows = {r["cell"]: r for r in out["result"]["cells"]}
+    assert rows[cell_of(12.462, 41.882, 9)]["mean"] == pytest.approx(spec.prior.mean)

@@ -104,23 +104,36 @@ def prior_layer(
     sources: set[str] = set()
     synthetic = False
     if prior_field is not None:
-        key = spec.prior_field.value_key if spec.prior_field is not None else spec.value_key
-        types = spec.prior_field.entity_types if spec.prior_field is not None else spec.entity_types
-        acc: dict[int, list[tuple[float, float]]] = {}
-        for o in prior_field:
-            if o.entity_type not in types or key not in o.values:
-                continue
-            i = index.get(cell_of(o.lon, o.lat, res))
-            if i is None:
-                continue
-            acc.setdefault(i, []).append((o.values[key], o.sigma.get(key, 0.0)))
-            sources.add(o.source_id)
-            synthetic = synthetic or o.synthetic
-        for i, vals in acc.items():
-            values = np.array([v for v, _ in vals])
-            sigmas = np.array([sd for _, sd in vals])
-            offset[i] = float(values.mean()) - base
-            prior_var[i] = max(float(np.mean(sigmas**2) + values.var()), 1e-6 * spec.prior.variance)
+        fspec = spec.prior_field
+        key = fspec.value_key if fspec is not None else spec.value_key
+        types = fspec.entity_types if fspec is not None else spec.entity_types
+        points = [o for o in prior_field if o.entity_type in types and key in o.values]
+        sources.update(o.source_id for o in points)
+        synthetic = any(o.synthetic for o in points)
+        if points and fspec is not None and fspec.method == "idw":
+            pxy = np.array(local_xy_km([(o.lon, o.lat) for o in points]), dtype=np.float64)
+            vals = np.array([o.values[key] for o in points])
+            sig2 = np.array([o.sigma.get(key, 0.0) ** 2 for o in points])
+            for lo in range(0, n, CHUNK):
+                d2 = ((xy[lo : lo + CHUNK, None, :] - pxy[None, :, :]) ** 2).sum(axis=2)
+                w = 1.0 / np.maximum(d2, 1e-6)
+                w /= w.sum(axis=1, keepdims=True)
+                m = w @ vals
+                offset[lo : lo + CHUNK] = m - base
+                # Map error plus how much the nearby map points disagree (interpolation error).
+                prior_var[lo : lo + CHUNK] = w @ sig2 + w @ (vals**2) - m**2
+            prior_var = np.maximum(prior_var, 1e-6 * spec.prior.variance)
+        else:
+            acc: dict[int, list[tuple[float, float]]] = {}
+            for o in points:
+                i = index.get(cell_of(o.lon, o.lat, res))
+                if i is not None:
+                    acc.setdefault(i, []).append((o.values[key], o.sigma.get(key, 0.0)))
+            for i, cell_vals in acc.items():
+                values = np.array([v for v, _ in cell_vals])
+                sigmas = np.array([sd for _, sd in cell_vals])
+                offset[i] = float(values.mean()) - base
+                prior_var[i] = max(float(np.mean(sigmas**2) + values.var()), 1e-6 * spec.prior.variance)
     return BeliefLayer(
         spec=spec,
         resolution=res,
@@ -154,6 +167,8 @@ def assimilate(layer: BeliefLayer, observations: Iterable[Observation], until: d
             outside += 1
             continue
         usable.append(o)
+    if spec.aggregate == "count":
+        usable = _count_per_cell(layer, usable)
     usable.sort(key=lambda o: _utc(o.observed_at))
 
     warnings = list(layer.warnings)
@@ -241,6 +256,14 @@ def _update(layer: BeliefLayer, batch: Sequence[Observation]) -> BeliefLayer:
     idx = np.array(sorted(per_cell), dtype=np.int64)
     weights = np.array([per_cell[int(i)][0] for i in idx])
     values = np.array([per_cell[int(i)][1] for i in idx]) / weights
+    if layer.spec.correlation_length_km <= 0.0:
+        # No spreading between cells: the plain per-cell Kalman update, vectorised.
+        mean = layer.mean.copy()
+        var = layer.variance.copy()
+        gain = var[idx] / (var[idx] + 1.0 / weights)
+        mean[idx] += gain * (values - mean[idx])
+        var[idx] *= 1.0 - gain
+        return _stamp(layer, mean, var)
     mean, var = posterior(
         layer.xy_km,
         layer.mean,
@@ -252,10 +275,58 @@ def _update(layer: BeliefLayer, batch: Sequence[Observation]) -> BeliefLayer:
         1.0 / weights,
         layer.spec.correlation_length_km,
     )
+    return _stamp(layer, mean, var)
+
+
+def _stamp(layer: BeliefLayer, mean: Array, var: Array) -> BeliefLayer:
     changed = var < layer.variance * (1.0 - UPDATED_SHARE)
     updated_at = layer.updated_at.copy()
     updated_at[changed] = layer.as_of.timestamp()
     return replace(layer, mean=mean, variance=var, updated_at=updated_at)
+
+
+def _count_per_cell(layer: BeliefLayer, items: Sequence[Observation]) -> list[Observation]:
+    """Turn item readings (one per parked scooter, say) into one count per cell and time window.
+
+    Cells inside the bounding box of a window's items that hold none count as 0,
+    since the feed covers them. Error = Poisson, sqrt(count + 1).
+    """
+    spec = layer.spec
+    window = spec.aggregate_window_minutes * 60.0
+    groups: dict[float, list[Observation]] = {}
+    for o in items:
+        t = _utc(o.observed_at).timestamp()
+        groups.setdefault(t - t % window, []).append(o)
+    out: list[Observation] = []
+    for t, group in groups.items():
+        counts: dict[str, float] = {}
+        for o in group:
+            c = cell_of(o.lon, o.lat, layer.resolution)
+            counts[c] = counts.get(c, 0.0) + o.values[spec.value_key]
+        lons = [o.lon for o in group]
+        lats = [o.lat for o in group]
+        when = datetime.fromtimestamp(t, tz=timezone.utc)
+        source = group[0].source_id
+        synthetic = any(o.synthetic for o in group)
+        for cell, i in layer.index.items():
+            lon, lat = cell_center(cell)
+            if not (min(lons) <= lon <= max(lons) and min(lats) <= lat <= max(lats)) and cell not in counts:
+                continue
+            n = counts.get(cell, 0.0)
+            out.append(
+                Observation(
+                    entity_id=f"count:{cell}",
+                    entity_type=spec.entity_types[0],
+                    lon=lon,
+                    lat=lat,
+                    observed_at=when,
+                    values={spec.value_key: n},
+                    sigma={spec.value_key: float(np.sqrt(n + 1.0))},
+                    source_id=source,
+                    synthetic=synthetic,
+                )
+            )
+    return out
 
 
 def _relax(layer: BeliefLayer, moment: datetime) -> BeliefLayer:

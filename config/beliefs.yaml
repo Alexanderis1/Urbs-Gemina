@@ -17,7 +17,13 @@
 
 layers:
   road_speed:
-    sources: [traffic_flow]
+    sources:
+      - traffic_flow            # sim_loops: the one simulated input
+      - layer: transit          # real GTFS-RT bus positions with speed (about 260 of 1,234 buses report it)
+        entity_types: [Vehicle]
+        value_key: speed_kmh
+        extra_sd: 10            # assumption (C=40): a bus's instant speed is a rough proxy for car speed (bus lanes, stops)
+        drop_below: 3           # a bus standing at a stop says nothing about traffic
     allow_simulated: true   # the only simulated input allowed: Roma Mobilita loop data is not public
     unit: km/h
     entity_types: [TrafficFlowObserved]
@@ -36,7 +42,8 @@ layers:
     basis: "assumption: congestion is correlated along about one km of street network; it changes within half an hour"
 
   air_no2:
-    sources: [air_quality]   # EEA/ARPA Lazio stations (real); add low-cost networks here with their own sigma
+    sources: [air_quality]   # EEA/ARPA Lazio stations (real). Sensor.Community has no NO2.
+    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: no2, method: idw}   # CAMS forecast via Open-Meteo, 0.1 deg lattice
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: no2
@@ -51,7 +58,8 @@ layers:
     basis: "assumption: urban NO2 background varies over a few km; hourly values persist a few hours"
 
   air_pm10:
-    sources: [air_quality]
+    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
+    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: pm10, method: idw}
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm10
@@ -66,7 +74,8 @@ layers:
     basis: "assumption: PM10 is more regional than NO2, so it spreads further and lasts longer"
 
   air_pm25:
-    sources: [air_quality]
+    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
+    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: pm25, method: idw}
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm25
@@ -127,19 +136,22 @@ layers:
     basis: "assumption: the field changes within a block of an antenna; it is stable over days"
 
   activity:
-    sources: []              # no real proxy connected yet (candidates: Wi-Fi sessions, shared-scooter density): layer reports not_available
-    unit: people/cell
-    entity_types: [CrowdFlowObserved]
-    value_key: peopleCount
+    # Weak proxy (C=40), not a people count: parked shared e-scooters available per cell.
+    sources: [micromobility]   # bird_gbfs, real, one reading per available vehicle, ids dropped
+    aggregate: count            # count items per cell; empty cells inside the covered area count as 0
+    aggregate_window_minutes: 5
+    unit: vehicles/cell
+    entity_types: [MicromobilityVehicle]
+    value_key: availableVehicles
     prior:
-      mean: 250
-      sd: 250
-      basis: "assumption: about 2,300 residents per km2 in Roma Capitale gives about 250 per 0.11 km2 cell; to be replaced by the census population grid plus POIs"
-    correlation_length_km: 0.4
+      mean: 1
+      sd: 3
+      basis: "assumption: about 3,700 scooters over a few thousand cells of the service area gives about 1 per cell"
+    correlation_length_km: 0    # no spreading: each cell is counted on its own
     relax_tau_hours: 1.0
     min_value: 0
-    calibration: {method: none, note: "uncalibrated: no ground-truth counts available"}
-    basis: "assumption: crowds cluster around a few blocks; they change within the hour"
+    calibration: {method: none, note: "uncalibrated: scooter counts are a proxy for activity; no ground-truth people counts. Roma Wi-Fi sessions (dati.comune.roma.it, daily, by site) are the next candidate"}
+    basis: "assumption: shared scooters gather where people go; this misses residents and people who do not use them"
 
 calibration_rules:
   interval: 0.90            # we check the 90% range
