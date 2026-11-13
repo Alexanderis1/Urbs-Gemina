@@ -83,9 +83,9 @@ class _Clusters:
             i = self.parent[i]
         return i
 
-    def try_union(self, i: int, j: int) -> bool:
+    def try_union(self, i: int, j: int, force: bool = False) -> bool:
         ri, rj = self.find(i), self.find(j)
-        if ri == rj or self.sources[ri] & self.sources[rj]:
+        if ri == rj or (not force and self.sources[ri] & self.sources[rj]):
             return False
         if rj < ri:
             ri, rj = rj, ri
@@ -129,6 +129,19 @@ def build_facilities(candidates: list[Candidate], config: SportsConfig) -> tuple
         if clusters.try_union(i, j):
             report.links.append(Link(ka, kb, reason, round(d, 1), -neg_sim))
 
+    # Unnamed pitches / pools next to a named facility are parts of that site (even same source).
+    if cfg.part_of_site_distance_m > 0:
+        sites: GridIndex[int] = GridIndex(cfg.part_of_site_distance_m)
+        for i, c in enumerate(cands):
+            if c.lon is not None and c.lat is not None and c.name:
+                sites.add(c.lon, c.lat, i)
+        for i, c in enumerate(cands):
+            if c.name or c.kind not in cfg.part_kinds or c.lon is None or c.lat is None:
+                continue
+            near = sorted(sites.near(c.lon, c.lat, cfg.part_of_site_distance_m), key=lambda h: (h[0], h[1]))
+            if near and clusters.try_union(near[0][1], i, force=True):
+                report.links.append(Link(cands[near[0][1]].key, c.key, "part_of_site", round(near[0][0], 1), 0.0))
+
     # Records without coordinates: near-exact name in the same municipio.
     for i, c in enumerate(cands):
         if c.located:
@@ -165,7 +178,7 @@ def _field(value: Any, c: Candidate, config: SportsConfig) -> FieldValue:
 
 def merge_cluster(members: list[Candidate], config: SportsConfig) -> Facility:
     """Most trusted source wins each field; disciplines are the union, each with its sources."""
-    ranked = sorted(members, key=lambda c: (config.priority(c.source), c.source, c.record_id))
+    ranked = sorted(members, key=lambda c: (config.priority(c.source), not c.name, c.source, c.record_id))
     anchor = ranked[0]
     located = next((c for c in ranked if c.located), None)
 

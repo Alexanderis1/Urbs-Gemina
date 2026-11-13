@@ -19,6 +19,13 @@ matching:
     Starting values for Rome, where a facility's point in different sources is
     usually within one block (about 100-150 m). To be checked by hand on the pilot
     municipio and reported as a precision/recall figure.
+  # An unnamed OSM pitch or pool this close to a named facility is part of that site
+  # (a sports centre mapped as one point plus one feature per pitch).
+  part_of_site_distance_m: 120
+  part_kinds: [pitch, pool]
+  part_basis: >-
+    On the real OSM extract (13 Nov 2026) about 5,000 unnamed pitches sit inside named sports
+    centres; without this rule each pitch shows up as its own facility.
   # Words removed before comparing names (lowercase, no accents).
   name_stopwords: [centro, sportivo, sportiva, sportive, sportivi, impianto, impianti,
                    comunale, municipale, asd, ssd, a, s, d, srl, polisportiva,
@@ -105,6 +112,15 @@ deserts:
   basis: >-
     Planning choice, not a standard: "most residents lack access" and a floor so
     nearly empty zones (parks, industrial areas) are not flagged. Tune with the office.
+
+coverage:
+  # OSM swimming pools with no name and no access tag are left out of coverage counts.
+  exclude_osm_unnamed_pools_without_access: true
+  basis: >-
+    On the real OSM extract 7,598 unnamed pools are tagged access=private (garden and
+    condominium pools) and 1,842 more are unnamed with no access tag; they are very likely the
+    same kind (C=85). They stay on the map; they just do not count as "a pool you can use".
+    Facilities a source tags access=private or access=no never count.
 
 # Disciplines assumed for a school gym opened to the community in the what-if,
 # when the user does not say which ones.

@@ -178,3 +178,31 @@ def test_closed_facilities_do_not_cover_anyone() -> None:
     result = coverage(POINTS, closed, "football", reach_radius_m(CFG))
     assert result["residents_uncovered"] == 3500
     assert result["facilities_offering"] == 0
+
+
+def test_osm_parts_private_access_and_garden_pools() -> None:
+    """Rules added after loading the real OSM extract (13 Nov 2026)."""
+    from twin.modules.sports.matching import build_facilities as build
+    from twin.modules.sports.sources import from_osm as osm
+
+    lon_c, lat_c = at(0, 3000)
+    lon_p, lat_p = at(60, 3000)
+    lon_g, lat_g = at(0, 3100)
+    lon_x, lat_x = at(30, 2950)
+    elements = {"elements": [
+        {"type": "node", "id": 1, "lon": lon_c, "lat": lat_c,
+         "tags": {"leisure": "sports_centre", "name": "Circolo Nord"}},
+        {"type": "node", "id": 2, "lon": lon_p, "lat": lat_p, "tags": {"leisure": "pitch", "sport": "volleyball"}},
+        {"type": "node", "id": 3, "lon": lon_g, "lat": lat_g + 0.01,
+         "tags": {"leisure": "swimming_pool", "access": "private"}},
+        {"type": "node", "id": 4, "lon": lon_x, "lat": lat_x - 0.01, "tags": {"leisure": "swimming_pool"}},
+    ]}
+    facs, report = build(osm(elements, CFG, "x"), CFG)
+    site = next(f for f in facs if f.fields["name"].value == "Circolo Nord")
+    assert "osm:node/2" in site.members and "volleyball" in site.disciplines
+    assert any(link.reason == "part_of_site" for link in report.links)
+    private = next(f for f in facs if "osm:node/3" in f.members)
+    assert private.access == "private" and not private.offers("swimming")
+    garden = next(f for f in facs if "osm:node/4" in f.members)
+    near_garden = [PopulationPoint("g", garden.lon or 0.0, garden.lat or 0.0, 100, 10, "Z9", "VII")]
+    assert coverage(near_garden, facs, "swimming", 500.0, config=CFG)["residents_uncovered"] == 100

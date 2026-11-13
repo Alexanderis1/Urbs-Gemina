@@ -123,8 +123,19 @@ class Facility:
         return (flag is not None and flag.value is True) or (
             active is not None and str(active.value).strip().upper() == "NO")
 
+    @property
+    def access(self) -> str | None:
+        """OSM-style access tag when a source states it (yes, customers, private, no...)."""
+        value = self.extra.get("access")
+        return str(value.value).strip().lower() if value is not None and value.value else None
+
+    @property
+    def usable(self) -> bool:
+        """False when a source says it is closed or not open to the public (access private/no)."""
+        return not self.closed and self.access not in ("private", "no")
+
     def offers(self, discipline: str, include_unverified: bool = True) -> bool:
-        if self.closed:
+        if not self.usable:
             return False
         value = self.disciplines.get(discipline)
         if value is None:
@@ -170,6 +181,7 @@ class Facility:
             "type": self.facility_type,
             "accessible": self.accessible,
             "closed": self.closed,
+            "access": self.access,
             "disciplines": sorted(self.disciplines),
             "fields": {k: v.to_dict() for k, v in self.fields.items()},
             "discipline_details": {k: v.to_dict() for k, v in sorted(self.disciplines.items())},
