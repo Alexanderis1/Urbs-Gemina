@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { PROXY, isSampleMode } from "@/api/client";
+import { isSampleMode, proxyFetch } from "@/api/client";
 import { buildTwinQuestion, parseTwinAnswer, type Language, type TwinAnswer } from "@/api/twin";
 import { KindBadge } from "@/components/Badge";
 import { dispatchMapAction } from "@/lib/mapbus";
@@ -13,9 +13,8 @@ interface Turn {
   answer?: TwinAnswer;
 }
 
-// Orchestrator hand-over (shared interface 7) through the edge function, which adds the tier from the session.
-// The "/ask" path on the proxy is provisional until WS7 fixes the route.
-const ASK_URL = (import.meta.env.VITE_ASK_URL as string | undefined) || (PROXY ? `${PROXY}/ask` : "");
+// Orchestrator hand-over (shared interface 7) through the edge function's /ask route,
+// which sets the tier from the session and forwards to ORCHESTRATOR_URL.
 
 const OPENING: Turn = {
   role: "assistant",
@@ -64,12 +63,8 @@ export default function Ask() {
     setBusy(true);
     try {
       let answer: TwinAnswer;
-      if (ASK_URL && !isSampleMode) {
-        const res = await fetch(ASK_URL, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(buildTwinQuestion(q, { language, conversationId: conversationId.current })),
-        });
+      if (!isSampleMode) {
+        const res = await proxyFetch("/ask", buildTwinQuestion(q, { language, conversationId: conversationId.current }));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         answer = parseTwinAnswer(await res.json());
       } else {

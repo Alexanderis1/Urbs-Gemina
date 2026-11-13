@@ -8,7 +8,9 @@ import { onMapAction } from "@/lib/mapbus";
 
 const STYLE_URL =
   (import.meta.env.VITE_BASEMAP_STYLE as string | undefined) || "https://tiles.openfreemap.org/styles/positron";
-const G0_PMTILES = (import.meta.env.VITE_BUILDINGS_PMTILES_URL as string | undefined) ?? "";
+const G0_RAW = (import.meta.env.VITE_BUILDINGS_PMTILES_URL as string | undefined) ?? "";
+// The pmtiles protocol needs an absolute URL; a relative one (e.g. /buildings.pmtiles) is resolved against the page.
+const G0_PMTILES = G0_RAW && typeof window !== "undefined" ? new URL(G0_RAW, window.location.href).href : G0_RAW;
 
 export const ROME = { lat: 41.8986, lon: 12.4769 };
 
@@ -41,8 +43,13 @@ function addBuildings(map: MlMap) {
   const style = map.getStyle() as StyleSpecification;
   const firstSymbol = style.layers.find((l) => l.type === "symbol")?.id;
   if (G0_PMTILES) {
-    // Assumed WS2 output: source-layer "buildings", height in metres in "height". Coordinate with WS2.
-    map.addSource("g0", { type: "vector", url: `pmtiles://${G0_PMTILES}` });
+    // WS2 G0 block model (twin/model/README.md): source-layer "buildings", height in "height_m", zoom 12-16.
+    map.addSource("g0", {
+      type: "vector",
+      url: `pmtiles://${G0_PMTILES}`,
+      attribution:
+        "Buildings © OpenStreetMap contributors / Overture (ODbL). Heights: GlobalBuildingAtlas, TUM (CC BY-NC 4.0, non-commercial); Copernicus Urban Atlas. Terrain: Copernicus DEM.",
+    });
     map.addLayer(
       {
         id: "g0-extrusion",
@@ -50,8 +57,9 @@ function addBuildings(map: MlMap) {
         source: "g0",
         "source-layer": "buildings",
         paint: {
-          "fill-extrusion-color": "#d6cfc4",
-          "fill-extrusion-height": ["coalesce", ["get", "height"], 9.6],
+          // Estimated heights (no measured source) are drawn a little lighter.
+          "fill-extrusion-color": ["match", ["get", "data_kind"], "real", "#cfc6b8", "#e3ddd3"],
+          "fill-extrusion-height": ["coalesce", ["get", "height_m"], 9.6],
           "fill-extrusion-opacity": 0.9,
         },
       },
@@ -123,7 +131,7 @@ export function CityMap({
     void loadStyle().then((style) => {
       if (cancelled) return;
       if (style === FALLBACK_STYLE) {
-        if (map.loaded()) addBuildings(map);
+        if (map.isStyleLoaded()) addBuildings(map);
         else map.once("load", () => addBuildings(map));
         return;
       }
@@ -132,6 +140,7 @@ export function CityMap({
     });
     map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
     mapRef.current = map;
+    if (import.meta.env.DEV) (window as unknown as { __urbsMap?: MlMap }).__urbsMap = map;
     overlayRef.current = overlay;
     const off = onMapAction((a) => {
       if (a.tool === "fly_to") map.flyTo({ center: [a.args.lon, a.args.lat], zoom: a.args.zoom ?? 16, pitch: 60 });

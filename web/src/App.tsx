@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { AiDisclosure, SampleModeBanner } from "@/components/Banners";
 import { ScreenRouter } from "@/components/ScreenRouter";
+import { Account } from "@/components/Account";
 import { canOpen, type ScreenId } from "@/lib/tiers";
 import { useSession } from "@/lib/runlog";
 import CityView from "@/pages/CityView";
@@ -22,7 +23,7 @@ const SCREENS: { id: ScreenId; path: string; label: string; el: JSX.Element }[] 
 ];
 
 export default function App() {
-  const { tier, setTier } = useSession();
+  const { tier } = useSession();
   const visible = SCREENS.filter((s) => canOpen(tier, s.id));
   return (
     <div className="flex h-full flex-col">
@@ -45,11 +46,7 @@ export default function App() {
             </NavLink>
           ))}
         </nav>
-        {/* Demo switch. With Supabase auth the tier comes from the user's role and is enforced server-side. */}
-        <select className="rounded border border-stone-300 px-2 py-1 text-sm" value={tier} onChange={(e) => setTier(e.target.value as typeof tier)}>
-          <option value="office">Office</option>
-          <option value="citizen">Citizen</option>
-        </select>
+        <Account />
       </header>
       <main className="min-h-0 flex-1">
         <Routes>

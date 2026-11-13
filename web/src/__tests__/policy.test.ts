@@ -1,0 +1,52 @@
+import { describe, expect, it } from "vitest";
+import { planForward } from "../../supabase/functions/_shared/policy";
+
+const env = {
+  TOOL_API_URL: "https://api.example/",
+  TOOL_API_OFFICE_KEY: "office-key",
+  TOOL_API_CITIZEN_KEY: "",
+  ORCHESTRATOR_URL: "https://orch.example/ask",
+};
+
+describe("edge function policy (tier decided on the server)", () => {
+  it("forwards a tool call with the key that matches the user's tier", () => {
+    const p = planForward("/tools/query_layer", "office", { layer: "rain" }, env);
+    expect(p).toEqual({ ok: true, url: "https://api.example/tools/query_layer", key: "office-key", body: { layer: "rain" } });
+  });
+
+  it("serves citizens without the office key", () => {
+    const p = planForward("/tools/query_layer", "citizen", { layer: "rain" }, env);
+    expect(p.ok && "key" in p && p.key).toBe("");
+  });
+
+  it("refuses office-only routes for citizens", () => {
+    expect(planForward("/tools/context_check", "citizen", {}, env)).toMatchObject({ ok: false, status: 403 });
+    expect(planForward("/sports/manager_update", "citizen", {}, env)).toMatchObject({ ok: false, status: 403 });
+  });
+
+  it("refuses unknown tools", () => {
+    expect(planForward("/tools/drop_database", "office", {}, env)).toMatchObject({ ok: false, status: 404 });
+  });
+
+  it("overwrites any tier the browser tried to send on /ask", () => {
+    const p = planForward("/ask", "citizen", { question: "q", tier: "office" }, env);
+    expect(p.ok && p.body).toMatchObject({ question: "q", tier: "citizen", channel: "chat" });
+    expect(p.ok && "url" in p && p.url).toBe("https://orch.example/ask");
+  });
+
+  it("strips a tier from tool inputs too", () => {
+    const p = planForward("/tools/query_layer", "citizen", { layer: "rain", tier: "office" }, env);
+    expect(p.ok && p.body).toEqual({ layer: "rain" });
+  });
+});
+
+describe("manager updates are stored in Lovable Cloud, not forwarded", () => {
+  it("stores a valid update from the office tier", () => {
+    const body = { facility_id: "f1", field: "hours", value: "9-21", account_ref: "org:asd-roma", confirmed_at: "2026-11-13T20:00:00Z" };
+    expect(planForward("/sports/manager_update", "office", body, env)).toEqual({ ok: true, table: "sports_manager_updates", body });
+  });
+  it("rejects a person's name as account_ref", () => {
+    const body = { facility_id: "f1", field: "hours", value: "9-21", account_ref: "Mario Rossi", confirmed_at: "t" };
+    expect(planForward("/sports/manager_update", "office", body, env)).toMatchObject({ ok: false, status: 422 });
+  });
+});

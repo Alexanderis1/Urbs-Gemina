@@ -4,7 +4,7 @@ import type { Layer } from "@deck.gl/core";
 import { CityMap } from "@/map/CityMap";
 import { KindBadge } from "@/components/Badge";
 import { RunMeta } from "@/components/RunMeta";
-import { PROXY, isSampleMode } from "@/api/client";
+import { isSampleMode, proxyFetch } from "@/api/client";
 import { SAMPLE_DISCIPLINES } from "@/api/mockSport";
 import { MUNICIPI, roman } from "@/lib/area";
 import { useSession } from "@/lib/runlog";
@@ -285,7 +285,6 @@ function FieldRow({ name, f }: { name: string; f: SportField }) {
   );
 }
 
-const MANAGER_URL = PROXY ? `${PROXY}/sports/manager_update` : "";
 
 function FacilityPage({ f, canManage, onClose }: { f: SportFeature; canManage: boolean; onClose: () => void }) {
   const p = f.properties;
@@ -299,8 +298,8 @@ function FacilityPage({ f, canManage, onClose }: { f: SportFeature; canManage: b
     try {
       const v = field === "disciplines" ? value.split(",").map((s) => s.trim()).filter(Boolean) : value;
       const u = buildManagerUpdate(p.facility_id, field, v, account, new Date().toISOString());
-      if (MANAGER_URL && !isSampleMode) {
-        const res = await fetch(MANAGER_URL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(u) });
+      if (!isSampleMode) {
+        const res = await proxyFetch("/sports/manager_update", u);
         if (!res.ok) {
           // The sports module rejects bad fields or disciplines with a validation message.
           const body = (await res.json().catch(() => ({}))) as { detail?: unknown; reason?: unknown };

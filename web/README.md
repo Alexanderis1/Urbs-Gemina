@@ -17,9 +17,9 @@ marked `synthetic: true`, and the whole UI shows SIMULATED badges. Copy `.env.ex
 
 | Variable | What it is |
 |---|---|
-| `VITE_TOOL_PROXY_URL` | Edge function that holds the keys and the user's tier and forwards `POST /tools/<name>` to the tool API |
-| `VITE_ASK_URL` | Orchestrator endpoint (defaults to `<proxy>/ask`) |
-| `VITE_BUILDINGS_PMTILES_URL` | G0 block model from the city-model workstream. Empty = OpenStreetMap buildings from the base map |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | Set by Lovable Cloud. Turns on sign-in and routes calls through the `tools` edge function |
+| `VITE_TOOL_PROXY_URL` | Override for the edge function URL (default `<supabase>/functions/v1/tools`) |
+| `VITE_BUILDINGS_PMTILES_URL` | G0 block model (`buildings.pmtiles` from the city-model workstream, about 144 MB, not committed). Locally: copy it to `web/public/` and set `/buildings.pmtiles`. Empty = OSM buildings from the base map |
 | `VITE_BASEMAP_STYLE` | Base map style (OpenFreeMap, no key). If unreachable the map falls back to a plain background |
 
 ## Screens
@@ -40,6 +40,16 @@ context list → field range → downloadable cited report) · Scenario lab · D
 - Area ids: `city`, `municipio:1`..`municipio:15`, `zone:<CODE>`, or a GeoJSON polygon.
 - Sport screen: `sports_facilities` and `sport_deserts` from the sports module (PR #5); manager updates go to
   `POST <proxy>/sports/manager_update` as `{facility_id, field, value, account_ref: "org:<slug>", confirmed_at}`.
+
+## Lovable Cloud (login, roles, server function)
+
+- `supabase/migrations/…_roles_and_manager_updates.sql`: `user_roles` (citizen | office; browsers can only read their own row)
+  and `sports_manager_updates` (org accounts only).
+- `supabase/functions/tools`: the only path from the browser to the back end. It reads the tier from `user_roles`
+  (signed out = citizen), picks the tool API key for that tier, blocks office-only routes, sets the tier on `/ask`,
+  and stores manager updates. Routing rules are in `supabase/functions/_shared/policy.ts` (unit-tested).
+- Secrets to add in Lovable Cloud: `TOOL_API_URL`, `TOOL_API_OFFICE_KEY`, `TOOL_API_CITIZEN_KEY` (optional), `ORCHESTRATOR_URL`.
+- To make someone an officer: insert a row `(user_id, 'office')` in `user_roles` from the Cloud dashboard.
 
 ## Lovable
 
