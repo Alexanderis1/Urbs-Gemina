@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -123,7 +124,7 @@ def fetch_dem(bbox: BBox, dst: Path) -> Path:
         return _clip_to_file([f"/vsicurl/{u}" for u in dem_tile_urls(bbox)], bbox, dst, nodata=-9999.0)
 
 
-def fetch_urban_atlas_heights(bbox: BBox, dst: Path, *, chunk_px: int = 4000) -> Path:
+def fetch_urban_atlas_heights(bbox: BBox, dst: Path, *, chunk_px: int = 2000, retries: int = 4) -> Path:
     """Urban Atlas Building Height 2012 height classes (10 m, EPSG:3035) for ``bbox`` as one GeoTIFF.
 
     Read from the EEA ImageServer in chunks (the server caps one image at 15000 x 4100 px).
@@ -151,8 +152,16 @@ def fetch_urban_atlas_heights(bbox: BBox, dst: Path, *, chunk_px: int = 4000) ->
                 f"&bboxSR=3035&imageSR=3035&size={w},{h}&format=tiff&pixelType=U16"
                 "&interpolation=RSP_NearestNeighbor&f=image"
             )
-            with urllib.request.urlopen(url, timeout=300) as resp:
-                payload = resp.read()
+            payload = b""
+            for attempt in range(retries):
+                try:
+                    with urllib.request.urlopen(url, timeout=300) as resp:
+                        payload = resp.read()
+                    break
+                except OSError:
+                    if attempt == retries - 1:
+                        raise
+                    time.sleep(2 ** (attempt + 1))
             with MemoryFile(payload) as mem, mem.open() as src:
                 block = src.read(1)
             block[block == 65535] = 0

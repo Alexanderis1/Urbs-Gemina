@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args.out.mkdir(parents=True, exist_ok=True)
     parquet = args.out / "buildings_lod1.parquet"
-    model.to_parquet(parquet)
+    model.to_parquet(parquet, write_covering_bbox=True)
     outputs = {"buildings_lod1.parquet": parquet}
     if not args.no_tiles:
         outputs["buildings.pmtiles"] = write_tiles(model, args.out / "buildings.pmtiles", cfg.tiles)
@@ -171,6 +171,8 @@ def main(argv: list[str] | None = None) -> int:
         "floors = floor count x 3.2 m. default = 9 m placeholder.",
         "raster_class rows: share of buildings whose height falls inside their Urban Atlas class; errors are "
         "distances to the nearest class edge.",
+        "GBA was built partly from OpenStreetMap, so where OSM has a height GBA may have learned from it: "
+        "the GBA vs osm_tag agreement is probably optimistic (C=60).",
         "The reference heights are not ground truth either: OSM tags can be rough, Urban Atlas dates from 2012 "
         "and covers the core urban area only. The free LiDAR (G2) will be the stronger reference in the centre.",
         "Ground level comes from the Copernicus 30 m surface model (low percentile around each building).",

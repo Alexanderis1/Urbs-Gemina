@@ -54,7 +54,8 @@ def match_gba(
     joined = joined.sort_values("height", ascending=False, kind="mergesort")
     best = joined[~joined.index.duplicated(keep="first")].reindex(range(len(metric)))
     height = np.asarray(best["height"].to_numpy(dtype="float64"), dtype="float64")
-    sd = np.sqrt(np.asarray(best["var"].to_numpy(dtype="float64"), dtype="float64"))
+    var = np.asarray(best["var"].to_numpy(dtype="float64"), dtype="float64")
+    sd = np.sqrt(np.where(var >= 0, var, np.nan))  # negative variance = GBA "unknown"
     return height, sd
 
 
