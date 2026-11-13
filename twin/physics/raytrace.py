@@ -30,6 +30,7 @@ from twin.physics import bel, config
 
 F64 = NDArray[np.float64]
 C_MHZ_M = 299.792458
+NO_RAYS = -32768  # int16 marker of a cell no ray reached
 
 
 def field_from_path_gain(path_gain: F64, eirp_w: float | F64, frequency_mhz: float) -> F64:
@@ -132,15 +133,23 @@ class RadioMaps:
     meta: dict[str, Any]
 
     def to_bytes(self) -> bytes:
+        """Compact form: path gain in centi-dB as int16 (0.01 dB steps; no rays = -32768).
+
+        Keeps a district's maps under Modal's 2 MiB inline limit, so no blob storage is needed."""
+        with np.errstate(divide="ignore"):
+            cdb = np.where(self.path_gain > 0, np.round(100.0 * 10.0 * np.log10(self.path_gain)), NO_RAYS)
         buf = io.BytesIO()
-        np.savez_compressed(buf, path_gain=self.path_gain, cell_centers=self.cell_centers,
-                            heights_m=self.heights_m, meta=np.array(json.dumps(self.meta)))
+        np.savez_compressed(buf, path_gain_cdb=np.clip(cdb, NO_RAYS, 32767).astype(np.int16),
+                            cell_centers=self.cell_centers.astype(np.float32), heights_m=self.heights_m,
+                            meta=np.array(json.dumps(self.meta)))
         return buf.getvalue()
 
     @classmethod
     def from_bytes(cls, blob: bytes) -> RadioMaps:
         z = np.load(io.BytesIO(blob), allow_pickle=False)
-        return cls(z["path_gain"], z["cell_centers"], z["heights_m"], json.loads(str(z["meta"])))
+        cdb = z["path_gain_cdb"].astype(np.float64)
+        pg = np.where(cdb <= NO_RAYS, 0.0, 10.0 ** (cdb / 1000.0))
+        return cls(pg, z["cell_centers"].astype(np.float64), z["heights_m"], json.loads(str(z["meta"])))
 
 
 def site_key(site: Mapping[str, Any], radius_m: float = 300.0) -> str:

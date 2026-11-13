@@ -24,6 +24,8 @@ class ReachConfig:
     walk_minutes: float
     walk_speed_kmh: float
     detour_factor: float
+    #: "network": shortest walk on the Overture street graph when it is available; else straight line x detour
+    method: str = "network"
 
 
 @dataclass(frozen=True)
@@ -94,7 +96,8 @@ def load_config(path: Path = DEFAULT_PATH) -> SportsConfig:
             name_stopwords=frozenset(_strs(m.get("name_stopwords"))),
         ),
         source_priority=_strs(raw["source_priority"]),
-        reach=ReachConfig(float(r["walk_minutes"]), float(r["walk_speed_kmh"]), float(r["detour_factor"])),
+        reach=ReachConfig(float(r["walk_minutes"]), float(r["walk_speed_kmh"]), float(r["detour_factor"]),
+                          str(r.get("method", "network"))),
         transit_stop_radius_m=float(raw["transit"]["stop_radius_m"]),
         web=WebConfig(
             min_confidence=float(w["min_confidence"]),

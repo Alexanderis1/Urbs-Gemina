@@ -1,7 +1,8 @@
 """"Sport deserts": residents with no facility for a discipline within reach.
 
-Reach is a walking distance turned into a straight-line radius
-(config/sports.yaml ``reach``), so results are *estimated*. Population points
+Reach is the shortest walk along real streets (Overture walking network) when
+the graph is available, else a straight-line radius from the walking budget
+(config/sports.yaml ``reach``). Results are *estimated*. Population points
 are census-section centroids (ISTAT 2021) with residents and children.
 The what-if adds facilities (e.g. a school gym opened to the community) and
 reports how many more residents are covered.
@@ -14,6 +15,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 from twin.modules.sports.config import SportsConfig
 from twin.modules.sports.geo import GridIndex
+from twin.modules.sports.network import WalkGraph, nearest_facility_m
 from twin.modules.sports.model import NOT_KNOWN, STANDARD_FIELDS, Facility, FieldStatus, FieldValue, Provenance
 
 
@@ -29,6 +31,11 @@ class PopulationPoint:
     municipio: str | None = None
 
 
+def street_budget_m(config: SportsConfig) -> float:
+    """Walking budget along streets: minutes x speed."""
+    return config.reach.walk_minutes / 60.0 * config.reach.walk_speed_kmh * 1000.0
+
+
 def reach_radius_m(config: SportsConfig) -> float:
     r = config.reach
     street_m = r.walk_minutes / 60.0 * r.walk_speed_kmh * 1000.0
@@ -42,8 +49,13 @@ def _offering(facilities: Iterable[Facility], discipline: str, include_unverifie
 
 def coverage(points: Sequence[PopulationPoint], facilities: Sequence[Facility], discipline: str,
              radius_m: float, include_unverified: bool = True,
-             config: SportsConfig | None = None) -> dict[str, Any]:
-    """Who has a facility for ``discipline`` within ``radius_m``, overall and per zone."""
+             config: SportsConfig | None = None, walk_graph: WalkGraph | None = None,
+             street_m: float | None = None) -> dict[str, Any]:
+    """Who has a facility for ``discipline`` within reach, overall and per zone.
+
+    With ``walk_graph`` and ``street_m``: reach is the shortest walk along streets (network);
+    otherwise a straight-line ``radius_m``.
+    """
     min_share = config.desert_min_uncovered_share if config else 0.5
     min_res = config.desert_min_residents if config else 1000.0
     offering = _offering(facilities, discipline, include_unverified)
@@ -51,12 +63,18 @@ def coverage(points: Sequence[PopulationPoint], facilities: Sequence[Facility], 
     for f in offering:
         assert f.lon is not None and f.lat is not None
         index.add(f.lon, f.lat, f)
+    walked: dict[str, float] | None = None
+    if walk_graph is not None and street_m is not None:
+        dist = nearest_facility_m(walk_graph, [(f.lon, f.lat) for f in offering if f.lon is not None and f.lat is not None],
+                                  [(p.lon, p.lat) for p in points], limit_m=street_m * 1.5)
+        walked = {p.point_id: float(d) for p, d in zip(points, dist)}
 
     zones: dict[str, dict[str, float]] = {}
     uncovered_ids: list[str] = []
     totals = {"residents": 0.0, "children": 0.0, "res_unc": 0.0, "chi_unc": 0.0}
     for p in points:
-        covered = next(iter(index.near(p.lon, p.lat, radius_m)), None) is not None
+        covered = (walked[p.point_id] <= float(street_m or 0.0) if walked is not None
+                   else next(iter(index.near(p.lon, p.lat, radius_m)), None) is not None)
         z = zones.setdefault(p.zone or "unknown", {"residents": 0.0, "children": 0.0, "res_unc": 0.0, "chi_unc": 0.0,
                                                     "wlon": 0.0, "wlat": 0.0, "w": 0.0, "slon": 0.0, "slat": 0.0,
                                                     "n": 0.0})
@@ -88,7 +106,8 @@ def coverage(points: Sequence[PopulationPoint], facilities: Sequence[Facility], 
         })
     return {
         "discipline": discipline,
-        "reach_m": round(radius_m, 1),
+        "reach_m": round(float(street_m) if walked is not None and street_m is not None else radius_m, 1),
+        "reach_method": "walking_network" if walked is not None else "straight_line",
         "facilities_offering": len(offering),
         "facilities_offering_unverified_only": sum(
             1 for f in offering if f.disciplines[discipline].status == "web_unverified"),
@@ -125,10 +144,11 @@ def school_gym_facility(name: str, lon: float, lat: float, config: SportsConfig,
 
 def what_if_open(points: Sequence[PopulationPoint], facilities: Sequence[Facility], discipline: str,
                  new_facilities: Sequence[Facility], radius_m: float, include_unverified: bool = True,
-                 config: SportsConfig | None = None) -> dict[str, Any]:
-    base = coverage(points, facilities, discipline, radius_m, include_unverified, config)
+                 config: SportsConfig | None = None, walk_graph: WalkGraph | None = None,
+                 street_m: float | None = None) -> dict[str, Any]:
+    base = coverage(points, facilities, discipline, radius_m, include_unverified, config, walk_graph, street_m)
     variant = coverage(points, list(facilities) + list(new_facilities), discipline, radius_m,
-                       include_unverified, config)
+                       include_unverified, config, walk_graph, street_m)
     base_zone = {z["zone"]: z for z in base["zones"]}
     zone_delta = [
         {"zone": z["zone"],

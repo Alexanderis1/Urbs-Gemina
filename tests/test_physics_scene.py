@@ -87,3 +87,17 @@ def test_tri_sector_from_twelve_yaws() -> None:
 def test_sionna_yaw_from_compass_bearing() -> None:
     assert raytrace.yaw_deg(0.0) == pytest.approx(90.0)    # north is +y
     assert raytrace.yaw_deg(90.0) == pytest.approx(0.0)    # east is +x
+
+
+def test_radio_maps_round_trip_is_compact_and_accurate() -> None:
+    rng = np.random.default_rng(0)
+    pg = 10.0 ** rng.uniform(-14, -6, (4, 12, 120, 120))
+    pg[0, 0, :10, :10] = 0.0
+    centers = np.stack(np.meshgrid(np.arange(120) * 5.0, np.arange(120) * 5.0), axis=-1)
+    maps = raytrace.RadioMaps(pg, centers, np.array([1.5, 10, 20, 30]), {"cell_m": 5.0})
+    blob = maps.to_bytes()
+    assert len(blob) < 2 * 1024 * 1024
+    back = raytrace.RadioMaps.from_bytes(blob)
+    assert np.all(back.path_gain[0, 0, :10, :10] == 0.0)
+    lit = pg > 0
+    assert np.max(np.abs(10 * np.log10(back.path_gain[lit] / pg[lit]))) < 0.006

@@ -25,3 +25,4 @@ data/restricted/
 # Front end
 node_modules/
 .DS_Store
+data/model/
