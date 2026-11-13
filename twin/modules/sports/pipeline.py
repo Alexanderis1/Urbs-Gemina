@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from twin.modules.sports.config import SportsConfig, load_config
+from twin.modules.sports.deserts import PopulationPoint, population_from_census
 from twin.modules.sports.manager import ManagerUpdate, apply_manager_update
 from twin.modules.sports.matching import build_facilities
 from twin.modules.sports.model import Candidate, Facility, facility_from_feature
@@ -191,6 +192,13 @@ def load_facilities(path: Path = OUT / "facilities.geojson") -> list[Facility]:
     """Read the built layer back as Facility objects (what the tool API passes to the tools)."""
     layer = json.loads(path.read_text(encoding="utf-8"))
     return [facility_from_feature(f) for f in layer["features"]]
+
+
+def load_population(path: Path = ROOT / "data" / "processed" / "census_sections.geojson") -> list[PopulationPoint]:
+    """Census sections written by the static-data stream; empty list if not built yet."""
+    if not path.exists():
+        return []
+    return population_from_census(json.loads(path.read_text(encoding="utf-8")))
 
 
 def main(argv: list[str]) -> int:

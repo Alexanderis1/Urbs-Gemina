@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from twin.modules.sports.config import SportsConfig
 from twin.modules.sports.geo import GridIndex
@@ -146,3 +146,56 @@ def what_if_open(points: Sequence[PopulationPoint], facilities: Sequence[Facilit
             "zones": [z for z in zone_delta if z["residents_newly_covered"] or z["was_desert"] != z["is_desert"]],
         },
     }
+
+
+def _ring_centroid(ring: Sequence[Sequence[float]]) -> tuple[float, float, float]:
+    """(lon, lat, signed area) of a closed ring; falls back to the vertex mean for a degenerate ring."""
+    ox, oy = float(ring[0][0]), float(ring[0][1])  # work relative to the first vertex for precision
+    local = [(float(p[0]) - ox, float(p[1]) - oy) for p in ring]
+    a = cx = cy = 0.0
+    for (x1, y1), (x2, y2) in zip(local, local[1:]):
+        cross = x1 * y2 - x2 * y1
+        a += cross
+        cx += (x1 + x2) * cross
+        cy += (y1 + y2) * cross
+    if abs(a) < 1e-18:
+        n = len(ring)
+        return sum(p[0] for p in ring) / n, sum(p[1] for p in ring) / n, 0.0
+    return ox + cx / (3 * a), oy + cy / (3 * a), a / 2
+
+
+def geometry_centroid(geometry: Mapping[str, Any]) -> tuple[float, float]:
+    """Centroid of a Point / Polygon / MultiPolygon (outer rings, area-weighted)."""
+    kind, coords = geometry["type"], geometry["coordinates"]
+    if kind == "Point":
+        return float(coords[0]), float(coords[1])
+    rings = [coords[0]] if kind == "Polygon" else [poly[0] for poly in coords] if kind == "MultiPolygon" else None
+    if not rings:
+        raise ValueError(f"unsupported geometry for a census section: {kind}")
+    parts = [_ring_centroid(r) for r in rings]
+    total = sum(abs(p[2]) for p in parts)
+    if total == 0:
+        return parts[0][0], parts[0][1]
+    return (sum(p[0] * abs(p[2]) for p in parts) / total, sum(p[1] * abs(p[2]) for p in parts) / total)
+
+
+def population_from_census(collection: Mapping[str, Any]) -> list[PopulationPoint]:
+    """Census sections (WS1: data/processed/census_sections.geojson) -> population points.
+
+    Reads only the agreed fields: sez_id, residents, children_0_14, municipio (1-15), zone.
+    """
+    from twin.modules.sports.sources import municipio_id
+
+    out = []
+    for feature in collection.get("features", []):
+        props = feature.get("properties") or {}
+        if not feature.get("geometry") or props.get("residents") is None:
+            continue
+        lon, lat = geometry_centroid(feature["geometry"])
+        zone = props.get("zone")
+        out.append(PopulationPoint(
+            point_id=str(props["sez_id"]), lon=lon, lat=lat, residents=float(props["residents"]),
+            children=float(props.get("children_0_14") or 0.0),
+            zone=str(zone) if zone not in (None, "") else None, municipio=municipio_id(props.get("municipio")),
+        ))
+    return out

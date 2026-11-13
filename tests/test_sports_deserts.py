@@ -149,3 +149,19 @@ def test_type_and_accessible_filters_and_max_minutes() -> None:
     long = sport_coverage(area="city", discipline="football", facilities=facilities(), population=POINTS,
                           config=CFG, max_minutes=40)  # 40 min = 2462 m straight line: p3 at 2.1 km is covered
     assert long["result"]["residents_uncovered"] == 2000
+
+
+def test_population_from_census_sections() -> None:
+    from twin.modules.sports.deserts import population_from_census
+
+    lon0, lat0 = at(0, 0)
+    lon1, lat1 = at(200, 100)
+    square = [[lon0, lat0], [lon1, lat0], [lon1, lat1], [lon0, lat1], [lon0, lat0]]
+    fc = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [square]},
+         "properties": {"sez_id": "058091000123", "residents": 420, "children_0_14": 55, "municipio": 7, "zone": "10A"}},
+        {"type": "Feature", "geometry": None, "properties": {"sez_id": "x", "residents": 1}},
+    ]}
+    (p,) = population_from_census(fc)
+    assert (p.point_id, p.residents, p.children, p.municipio, p.zone) == ("058091000123", 420.0, 55.0, "VII", "10A")
+    assert (p.lon, p.lat) == pytest.approx(at(100, 50), abs=1e-9)
