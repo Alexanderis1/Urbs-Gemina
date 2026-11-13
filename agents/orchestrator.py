@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agents.config import AgentConfig, load_agent_config
+from agents.envelope import flatten_runs
 from agents.contract import TwinAnswer, TwinQuestion
 from agents.llm import LLM, AnthropicLLM, ModelRefused
 from agents.loop import AgentLoop, LoopResult
@@ -104,14 +105,14 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
                      tool_names=tool_names or DEFAULT_TOOLS, max_tool_rounds=cfg.max_tool_rounds)
     try:
         state = loop.run(question)
-        runs = {r["run_id"]: r for r in state.runs}
+        runs = flatten_runs(state.runs)
         report = verify(state.text, runs, cfg)
         attempts = 0
         while (not report.ok) and state.text.strip() and attempts < cfg.verifier_retries:
             attempts += 1
             state = loop.resume(state, "VERIFIER: your draft was blocked. Fix these problems using only the tool "
                                        "outputs above, or answer 'insufficient data':\n" + describe_problems(report))
-            runs = {r["run_id"]: r for r in state.runs}
+            runs = flatten_runs(state.runs)
             report = verify(state.text, runs, cfg)
     except ModelRefused:
         state = LoopResult(text="", runs=[], messages=[])

@@ -1,6 +1,8 @@
 """Permit-context agent (Challenge 02): fixed tool sequence, then a verified narrative.
 
 The tool calls are made by code in a fixed order, so the facts never depend on the model.
+When the tool API has WS4's ``permit_report``, that tool builds the cited report and the agent
+adds the legal references and a verified summary; otherwise the agent calls the tools one by one.
 The model only writes the narrative, and the verifier checks it against those runs.
 """
 from __future__ import annotations
@@ -11,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agents.config import AgentConfig, load_agent_config
+from agents.envelope import flatten_runs, is_ok
 from agents.llm import LLM, ModelRefused
 from agents.loop import render_for_model
 from agents.orchestrator import INSUFFICIENT, PLAIN_PROBLEMS
@@ -30,6 +33,8 @@ class PermitReport:
     problems: list[Problem]
     runs: list[dict[str, Any]]
     warnings: list[str] = field(default_factory=list)
+    #: Deterministic report from WS4's ``permit_report`` tool, when the tool API has it.
+    markdown: str = ""
 
 
 def circle_polygon(lon: float, lat: float, radius_m: float, vertices: int) -> dict[str, Any]:
@@ -66,24 +71,38 @@ def permit_context(address: str, *, llm: LLM, gateway: ToolGateway, language: st
         warnings.extend(str(w) for w in env.get("warnings", []))
         return env
 
-    place = call("resolve_place", {"text": address})
-    res = place["result"] if place else {}
-    lon, lat = res.get("lon"), res.get("lat")
-    if not isinstance(lon, (int, float)) or not isinstance(lat, (int, float)):
-        msg = INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " The address could not be located."
-        return PermitReport(address, msg, False, [Problem("no_answer", "address not resolved")], runs, warnings)
-
     radius = cfg.context_radius_m
-    call("context_check", {"point": [lon, lat], "radius_m": radius})
-    call("estimate_field", {"area": circle_polygon(float(lon), float(lat), radius, cfg.circle_vertices)})
+    markdown = ""
+    if "permit_report" in gateway.specs:
+        # WS4 builds the report deterministically (location, context, field, provenance).
+        rep = call("permit_report", {"place": address, "radius_m": radius})
+        if rep is None or not is_ok(rep):
+            reason = str(rep.get("reason", "permit report not available")) if rep else "permit report failed"
+            msg = INSUFFICIENT.get(language, INSUFFICIENT["en"]) + f" {reason}."
+            return PermitReport(address, msg, False, [Problem("no_answer", reason)], runs, warnings)
+        markdown = str(rep["result"].get("markdown", ""))
+        inner = rep["result"].get("tool_runs")
+        facts = [r for r in inner if isinstance(r, dict)] if isinstance(inner, list) else [rep]
+    else:
+        place = call("resolve_place", {"text": address})
+        res = place["result"] if place else {}
+        lon, lat = res.get("lon"), res.get("lat")
+        if not isinstance(lon, (int, float)) or not isinstance(lat, (int, float)):
+            msg = INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " The address could not be located."
+            return PermitReport(address, msg, False, [Problem("no_answer", "address not resolved")], runs, warnings)
+        call("context_check", {"point": [lon, lat], "radius_m": radius})
+        call("estimate_field", {"area": circle_polygon(float(lon), float(lat), radius, cfg.circle_vertices)})
+        facts = list(runs)
     for q in cfg.permit_legal_questions:
-        call("legal_lookup", {"question": q})
+        env = call("legal_lookup", {"question": q})
+        if env is not None:
+            facts.append(env)
 
     untrusted = {n for n, s in gateway.specs.items() if s.untrusted_output} | {"legal_lookup"}
-    prompt = (f"Address: {address}\n\nTool outputs:\n\n{_runs_block(runs, untrusted)}\n\n"
+    prompt = (f"Address: {address}\n\nTool outputs:\n\n{_runs_block(facts, untrusted)}\n\n"
               f"Write the narrative now. Use the fixed sentence: \"{CONTEXT_SENTENCE}\"")
     messages: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
-    by_id = {r["run_id"]: r for r in runs}
+    by_id = flatten_runs(runs)
     system = system_prompt("permit", language, "office")
     try:
         turn = llm.step(system, messages, [])
@@ -101,15 +120,15 @@ def permit_context(address: str, *, llm: LLM, gateway: ToolGateway, language: st
         text, report = "", VerifierReport(problems=[Problem("model_refused", "the model declined the request")])
 
     if report.ok and text.strip():
-        return PermitReport(address, text, True, [], runs, warnings)
+        return PermitReport(address, text, True, [], runs, warnings, markdown)
     missing = sorted({PLAIN_PROBLEMS.get(p.code, p.code) for p in report.problems}) or ["no narrative"]
     fallback = (INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " The tool results below are complete and cited; "
                 "the written summary was withheld because of: " + "; ".join(missing) + ".")
-    return PermitReport(address, fallback, False, report.problems, runs, warnings)
+    return PermitReport(address, fallback, False, report.problems, runs, warnings, markdown)
 
 
 def report_json(report: PermitReport) -> str:
     """Machine-readable handoff for the WS4 report builder and the WS8 Permit check screen."""
-    return json.dumps({"address": report.address, "narrative": report.text, "verified": report.verified,
+    return json.dumps({"address": report.address, "narrative": report.text, "report_markdown": report.markdown, "verified": report.verified,
                        "run_ids": [r["run_id"] for r in report.runs], "runs": report.runs,
                        "warnings": report.warnings}, ensure_ascii=False, indent=2)

@@ -5,7 +5,7 @@ Numbers come from tools, words come from the model, and code checks the join.
 | File | What it does |
 |---|---|
 | `orchestrator.py` | Answers a question with tools, runs the verifier, rewrites once, otherwise says "insufficient data". `TwinOrchestrator.ask(TwinQuestion) -> TwinAnswer` is shared interface 7, used by chat (WS8) and voice (WS9). |
-| `permit.py` | Challenge 02 flow. Code calls `resolve_place` → `context_check` (radius from `config/thresholds.yaml`) → `estimate_field` (on the circle) → `legal_lookup`; the model only writes the narrative, which is verified. `report_json` hands the runs to the WS4 report builder. |
+| `permit.py` | Challenge 02 flow. Uses WS4's `permit_report` tool when the API has it (deterministic cited markdown), adds `legal_lookup` references and a verified summary. Without it, code calls `resolve_place` → `context_check` (radius from `config/thresholds.yaml`) → `estimate_field` (on the circle) → `legal_lookup`; the model only writes the narrative, which is verified. `report_json` hands the runs to the WS4 report builder. |
 | `scenario.py` | Asks for kind, area and change before `run_scenario`; explains the delta from the tool output only. |
 | `steward.py` | Exa monitors (roadworks, strikes, demonstrations, new datasets). `scan` reads and writes nothing; `propose` is an officer action that queues an ingest for approval. |
 | `verifier.py` | The deterministic check behind guardrails 1, 3, 6 and 7. |

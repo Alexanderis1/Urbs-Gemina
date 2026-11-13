@@ -77,3 +77,31 @@ def test_eval_sets_pass_offline() -> None:
     summary = run_offline(Path("eval/sets"))
     assert summary["failed"] == [], summary["failed"]
     assert summary["passed"] >= 10
+
+
+class ReportGateway(RecordingGateway):
+    """A tool API that has WS4's permit_report tool (deterministic markdown + inner runs)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.specs["permit_report"] = ToolSpec("permit_report", "report", {"type": "object"})
+
+    def call(self, name: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
+        if name != "permit_report":
+            return super().call(name, arguments)
+        self.calls.append((name, dict(arguments)))
+        inner = [super(ReportGateway, self).call(n, {"x": 1}) for n in ("resolve_place", "context_check", "estimate_field")]
+        self.calls = [c for c in self.calls if c[1] != {"x": 1}]
+        return make_envelope(tool=name, inputs=dict(arguments), result={"markdown": "# Report\n| school | 182.4 m |", "tool_runs": inner},
+                             data_kinds={"schools": "real"}, sources=[])
+
+
+def test_permit_flow_uses_permit_report_when_available() -> None:
+    gw = ReportGateway()
+    report = permit_context("Via del Corso 1", llm=EchoLLM(), gateway=gw)
+    names = [c[0] for c in gw.calls]
+    assert names[0] == "permit_report" and "resolve_place" not in names
+    assert gw.calls[0][1]["radius_m"] == 300
+    assert "legal_lookup" in names
+    assert report.markdown.startswith("# Report")
+    assert report.verified, report.problems  # summary cites the inner runs of the report

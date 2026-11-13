@@ -78,3 +78,17 @@ def check_envelope(env: Mapping[str, Any]) -> list[str]:
     if "simulated" in dict(env.get("data_kinds", {})).values() and env.get("synthetic") is not True:
         problems.append("simulated layer but synthetic is not true")
     return problems
+
+
+def flatten_runs(envs: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Index runs by id, including runs nested in a composite tool's ``result.tool_runs`` (e.g. permit_report)."""
+    out: dict[str, dict[str, Any]] = {}
+    stack = list(envs)
+    while stack:
+        env = stack.pop()
+        if isinstance(env, Mapping) and "run_id" in env:
+            out[str(env["run_id"])] = dict(env)
+            inner = dict(env.get("result", {}) or {}).get("tool_runs")
+            if isinstance(inner, list):
+                stack.extend(i for i in inner if isinstance(i, Mapping))
+    return out

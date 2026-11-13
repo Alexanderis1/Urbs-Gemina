@@ -53,11 +53,18 @@
      },
      "variant": {
       "type": "object"
+     },
+     "point": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[lon, lat] WGS84; alternative to area"
      }
     },
-    "required": [
-     "area"
-    ],
+    "required": [],
     "additionalProperties": false
    }
   },
@@ -78,8 +85,7 @@
      }
     },
     "required": [
-     "layer",
-     "area"
+     "layer"
     ],
     "additionalProperties": false
    }
@@ -165,6 +171,36 @@
    "input_schema": {
     "type": "object",
     "properties": {},
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "permit_report",
+   "description": "Cited permit-context report built by code: location, context within the radius, field estimate, provenance. Returns markdown and the inner tool runs.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "place": {
+      "type": "string"
+     },
+     "point": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     },
+     "radius_m": {
+      "type": "number"
+     },
+     "proposed_antennas": {
+      "type": "array",
+      "items": {
+       "type": "object"
+      }
+     }
+    },
     "additionalProperties": false
    }
   }
