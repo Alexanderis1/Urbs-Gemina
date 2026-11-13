@@ -211,3 +211,40 @@ def test_scenario_data_prefers_ws6_live_baseline(monkeypatch: pytest.MonkeyPatch
 
     live.live_data = broken  # type: ignore[attr-defined]
     assert api_tools._scenario_data(rt, "antenna", None, {})[0] == "ours"
+
+
+def test_unexpected_error_is_json_500_with_cors(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.api import tools as api_tools
+
+    def boom(rt: Any) -> dict[str, Any]:
+        raise RuntimeError("kaboom")
+
+    monkeypatch.setattr(api_tools, "data_status", boom)
+    r = client.post("/tools/data_status", json={}, headers={"Origin": "https://example.lovable.app"})
+    assert r.status_code == 500
+    assert r.json()["error"].startswith("RuntimeError")
+    assert r.headers.get("access-control-allow-origin") == "*"
+
+
+def test_scenario_bad_change_is_refused_with_reason(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+    import types
+
+    engine = types.ModuleType("twin.scenarios.engine")
+    engine.kinds = lambda: {"antenna": "x"}  # type: ignore[attr-defined]
+
+    def run(kind: str, area: Any, change: Any, data: Any = None) -> Any:
+        raise ValueError("antenna change needs a 'site' with lon, lat, height_m")
+
+    engine.run = run  # type: ignore[attr-defined]
+    area_mod = types.ModuleType("twin.scenarios.area")
+    area_mod.AreaTooLarge = type("AreaTooLarge", (Exception,), {})  # type: ignore[attr-defined]
+    area_mod.AreaNotAvailable = type("AreaNotAvailable", (Exception,), {})  # type: ignore[attr-defined]
+    data_mod = types.ModuleType("twin.scenarios.data")
+    data_mod.ScenarioData = lambda **kw: kw  # type: ignore[attr-defined]
+    data_mod.FieldSample = lambda v, s: (v, s)  # type: ignore[attr-defined]
+    for mod in (engine, area_mod, data_mod):
+        monkeypatch.setitem(sys.modules, mod.__name__, mod)
+    r = client.post("/tools/run_scenario", json={"kind": "antenna", "area": "city", "change": {}})
+    assert r.status_code == 200
+    assert r.json()["status"] == "refused" and "site" in r.json()["reason"]

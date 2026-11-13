@@ -46,7 +46,7 @@ app = modal.App("urbs-gemina-tools")
 
 
 @app.function(image=image, volumes=VOLUMES, secrets=[modal.Secret.from_name("urbs-gemina-api")],
-              min_containers=0, scaledown_window=300, timeout=120)  # sleeps when idle to save credits
+              min_containers=0, scaledown_window=300, timeout=300)  # sleeps when idle to save credits
 @modal.concurrent(max_inputs=20)
 @modal.asgi_app()
 def api() -> object:

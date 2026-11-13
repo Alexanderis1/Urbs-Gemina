@@ -429,3 +429,39 @@ def test_prg_failure_is_reported_not_raised(runtime: ToolRuntime) -> None:
     assert env["data_kinds"]["prg_sistemi_regole"] == "not_available"
     assert any("live query failed" in w for w in env["warnings"])
     prg._CACHE.clear()
+
+
+def test_belief_layer_uses_ws5_layer_payload_and_survives_a_failing_feed(
+        runtime: ToolRuntime, monkeypatch: pytest.MonkeyPatch) -> None:
+    """With WS5's layer_payload, only that call picks the feeds; a feed that errors is skipped with a warning."""
+    import sys
+    import types
+
+    class Broken:
+        kind = "open"
+
+        def fetch(self, bbox: Any, start: Any, end: Any) -> list[Any]:
+            raise RuntimeError("upstream down")
+
+    seen: dict[str, Any] = {}
+
+    def layer_payload(name: str, cells: Any, start: Any, end: Any, providers: Any) -> dict[str, Any]:
+        seen["providers"] = providers
+        assert providers["rain"].fetch(None, start, end) == []  # wrapped: no exception
+        return {"status": "ok", "result": {"layer": name, "cells": [{"cell": "a"}]}, "data_kinds": {name: "estimated"},
+                "sources": [], "warnings": []}
+
+    api = types.ModuleType("twin.beliefs.api")
+    api.layer_names = lambda: ["rain"]  # type: ignore[attr-defined]
+    api.layer_payload = layer_payload  # type: ignore[attr-defined]
+    grid = types.ModuleType("twin.beliefs.grid")
+    grid.cells_in_polygon = lambda geometry, res: ["a"]  # type: ignore[attr-defined]
+    bconfig = types.ModuleType("twin.beliefs.config")
+    bconfig.load_specs = lambda: {"rain": object()}  # type: ignore[attr-defined]
+    bconfig.grid_resolution = lambda: 9  # type: ignore[attr-defined]
+    for mod in (api, grid, bconfig):
+        monkeypatch.setitem(sys.modules, mod.__name__, mod)
+    runtime.providers = {"rain": Broken()}  # type: ignore[dict-item]
+    env = query_layer(runtime, "rain", area=square(200))
+    assert env["status"] == "ok" and env["result"]["count"] == 1
+    assert any("upstream down" in w or "rain" in w for w in env["warnings"])

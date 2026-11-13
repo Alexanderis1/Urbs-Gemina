@@ -11,11 +11,11 @@ import hmac
 import importlib
 import logging
 import os
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
 from twin.api.models import AskIn, EnvelopeOut
@@ -47,6 +47,16 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
         description="Deterministic tools of the Rome digital twin. Every response is a tool envelope with a "
                     "run id, sources and real / estimated / simulated labels. Decision support only.",
     )
+    @app.middleware("http")
+    async def json_errors(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        """Unexpected errors become JSON inside the CORS layer, so browsers see the error, not a CORS failure."""
+        try:
+            return await call_next(request)
+        except Exception as error:  # noqa: BLE001 - last resort; the traceback goes to the server log
+            log.exception("unhandled error on %s", request.url.path)
+            return JSONResponse(status_code=500, content={"error": f"{type(error).__name__}: {error}",
+                                                          "path": request.url.path})
+
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"],
                        allow_headers=["Authorization", "Content-Type"])
     state: dict[str, ToolRuntime] = {}
