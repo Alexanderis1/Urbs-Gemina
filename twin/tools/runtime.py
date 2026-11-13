@@ -62,6 +62,8 @@ class ToolRuntime:
     store: LayerStore
     geocoder: Nominatim | None = None
     baseline: BaselineSource | None = None
+    #: Real field measurements (ARPA points), reported next to the estimate as a reference.
+    measurements: BaselineSource | None = None
     providers: dict[str, Provider] = field(default_factory=dict)
 
     @classmethod
@@ -80,6 +82,11 @@ class ToolRuntime:
             runtime.baseline = ProviderBaseline(runtime.providers[layer],
                                                 list(settings.tool("estimate_field", "baseline_value_keys")),
                                                 float(settings.tool("estimate_field", "baseline_search_radius_m")))
+        mlayer = str(settings.tool("estimate_field", "measurement_layer"))
+        if mlayer in runtime.providers and runtime.simulation_allowed(mlayer, runtime.providers[mlayer]):
+            runtime.measurements = ProviderBaseline(runtime.providers[mlayer],
+                                                    list(settings.tool("estimate_field", "baseline_value_keys")),
+                                                    float(settings.tool("estimate_field", "measurement_search_radius_m")))
         return runtime
 
     def simulation_allowed(self, layer: str, provider: Provider) -> bool:

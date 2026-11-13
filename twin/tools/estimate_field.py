@@ -154,6 +154,15 @@ def estimate_field(runtime: ToolRuntime, point: Mapping[str, float] | None = Non
                 warnings.append("Cartoradio value sits at its cap: read it as '15 V/m or more'.")
         elif runtime.baseline is not None:
             warnings.append("No Cartoradio cell near this point.")
+        estimate["nearest_measurement"] = None
+        if runtime.measurements is not None:
+            found = runtime.measurements.at(float(point["lon"]), float(point["lat"]))
+            if found is not None:
+                kinds["emf_measurements"] = "real"
+                sources.append(found.source)
+                estimate["nearest_measurement"] = {"value_v_per_m": round(found.value_v_per_m, 3),
+                                                   "distance_m": round(found.distance_m, 1),
+                                                   "source": found.source.id}
         return runtime.envelope(TOOL, inputs, {"mode": "point", **common, **estimate}, kinds, sources, warnings)
 
     resolved = resolve_area(area, runtime.store, runtime.settings)

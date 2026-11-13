@@ -36,10 +36,10 @@ def data_status(runtime: ToolRuntime) -> dict[str, Any]:
                              notes=info.notes)
                 data_kind = str(kind_map.get(info.kind, "real"))
             except ProviderNotConfigured as error:
-                entry.update(status="not_configured", reason=str(error))
+                entry.update(status="needs_access", reason=str(error))
                 data_kind = _manifest_kind(meta)
         else:
-            entry["status"] = "planned" if provider_id not in FACTORIES else "not_configured"
+            entry["status"] = "planned" if provider_id not in FACTORIES else "needs_access"
             data_kind = _manifest_kind(meta)
             entry.update(synthetic=data_kind == "simulated", licence=meta.get("licence"),
                          redistribution=meta.get("redistribution"))

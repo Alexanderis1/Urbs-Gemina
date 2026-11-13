@@ -121,6 +121,10 @@ def _markdown(runtime: ToolRuntime, title: str, located: dict[str, Any], context
         for antenna in est.get("new_sources", []):
             lines.append(f"- Proposed antenna at {antenna['distance_m']:g} m, EIRP {antenna['eirp_w']:g} W "
                          f"({antenna['eirp_basis']}): {_fmt(antenna['field_p50_v_per_m'], 'V/m')}")
+        measured = est.get("nearest_measurement")
+        if measured:
+            lines.append(f"- Nearest real measurement ({measured['source']}): {_fmt(measured['value_v_per_m'], 'V/m')} "
+                         f"at {measured['distance_m']:g} m. Reference only, not part of the estimate.")
         lines += [f"- Total field: P5 {_fmt(est['p5'])} / P50 {_fmt(est['p50'])} / P95 {_fmt(est['p95'])} V/m "
                   f"{_ref(field)}"]
         for name, ex in est["exceedance"].items():

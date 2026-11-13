@@ -377,3 +377,15 @@ def test_layer_store_falls_back_to_processed(tmp_path: Path) -> None:
     store = LayerStore(raw_dir=tmp_path / "raw", processed_dir=tmp_path / "processed")
     area = resolve_area("zone:1a", store, Settings.load())
     assert area.id == "zone:1A" and area.name == "Centro Storico"
+
+
+def test_field_reports_nearest_real_measurement(runtime: ToolRuntime) -> None:
+    from twin.modules.antennas.report import build_permit_report
+
+    runtime.baseline = FixedBaseline(1.4)
+    runtime.measurements = FixedBaseline(0.9)
+    env = estimate_field(runtime, point={"lon": LON, "lat": LAT})
+    assert env["result"]["nearest_measurement"]["value_v_per_m"] == 0.9
+    assert env["data_kinds"]["emf_measurements"] == "real"
+    md = build_permit_report(runtime, point={"lon": LON, "lat": LAT})["result"]["markdown"]
+    assert "Nearest real measurement" in md
