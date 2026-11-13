@@ -155,3 +155,17 @@ def test_claude_key_read_from_configured_variables(monkeypatch: Any) -> None:
     monkeypatch.setenv("ANTHROPIC_API_KEY", "b")
     monkeypatch.setenv("CLAUDE_API_KEY", "a")
     assert claude_api_key(cfg) == "a"
+
+
+def test_show_area_uses_municipio_id_when_resolve_place_returns_an_object() -> None:
+    from agents.orchestrator import map_actions
+
+    place = make_envelope(tool="resolve_place", inputs={"text": "x"},
+                          result={"lon": 12.48, "lat": 41.89, "municipio": {"status": "ok", "id": "1", "name": "I"}},
+                          data_kinds={"places": "real"}, sources=[])
+    areas = [m["args"]["area"] for m in map_actions([place]) if m["tool"] == "show_area"]
+    assert areas == ["municipio:1"]
+    missing = make_envelope(tool="resolve_place", inputs={"text": "y"},
+                            result={"lon": 12.48, "lat": 41.89, "municipio": {"status": "not_available"}},
+                            data_kinds={"places": "real"}, sources=[])
+    assert [m["tool"] for m in map_actions([missing])] == ["fly_to"]

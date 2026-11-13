@@ -166,8 +166,10 @@ def map_actions(runs: list[dict[str, Any]]) -> tuple[dict[str, Any], ...]:
         if r.get("tool") == "resolve_place" and isinstance(res.get("lon"), (int, float)) and isinstance(res.get("lat"), (int, float)):
             point = (float(res["lon"]), float(res["lat"]))
             actions.append({"tool": "fly_to", "args": {"lon": point[0], "lat": point[1], "zoom": 16}})
-            if res.get("municipio"):
-                actions.append({"tool": "show_area", "args": {"area": f"municipio:{res['municipio']}"}})
+            mun = res.get("municipio")
+            mun_id = mun.get("id") if isinstance(mun, dict) else mun
+            if isinstance(mun_id, (str, int)) and str(mun_id).strip().isdigit():
+                actions.append({"tool": "show_area", "args": {"area": f"municipio:{int(str(mun_id).strip())}"}})
         if r.get("tool") == "context_check":
             inp = r.get("inputs", {})
             pt = inp.get("point")
