@@ -27,3 +27,11 @@ def offset(lon: float, lat: float, east_m: float, north_m: float) -> tuple[float
 def in_bbox(lon: float, lat: float, bbox: BBox) -> bool:
     min_lon, min_lat, max_lon, max_lat = bbox
     return min_lon <= lon <= max_lon and min_lat <= lat <= max_lat
+
+
+def expand_bbox(bbox: BBox, buffer_m: float) -> BBox:
+    """The box grown by ``buffer_m`` on every side."""
+    min_lon, min_lat, max_lon, max_lat = bbox
+    west, south = offset(min_lon, min_lat, -buffer_m, -buffer_m)
+    east, north = offset(max_lon, max_lat, buffer_m, buffer_m)
+    return (west, south, east, north)

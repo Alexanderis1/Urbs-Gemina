@@ -241,3 +241,18 @@ def test_cams_model_background_is_labelled_as_a_forecast() -> None:
     assert observations[0].entity_type == "AirQualityForecast"
     assert observations[0].values == {"no2": 30.0, "pm10": 20.0}
     assert observations[0].sigma == {"no2": 15.0, "pm10": 10.0}
+
+
+def test_cams_answers_a_small_area_and_a_now_window() -> None:
+    from twin.providers.open.open_meteo import CamsOpenMeteoProvider, lattice
+
+    small = (12.47, 41.89, 12.49, 41.90)  # smaller than one 0.1 degree model cell
+    assert lattice(small, 0.1) == [(12.48, 41.895)]
+    answers = [{"latitude": 41.895, "longitude": 12.48, "hourly": {
+        "time": ["2026-11-13T07:00", "2026-11-13T08:00", "2026-11-13T09:00"],
+        "nitrogen_dioxide": [28.0, 30.0, 33.0], "pm10": [20.0, 20.0, 21.0], "pm2_5": [9.0, 10.0, 11.0]}}]
+    provider = CamsOpenMeteoProvider(SETTINGS, fetch_bytes=lambda url: json.dumps(answers).encode())
+    now = datetime(2026, 11, 13, 8, 43, tzinfo=timezone.utc)
+    observations = list(provider.fetch(small, now, now))
+    assert [obs.observed_at.hour for obs in observations] == [8]
+    assert observations[0].values["no2"] == 30.0

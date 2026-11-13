@@ -84,6 +84,10 @@ open:
     relative_sigma: {value: 0.15, basis: "data quality objective for continuous NO2 measurement, Directive 2008/50/EC Annex I"}
     pollutant_codes: {NO2: 8, PM10: 5, O3: 7, PM2.5: 6001}
     timeout_s: 60
+    lookback_hours: {value: 6, basis: "E2a up-to-date values arrived about 3.7 h late on 13 Nov 2026 (latest 17:00 UTC at 20:43 UTC)"}
+    download_workers: 8
+    cache_minutes: {value: 10, basis: "station files gain one value per hour"}
+    search_buffer_km: {value: 5, basis: "air-quality correlation lengths in config/beliefs.yaml are 3-8 km; a district with no station still gets the nearby ones"}
 
   dpc_radar:
     api_url: https://radar-api.protezionecivile.it
@@ -124,6 +128,7 @@ open:
 
   cams_open_meteo:
     api_url: https://air-quality-api.open-meteo.com/v1/air-quality
+    lookback_hours: {value: 1, basis: "hourly model values: a 'now' window still gets the hour it falls in"}
     step_deg: {value: 0.1, basis: "CAMS European ensemble grid is 0.1 degree"}
     relative_sigma: {value: 0.5, basis: "assumption: hourly CAMS error at urban scale is of the order of the value"}
     timeout_s: 60
