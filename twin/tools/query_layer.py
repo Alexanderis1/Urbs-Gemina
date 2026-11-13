@@ -166,6 +166,10 @@ def _provider_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, 
     except ProviderNotConfigured as error:
         return runtime.envelope(TOOL, inputs, {"type": "observations", "provider": provider_id},
                                 {layer: "not_available"}, sources, status="not_available", reason=str(error))
+    except Exception as error:  # noqa: BLE001 - upstream server down or bad payload: say so, do not crash
+        return runtime.envelope(TOOL, inputs, {"type": "observations", "provider": provider_id},
+                                {layer: "not_available"}, sources, status="not_available",
+                                reason=f"Provider '{provider_id}' failed: {type(error).__name__}: {error}")
     kind = str(runtime.settings.tools["data_kind_by_provider_kind"].get(info.kind, "real"))
     latest: dict[str, Any] = {}
     for obs in observations:
@@ -189,5 +193,13 @@ def _provider_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, 
         warnings = []
     if info.synthetic:
         warnings.append("SIMULATED data: generated values, not measurements.")
+    feed_time = getattr(provider, "last_feed_time", None)  # set by snapshot feeds (GTFS-RT, GBFS)
+    if isinstance(feed_time, datetime):
+        feed_time = feed_time if feed_time.tzinfo else feed_time.replace(tzinfo=timezone.utc)
+        result["feed_updated_at"] = feed_time.isoformat()
+        stale_after = float(runtime.settings.tool("query_layer", "stale_feed_minutes"))
+        if at - feed_time > timedelta(minutes=stale_after):
+            warnings.append(f"{info.id}: the source feed has not updated since {feed_time:%Y-%m-%d %H:%M} UTC, "
+                            "so there are no live readings.")
     return runtime.envelope(TOOL, inputs, result, {layer: kind}, sources, warnings,
                          synthetic=info.synthetic or kind == "simulated")

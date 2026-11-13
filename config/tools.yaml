@@ -36,6 +36,7 @@ query_layer:
   max_limit: 5000
   window_minutes: {value: 15, basis: "one provider cadence step or more for live layers"}
   belief_history_hours: {value: 3, basis: "readings older than a few relax time constants no longer move a belief layer"}
+  stale_feed_minutes: {value: 15, basis: "a snapshot feed older than one query window has no live readings (WS3)"}
   aggregate_cell_m: {value: 500, basis: "citizen tier sees counts on a 500 m grid, not single sites"}
 
 api:
