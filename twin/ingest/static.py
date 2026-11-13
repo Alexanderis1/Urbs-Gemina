@@ -27,6 +27,7 @@ from typing import Any, Iterable, Sequence
 from twin.ingest.catalog import BBox, Catalog, LayerSpec
 from twin.ingest.census import build_census_sections
 from twin.ingest.osm_extract import extract_file, read_elements
+from twin.ingest.sensitive_sites import build_sensitive_sites
 from twin.ingest.http import Fetch, HttpRequest
 from twin.ingest.manifest import record_snapshots, sha256_file
 from twin.ingest.privacy import personal_columns
@@ -238,7 +239,10 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
         entry["notes"] = layer.notes
     raw_elements: list[dict[str, Any]] | None = None
     try:
-        if catalog.sources[layer.source].protocol == "istat_census":
+        if catalog.sources[layer.source].protocol == "derived":
+            frame, report = build_sensitive_sites(layer, out_dir)
+            entry.update(report)
+        elif catalog.sources[layer.source].protocol == "istat_census":
             frame = _census_frame(layer, catalog, fetch, entry)
         else:
             raw, url = _download(layer, catalog, fetch)
@@ -252,6 +256,12 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
                     # Provenance is the hash of the extract file itself, not of the filtered subset.
                     entry["raw_sha256"] = parsed_raw["extract_sha256"]
             del raw  # the raw bytes may hold personal fields; only the cleaned data goes on
+
+        for column, values in layer.exclude.items():
+            if column in frame.columns:
+                excluded = frame[column].isin(values)
+                entry["excluded_rows"] = entry.get("excluded_rows", 0) + int(excluded.sum())
+                frame = frame[~excluded]
 
         columns = [c for c in frame.columns if c != frame.geometry.name]
         dropped = personal_columns(columns, catalog.privacy_patterns, layer.drop_fields)

@@ -9,7 +9,7 @@ import yaml
 
 DataKind = Literal["real", "estimated", "simulated"]
 DATA_KINDS: tuple[str, ...] = ("real", "estimated", "simulated")
-PROTOCOLS = ("wfs", "overpass", "osm_extract", "zip_shapefile", "istat_census")
+PROTOCOLS = ("wfs", "overpass", "osm_extract", "zip_shapefile", "istat_census", "derived")
 FEED_METHODS = ("get", "eea_parquet_zip", "dpc_radar")
 
 #: (min_lon, min_lat, max_lon, max_lat) in WGS84
@@ -41,6 +41,8 @@ class LayerSpec:
     notes: str = ""
     #: Protocol-specific settings, e.g. the census population file.
     options: dict[str, Any] = field(default_factory=dict)
+    #: Rows to leave out entirely: {column: [values]}.
+    exclude: dict[str, list[Any]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -99,6 +101,7 @@ def parse_catalog(raw: dict[str, Any], city_bbox: BBox) -> Catalog:
             clip_to_city=bool(spec.get("clip_to_city", False)),
             notes=str(spec.get("notes", "")),
             options=dict(spec.get("options") or {}),
+            exclude={str(k): list(v) for k, v in (spec.get("exclude") or {}).items()},
         )
         protocol = sources[source].protocol
         if protocol == "wfs" and not layer.type_name:

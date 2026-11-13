@@ -42,6 +42,10 @@ sources:
     # To use Overpass instead, set protocol: overpass and list interpreter URLs.
     protocol: osm_extract
     url: "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf"
+  derived:
+    # Layers built from other processed layers (no download). Run them after their inputs.
+    protocol: derived
+    url: "data/processed"
   istat_census:
     protocol: istat_census
     url: "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip"
@@ -143,6 +147,163 @@ layers:
   ptpr_b_aree_naturali_protette: {source: lazio_geoserver, type_name: "geonode:aree_naturali_protette1", data_kind: real, theme: environment, clip_to_city: true}
   ptpr_b_usi_civici:     {source: lazio_geoserver, type_name: "geonode:usi_civici", data_kind: real, theme: landscape, clip_to_city: true}
   natura2000:            {source: lazio_geoserver, type_name: "geonode:rete_natura200000", data_kind: real, theme: environment, clip_to_city: true}
+
+  # More PTPR (Regione Lazio landscape plan). PTPR is the official landscape source of
+  # the twin (theme: landscape_ptpr). Tavola C is not published as WFS (C=70).
+  ptpr_a_punti_vincoli:      {source: lazio_geoserver, type_name: "geonode:punti_5_vincoli", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_a_rispetto_vincoli:   {source: lazio_geoserver, type_name: "geonode:rispetto_5_vincoli", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_a_visuali:            {source: lazio_geoserver, type_name: "geonode:visuali_5_vincoli0", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_a_piani_attuativi:    {source: lazio_geoserver, type_name: "geonode:piani_attuativi_valenza_paesistica", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_linee_archeologiche: {source: lazio_geoserver, type_name: "geonode:linee_archeologiche", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_punti_archeologici_tipizzati: {source: lazio_geoserver, type_name: "geonode:punti_archeologici_tipizzati3", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rispetto_punti_archeologici: {source: lazio_geoserver, type_name: "geonode:rispetto_punti_archeologici", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rispetto_linee_archeologiche: {source: lazio_geoserver, type_name: "geonode:rispetto_linee_archeologiche", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rispetto_punti_archeologici_tipizzati: {source: lazio_geoserver, type_name: "geonode:rispetto_punti_archeologici_tipizzati", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_centri_storici_rispetto: {source: lazio_geoserver, type_name: "geonode:centri_storici_rispetto_150", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_zone_umide:         {source: lazio_geoserver, type_name: "geonode:zone_umide", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_geomorfologici:     {source: lazio_geoserver, type_name: "geonode:geomorfologici_tipizzati", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_ptp_1512:           {source: lazio_geoserver, type_name: "geonode:ptp_1512", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_agro_identitario:   {source: lazio_geoserver, type_name: "geonode:agro_identitario", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rurali_identitari:  {source: lazio_geoserver, type_name: "geonode:rurali_identitari", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_aree_urbanizzate:   {source: lazio_geoserver, type_name: "geonode:aree_urbanizzate", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptp_beni_art134_c:         {source: lazio_geoserver, type_name: "geonode:PTP_15_12_beni_articolo_134_co_1_lett_c", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Beni paesaggistici art. 134 c.1 lett. c (PTP 15/12)"}
+  ptp_vincoli_1089:          {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_1089", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Archaeological and monumental constraints L. 1089/1939 (PTP 15/12)"}
+  ptp_vincoli_1497_ab:       {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_ex_1497_39_ab", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Art. 136 a/b equivalent (PTP 15/12)"}
+  ptp_vincoli_1497_cd:       {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_ex_1497_39_cd", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Art. 136 c/d equivalent (PTP 15/12)"}
+  ptp_vincoli_431_m:         {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_431_85_lettera_m_con_specif", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Art. 142 lett. m (archaeological interest) equivalent"}
+
+  # --- More official sensitive-site layers (Roma Capitale, Protezione Civile) --
+  hazardous_sites:
+    source: roma_geoserver
+    type_name: "DIPPC:263_StabilimentiImpiantiRilevanti"
+    data_kind: real
+    theme: sensitive_sites
+    # Informal settlements are not industrial sites and describe a community; never ingested.
+    exclude: {tipologia: ["CampiNomadi"]}
+    notes: "Seveso (D.Lgs. 105/2015) plants, nuclear reactor, landfills, waste storage, car breakers"
+  seveso_perimeters:         {source: roma_geoserver, type_name: "DIPPC:306_RIR_Perimetri_Industrie", data_kind: real, theme: sensitive_sites}
+  seveso_damage_zones:       {source: roma_geoserver, type_name: "DIPPC:306_RIR_ZoneDanno", data_kind: real, theme: sensitive_sites}
+  stations_ports_airports:   {source: roma_geoserver, type_name: "DIPPC:253_StazioniPortiAeroporti", data_kind: real, theme: sensitive_sites}
+  embassies:                 {source: roma_geoserver, type_name: "DIPPC:ambasciate_consolati", data_kind: real, theme: sensitive_sites}
+  police_fire:               {source: roma_geoserver, type_name: "DIPPC:mappa_roma_notte_forzeordine_vigilifuoco", data_kind: real, theme: sensitive_sites}
+  emergency_hospitals:       {source: roma_geoserver, type_name: "DIPPC:ospedali_prontosoccorso", data_kind: real, theme: sensitive_sites}
+  civil_protection_sites:    {source: roma_geoserver, type_name: "DIPPC:421_SediEdificiProtezioneCivile", data_kind: real, theme: sensitive_sites}
+  parks_municipal:           {source: roma_geoserver, type_name: "GABSIN:parchi", data_kind: real, theme: sensitive_sites}
+
+  # --- OSM gap filler for sensitive sites (one pass over the Lazio extract) ---
+  osm_sensitive_pois:
+    source: osm
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Gap filler only; official layers win when both describe the same site"
+    selectors:
+      - 'nwr["amenity"="hospital"]'
+      - 'nwr["amenity"="clinic"]'
+      - 'nwr["healthcare"="hospital"]'
+      - 'nwr["healthcare"="clinic"]'
+      - 'nwr["amenity"="school"]'
+      - 'nwr["amenity"="kindergarten"]'
+      - 'nwr["amenity"="childcare"]'
+      - 'nwr["amenity"="university"]'
+      - 'nwr["amenity"="college"]'
+      - 'nwr["leisure"="park"]'
+      - 'nwr["power"="substation"]'
+      - 'nwr["power"="plant"]'
+      - 'nwr["man_made"="water_works"]'
+      - 'nwr["man_made"="wastewater_plant"]'
+      - 'nwr["man_made"="gasometer"]'
+      - 'nwr["railway"="station"]'
+      - 'nwr["station"="subway"]'
+      - 'nwr["aeroway"="aerodrome"]'
+      - 'nwr["amenity"="police"]'
+      - 'nwr["amenity"="fire_station"]'
+      - 'nwr["amenity"="townhall"]'
+      - 'nwr["amenity"="courthouse"]'
+      - 'nwr["amenity"="prison"]'
+      - 'nwr["office"="government"]'
+      - 'nwr["office"="diplomatic"]'
+      - 'nwr["amenity"="embassy"]'
+
+  # --- One merged layer of sensitive sites ------------------------------------
+  # Inputs are read from data/processed, in this order. Official layers come first;
+  # a later feature within dedupe_m metres of an already-kept site of the same
+  # category is treated as the same site and dropped. Run this layer last.
+  sensitive_sites:
+    source: derived
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Official layers first, OSM fills gaps; each row says its source layer and provenance"
+    options:
+      basis: "Challenge 02 asks for sensitive sites within 300 m; categories follow the design proposal section 7"
+      dedupe_m: {default: 50, green: 100, critical_infrastructure: 30, hazardous_industry: 100}
+      inputs:
+        - {layer: hospitals, provenance: official, category: health, subtype: hospital, name: DESCRIZION}
+        - {layer: emergency_hospitals, provenance: official, category: health, subtype: emergency_department, name: denominazione}
+        - {layer: health_care, provenance: official, category: health, subtype: hospital, name: denominaz}
+        - {layer: care_homes_osm, provenance: osm, category: health, subtype: care_home, name: name}
+        - {layer: nidi, provenance: official, category: education, subtype: nursery, name: denominazione}
+        - {layer: infanzia, provenance: official, category: education, subtype: preschool, name: denominazione}
+        - {layer: schools_state, provenance: official, category: education, subtype: school, name: denominazione}
+        - {layer: parks_municipal, provenance: official, category: green, subtype: park, name: name}
+        - {layer: protected_areas, provenance: official, category: green, subtype: protected_area, name: nome_gazz_}
+        - {layer: playgrounds_osm, provenance: osm, category: green, subtype: playground, name: name}
+        - {layer: hazardous_sites, provenance: official, category: hazardous_industry, subtype_field: tipologia, name: denominaz}
+        - {layer: seveso_perimeters, provenance: official, category: hazardous_industry, subtype: seveso_plant, name: nome}
+        - {layer: stations_ports_airports, provenance: official, category: critical_infrastructure, subtype_field: tipologia, name: nome}
+        - {layer: masts_osm, provenance: osm, category: critical_infrastructure, subtype: telecom_mast, name: name}
+        - {layer: embassies, provenance: official, category: government, subtype_field: tipologia, name: denominazione}
+        - {layer: police_fire, provenance: official, category: government, subtype_field: _tipologia, name: _denominaz}
+        - {layer: civil_protection_sites, provenance: official, category: government, subtype: civil_protection, name: denominaz}
+        - {layer: osm_sensitive_pois, provenance: osm, name: name, osm_rules: true}
+      # Official labels (from subtype_field) mapped to the same codes the OSM rules use.
+      subtype_map:
+        "Aeroporti": airport
+        "Porti": port
+        "STAZIONI FERROVIE REGIONALI (FL 1-8)": railway_station
+        "Stazioni Alta Velocità": railway_station
+        "Stazioni COTRAL": bus_station
+        "Stazioni METROPOLITANE A-B-C": metro_station
+        "Stazioni ROMA VITERBO E ROMA LIDO": railway_station
+        "Ambasciate": embassy
+        "Consolati": consulate
+        "Carabinieri": police
+        "Guardia di Finanza": police
+        "Polizia Locale": police
+        "Polizia di Stato": police
+        "Vigili del Fuoco": fire_station
+        "Autodemolitori": car_breaker
+        "Discariche": landfill
+        "Reattore": nuclear_reactor
+        "Siti Stoccaggio Rifiuti": waste_storage
+        "Stabilimenti a incidente a rischio rilevante": seveso_plant
+      # For osm_rules: the first matching tag decides category and subtype.
+      osm_rules:
+        - {tag: amenity, value: hospital, category: health, subtype: hospital}
+        - {tag: healthcare, value: hospital, category: health, subtype: hospital}
+        - {tag: amenity, value: clinic, category: health, subtype: clinic}
+        - {tag: healthcare, value: clinic, category: health, subtype: clinic}
+        - {tag: amenity, value: kindergarten, category: education, subtype: preschool}
+        - {tag: amenity, value: childcare, category: education, subtype: nursery}
+        - {tag: amenity, value: school, category: education, subtype: school}
+        - {tag: amenity, value: university, category: education, subtype: university}
+        - {tag: amenity, value: college, category: education, subtype: college}
+        - {tag: leisure, value: park, category: green, subtype: park}
+        - {tag: power, value: substation, category: critical_infrastructure, subtype: power_substation}
+        - {tag: power, value: plant, category: critical_infrastructure, subtype: power_plant}
+        - {tag: man_made, value: water_works, category: critical_infrastructure, subtype: water_works}
+        - {tag: man_made, value: wastewater_plant, category: critical_infrastructure, subtype: wastewater_plant}
+        - {tag: man_made, value: gasometer, category: critical_infrastructure, subtype: gas_facility}
+        - {tag: station, value: subway, category: critical_infrastructure, subtype: metro_station}
+        - {tag: railway, value: station, category: critical_infrastructure, subtype: railway_station}
+        - {tag: aeroway, value: aerodrome, category: critical_infrastructure, subtype: airport}
+        - {tag: amenity, value: police, category: government, subtype: police}
+        - {tag: amenity, value: fire_station, category: government, subtype: fire_station}
+        - {tag: amenity, value: townhall, category: government, subtype: town_hall}
+        - {tag: amenity, value: courthouse, category: government, subtype: court}
+        - {tag: amenity, value: prison, category: government, subtype: prison}
+        - {tag: office, value: diplomatic, category: government, subtype: embassy}
+        - {tag: amenity, value: embassy, category: government, subtype: embassy}
+        - {tag: office, value: government, category: government, subtype: government_office}
 
   # --- National landscape constraints (MiC SITAP), clipped to Rome ----------
   sitap_art136_cd:       {source: sitap, type_name: "sitap_ws_clone:LAZIO_art_136_c_d", data_kind: real, theme: landscape, clip_to_city: true}

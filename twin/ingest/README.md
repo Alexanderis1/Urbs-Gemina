@@ -34,6 +34,18 @@ A manifest snapshot looks like this:
 A layer that fails gets `"status": "not_available"` and an `error`; the run carries on
 (gate A no-go rule). Exit code 1 means at least one layer failed.
 
+## Sensitive sites (one merged layer)
+
+`sensitive_sites` (built last, from the files in `data/processed/`) puts every sensitive
+place in one layer with `site_id, category, subtype, name, source_layer, provenance, data_kind`.
+Categories: health, education, green, critical_infrastructure, hazardous_industry, government.
+Official layers come first; an OSM feature within `dedupe_m` metres of an official site of the
+same category is treated as the same site. The recipe (inputs, OSM tag rules, label mapping)
+is in `config/ingest.yaml` under `layers.sensitive_sites.options`.
+
+PTPR (Regione Lazio landscape plan, Tavole A and B plus the PTP 15/12 constraint layers)
+is the official landscape source: those layers carry `theme: landscape_ptpr`.
+
 ## Live feeds
 
 ```

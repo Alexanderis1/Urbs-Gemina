@@ -190,3 +190,16 @@ def test_overpass_tiles_split_the_bbox_and_merge_duplicates(tmp_path: Path) -> N
     way = next(e for e in raw["elements"] if e["type"] == "way")
     assert way["tags"] == {"leisure": "pitch", "sport": "soccer"}  # contact tag dropped
     assert way["center"] == {"lat": 41.9, "lon": 12.5}
+
+
+def test_excluded_categories_never_reach_the_files(tmp_path: Path) -> None:
+    collection = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "id": "263.1", "geometry": {"type": "Point", "coordinates": [12.3, 41.9]},
+         "properties": {"tipologia": "Stabilimenti a incidente a rischio rilevante", "denominaz": "Raffineria"}},
+        {"type": "Feature", "id": "263.2", "geometry": {"type": "Point", "coordinates": [12.4, 41.9]},
+         "properties": {"tipologia": "CampiNomadi", "denominaz": "Campo"}},
+    ]}
+    entry = ingest_layer(CATALOG.layers["hazardous_sites"], CATALOG,
+                         lambda r: json.dumps(collection).encode(), tmp_path, NOW)
+    assert entry["status"] == "ok" and entry["features"] == 1 and entry["excluded_rows"] == 1
+    assert "CampiNomadi" not in (tmp_path / "hazardous_sites.geojson").read_text(encoding="utf-8")
