@@ -202,7 +202,7 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
         body = CITATION.sub(" ", sentence)
         body = URL.sub(" ", body)
         for pat in vc.exempt_patterns:
-            body = re.sub(pat, " ", body)
+            body = re.sub(pat, " ", body, flags=re.IGNORECASE)
         for m in NUMBER.finditer(body):
             token = m.group(0).rstrip("% ").lstrip("+")
             is_percent = bool(m.group(1))
