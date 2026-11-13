@@ -3,8 +3,9 @@
 # A layer that is listed here but not downloaded yet is reported "not_available", never as empty.
 basis: "Challenge 02 brief and docs/data-inventory.md (300 m context: sensitive sites and constraints)"
 
-# Property names tried in order to label a hit. GeoServer field names not read yet (C=50).
-name_fields: [nome, NOME, denominazione, DENOMINAZIONE, denominazi, DENOMINAZI, name, NAME, descrizione, DESCRIZIONE, tipo, TIPO]
+# Property names tried in order to label a hit. denominazione (schools), DESCRIZION (hospitals) and denom (UNESCO)
+# were read from the GeoServer on 2026-11-13; the rest are fallbacks.
+name_fields: [denominazione, DESCRIZION, denom, nome, NOME, denominazione, DENOMINAZIONE, denominazi, DENOMINAZI, name, NAME, descrizione, DESCRIZIONE, tipo, TIPO]
 
 groups:
   sensitive_site: "Sensitive sites (schools, care, health, play areas)"

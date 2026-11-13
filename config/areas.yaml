@@ -19,8 +19,9 @@ heavy_tools_max_area_km2: 40   # micro traffic simulation and ray tracing refuse
 city_area_km2:
   value: 1287.36
   basis: "ISTAT surface of Roma Capitale"
-# Field names are tried in order; the GeoServer property names were not read yet (C=50).
-municipio_id_fields: [MUNICIPIO, municipio, NUM_MUN, num_mun, COD_MUN, cod_mun, ID, id]
-municipio_name_fields: [NOME, nome, DENOMINAZ, denominazione, MUNICIPIO, municipio]
-urban_zone_id_fields: [CODZU, codzu, COD_ZU, cod_zu, ZONA_URB, CODICE, codice, ID, id]
-urban_zone_name_fields: [NOME, nome, DEN_ZU, den_zu, DENOMINAZ, denominazione]
+# Field names are tried in order. The first ones were read from the GeoServer on 2026-11-13
+# (municipi: municipio, numero_rom; zone urbanistiche: ZONA_URBANISTICA, DENOMINAZIONE); the rest are fallbacks.
+municipio_id_fields: [municipio, id_municip, numero_rom, MUNICIPIO, municipio, NUM_MUN, num_mun, COD_MUN, cod_mun, ID, id]
+municipio_name_fields: [numero_rom, NOME, nome, DENOMINAZ, denominazione, MUNICIPIO, municipio]
+urban_zone_id_fields: [ZONA_URBANISTICA, zona_urbanistica, CODZU, codzu, COD_ZU, cod_zu, ZONA_URB, CODICE, codice, ID, id]
+urban_zone_name_fields: [DENOMINAZIONE, denominazione, NOME, nome, DEN_ZU, den_zu, DENOMINAZ, denominazione]
