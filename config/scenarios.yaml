@@ -76,6 +76,27 @@ road_closure:
   rerouting_period_s:
     value: 60
     basis: "assumption: drivers update their route each minute (navigation apps)"
+  auto_network:
+    value: true
+    basis: "build the district network from OpenStreetMap (Overpass) on first use and cache it"
+  overpass_url:
+    value: https://overpass-api.de/api/interpreter
+    basis: "public Overpass API (ODbL data)"
+  network_cache_dir:
+    value: data/cache/networks
+    basis: "git-ignored; a volume in the Modal worker"
+  osm_highways:
+    value: "motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street"
+    basis: "roads cars use; service roads and tracks are left out to keep the district network small"
+  event_car_share:
+    value: 0.35
+    basis: "assumption (C=40): share of event attendees arriving by car in Rome; replace with the organiser's mobility plan"
+  event_car_occupancy:
+    value: 1.8
+    basis: "assumption (C=50): people per car for events"
+  event_radius_m:
+    value: 400
+    basis: "assumption: event car trips end on roads within 400 m of the venue (parking and drop-off)"
   top_changed_roads:
     value: 10
     basis: "how many roads with the largest traffic change are listed"
@@ -136,9 +157,9 @@ river_flood:
       river: tevere
       lon: 12.4757
       lat: 41.9058
-      normal_level_m: 5.5
-      rating: [[150, 5.5], [500, 7.0], [1000, 9.0], [1500, 10.8], [2000, 12.3], [2500, 13.6], [3000, 14.8]]
-      basis: "assumption (C=35): rough stage-discharge curve placed between the alert levels (7 / 11 / 13 m); replace with the Centro Funzionale's official rating curve"
+      normal_level_m: 6.5
+      rating: [[150, 6.5], [280, 7.32], [1375, 10.89], [1800, 12.55], [1933, 13.49], [2750, 16.84]]
+      basis: "observed stage-discharge pairs at Ripetta (WS1 tiber_hydraulics.json, C=70): 31 Jan 2014 base flow, Dec 2004, Dec 2008, Nov 2012 and Dec 1937 peaks; ordinary level 6.5 m (C=60); the first point is an assumption. Not the official rating curve (Annali Idrologici Parte II, not online)"
     aniene_lunghezza:
       river: aniene
       lon: 12.6467
@@ -157,9 +178,9 @@ river_flood:
       tevere_muraglioni:
         river: tevere
         gauge: tevere_ripetta
-        crest_level_m: 16.5
+        crest_level_m: 18.45
         reach_bbox: [12.440, 41.850, 12.500, 41.935]
-    basis: "assumption (C=40): the 19th-century embankment walls of the urban Tiber (Ponte Milvio to Ponte Marconi) were built above the 1870 flood (17.22 m at Ripetta); taken as overtopped from 16.5 m on the gauge. The walls are thinner than a 30 m cell, so they enter the model as this rule, not as terrain"
+    basis: "Canevari design crest 18.45 m on the Ripetta zero, 1.20 m above the 1870 flood (WS1 tiber_hydraulics.json, C=75; benchmarks 18.5-19.9 m a.s.l.). The crest is not level along the reach; the LiDAR crest (WS2) will replace this single value. The walls are thinner than a 30 m cell, so they enter the model as this rule, not as terrain"
   hazard_file:
     value: flood_hazard_pgra.geojson
     basis: "WS1: official PGRA hazard polygons, field 'hazard' = P1 | P2 | P3"

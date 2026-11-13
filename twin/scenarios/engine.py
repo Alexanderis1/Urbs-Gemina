@@ -5,14 +5,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from twin.scenarios import cache, config, layers
+from twin.scenarios import cache, config, layers, remote
 from twin.scenarios.antenna import run_antenna
 from twin.scenarios.area import Area, AreaArg, AreaNotAvailable, AreaTooLarge, check_heavy, resolve_area
 from twin.scenarios.data import ScenarioData
 from twin.scenarios.envelope import envelope, run_id
 from twin.scenarios.exposure import run_population_exposure
 from twin.scenarios.flood import run_rain_flood, run_river_flood
-from twin.scenarios.traffic import run_road_closure
+from twin.scenarios.traffic import run_road_closure, run_traffic_event
 
 TOOL = "run_scenario"
 Runner = Callable[[Area, Mapping[str, Any], ScenarioData], dict[str, Any]]
@@ -25,6 +25,8 @@ class Kind:
     description: str
     #: WS1 layer files the kind reads; their hashes enter the run id.
     reads: tuple[str, ...] = ()
+    #: Run in the scenario worker (Modal) when URBS_SCENARIO_WORKER=modal.
+    isolate: bool = False
 
 
 KINDS: dict[str, Kind] = {
@@ -37,14 +39,18 @@ KINDS: dict[str, Kind] = {
                         "Tiber / Aniene rises by X m: flooded area, residents and sensitive sites (P5/P50/P95), "
                         "beside the official PGRA hazard areas",
                         ("dtm_glo30_ground.tif", "rivers_osm.geojson", "flood_hazard_pgra.geojson",
-                         "census_sections.geojson", "sensitive_sites.geojson")),
+                         "census_sections.geojson", "sensitive_sites.geojson"), True),
     "rain_flood": Kind(run_rain_flood, False,
                        "Heavy rain: where water collects (hotspots with P5/P50/P95 depth), residents and sensitive "
                        "sites affected",
                        ("dtm_glo30_ground.tif", "imperviousness_2018.tif", "ptpr_b_aree_urbanizzate.geojson",
-                        "road_underpasses_osm.geojson", "census_sections.geojson", "sensitive_sites.geojson")),
+                        "road_underpasses_osm.geojson", "census_sections.geojson", "sensitive_sites.geojson"), True),
+    "traffic_event": Kind(run_traffic_event, True,
+                          "Roadworks, closures and big events on one district: SUMO travel time, delay and congestion "
+                          "points, baseline vs variant (synthetic demand anchored to loop counts)", (), True),
     "road_closure": Kind(run_road_closure, True,
-                         "Close roads on one district: SUMO travel time and delay, baseline vs variant (synthetic demand)"),
+                         "Close roads on one district: SUMO travel time and delay, baseline vs variant (synthetic demand)",
+                         (), True),
 }
 
 
@@ -57,7 +63,7 @@ def default_cache_dir() -> Path:
 
 
 def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData | None = None,
-        cache_dir: Path | None = None, use_cache: bool = True) -> dict[str, Any]:
+        cache_dir: Path | None = None, use_cache: bool = True, isolate: bool = True) -> dict[str, Any]:
     if kind not in KINDS:
         raise KeyError(f"Unknown scenario kind '{kind}'. Known: {', '.join(sorted(KINDS))}")
     data = data or ScenarioData()
@@ -76,6 +82,14 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
         if hit is not None:
             return {**hit, "cached": True}
 
+    if isolate and spec.isolate and remote.enabled():
+        try:
+            out = remote.call(kind, area, change, data)
+        except Exception as exc:  # noqa: BLE001 - worker down or not deployed: say so, never hang the API
+            return _not_ok(inputs, snapshots, "not_available", f"Scenario worker unavailable: {exc}")
+        if use_cache and out.get("status") == "ok":
+            cache.put(directory, rid, out)
+        return out
     try:
         resolved = resolve_area(area, lookup=data.area_lookup or layers.default_area_lookup)
         if spec.heavy:

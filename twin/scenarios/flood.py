@@ -258,7 +258,7 @@ def _defended_river(grid: Grid, river: str, river_mask: BoolArray) -> tuple[list
         reach[rows[0]:rows[1] + 1, cols[0]:cols[1] + 1] = True
         out.append((river_mask & reach, float(d["crest_level_m"])))
         notes.append(f"Defence '{name}': the walled reach only spills above {d['crest_level_m']} m at "
-                     f"{d['gauge']} (assumption C=40); below that, water reaches land only from unwalled reaches.")
+                     f"{d['gauge']} (design crest, C=75); below that, water reaches land only from unwalled reaches.")
     return out, notes
 
 

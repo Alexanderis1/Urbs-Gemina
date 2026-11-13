@@ -34,7 +34,13 @@ def test_closure_refuses_the_whole_city(tmp_path: Path) -> None:
     assert not list(tmp_path.glob("*.json"))
 
 
-def test_missing_network_is_not_available_and_not_cached(tmp_path: Path) -> None:
+def test_missing_network_is_not_available_and_not_cached(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.scenarios import traffic
+
+    def offline(area: object) -> Path:
+        raise OSError("offline")
+
+    monkeypatch.setattr(traffic, "network_for_area", offline)
     out = engine.run("road_closure", DISTRICT, CLOSE, data=ScenarioData(), cache_dir=tmp_path)
     assert out["status"] == "not_available"
     assert "network" in out["reason"]
@@ -142,3 +148,76 @@ def test_bus_speeds_are_checked_against_the_baseline(grid_net: Path) -> None:
     assert check["edges"] == 2
     assert check["mean_abs_error_m_per_s"] >= 0.0
     assert out["data_kinds"]["bus_speeds"] == "real"
+
+
+@pytest.fixture(scope="module")
+def two_lane_net(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    netgenerate = sumo_binary("netgenerate")
+    assert netgenerate is not None
+    out = tmp_path_factory.mktemp("net2") / "grid2.net.xml"
+    subprocess.run([netgenerate, "--grid", "--grid.number", "5", "--grid.length", "200",
+                    "--default.lanenumber", "2", "-o", str(out)], check=True, capture_output=True)
+    return out
+
+
+@needs_sumo
+def test_roadworks_cut_lanes_and_add_delay(two_lane_net: Path) -> None:
+    works = {"roadworks": [{"edges": ["B2C2", "C2B2", "C2D2", "D2C2"], "lanes_closed": 1, "speed_kmh": 20}]}
+    out = engine.run("traffic_event", DISTRICT, works, data=ScenarioData(road_network=two_lane_net), use_cache=False)
+    r = out["result"]
+    assert out["status"] == "ok"
+    assert {w["edge"] for w in r["roadworks"]} == {"B2C2", "C2B2", "C2D2", "D2C2"}
+    assert r["roadworks"][0]["lanes"] == [2, 1]
+    assert r["difference"]["mean_time_loss_s"]["p50"] > 0
+
+
+@needs_sumo
+def test_big_event_adds_traffic_and_congestion_points(grid_net: Path) -> None:
+    change = {"event": {"edges": ["C2C3", "C3C2"], "attendees": 3000, "arrive_from_s": 0, "arrive_to_s": 1800}}
+    out = engine.run("traffic_event", DISTRICT, change, data=ScenarioData(road_network=grid_net), use_cache=False)
+    r = out["result"]
+    assert r["event"]["vehicles"] == round(3000 * 0.35 / 1.8)
+    assert r["variant"]["completed"]["p50"] > r["baseline"]["completed"]["p50"]
+    assert r["congestion_points"] and r["congestion_points"][0]["extra_vehicle_hours_lost"] > 0
+    assert any("event traffic" in w.lower() for w in out["warnings"])
+
+
+def test_traffic_change_needs_something_to_do() -> None:
+    with pytest.raises(ValueError):
+        engine.run("traffic_event", DISTRICT, {"event": {"attendees": 0}},
+                   data=ScenarioData(road_network=Path("x")), use_cache=False)
+
+
+def test_isolated_kinds_go_to_the_worker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.scenarios import remote
+
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    def fake_call(kind: str, area: object, change: dict[str, object], data: ScenarioData) -> dict[str, object]:
+        calls.append((kind, remote.to_spec(data)))
+        return {"status": "ok", "run_id": "x", "result": {}, "cached": False}
+
+    monkeypatch.setenv(remote.ENV_SWITCH, "modal")
+    monkeypatch.setattr(remote, "call", fake_call)
+    data = ScenarioData(loop_counts_veh_per_h={"A1B1": 100.0}, river_discharge={"g": [("2026-11-14", 1.0, 0.1)]})
+    out = engine.run("traffic_event", DISTRICT, CLOSE, data=data, cache_dir=tmp_path)
+    assert out["status"] == "ok" and calls[0][0] == "traffic_event"
+    back = remote.from_spec(calls[0][1])
+    assert back.loop_counts_veh_per_h == {"A1B1": 100.0}
+    assert back.river_discharge == {"g": [("2026-11-14", 1.0, 0.1)]}
+    # light kinds stay in the API process
+    assert engine.run("antenna", "city", {"action": "add", "site": {"lon": 12.48, "lat": 41.9, "height_m": 20},
+                                          "eirp_w": 100.0}, data=ScenarioData(), cache_dir=tmp_path)["status"] == "ok"
+    assert len(calls) == 1
+
+
+def test_worker_down_is_not_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.scenarios import remote
+
+    def broken(*args: object) -> dict[str, object]:
+        raise ConnectionError("no worker")
+
+    monkeypatch.setenv(remote.ENV_SWITCH, "modal")
+    monkeypatch.setattr(remote, "call", broken)
+    out = engine.run("road_closure", DISTRICT, CLOSE, data=ScenarioData(), cache_dir=tmp_path)
+    assert out["status"] == "not_available" and "worker" in out["reason"]
