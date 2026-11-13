@@ -61,4 +61,5 @@ Decided by Alessandro: no time-based scope cuts. The elements are built in paral
 
 | Workstream | Decision | Status |
 |---|---|---|
-| (filled in as each workstream decides) | | |
+| WS6 scenarios | Road closure runs on SUMO only, no simplified fallback model. Scenario kinds: antenna, population_exposure, road_closure (heavy) | Decided by Alessandro |
+| Hub | Tool envelope gains top-level `status` (ok / not_available / refused) + `reason`, `cached`, and `not_available` as a data kind; `run_id` also hashes the driving config files | Agreed |

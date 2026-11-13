@@ -19,7 +19,8 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
 2. **Area argument**: every tool takes `area` = `"city"`, a municipio id, an urban-zone id, or a GeoJSON polygon (see `config/areas.yaml`). Heavy tools refuse areas above `heavy_tools_max_area_km2`.
 3. **Tool response envelope** (every tool, JSON):
    `{ "run_id": str, "tool": str, "inputs": {...}, "result": {...}, "data_kinds": {"<layer>": "real|estimated|simulated"}, "sources": [{"id", "url?", "retrieved_at"}], "synthetic": bool, "warnings": [str] }`.
-   `run_id` = SHA-256 of tool name + inputs + data snapshot hashes. Estimates carry `p5`, `p50`, `p95` and `calibration: "calibrated|uncalibrated"`.
+   Additions agreed 13 Nov (from WS6): top-level `"status": "ok" | "not_available" | "refused"` with `"reason": str` when not ok (`refused` = guardrail, e.g. heavy run on too large an area); top-level `"cached": bool`; `data_kinds` values may also be `"not_available"` for a missing input. Results that are not `ok` are never cached.
+   `run_id` = SHA-256 of tool name + inputs + data snapshot hashes + hashes of the config files that drive the result (thresholds, emf_params, areas, scenarios, beliefs). Estimates carry `p5`, `p50`, `p95` and `calibration: "calibrated|uncalibrated"`.
 4. **Tool list and HTTP API**: `POST /tools/<name>` on the tool API for `resolve_place`, `context_check`, `estimate_field`, `query_layer`, `run_scenario`, `legal_lookup`, `find_dataset`, `data_status`. Schemas published by the tools stream in `twin/api/schemas/*.json`; other streams consume them.
 5. **Map data handoff**: static layers as GeoParquet in `data/processed/` (git-ignored) plus tiles (PMTiles) for the viewer; belief layers served as GeoJSON / H3 cell lists via `query_layer`.
 6. **Answer contract**: `agents/prompts/answer_contract.md`.
