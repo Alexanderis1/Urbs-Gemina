@@ -1,7 +1,7 @@
 """Morning briefing: a fixed list of questions sent to the orchestrator, stitched in order."""
 from __future__ import annotations
 
-from voice.briefing import build_briefing, load_briefing_items
+from voice.briefing import build_briefing, load_briefing_items, spoken_area
 from voice.contract import TwinAnswer, TwinQuestion
 
 
@@ -28,9 +28,9 @@ def test_every_item_goes_through_the_orchestrator_in_order() -> None:
     items = load_briefing_items("en")
     assert len(items) >= 3
     orch = ScriptedOrchestrator()
-    answer = build_briefing(orch, area="municipio:I", tier="office", language="en", conversation_id="c")
-    assert [c.question for c in orch.calls] == [i.question.format(area="municipio:I") for i in items]
-    assert all(c.mode == "briefing" and c.area == "municipio:I" and c.tier == "office" for c in orch.calls)
+    answer = build_briefing(orch, area="municipio:1", tier="office", language="en", conversation_id="c")
+    assert [c.question for c in orch.calls] == [i.question.format(area="Municipio I") for i in items]
+    assert all(c.channel == "voice" and c.mode == "briefing" and c.area == "municipio:1" and c.tier == "office" for c in orch.calls)
     assert answer.run_ids == tuple(f"run{n}" for n in range(1, len(items) + 1) if n != 2)
     assert answer.synthetic is True
     assert answer.verified is True
@@ -38,7 +38,7 @@ def test_every_item_goes_through_the_orchestrator_in_order() -> None:
 
 def test_unverified_items_say_insufficient_data_without_their_numbers() -> None:
     orch = ScriptedOrchestrator()
-    answer = build_briefing(orch, area="municipio:I", tier="office", language="en", conversation_id="c")
+    answer = build_briefing(orch, area="municipio:1", tier="office", language="en", conversation_id="c")
     assert "99" not in answer.text
     assert "air stations" in answer.text
     assert answer.text.index("Item 1 fact.") < answer.text.index("air stations") < answer.text.index("Item 3 fact.")
@@ -46,3 +46,9 @@ def test_unverified_items_say_insufficient_data_without_their_numbers() -> None:
 
 def test_italian_items_exist() -> None:
     assert len(load_briefing_items("it")) == len(load_briefing_items("en"))
+
+
+def test_area_ids_are_spoken_as_names() -> None:
+    assert spoken_area("municipio:12", "it") == "Municipio XII"
+    assert spoken_area("zone:6a", "it") == "zona 6a"
+    assert spoken_area("city", "it") == "Roma"

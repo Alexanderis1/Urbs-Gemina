@@ -58,7 +58,7 @@ def ask_twin_tool(webhook_url: str, secret_id: str, languages: list[str]) -> dic
                     "question": {"type": "string", "description": "The user's question, in their own words"},
                     "area": {
                         "type": "string",
-                        "description": "Optional: 'city', a municipio id such as 'municipio:I', or an urban-zone id",
+                        "description": "Optional: 'city', 'municipio:<1-15>' (e.g. 'municipio:1' for Municipio I) or 'zone:<CODE>' for an urban zone",
                     },
                     "language": {"type": "string", "enum": languages, "description": "Language of the conversation"},
                     "mode": {

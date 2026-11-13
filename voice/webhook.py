@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 SECRET_HEADER = "x-urbs-voice-secret"
 CONVERSATION_HEADER = "x-conversation-id"
 MAX_QUESTION_CHARS = 500
-#: "city", a municipio or urban-zone id. Polygons are not dictated by voice.
-AREA_PATTERN = re.compile(r"^[A-Za-z0-9 :_.'\-]{1,64}$")
+#: Shared area ids: "city", "municipio:<1-15>", "zone:<CODE>". Polygons are not dictated by voice.
+AREA_PATTERN = re.compile(r"^(?:city|municipio:(?:[1-9]|1[0-5])|zone:[A-Za-z0-9_\-]{1,20})$")
 
 
 def secrets_from_env(env: Mapping[str, str] | None = None) -> dict[str, Tier]:
@@ -67,7 +67,7 @@ def _parse(body: Mapping[str, Any]) -> tuple[str, Language, str | None, str]:
     if area in ("", None):
         area = None
     elif not isinstance(area, str) or not AREA_PATTERN.match(area):
-        raise BadRequest("area must be 'city', a municipio or an urban-zone id")
+        raise BadRequest("area must be city, municipio:<1-15> or zone:<CODE>")
     mode = params.get("mode", "question")
     if mode not in ("question", "briefing"):
         raise BadRequest("mode must be question or briefing")
@@ -98,7 +98,7 @@ def handle_ask_twin(
             answer = build_briefing(orchestrator, area=area or "city", tier=tier, language=language, conversation_id=conversation_id)
         else:
             answer = orchestrator.ask(
-                TwinQuestion(question=question, tier=tier, language=language, area=area, mode="question", conversation_id=conversation_id)
+                TwinQuestion(question=question, tier=tier, language=language, area=area, mode="question", conversation_id=conversation_id, channel="voice")
             )
     except Exception:  # the caller hears a fixed sentence, never a stack trace
         log.exception("orchestrator failed for conversation %s", conversation_id)

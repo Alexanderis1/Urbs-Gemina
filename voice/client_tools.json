@@ -20,7 +20,7 @@
     {
       "type": "client",
       "name": "show_area",
-      "description": "Highlight an operating area on the map: 'city', a municipio id or an urban-zone id from a map_actions entry.",
+      "description": "Highlight an operating area on the map: 'city', 'municipio:<1-15>' or 'zone:<CODE>', copied from a map_actions entry.",
       "expects_response": false,
       "parameters": {
         "type": "object",

@@ -1,54 +1,18 @@
-"""What the voice layer sends to the orchestrator and what it expects back.
+"""Voice side of shared interface 7 (orchestrator hand-over).
 
-The voice agent never answers on its own. Every question goes to the same
-orchestrator (and verifier) as the chat, owned by the agents stream. This file
-is the voice side of that hand-over; the orchestrator side must return a
-``TwinAnswer`` (or the JSON shape parsed by ``answer_from_json``).
+The dataclasses live in ``agents/contract.py`` (owned by the agents stream, frozen by
+the hub). This module re-exports them and adds the voice-only helpers.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Literal, Mapping, Protocol
+from typing import Any, Mapping
 
-Tier = Literal["office", "citizen"]
-Language = Literal["it", "en"]
-Mode = Literal["question", "briefing"]
+from agents.contract import Language, Mode, Orchestrator, Tier, TwinAnswer, TwinQuestion
+
+__all__ = ["LANGUAGES", "TIERS", "Language", "Mode", "Orchestrator", "Tier", "TwinAnswer", "TwinQuestion", "answer_from_json"]
 
 TIERS: tuple[Tier, ...] = ("office", "citizen")
 LANGUAGES: tuple[Language, ...] = ("it", "en")
-
-
-@dataclass(frozen=True)
-class TwinQuestion:
-    question: str
-    #: Set by the server from the calling agent's secret, never by the model.
-    tier: Tier
-    language: Language
-    area: str | None = None
-    mode: Mode = "question"
-    conversation_id: str | None = None
-    channel: str = "voice"
-
-
-@dataclass(frozen=True)
-class TwinAnswer:
-    #: Answer text written by the orchestrator, already checked by the verifier.
-    text: str
-    #: True only when the verifier found a run id or source for every figure.
-    verified: bool
-    run_ids: tuple[str, ...]
-    sources: tuple[str, ...]
-    #: Layer name -> "real" | "estimated" | "simulated".
-    data_kinds: Mapping[str, str]
-    synthetic: bool
-    #: What is missing when the answer is "insufficient data".
-    missing: tuple[str, ...] = ()
-    #: Suggested map moves, each {"tool": <client tool name>, "args": {...}}.
-    map_actions: tuple[Mapping[str, Any], ...] = field(default=())
-
-
-class Orchestrator(Protocol):
-    def ask(self, question: TwinQuestion) -> TwinAnswer: ...
 
 
 def _strs(value: Any) -> tuple[str, ...]:
@@ -58,7 +22,7 @@ def _strs(value: Any) -> tuple[str, ...]:
 
 
 def answer_from_json(data: Mapping[str, Any]) -> TwinAnswer:
-    """Parse the orchestrator's JSON reply. Unknown or missing fields fail safe (unverified)."""
+    """Parse an orchestrator reply sent as JSON. Unknown or missing fields fail safe (unverified)."""
     kinds = data.get("data_kinds")
     actions = data.get("map_actions")
     return TwinAnswer(

@@ -12,7 +12,7 @@ Two ElevenLabs voice agents that talk to the same orchestrator and guardrails as
 1. The agent opens with an AI disclosure (`agents.yaml`). Italian only (decision of 13 Nov 2026); English texts stay in the files so it can be switched on later.
 2. For any question about Rome it calls the one webhook tool `ask_twin` (question, optional area, language, mode).
 3. `webhook.handle_ask_twin` checks the per-agent secret header. **The secret decides the tier** (office or citizen); the model cannot choose it.
-4. The question goes to the orchestrator (`contract.Orchestrator`, built by the agents stream). The briefing is a fixed list of questions in `briefing.yaml`, each sent to the orchestrator too.
+4. The question goes to the orchestrator (shared interface 7: `agents/contract.py`, re-exported by `voice/contract.py`). Areas use the shared ids `city`, `municipio:<1-15>`, `zone:<CODE>`. The briefing is a fixed list of questions in `briefing.yaml`, each sent to the orchestrator too.
 5. `speech.to_speech` turns the answer into speech: unverified answers become "insufficient data" plus what is missing; run ids and links are removed from the spoken text but returned in the payload (shown on screen); simulated data is announced; map moves outside Rome are dropped.
 6. The agent reads `speak` and calls the map client tools (`client_tools.json`) with the `map_actions` it received.
 7. After the call, `audit.audit_transcript` flags any number the agent said that no tool returned.

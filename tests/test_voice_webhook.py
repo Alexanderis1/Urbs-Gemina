@@ -55,12 +55,20 @@ def test_tier_comes_from_secret_not_from_body() -> None:
 
 
 def test_question_goes_to_orchestrator_with_area_and_language() -> None:
-    status, resp, orch = call({"question": "What is around Piazza Venezia?", "area": "municipio:I", "language": "en"})
+    status, resp, orch = call({"question": "What is around Piazza Venezia?", "area": "municipio:1", "language": "en"})
     assert status == 200
     q = orch.calls[0]
     assert q.question == "What is around Piazza Venezia?"
-    assert q.area == "municipio:I" and q.language == "en" and q.conversation_id == "conv_1"
+    assert q.area == "municipio:1" and q.language == "en" and q.conversation_id == "conv_1"
     assert resp["status"] == "ok"
+    assert q.channel == "voice"
+
+
+def test_area_must_use_shared_ids() -> None:
+    for area in ("city", "municipio:15", "zone:6a"):
+        assert call({"question": "x", "area": area})[0] == 200
+    for area in ("municipio:16", "municipio:I", "Trastevere", "zone:"):
+        assert call({"question": "x", "area": area})[0] == 400, area
 
 
 def test_speech_drops_run_ids_and_urls_but_keeps_them_in_payload() -> None:
@@ -119,6 +127,6 @@ def test_orchestrator_failure_is_spoken_as_error() -> None:
 
 
 def test_briefing_is_office_only() -> None:
-    status, resp, orch = call({"question": "brief me", "mode": "briefing", "area": "municipio:I"}, secret="citizen-secret")
+    status, resp, orch = call({"question": "brief me", "mode": "briefing", "area": "municipio:1"}, secret="citizen-secret")
     assert status == 200 and resp["status"] == "refused"
     assert orch.calls == []

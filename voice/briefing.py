@@ -29,6 +29,19 @@ def load_briefing_items(language: Language) -> list[BriefingItem]:
     return [BriefingItem(topic=str(i["topic"]), question=str(i["question"])) for i in data[language]]
 
 
+_ROMAN = ("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV")
+
+
+def spoken_area(area: str, language: Language) -> str:
+    """'municipio:1' -> 'Municipio I', 'zone:6a' -> 'zona 6a', 'city' -> 'Roma'."""
+    kind, _, code = area.partition(":")
+    if kind == "municipio" and code.isdigit() and 1 <= int(code) <= len(_ROMAN):
+        return f"Municipio {_ROMAN[int(code) - 1]}"
+    if kind == "zone" and code:
+        return f"{'zona' if language == 'it' else 'zone'} {code}"
+    return "Roma" if language == "it" else "Rome"
+
+
 def build_briefing(
     orchestrator: Orchestrator,
     *,
@@ -37,7 +50,8 @@ def build_briefing(
     language: Language,
     conversation_id: str | None,
 ) -> TwinAnswer:
-    parts = [phrase(language, "briefing_intro", area=area)]
+    name = spoken_area(area, language)
+    parts = [phrase(language, "briefing_intro", area=name)]
     run_ids: list[str] = []
     sources: list[str] = []
     kinds: dict[str, str] = {}
@@ -46,12 +60,13 @@ def build_briefing(
     for item in load_briefing_items(language):
         answer = orchestrator.ask(
             TwinQuestion(
-                question=item.question.format(area=area),
+                question=item.question.format(area=name),
                 tier=tier,
                 language=language,
                 area=area,
                 mode="briefing",
                 conversation_id=conversation_id,
+                channel="voice",
             )
         )
         if not answer.verified:
