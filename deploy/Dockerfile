@@ -4,7 +4,7 @@
 #   cloudflared tunnel --url http://localhost:8000      # prints a public https URL
 FROM python:3.12-slim
 WORKDIR /app
-RUN pip install --no-cache-dir "fastapi>=0.110" "pydantic>=2" "PyYAML>=6" "uvicorn>=0.29" "numpy>=1.26" "h3>=4" "httpx>=0.27"
+RUN pip install --no-cache-dir "fastapi>=0.110" "pydantic>=2" "PyYAML>=6" "uvicorn>=0.29" "numpy>=1.26" "h3>=4" "httpx>=0.27" "anthropic>=2.8" "rasterio>=1.3" "scipy>=1.10" "pyarrow>=14" "gtfs-realtime-bindings>=1.0" "protobuf>=4"
 COPY twin ./twin
 COPY config ./config
 COPY scripts ./scripts
