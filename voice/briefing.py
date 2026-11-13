@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Mapping
 
 import yaml
 
@@ -57,6 +58,7 @@ def build_briefing(
     kinds: dict[str, str] = {}
     synthetic = False
     actions = []
+    citations: list[Mapping[str, Any]] = []
     for item in load_briefing_items(language):
         answer = orchestrator.ask(
             TwinQuestion(
@@ -80,6 +82,7 @@ def build_briefing(
         kinds.update(answer.data_kinds)
         synthetic = synthetic or answer.synthetic
         actions += list(answer.map_actions)
+        citations += list(answer.citations)
     parts.append(phrase(language, "briefing_outro"))
     return TwinAnswer(
         text=" ".join(parts),
@@ -90,4 +93,5 @@ def build_briefing(
         data_kinds=kinds,
         synthetic=synthetic,
         map_actions=tuple(actions[:1]),
+        citations=tuple(citations),
     )
