@@ -97,6 +97,12 @@ def run_chemical_plume(area: Area, change: Mapping[str, Any], data: ScenarioData
     except LookupError as exc:
         return {"result": {"status": "not_available", "reason": str(exc)}, "data_kinds": {"wind": "not_available"},
                 "sources": [], "synthetic": False, "warnings": [str(exc)]}
+    density = float(cfg["relative_density"].get(substance, 1.0))
+    if density > 1.1:
+        warnings.append(f"{substance.replace('_', ' ').capitalize()} is heavier than air ({density:.2f} x air): it "
+                        "slumps and runs along low ground, which this passive-gas model does not show. Near the "
+                        "plant the real cloud is wider and lower; check with a heavy-gas model (ALOHA).")
+    warnings.append(f"Expected accuracy of this model: {cfg['expected_accuracy']}.")
     release = float(change.get("release_kg_s", cfg["default_release_kg_s"]))
     if "release_kg_s" not in change:
         warnings.append(f"Release rate {release} kg/s is the default assumption; enter the plant's safety-report scenario.")

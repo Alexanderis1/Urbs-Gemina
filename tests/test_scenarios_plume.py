@@ -52,3 +52,29 @@ def test_unknown_substance_and_missing_wind() -> None:
                    use_cache=False)
     out = engine.run("chemical_plume", "city", {**SITE, "wind": "forecast"}, use_cache=False)
     assert out["status"] == "not_available"
+
+
+def test_plume_conserves_mass_across_the_wind() -> None:
+    """Ground release: integral of C over y at ground = Q sqrt(2/pi) / (u sigma_z) (Briggs urban, class D)."""
+    import math
+
+    import numpy as np
+
+    from twin.scenarios.plume import concentration
+
+    q, u, x = 1000.0, 3.0, 800.0
+    y = np.linspace(-3000, 3000, 60001)
+    c = concentration(q, u, "D", np.full_like(y, x), y, 0.0)
+    sz = 0.14 * x * (1 + 0.0003 * x) ** -0.5
+    expected = q * math.sqrt(2 / math.pi) / (u * sz)
+    assert float(np.trapezoid(c, y)) == pytest.approx(expected, rel=1e-4)
+    # centreline value against the textbook formula Q / (pi u sy sz)
+    sy = 0.16 * x * (1 + 0.0004 * x) ** -0.5
+    assert float(c[30000]) == pytest.approx(q / (math.pi * u * sy * sz), rel=1e-9)
+
+
+def test_dense_gas_is_flagged(tmp_path: Path) -> None:
+    out = engine.run("chemical_plume", "city", {"lon": 12.48, "lat": 41.90, "substance": "chlorine",
+                                                "release_kg_s": 1.0, "wind": {"speed_ms": 3, "from_deg": 270}},
+                     cache_dir=tmp_path)
+    assert any("heavier than air" in w for w in out["warnings"])

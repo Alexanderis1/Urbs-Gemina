@@ -121,7 +121,15 @@ class Stage:
     alerts: dict[str, float] | None = None  # probability of reaching each official alert level
 
 
-def _rating(gauge: Mapping[str, Any], discharge: FloatArray) -> FloatArray:
+def _rating(gauge: Mapping[str, Any], discharge: FloatArray, noise: bool = True) -> FloatArray:
+    """Level (m on the gauge) for each discharge; the fitted curve adds its own scatter unless ``noise`` is off."""
+    power = gauge.get("rating_power")
+    if power is not None:
+        q = np.maximum(np.asarray(discharge, dtype=np.float64), 0.0)
+        levels: FloatArray = float(power["h0"]) + np.power(q / float(power["a"]), 1.0 / float(power["b"]))
+        if noise:
+            levels = levels + np.random.default_rng(29).normal(0.0, float(power["sigma_m"]), levels.shape)
+        return levels
     curve = np.asarray(gauge["rating"], dtype=np.float64)
     out: FloatArray = np.interp(discharge, curve[:, 0], curve[:, 1],
                                 left=float(curve[0, 1]), right=None)
@@ -211,27 +219,63 @@ def _official(grid: Grid, data: ScenarioData) -> dict[str, BoolArray] | None:
     return {cls: rasterize_mask(grid, geoms, all_touched=False) for cls, geoms in sorted(by_class.items())}
 
 
+def _along_river_m(grid: Grid, river_mask: BoolArray, start: int) -> FloatArray:
+    """Distance (m) along the river cells from ``start`` (flat index of a river cell); inf off the river."""
+    from scipy.sparse import coo_matrix  # type: ignore[import-untyped]
+    from scipy.sparse.csgraph import dijkstra  # type: ignore[import-untyped]
+
+    cells = np.flatnonzero(river_mask.ravel())
+    index = np.full(river_mask.size, -1, dtype=np.int64)
+    index[cells] = np.arange(cells.size)
+    rows, cols = np.divmod(cells, grid.shape[1])
+    src: list[npt.NDArray[np.int64]] = []
+    dst: list[npt.NDArray[np.int64]] = []
+    wts: list[FloatArray] = []
+    for dr, dc in ((0, 1), (1, 0), (1, 1), (1, -1)):
+        r2, c2 = rows + dr, cols + dc
+        ok = (r2 >= 0) & (r2 < grid.shape[0]) & (c2 >= 0) & (c2 < grid.shape[1])
+        j = np.full(cells.size, -1, dtype=np.int64)
+        j[ok] = index[r2[ok] * grid.shape[1] + c2[ok]]
+        good = j >= 0
+        src.append(np.flatnonzero(good))
+        dst.append(j[good])
+        wts.append(np.full(int(good.sum()), grid.cell * (math.sqrt(2.0) if dr and dc else 1.0)))
+    i_all, j_all, w_all = np.concatenate(src), np.concatenate(dst), np.concatenate(wts)
+    graph = coo_matrix((w_all, (i_all, j_all)), shape=(cells.size, cells.size)).tocsr()
+    dist = dijkstra(graph, directed=False, indices=int(index[start]))
+    out = np.full(river_mask.size, np.inf)
+    out[cells] = dist
+    return out.reshape(grid.shape)
+
+
 def _sea_taper(grid: Grid, river: str, river_mask: BoolArray, nearest: npt.NDArray[np.int64],
                warnings: list[str]) -> FloatArray:
-    """Share of the gauge's rise felt at each cell: 1 upstream of the gauge, falling to 0 at sea level."""
+    """Share of the gauge's rise felt at each cell: 1 upstream of the gauge, falling to 0 at the mouth.
+
+    The flood surface between the gauge and the sea is taken as a straight line along the river
+    (distance from the mouth over the gauge's distance from the mouth).
+    """
     cfg = _cfg("river_flood")
-    gauge_id = cfg["sea_taper"].get(river)
-    if gauge_id is None:
+    spec = cfg["sea_taper"].get(river)
+    if spec is None:
         return np.ones(grid.shape)
-    gauge = cfg["gauges"][gauge_id]
-    rows, cols = grid.rowcol([float(gauge["lon"])], [float(gauge["lat"])])
-    if rows[0] < 0:
+    gauge = cfg["gauges"][spec["gauge"]]
+    pts_r, pts_c = grid.rowcol([float(gauge["lon"]), float(spec["mouth"][0])],
+                               [float(gauge["lat"]), float(spec["mouth"][1])])
+    if (pts_r < 0).any():
         return np.ones(grid.shape)
     from scipy import ndimage  # type: ignore[import-untyped]
 
     _, (ri, ci) = ndimage.distance_transform_edt(~river_mask, return_indices=True)
-    z_ref = float(grid.z[ri[rows[0], cols[0]], ci[rows[0], cols[0]]])
-    if not z_ref > 0:
+    snap = [int(ri[r, c] * grid.shape[1] + ci[r, c]) for r, c in zip(pts_r.tolist(), pts_c.tolist())]
+    along = _along_river_m(grid, river_mask, snap[1])
+    d_gauge = float(along.ravel()[snap[0]])
+    if not math.isfinite(d_gauge) or d_gauge <= 0:
         return np.ones(grid.shape)
-    river_z = np.nan_to_num(grid.z.ravel()[nearest].reshape(grid.shape), nan=z_ref)
-    warnings.append(f"Towards the sea the rise shrinks with the river's height above sea level "
-                    f"(full at {gauge_id}, none at the mouth; assumption C=50).")
-    out: FloatArray = np.clip(river_z / z_ref, 0.0, 1.0)
+    d_cell = along.ravel()[nearest].reshape(grid.shape)
+    warnings.append(f"Towards the sea the rise shrinks linearly along the river (full at {spec['gauge']}, "
+                    f"none at the mouth, {d_gauge / 1000:.0f} km downstream; validated against PGRA maps).")
+    out: FloatArray = np.clip(np.nan_to_num(d_cell / d_gauge, nan=1.0, posinf=1.0), 0.0, 1.0)
     return out
 
 

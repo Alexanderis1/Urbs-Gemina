@@ -158,8 +158,8 @@ river_flood:
       lon: 12.4757
       lat: 41.9058
       normal_level_m: 6.5
-      rating: [[150, 6.5], [280, 7.32], [1375, 10.89], [1800, 12.55], [1933, 13.49], [2750, 16.84]]
-      basis: "observed stage-discharge pairs at Ripetta (WS1 tiber_hydraulics.json, C=70): 31 Jan 2014 base flow, Dec 2004, Dec 2008, Nov 2012 and Dec 1937 peaks; ordinary level 6.5 m (C=60); the first point is an assumption. Not the official rating curve (Annali Idrologici Parte II, not online)"
+      rating_power: {h0: 5.89, a: 198.76, b: 1.1475, sigma_m: 0.5}
+      basis: "power-law curve h = h0 + (Q/a)^(1/b) fitted to 7 observed peaks after the walls (eval/scenarios/tiber_ripetta_peaks.json: 2014 base flow, 2004, 2008, 2012, 1937, 1915, 1900); fit error 0.50 m, leave-one-out 1.19 m; sigma_m adds the fit scatter to every level. Validated: T200 (3,360 m3/s, Calenda 2017) gives 17.6 m, below the 18.45 m walls, consistent with flooding starting near T175-T300 (Fiori et al. 2023). The earlier straight-line extension put T200 at 19.3 m. Ordinary level 6.5 m (C=60). Not the official rating (Annali Idrologici Parte II, not online)"
     aniene_lunghezza:
       river: aniene
       lon: 12.6467
@@ -171,8 +171,8 @@ river_flood:
     value: 0.3
     basis: "assumption: uncertainty of a hypothetical or forecast level; measured levels use the gauge's own sigma"
   sea_taper:
-    value: {tevere: tevere_ripetta}
-    basis: "assumption (C=50): towards the mouth the water surface is pinned to sea level, so the rise measured at the gauge shrinks in proportion to the river's height above the sea (river surface at the gauge = full rise, at the sea = none)"
+    value: {tevere: {gauge: tevere_ripetta, mouth: [12.2343, 41.7404]}}
+    basis: "towards the mouth (Fiumara Grande) the flood surface falls to sea level along a straight line in distance along the river. Validation against the PGRA maps (eval/scenarios) replaced the earlier rule (rise in proportion to the bed's height above the sea), which missed 94% of the official hazard area downstream of Magliana"
   defences:
     value:
       tevere_muraglioni:
@@ -280,6 +280,12 @@ impacts:
 chemical_plume:
   heavy: false
   model: gaussian_plume_briggs_urban
+  relative_density:
+    value: {ammonia: 0.59, chlorine: 2.49, hydrogen_sulfide: 1.19}
+    basis: "gas density relative to air (standard physical data). Above about 1.1 the gas slumps and spreads along low ground: a Gaussian plume (passive gas) is then only a first look; ALOHA / DEGADIS heavy-gas models are the reference"
+  expected_accuracy:
+    value: "factor of 2 for about half of the places (FAC2 about 0.5)"
+    basis: "Gaussian models with Briggs urban curves against urban field tracer trials (Hanna and Chang 2012, Joint Urban 2003 Oklahoma City; acceptance FAC2 >= 0.3 for urban areas)"
   members:
     value: 60
     basis: "ensemble size for stable P5 / P95 footprints"
