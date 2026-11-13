@@ -29,6 +29,10 @@ STATUS_RANK: dict[FieldStatus, int] = {
     "manager_confirmed": 5, "official": 4, "open_data": 3, "web_unverified": 2, "simulated": 1, "not_known": 0,
 }
 
+#: OSM operator:type values that state who runs a facility.
+PRIVATE_OPERATOR_TYPES = frozenset({"private", "business", "commercial", "company"})
+PUBLIC_OPERATOR_TYPES = frozenset({"public", "government", "municipal", "community"})
+
 #: Fields shown on the facility page. "not known" unless a source sets them.
 STANDARD_FIELDS = ("name", "kind", "address", "municipio", "hours", "accessibility", "manager", "contact")
 
@@ -119,12 +123,19 @@ class Facility:
 
     @property
     def facility_type(self) -> str:
-        """public | school | private. "private" means: known only from OSM or the web (estimated)."""
+        """public | school | private | unclassified. Never inferred: "private" only when a source says so
+        (OSM ``operator:type``); without such a statement the type is "unclassified" ("type not known")."""
         if self.fields["kind"].value == "school_gym":
             return "school"
         if any(SOURCE_STATUS.get(m.split(":", 1)[0]) in ("official", "manager_confirmed") for m in self.members):
             return "public"
-        return "private"
+        stated = self.extra.get("operator:type")
+        value = str(stated.value).strip().lower() if stated is not None else ""
+        if value in PRIVATE_OPERATOR_TYPES:
+            return "private"
+        if value in PUBLIC_OPERATOR_TYPES:
+            return "public"
+        return "unclassified"
 
     @property
     def accessible(self) -> bool | None:

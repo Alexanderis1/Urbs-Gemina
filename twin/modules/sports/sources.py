@@ -20,7 +20,7 @@ ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII
 #: OSM tags that make an element a place to play sport.
 OSM_SPORT_LEISURE = {"sports_centre", "pitch", "fitness_centre", "swimming_pool", "stadium", "track",
                      "ice_rink", "sports_hall", "golf_course", "horse_riding"}
-OSM_KEEP_TAGS = ("website", "opening_hours", "wheelchair", "operator", "access")
+OSM_KEEP_TAGS = ("website", "opening_hours", "wheelchair", "operator", "operator:type", "access")
 
 
 def municipio_id(value: Any) -> str | None:

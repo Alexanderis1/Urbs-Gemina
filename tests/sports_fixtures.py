@@ -41,6 +41,8 @@ def osm_elements() -> dict[str, Any]:
         {"type": "node", "id": 12, "lon": lon2, "lat": lat2,
          "tags": {"leisure": "swimming_pool", "name": "Piscina Quadraro"}},
         {"type": "node", "id": 13, "lon": lon3, "lat": lat3,
-         "tags": {"leisure": "fitness_centre", "name": "Gym Private Club"}},
+         "tags": {"leisure": "fitness_centre", "name": "Gym Private Club", "operator:type": "private"}},
+        {"type": "node", "id": 15, "lon": lon3 + 0.01, "lat": lat3,
+         "tags": {"leisure": "pitch", "sport": "soccer", "name": "Campo Parrocchia"}},
         {"type": "node", "id": 14, "lon": lon3, "lat": lat3, "tags": {"amenity": "bench"}},
     ]}

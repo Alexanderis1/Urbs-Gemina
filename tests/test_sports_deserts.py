@@ -134,6 +134,9 @@ def test_type_and_accessible_filters_and_max_minutes() -> None:
     assert [f["properties"]["name"] for f in env["result"]["features"]] == ["Gym Private Club"]
     env = sports_facilities(area="city", discipline=None, facilities=facilities(), config=CFG, type="public")
     assert env["result"]["count"] == 3
+    # Known only from OSM with no operator:type: never guessed as private.
+    env = sports_facilities(area="city", discipline=None, facilities=facilities(), config=CFG, type="unclassified")
+    assert [f["properties"]["name"] for f in env["result"]["features"]] == ["Campo Parrocchia"]
     env = sports_facilities(area="city", discipline=None, facilities=facilities(), config=CFG, accessible=True)
     assert env["result"]["count"] == 0  # nothing states accessibility in the fixtures
     with pytest.raises(ValueError):

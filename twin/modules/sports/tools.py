@@ -72,7 +72,7 @@ def _kinds(facilities: Sequence[Facility]) -> dict[str, str]:
     return kinds
 
 
-FACILITY_TYPES = ("public", "school", "private")
+FACILITY_TYPES = ("public", "school", "private", "unclassified")
 
 
 def sports_facilities(area: Area, discipline: str | None, facilities: Sequence[Facility], config: SportsConfig,
@@ -81,7 +81,7 @@ def sports_facilities(area: Area, discipline: str | None, facilities: Sequence[F
                       accessible: bool | None = None) -> dict[str, Any]:
     """Merged facility map as a GeoJSON FeatureCollection.
 
-    Filters: area, discipline, ``type`` (public | school | private) and ``accessible``
+    Filters: area, discipline, ``type`` (public | school | private | unclassified) and ``accessible``
     (True keeps only facilities a source states are accessible; None = no filter).
     """
     _check_discipline(discipline, config)
@@ -108,7 +108,7 @@ def sports_facilities(area: Area, discipline: str | None, facilities: Sequence[F
     if accessible is not None:
         warnings.append("facilities whose accessibility is not known are left out by the accessible filter")
     if type == "private":
-        warnings.append("'private' means known only from OpenStreetMap or the web; ownership is not verified")
+        warnings.append("'private' only where a source states it; facilities of unknown type are 'unclassified'")
     if any(f.fields["accessibility"].status == "not_known" for f in selected):
         warnings.append("accessibility is 'not known' unless a source states it")
     result = {"type": "FeatureCollection", "count": len(selected), "features": [f.to_feature() for f in selected]}

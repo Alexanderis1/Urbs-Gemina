@@ -41,7 +41,7 @@ def test_geoserver_adapter_drops_personal_fields_and_private_holder() -> None:
 
 def test_osm_adapter_keeps_sport_places_only_and_no_phone() -> None:
     cands = from_osm(osm_elements(), CFG, retrieved_at="2026-11-13")
-    assert [c.record_id for c in cands] == ["way/11", "node/12", "node/13"]
+    assert [c.record_id for c in cands] == ["way/11", "node/12", "node/13", "node/15"]
     assert "phone" not in cands[0].attributes
     assert cands[0].attributes["website"] == "https://bernardini.example"
 
@@ -50,7 +50,7 @@ def test_build_facilities_merges_duplicates_but_not_same_source_neighbours() -> 
     cands = from_geoserver_sports(geoserver_sports(), CFG, "2026-11-13") + from_osm(osm_elements(), CFG, "2026-11-13")
     facilities, report = build_facilities(cands, CFG)
     by_name = {f.fields["name"].value: f for f in facilities}
-    assert len(facilities) == 4
+    assert len(facilities) == 5
     bern = by_name["Centro Sportivo Fulvio Bernardini"]
     assert set(bern.members) == {"roma_sports_municipal:243.1", "osm:way/11"}
     # Official record wins the position; disciplines are the union with provenance.
