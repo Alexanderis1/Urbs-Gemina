@@ -19,6 +19,7 @@ from twin.providers.open.eea import EeaHourlyProvider
 from twin.providers.open.gbfs import GbfsProvider
 from twin.providers.open.gtfs_rt import RomaGtfsRtProvider
 from twin.providers.open.open_meteo import CamsOpenMeteoProvider
+from twin.providers.open.open_meteo_weather import FloodDischargeProvider, OpenMeteoForecastProvider
 from twin.providers.open.roma_wifi import RomaWifiProvider
 from twin.providers.open.sensor_community import SensorCommunityProvider
 from twin.providers.pa.register_file import PaRegisterFileProvider
@@ -51,6 +52,10 @@ FACTORIES: dict[str, Factory] = {
     "bird_gbfs": GbfsProvider,
     "sensor_community": SensorCommunityProvider,
     "roma_wifi": RomaWifiProvider,
+    # estimated: weather and hydrological model forecasts (flood and environment scenarios)
+    "om_rain_forecast": lambda settings: OpenMeteoForecastProvider(settings, "om_rain_forecast"),
+    "om_weather_forecast": lambda settings: OpenMeteoForecastProvider(settings, "om_weather_forecast"),
+    "glofas_flood": FloodDischargeProvider,
     "cams_open_meteo": CamsOpenMeteoProvider,
     # restricted: runtime read only
     "cartoradio_grid": CartoradioGridProvider,
@@ -70,6 +75,9 @@ DATA_KIND: dict[str, DataKind] = {
     "bird_gbfs": "real",
     "sensor_community": "real",
     "roma_wifi": "real",
+    "om_rain_forecast": "estimated",
+    "om_weather_forecast": "estimated",
+    "glofas_flood": "estimated",
     "cams_open_meteo": "estimated",
     "cartoradio_grid": "estimated",
     "roma_wfs": "real",
