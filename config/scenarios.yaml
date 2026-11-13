@@ -62,3 +62,6 @@ road_closure:
   top_changed_roads:
     value: 10
     basis: "how many roads with the largest traffic change are listed"
+  demand_scale_bounds:
+    value: [0.2, 5.0]
+    basis: "assumption: loop counts may rescale the synthetic demand at most 5x either way, to stop one bad station dominating"

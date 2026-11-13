@@ -29,7 +29,7 @@ CHANGE = {"action": "add", "site": {"lon": LON, "lat": LAT, "height_m": 6.0}, "e
 
 
 def data() -> ScenarioData:
-    return ScenarioData(baseline_field=lambda lon, lat: FieldSample(1.0, 4.0), baseline_kind="real", census=CENSUS)
+    return ScenarioData(baseline_field=lambda lon, lat: FieldSample(1.0, 4.0), baseline_kind="estimated", census=CENSUS)
 
 
 def test_residents_near_a_strong_antenna_are_counted(tmp_path: Path) -> None:

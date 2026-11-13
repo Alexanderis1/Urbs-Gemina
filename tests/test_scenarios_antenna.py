@@ -15,7 +15,7 @@ ADD = {"action": "add", "site": SITE, "eirp_w": 2000.0}
 
 
 def flat_baseline(value: float) -> ScenarioData:
-    return ScenarioData(baseline_field=lambda lon, lat: FieldSample(value, 4.0), baseline_kind="real",
+    return ScenarioData(baseline_field=lambda lon, lat: FieldSample(value, 4.0), baseline_kind="estimated",
                         baseline_source={"id": "cartoradio_grid", "retrieved_at": "2026-11-13T00:00:00Z"})
 
 
@@ -82,14 +82,20 @@ def test_missing_baseline_is_said_not_hidden(tmp_path: Path) -> None:
     assert out["result"]["calibration"] == "uncalibrated"
 
 
-def test_move_removes_the_old_site_and_is_synthetic(tmp_path: Path) -> None:
+def test_move_removes_the_old_site_estimated_from_cartoradio(tmp_path: Path) -> None:
     old = {"lon": LON + 0.003, "lat": LAT, "height_m": 25.0}
     change = {"action": "move", "site": SITE, "eirp_w": 2000.0, "from": {**old, "eirp_w": 2000.0}}
     out = engine.run("antenna", "city", change, data=flat_baseline(3.0), cache_dir=tmp_path)
     near_old = min(out["result"]["points"], key=lambda p: math.hypot(p["lon"] - old["lon"], p["lat"] - old["lat"]))
     assert near_old["variant"]["p50"] < near_old["baseline"]["p50"]
-    assert out["synthetic"] is True
-    assert out["data_kinds"]["existing_site"] == "simulated"
+    assert out["synthetic"] is False  # only traffic loops may be simulated
+    assert out["data_kinds"]["existing_site"] == "estimated"
+    assert any("fitted to cartoradio" in w.lower() for w in out["warnings"])
+
+
+def test_simulated_baseline_is_not_accepted() -> None:
+    with pytest.raises(ValueError, match="baseline_kind"):
+        ScenarioData(baseline_field=lambda lon, lat: FieldSample(1.0, 4.0), baseline_kind="simulated")
 
 
 def test_points_outside_the_area_are_dropped(tmp_path: Path) -> None:

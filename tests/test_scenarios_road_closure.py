@@ -115,3 +115,30 @@ def test_network_is_built_from_osm_with_street_names(tmp_path: Path) -> None:
     _tiny_osm(osm)
     net = build_network(osm, tmp_path / "district.net.xml")
     assert {"Via di Prova", "Vicolo Corto"} <= street_names(net)
+
+
+@needs_sumo
+def test_demand_is_scaled_to_real_loop_counts(grid_net: Path, tmp_path: Path) -> None:
+    plain = engine.run("road_closure", DISTRICT, CLOSE, data=ScenarioData(road_network=grid_net), use_cache=False)
+    assert plain["result"]["demand_anchor"]["loop_stations"] == 0
+    assert plain["result"]["demand_anchor"]["scale"] == 1.0
+    busy = {"A1B1": 2000.0, "B1C1": 2000.0, "C1D1": 2000.0}
+    out = engine.run("road_closure", DISTRICT, CLOSE, use_cache=False,
+                     data=ScenarioData(road_network=grid_net, loop_counts_veh_per_h=busy, loop_counts_kind="real"))
+    anchor = out["result"]["demand_anchor"]
+    assert anchor["loop_stations"] == 3
+    assert anchor["scale"] > 1.0
+    assert out["data_kinds"]["loop_counts"] == "real"
+    assert out["synthetic"] is True
+    assert any("synthetic demand" in w.lower() for w in out["warnings"])
+
+
+@needs_sumo
+def test_bus_speeds_are_checked_against_the_baseline(grid_net: Path) -> None:
+    speeds = {"A1B1": 8.0, "B1C1": 8.0}
+    out = engine.run("road_closure", DISTRICT, CLOSE, use_cache=False,
+                     data=ScenarioData(road_network=grid_net, observed_speeds_m_per_s=speeds))
+    check = out["result"]["speed_check"]
+    assert check["edges"] == 2
+    assert check["mean_abs_error_m_per_s"] >= 0.0
+    assert out["data_kinds"]["bus_speeds"] == "real"

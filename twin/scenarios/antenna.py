@@ -211,15 +211,16 @@ def run_antenna(area: Area, change: Mapping[str, Any], data: ScenarioData) -> di
     if data.baseline_field is None:
         warnings.append("EMF baseline (Cartoradio) not available: the variant shows the changed antenna alone.")
     if model.old is not None:
-        warnings.append("Move: the current site's contribution is modelled from simulated parameters "
-                        "and subtracted from the baseline; treat the reduction as indicative.")
+        warnings.append("Move: the current site is estimated (OpenCelliD + OSM position, azimuth and EIRP "
+                        "fitted to Cartoradio); its modelled contribution is subtracted from the baseline, "
+                        "so treat the reduction as indicative.")
     if not rows:
         warnings.append("No grid point of the antenna neighbourhood falls inside the area.")
 
     kinds = {"emf_baseline": data.baseline_kind if data.baseline_field is not None else "not_available",
              "new_site": "estimated"}
     if model.old is not None:
-        kinds["existing_site"] = "simulated"
+        kinds["existing_site"] = "estimated"
     return {
         "result": {
             "model": "free_space_isotropic",
@@ -232,6 +233,6 @@ def run_antenna(area: Area, change: Mapping[str, Any], data: ScenarioData) -> di
         },
         "data_kinds": kinds,
         "sources": [s for s in [data.baseline_source] if s],
-        "synthetic": model.old is not None or (data.baseline_field is not None and data.baseline_kind == "simulated"),
+        "synthetic": False,
         "warnings": warnings,
     }

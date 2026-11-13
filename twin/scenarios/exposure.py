@@ -40,8 +40,8 @@ def run_population_exposure(area: Area, change: Mapping[str, Any], data: Scenari
     kinds = {"emf_baseline": data.baseline_kind if data.baseline_field is not None else "not_available",
              "new_site": "estimated", "census": "real" if census is not None else "not_available"}
     if model.old is not None:
-        kinds["existing_site"] = "simulated"
-    synthetic = model.old is not None or (data.baseline_field is not None and data.baseline_kind == "simulated")
+        kinds["existing_site"] = "estimated"
+    synthetic = False
     if census is None:
         reason = "Census sections not available yet (data/processed/census_sections.geojson is missing)."
         return {"result": {"status": "not_available", "reason": reason}, "data_kinds": kinds, "sources": [],

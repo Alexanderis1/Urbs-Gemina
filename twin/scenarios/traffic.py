@@ -19,7 +19,7 @@ from twin.scenarios import config
 from twin.scenarios.area import Area
 from twin.scenarios.data import ScenarioData
 
-SYNTHETIC_DEMAND = ("Synthetic demand: traffic volumes are generated, not measured. "
+SYNTHETIC_DEMAND = ("Synthetic demand: trips are generated, then scaled to real loop counts where they exist. "
                     "Compare variants with each other, not with real counts.")
 
 
@@ -134,12 +134,47 @@ def _simulate(net: Path, trips: Path, seed: int, work: Path, tag: str, cfg: Mapp
         durations.append(float(trip.get("duration", 0)))
         losses.append(float(trip.get("timeLoss", 0)))
     entered: dict[str, float] = {}
+    speed: dict[str, float] = {}
     for edge in ET.parse(edgedata).getroot().iter("edge"):
         eid = str(edge.get("id"))
         entered[eid] = entered.get(eid, 0.0) + float(edge.get("entered", 0))
+        if edge.get("speed") is not None:
+            speed[eid] = float(edge.get("speed", 0))
     n = max(len(durations), 1)
     return {"completed": len(durations), "mean_travel_time_s": sum(durations) / n,
-            "mean_time_loss_s": sum(losses) / n, "vehicle_hours_lost": sum(losses) / 3600.0, "entered": entered}
+            "mean_time_loss_s": sum(losses) / n, "vehicle_hours_lost": sum(losses) / 3600.0, "entered": entered,
+            "speed": speed}
+
+
+def _random_trips(home: Path, net: Path, out: Path, seed: int, density: float, cfg: Mapping[str, Any],
+                  env: Mapping[str, str], work: Path) -> None:
+    _run([sys.executable, str(home / "tools" / "randomTrips.py"), "-n", str(net), "-o", str(out),
+          "--seed", str(seed), "-b", "0", "-e", str(cfg["duration_s"]),
+          "--insertion-density", f"{density:.4f}",
+          "--min-distance", str(cfg["min_trip_distance_m"]), "--fringe-factor", str(cfg["fringe_factor"]),
+          "--validate"], env=env, cwd=work)
+
+
+def _median(values: Sequence[float]) -> float:
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    return ordered[mid] if len(ordered) % 2 else (ordered[mid - 1] + ordered[mid]) / 2.0
+
+
+def _demand_scale(home: Path, net: Path, loops: Mapping[str, float], cfg: Mapping[str, Any],
+                  env: Mapping[str, str], work: Path) -> tuple[float, int]:
+    """One pilot run at the configured density; scale = median(observed / simulated) on loop edges."""
+    density = float(cfg["insertion_density_veh_per_h_per_lane_km"])
+    pilot = work / "pilot.trips.xml"
+    _random_trips(home, net, pilot, int(cfg["seed"]), density, cfg, env, work)
+    run = _simulate(net, pilot, int(cfg["seed"]), work, "pilot", cfg)
+    per_hour = 3600.0 / float(cfg["duration_s"])
+    ratios = [obs / (run["entered"][eid] * per_hour) for eid, obs in loops.items()
+              if run["entered"].get(eid, 0.0) > 0.0]
+    if not ratios:
+        return 1.0, 0
+    low, high = (float(v) for v in cfg["demand_scale_bounds"])
+    return min(high, max(low, _median(ratios))), len(ratios)
 
 
 def _filter_trips(src: Path, dst: Path, closed: set[str]) -> int:
@@ -188,8 +223,12 @@ def run_road_closure(area: Area, change: Mapping[str, Any], data: ScenarioData) 
     assert home is not None
     env = {**os.environ, "SUMO_HOME": str(home)}
 
+    unknown = sorted(set(data.loop_counts_veh_per_h) - set(edges))
+    loops = {e: float(v) for e, v in data.loop_counts_veh_per_h.items() if e in edges}
     with tempfile.TemporaryDirectory(prefix="urbs_sumo_") as tmp:
         work = Path(tmp)
+        scale, used_loops = (_demand_scale(home, net, loops, cfg, env, work) if loops else (1.0, 0))
+        density = float(cfg["insertion_density_veh_per_h_per_lane_km"]) * scale
         variant_net = work / "variant.net.xml"
         netconvert = sumo_binary("netconvert")
         assert netconvert is not None
@@ -205,11 +244,7 @@ def run_road_closure(area: Area, change: Mapping[str, Any], data: ScenarioData) 
         for r in range(int(cfg["replicates"])):
             seed = int(cfg["seed"]) + r
             raw, trips = work / f"raw{r}.trips.xml", work / f"trips{r}.xml"
-            _run([sys.executable, str(home / "tools" / "randomTrips.py"), "-n", str(net), "-o", str(raw),
-                  "--seed", str(seed), "-b", "0", "-e", str(cfg["duration_s"]),
-                  "--insertion-density", str(cfg["insertion_density_veh_per_h_per_lane_km"]),
-                  "--min-distance", str(cfg["min_trip_distance_m"]), "--fringe-factor", str(cfg["fringe_factor"]),
-                  "--validate"], env=env, cwd=work)
+            _random_trips(home, net, raw, seed, density, cfg, env, work)
             dropped = _filter_trips(raw, trips, set(closed))
             runs["baseline"].append(_simulate(net, trips, seed, work, f"b{r}", cfg))
             runs["variant"].append(_simulate(variant_net, trips, seed, work, f"v{r}", cfg))
@@ -235,9 +270,33 @@ def run_road_closure(area: Area, change: Mapping[str, Any], data: ScenarioData) 
             row["lon"], row["lat"] = midpoints[eid]
         changed.append(row)
 
+    speed_check = None
+    observed = {e: float(v) for e, v in data.observed_speeds_m_per_s.items() if e in edges}
+    if observed:
+        errors = []
+        for eid, obs in observed.items():
+            sim = [run["speed"][eid] for run in runs["baseline"] if eid in run["speed"]]
+            if sim:
+                errors.append(sum(sim) / len(sim) - obs)
+        if errors:
+            speed_check = {"edges": len(errors),
+                           "mean_abs_error_m_per_s": round(sum(abs(e) for e in errors) / len(errors), 2),
+                           "bias_m_per_s": round(sum(errors) / len(errors), 2)}
+            kinds["bus_speeds"] = "real"
+
     warnings = [SYNTHETIC_DEMAND,
                 f"Ranges are the spread over {n} demand seeds, not a calibrated uncertainty.",
                 "Buses (GTFS) are not in the simulation yet."]
+    if used_loops:
+        kinds["loop_counts"] = data.loop_counts_kind
+        warnings.append(f"Demand scaled by {scale:.2f} to match {used_loops} loop stations "
+                        f"({data.loop_counts_kind}).")
+    else:
+        warnings.append("No loop counts on this network: demand density is the configured assumption.")
+    if unknown:
+        warnings.append(f"{len(unknown)} loop stations are not on this network and were ignored.")
+    if speed_check is None:
+        warnings.append("No real bus speeds to check the baseline against.")
     if dropped:
         warnings.append(f"{dropped} trips starting or ending on the closed road were left out of both runs.")
     return {
@@ -246,6 +305,9 @@ def run_road_closure(area: Area, change: Mapping[str, Any], data: ScenarioData) 
             "closed_edges": closed, "replicates": n, "trips_left_out": dropped,
             "baseline": sides["baseline"], "variant": sides["variant"], "difference": sides["difference"],
             "changed_roads": changed,
+            "demand_anchor": {"loop_stations": used_loops, "scale": round(scale, 3),
+                              "insertion_density_veh_per_h_per_lane_km": round(density, 2)},
+            "speed_check": speed_check,
         },
         "data_kinds": kinds,
         "sources": [s for s in [data.road_network_source] if s],

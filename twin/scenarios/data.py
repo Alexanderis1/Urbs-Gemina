@@ -26,7 +26,8 @@ FieldFn = Callable[[float, float], Optional[FieldSample]]
 class ScenarioData:
     #: EMF baseline, normally the Cartoradio grid read at runtime (never stored).
     baseline_field: FieldFn | None = None
-    #: "real" | "estimated" | "simulated" label of the baseline source.
+    #: "real" | "estimated" label of the baseline source. Cartoradio is "estimated" (an official model).
+    #: Only traffic loops may be simulated, so a simulated baseline is refused.
     baseline_kind: str = "estimated"
     baseline_source: Mapping[str, Any] | None = None
     #: ISTAT census sections as a GeoJSON FeatureCollection.
@@ -36,10 +37,20 @@ class ScenarioData:
     road_network: Path | None = None
     road_network_kind: str = "real"
     road_network_source: Mapping[str, Any] | None = None
+    #: Real traffic anchors for road closure, keyed by SUMO edge id (matching is the caller's job):
+    #: loop-station counts in vehicles per hour, and GTFS-RT bus speeds in m/s.
+    loop_counts_veh_per_h: Mapping[str, float] = field(default_factory=dict)
+    observed_speeds_m_per_s: Mapping[str, float] = field(default_factory=dict)
+    #: Label of the loop counts: "simulated" while sim_loops is the active provider, "real" with pa_datex.
+    loop_counts_kind: str = "simulated"
     #: Boundary lookup for named areas (municipi, urban zones).
     area_lookup: AreaLookup | None = None
     #: Data snapshot hashes (from the manifest) that enter the run id.
     snapshots: Mapping[str, str] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.baseline_kind not in ("real", "estimated"):
+            raise ValueError(f"baseline_kind must be 'real' or 'estimated', not {self.baseline_kind!r}")
 
     def fingerprint(self) -> dict[str, str]:
         """Everything about the data that can change a result, for the run id."""
@@ -50,10 +61,18 @@ class ScenarioData:
         if "census" not in out:
             out["census"] = ("none" if self.census is None else
                              hashlib.sha256(json.dumps(self.census, sort_keys=True).encode()).hexdigest())
+        if self.loop_counts_veh_per_h and "loop_counts" not in out:
+            out["loop_counts"] = _json_hash(self.loop_counts_veh_per_h)
+        if self.observed_speeds_m_per_s and "observed_speeds" not in out:
+            out["observed_speeds"] = _json_hash(self.observed_speeds_m_per_s)
         if "road_network" not in out:
             out["road_network"] = ("none" if self.road_network is None else
                                    _file_hash(self.road_network))
         return out
+
+
+def _json_hash(value: Mapping[str, Any]) -> str:
+    return hashlib.sha256(json.dumps(dict(value), sort_keys=True).encode()).hexdigest()
 
 
 def _file_hash(path: Path) -> str:
