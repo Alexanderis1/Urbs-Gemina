@@ -297,7 +297,7 @@ def test_query_simulated_provider_layer_is_flagged(runtime: ToolRuntime) -> None
 
 
 def test_query_unknown_or_planned_layer_says_not_available(runtime: ToolRuntime) -> None:
-    for name in ("antenna_register", "nonsense"):
+    for name in ("emf_measurements", "nonsense"):  # no provider configured in the test runtime
         env = query_layer(runtime, name)
         assert env["status"] == "not_available" and env["reason"]
         assert env["data_kinds"] == {name: "not_available"}

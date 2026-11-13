@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Iterable, Mapping, Protocol
 
 from twin.providers.base import Provider, ProviderNotConfigured
+from twin.providers import registry as _registry
 from twin.providers.registry import FACTORIES
 from twin.tools.context_check import distance_to_geometry_m
 from twin.tools.envelope import Source, make_envelope, utc_now
@@ -112,7 +113,9 @@ class ToolRuntime:
             if factory is None:
                 continue
             try:
-                active[layer] = factory()
+                # WS3's registry adds build_provider (factories that take Settings); fall back to a bare call.
+                builder = getattr(_registry, "build_provider", None)
+                active[layer] = builder(provider_id) if builder is not None else factory()
             except ProviderNotConfigured:
                 continue
         return active
