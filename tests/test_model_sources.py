@@ -1,5 +1,5 @@
 """WS2: naming of remote input tiles (no network)."""
-from twin.model.sources import dem_tile_urls, gba_tile_name
+from twin.model.sources import dem_tile_urls, gba_tile_name, quadkeys_for_bbox
 from twin.providers.base import ROME_BBOX
 
 
@@ -12,3 +12,7 @@ def test_dem_tiles_cover_the_whole_city() -> None:
     urls = dem_tile_urls(ROME_BBOX)
     assert len(urls) == 2
     assert any("N41_00_E012_00" in u for u in urls) and any("N42_00_E012_00" in u for u in urls)
+
+
+def test_canopy_quadkeys_for_rome() -> None:
+    assert sorted(quadkeys_for_bbox(ROME_BBOX)) == ["120232203", "120232212", "120232221", "120232230"]

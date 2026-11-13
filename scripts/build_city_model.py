@@ -147,6 +147,13 @@ def main(argv: list[str] | None = None) -> int:
     log(f"model: {len(model):,} buildings")
 
     args.out.mkdir(parents=True, exist_ok=True)
+    from twin.model.enrich import enrich
+
+    model_attrs = dict(model.attrs)
+    model, enrichments = enrich(model, args.out)
+    model.attrs.update(model_attrs)
+    if enrichments:
+        log(f"joined per-building facts: {', '.join(enrichments)}")
     parquet = args.out / "buildings_lod1.parquet"
     model.to_parquet(parquet, write_covering_bbox=True)
     outputs = {"buildings_lod1.parquet": parquet}
@@ -157,9 +164,9 @@ def main(argv: list[str] | None = None) -> int:
     within = cfg.validation.within_m
     agreements = []
     for ref in cfg.validation.references:
-        for src in ("gba", "raster", "floors"):
-            if src == ref:
-                continue
+        for src in ("fused_noref", "gba", "raster", "floors"):
+            if src == ref or (src == "fused_noref" and ref != cfg.heights.fusion_reference):
+                continue  # the fusion already contains the other references
             if ref == "raster" and hc.raster_classes:
                 agreements.append(class_agreement(
                     list(model[f"h_{src}"]), list(model["raster_low_m"]), list(model["raster_high_m"]), source=src
@@ -183,6 +190,18 @@ def main(argv: list[str] | None = None) -> int:
     ]
     if model.attrs.get("non_commercial"):
         notes.append("LICENCE: building heights include CC BY-NC 4.0 data. Non-commercial use only.")
+    if cfg.heights.method == "fusion":
+        notes.insert(0, (
+            "Heights are FUSED: each source is calibrated against OSM measured heights (bias and spread), then "
+            "combined with inverse-variance weights into one height +- sd. 'fused_noref' is the same fusion without "
+            "OSM, so its row against osm_tag is a fair hold-out score. "
+            f"Buildings whose sources disagree beyond 3 sd: {model['height_conflict'].mean():.1%}."
+        ))
+        cal_rows = [
+            f"{k}: bias {v['bias_m']:+.1f} m, spread {v['sd_m']:.1f} m, sd scale {v['scale']:.2f} (n={v['n']:,})"
+            for k, v in model.attrs["calibration"].items() if v.get("role") == "measurement"
+        ]
+        notes.append("Calibration against OSM measured heights: " + "; ".join(cal_rows) + ".")
     report = render_report(len(model), shares, agreements, notes)
     (args.out / "height_check.md").write_text(report, encoding="utf-8")
 
@@ -194,6 +213,10 @@ def main(argv: list[str] | None = None) -> int:
         "licences": sorted(set(model["height_licence"])) + ["ODbL (footprints)"],
         "height_sources": shares,
         "agreements": [a.as_dict() for a in agreements],
+        "height_method": cfg.heights.method,
+        "enrichments": enrichments,
+        "calibration": model.attrs.get("calibration", {}),
+        "conflict_share": float(model["height_conflict"].mean()),
         "inputs": {k: ({"file": str(p.relative_to(ROOT)), "sha256": sha256(p)} if p else None) for k, p in inputs.items()},
         "outputs": {k: {"sha256": sha256(p), "bytes": p.stat().st_size} for k, p in outputs.items()},
         "seconds": round(time.time() - t0, 1),

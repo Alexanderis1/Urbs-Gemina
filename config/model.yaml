@@ -14,7 +14,19 @@ footprints:
   basis: "Footprints under 4 m2 are mostly sheds, kiosks and digitising noise (assumption, C=70)."
 
 heights:
-  # Tried in order; the first source that gives a value wins.
+  # method: fusion  -> every source is a measurement with a calibrated error, combined into height +- sd.
+  # method: priority -> the first source in `priority` that has a value wins (old behaviour, kept for comparison).
+  method: fusion
+  fusion:
+    reference: osm_tag
+    reference_sd_m: 1.5
+    reference_basis: "OSM height tags are mapper estimates, often rounded to a floor; 1.5 m is an assumption (C=60) until the LiDAR gives a measured reference."
+    prior: {mean_m: 9.0, sd_m: 8.0}
+    prior_basis: "Used only for buildings with no measurement at all (about 1%): three floors, with a spread wide enough to say we do not know."
+    min_pairs: 200
+    conflict_chi2: 9.0
+    conflict_basis: "Sources disagree by more than about 3 standard deviations: flagged for review, not hidden."
+  # Priority order (method: priority) and list of sources used by both methods.
   # Each source is labelled real or estimated and travels with the building as height_source.
   priority: [osm_tag, gba, raster, floors, default]
   sources:
@@ -78,6 +90,57 @@ validation:
   references: [osm_tag, raster]
   within_m: 3.0
   basis: "One floor of tolerance. Against Urban Atlas the check is instead: does the height fall inside the building's Urban Atlas class?"
+
+ortho:
+  # AGEA 2023 orthophoto (Regione Lazio GeoServer). WMS gives correct colours fast; the WCS raw bands
+  # come back inverted and are capped at about 100 MB per request.
+  wms: https://geoportale.regione.lazio.it/geoserver/ows
+  layer: "geonode:2023_AGEA_25833_COG"
+  crs: "EPSG:25833"
+  resolution_m: 0.5
+  tile_m: 1000
+  district_bbox: [12.44, 41.87, 12.52, 41.92]
+  district_basis: "Historic centre and Prati/Trastevere: the demo district, inside the LiDAR area. Whole city is possible with --bbox."
+  dark_quantile: 0.12
+  azimuth_candidates_deg: [240, 255, 270, 285, 300, 315, 330, 345, 0, 15, 30, 45]
+  roof_thresholds:
+    clay_hue_max: 40
+    clay_sat_min: 0.10
+    clay_val_min: 0.35
+    flat_sat_max: 0.07
+    flat_val_min: 0.60
+    green_exg_min: 0.04
+    solar_val_max: 0.45
+    solar_sat_min: 0.08
+  basis: "The 2023 photo is pale (median saturation 0.12, darkest 1% at 26% brightness), so thresholds are relative: shadow = darkest 12% of each tile, clay tiles = reddish hue with saturation >= 0.10. Set by eye on central tiles (C=60). Sun direction is not published, so the shadow direction that best explains measured heights is chosen."
+
+history:
+  # Historical orthophotos on the same Regione Lazio WMS, oldest first; today's photo is ortho.layer (2023).
+  layers:
+    1998: "geonode:1998_1999_IT2000_25833_COG"
+    2002: "geonode:2002_2003_CGR_25833_COG"
+    2005: "geonode:2005_IT2000NR_25833_COG"
+    2008: "geonode:2008_AGEA_25833_COG"
+    2011: "geonode:2011_AGEA_25833_COG"
+    2014: "geonode:2014_AGEA_25833_COG"
+    2017: "geonode:2017_AGEA_25833_COG"
+    2020: "geonode:2020_AGEA_25833_COG"
+  resolution_m: 1.0
+  ncc_threshold: 0.45
+  max_shift_m: 80
+  shift_basis: "Old photos are offset by up to tens of metres from 2023 (seen on EUR tiles); each tile is aligned by phase correlation first."
+  min_footprint_m2: 60
+  basis: "1 m is enough to compare roofs of 60 m2 or more; NCC >= 0.45 = same roof, set by eye on a few known buildings (C=55, uncalibrated: there is no open register of construction years)."
+
+ground_motion:
+  # Persistent Scatterer InSAR from Regione Lazio's GeoServer (Sentinel-1, mm/year along the line of sight).
+  wfs: https://geoportale.regione.lazio.it/geoserver/ows
+  layers: {asc: "geonode:sentinel_asc", desc: "geonode:sentinel_desc"}
+  min_coherence: 0.7
+  buffer_m: 3.0
+  incidence_deg: 39.0
+  heading_deg: {asc: -10.0, desc: -170.0}
+  basis: "Sentinel-1 IW over Rome: incidence about 39 degrees mid-swath, track heading about -10 (asc) and -170 (desc) degrees (typical values, C=70; the layer does not publish per-point geometry). Points within 3 m of a footprint count for that building (roofs and facades); coherence below 0.7 is too noisy."
 
 tiles:
   layer: buildings

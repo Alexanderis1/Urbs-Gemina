@@ -174,3 +174,39 @@ def fetch_urban_atlas_heights(bbox: BBox, dst: Path, *, chunk_px: int = 2000, re
     ) as out:
         out.write(mosaic, 1)
     return dst
+
+
+#: Meta / WRI global canopy height 1 m (CC BY 4.0), quadkey-named Web Mercator tiles.
+CANOPY_URL = "https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_global_v6_float/chm/{quadkey}.tif"
+
+
+def quadkeys_for_bbox(bbox: BBox, zoom: int = 9) -> list[str]:
+    """Web Mercator quadkeys at ``zoom`` covering ``bbox`` (the canopy tiles are zoom 9)."""
+
+    def tile(lon: float, lat: float) -> tuple[int, int]:
+        n = 2**zoom
+        x = int((lon + 180.0) / 360.0 * n)
+        y = int((1.0 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2.0 * n)
+        return x, y
+
+    x0, y1 = tile(bbox[0], bbox[1])
+    x1, y0 = tile(bbox[2], bbox[3])
+    keys = []
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            q = ""
+            for z in range(zoom, 0, -1):
+                mask = 1 << (z - 1)
+                q += str((1 if x & mask else 0) + (2 if y & mask else 0))
+            keys.append(q)
+    return keys
+
+
+def fetch_canopy(bbox: BBox, dst: Path) -> Path:
+    """Clip the 1 m canopy height model to ``bbox`` (EPSG:3857, metres of canopy height)."""
+    import rasterio
+
+    urls = [f"/vsicurl/{CANOPY_URL.format(quadkey=q)}" for q in quadkeys_for_bbox(bbox)]
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_MULTIRANGE="YES",
+                      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES="YES"):
+        return _clip_to_file(urls, bbox, dst, nodata=None)

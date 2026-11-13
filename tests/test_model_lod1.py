@@ -1,5 +1,6 @@
 """WS2: G0 LoD1 block model built from footprints, heights and terrain."""
 import shutil
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +18,10 @@ from twin.model.rasters import sample_ground, sample_polygon_stat  # noqa: E402
 from twin.model.tiles import tippecanoe_command, write_tiles  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-CFG = load_model_config(ROOT / "config" / "model.yaml")
+_LOADED = load_model_config(ROOT / "config" / "model.yaml")
+# Most tests check the plain priority rule; fusion has its own tests below.
+CFG = replace(_LOADED, heights=replace(_LOADED.heights, method="priority"))
+FUSION = _LOADED
 
 # Three buildings around Piazza Navona, in metres (UTM 33N), plus a shed and a basement.
 X0, Y0 = 290_500.0, 4_640_500.0
@@ -146,3 +150,42 @@ def test_write_tiles_produces_a_pmtiles_archive(tmp_path: Path) -> None:
     out = build_lod1(_footprints(), CFG, raster_heights=None, ground=None)
     pm = write_tiles(out, tmp_path / "buildings.pmtiles", CFG.tiles)
     assert pm.read_bytes()[:7] == b"PMTiles"
+
+
+def test_config_uses_fusion_by_default() -> None:
+    assert FUSION.heights.method == "fusion"
+
+
+def test_fusion_combines_sources_and_reports_uncertainty(tmp_path: Path) -> None:
+    gba = gpd.GeoDataFrame(
+        {"height": [27.5, 22.0], "var": [4.0, 4.0]},
+        geometry=[box(X0 + 75, Y0 - 5, X0 + 105, Y0 + 25), box(X0 - 5, Y0 - 5, X0 + 25, Y0 + 25)],
+        crs=METRIC_CRS,
+    ).to_crs("EPSG:4326")
+    out = build_lod1(_footprints(), FUSION, gba=gba).set_index("id")
+    # "tagged": OSM 24 m (sd 1.5) and GBA 22 m (sd 2): fused between them, closer to OSM.
+    assert 22.0 < out.loc["tagged", "height_m"] < 24.0
+    assert out.loc["tagged", "height_sd_m"] < 1.5
+    assert out.loc["tagged", "height_sources"] == "osm_tag+gba"
+    assert out.loc["tagged", "height_source"] == "osm_tag" and out.loc["tagged", "data_kind"] == "real"
+    # "nothing": GBA only.
+    assert out.loc["nothing", "height_source"] == "gba"
+    assert out.loc["nothing", "height_m"] == pytest.approx(27.5, abs=0.5)
+    # "floors": floor count only (too few pairs to calibrate -> fallback spread).
+    assert out.loc["floors", "height_source"] == "floors"
+    assert "height_conflict" in out.columns
+    assert "calibration" in out.attrs
+    # Hold-out: fused height without OSM, used to score the fusion against OSM fairly.
+    assert out.loc["tagged", "h_fused_noref"] == pytest.approx(22.0)
+
+
+def test_geojsonseq_writes_numpy_bools_and_drops_nan(tmp_path: Path) -> None:
+    import json
+
+    from twin.model.tiles import write_geojsonseq
+
+    out = build_lod1(_footprints(), FUSION)
+    path = write_geojsonseq(out, tmp_path / "b.geojsonl")
+    first = json.loads(path.read_text().splitlines()[0])
+    assert first["properties"]["height_conflict"] is False
+    assert "ground_m" not in first["properties"]

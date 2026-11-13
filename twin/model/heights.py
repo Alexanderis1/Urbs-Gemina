@@ -27,6 +27,12 @@ class HeightConfig:
     raster_statistic: str = "median"
     raster_min_valid: float = 1.0
     gba_path: Optional[str] = None
+    method: str = "priority"
+    fusion_reference: str = "osm_tag"
+    fusion_reference_sd: float = 1.5
+    fusion_prior: tuple[float, float] = (9.0, 8.0)
+    fusion_min_pairs: int = 200
+    fusion_conflict_chi2: float = 9.0
     #: Urban Atlas class code -> (low m, high m, height used). Empty when the raster holds metres.
     raster_classes: dict[int, tuple[float, float, float]] = field(default_factory=dict)
 
@@ -62,6 +68,11 @@ def height_config_from_dict(heights: Mapping[str, Any]) -> HeightConfig:
         kinds[name] = kind  # type: ignore[assignment]
     raster = sources.get("raster", {})
     lo, hi = heights.get("clamp_m", [2.0, 160.0])
+    method = str(heights.get("method", "priority"))
+    if method not in ("priority", "fusion"):
+        raise ValueError(f"unknown height method {method}")
+    fu = heights.get("fusion", {}) or {}
+    prior = fu.get("prior", {}) or {}
     return HeightConfig(
         priority=priority,
         data_kinds=kinds,
@@ -69,6 +80,12 @@ def height_config_from_dict(heights: Mapping[str, Any]) -> HeightConfig:
         metres_per_floor=float(sources.get("floors", {}).get("metres_per_floor", 3.2)),
         default_m=float(sources.get("default", {}).get("metres", 9.0)),
         clamp=(float(lo), float(hi)),
+        method=method,
+        fusion_reference=str(fu.get("reference", "osm_tag")),
+        fusion_reference_sd=float(fu.get("reference_sd_m", 1.5)),
+        fusion_prior=(float(prior.get("mean_m", 9.0)), float(prior.get("sd_m", 8.0))),
+        fusion_min_pairs=int(fu.get("min_pairs", 200)),
+        fusion_conflict_chi2=float(fu.get("conflict_chi2", 9.0)),
         raster_path=raster.get("path"),
         raster_statistic=str(raster.get("statistic", "median")),
         raster_min_valid=float(raster.get("min_valid", 1.0)),

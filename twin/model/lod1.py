@@ -9,7 +9,8 @@ import numpy.typing as npt
 import shapely
 
 from twin.model.config import ModelConfig
-from twin.model.heights import resolve_height
+from twin.model.fusion import SourceObs, calibrate, fuse
+from twin.model.heights import HeightConfig, resolve_height
 
 #: UTM zone 33N: metric frame for areas, rings and simulations around Rome.
 METRIC_CRS = "EPSG:32633"
@@ -19,9 +20,10 @@ Sampler = Callable[[gpd.GeoDataFrame], npt.NDArray[np.float64]]
 
 #: Columns written to tiles and GeoParquet (h_* are the candidate heights, kept for the height check).
 OUTPUT_COLUMNS = [
-    "id", "height_m", "height_sd_m", "height_source", "data_kind", "height_licence", "ground_m", "roof_m",
+    "id", "height_m", "height_sd_m", "height_source", "height_sources", "height_conflict", "data_kind",
+    "height_licence", "ground_m", "roof_m",
     "num_floors", "class", "h_osm_tag", "h_gba", "h_raster", "raster_class", "raster_low_m", "raster_high_m",
-    "h_floors", "synthetic",
+    "h_floors", "h_fused_noref", "synthetic",
 ]
 
 
@@ -57,6 +59,46 @@ def match_gba(
     var = np.asarray(best["var"].to_numpy(dtype="float64"), dtype="float64")
     sd = np.sqrt(np.where(var >= 0, var, np.nan))  # negative variance = GBA "unknown"
     return height, sd
+
+
+def fuse_heights(
+    cand: dict[str, npt.NDArray[np.float64]],
+    per_building_sd: dict[str, npt.NDArray[np.float64]],
+    hc: HeightConfig,
+) -> tuple[Any, dict[str, Any]]:
+    """Calibrate every source against the reference and fuse them (see twin.model.fusion)."""
+    ref_name = hc.fusion_reference
+    ref = cand[ref_name]
+    obs: dict[str, SourceObs] = {}
+    calibrations: dict[str, Any] = {}
+    for name in hc.priority:
+        if name == "default" or name not in cand:
+            continue
+        value = cand[name]
+        if not np.isfinite(value).any():
+            continue
+        if name == ref_name:
+            obs[name] = SourceObs(value, np.full(len(value), hc.fusion_reference_sd))
+            calibrations[name] = {"role": "reference", "sd_m": hc.fusion_reference_sd}
+            continue
+        claimed = per_building_sd.get(name)
+        cal = calibrate(
+            value, ref, ref_sd=hc.fusion_reference_sd, prior_sd=claimed, min_pairs=hc.fusion_min_pairs,
+            fallback_sd=float(np.nanmedian(claimed)) if claimed is not None and np.isfinite(claimed).any() else 3.0,
+        )
+        if claimed is not None:
+            sd = np.where(np.isfinite(claimed) & (claimed > 0), claimed * cal.scale, cal.sd_m)
+        else:
+            sd = np.full(len(value), cal.sd_m)
+        obs[name] = SourceObs(value - cal.bias_m, sd)
+        calibrations[name] = {"role": "measurement", **cal.as_dict()}
+    prior_mean, prior_sd = hc.fusion_prior
+    result = fuse(obs, prior_mean=prior_mean, prior_sd=prior_sd, conflict_chi2=hc.fusion_conflict_chi2)
+    # Hold-out check: the same fusion without the reference, to compare against the reference fairly.
+    others = {k: v for k, v in obs.items() if k != ref_name}
+    held = fuse(others, prior_mean=np.nan, prior_sd=np.nan, conflict_chi2=hc.fusion_conflict_chi2)
+    calibrations["_holdout_mean"] = held.mean
+    return result, calibrations
 
 
 def build_lod1(
@@ -98,16 +140,39 @@ def build_lod1(
         "raster": raster_h,
         "floors": _float_column(metric, "num_floors") * hc.metres_per_floor,
     }
-    resolved = [resolve_height({k: float(v[i]) for k, v in cand.items()}, hc) for i in range(len(metric))]
     ground_m = ground(metric) if ground is not None else np.full(len(metric), np.nan)
-
     out = metric.copy()
-    out["height_m"] = [r.height_m for r in resolved]
-    out["height_source"] = [r.source for r in resolved]
-    # Spread is known only for GBA (its model variance); other sources leave it empty.
-    out["height_sd_m"] = np.where(out["height_source"] == "gba", gba_sd, np.nan)
-    out["data_kind"] = [r.data_kind for r in resolved]
-    out["height_licence"] = [r.licence for r in resolved]
+    calibrations: dict[str, Any] = {}
+    if hc.method == "fusion":
+        class_sd = (raster_high - raster_low) / np.sqrt(12.0)  # uniform within the Urban Atlas class
+        per_sd = {"gba": gba_sd, "raster": class_sd if hc.raster_classes else nan}
+        fused, calibrations = fuse_heights(cand, per_sd, hc)
+        out["h_fused_noref"] = calibrations.pop("_holdout_mean")
+        lo, hi = hc.clamp
+        dominant = np.where(fused.dominant == "prior", "default", fused.dominant).astype(object)
+        out["height_m"] = np.clip(fused.mean, lo, hi)
+        out["height_sd_m"] = fused.sd
+        out["height_source"] = dominant
+        out["height_sources"] = fused.sources
+        out["height_conflict"] = fused.conflict
+        out["data_kind"] = [hc.data_kinds.get(d, "estimated") for d in dominant]
+        out["height_licence"] = [
+            "; ".join(sorted({hc.licences.get(s, "not stated") for s in srcs.split("+") if s != "prior"})) or "none"
+            for srcs in fused.sources
+        ]
+        used = set("+".join(fused.sources).split("+"))
+    else:
+        resolved = [resolve_height({k: float(v[i]) for k, v in cand.items()}, hc) for i in range(len(metric))]
+        out["height_m"] = [r.height_m for r in resolved]
+        out["height_source"] = [r.source for r in resolved]
+        out["height_sources"] = out["height_source"]
+        out["height_conflict"] = False
+        # Spread is known only for GBA (its model variance); other sources leave it empty.
+        out["height_sd_m"] = np.where(out["height_source"] == "gba", gba_sd, np.nan)
+        out["h_fused_noref"] = np.nan
+        out["data_kind"] = [r.data_kind for r in resolved]
+        out["height_licence"] = [r.licence for r in resolved]
+        used = set(out["height_source"])
     out["ground_m"] = ground_m
     out["roof_m"] = out["ground_m"] + out["height_m"]
     for k, v in cand.items():
@@ -120,5 +185,6 @@ def build_lod1(
         if col not in out.columns:
             out[col] = None
     out = gpd.GeoDataFrame(out[OUTPUT_COLUMNS + ["geometry"]], geometry="geometry", crs=METRIC_CRS).to_crs(WGS84)
-    out.attrs["non_commercial"] = bool(set(out["height_source"]) & hc.non_commercial)
+    out.attrs["non_commercial"] = bool(used & hc.non_commercial)
+    out.attrs["calibration"] = calibrations
     return out
