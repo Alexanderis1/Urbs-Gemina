@@ -196,3 +196,32 @@ def test_auto_cite_attaches_the_run_that_holds_every_figure_on_a_line() -> None:
 
 def test_hex_ids_in_prose_are_not_figures() -> None:
     assert verify("The run id is 80811ab03827; insufficient data otherwise.", {}).ok
+
+
+def ctx_hits_run() -> dict[str, Any]:
+    return make_envelope(
+        tool="context_check", inputs={"point": [12.4823, 41.896], "radius_m": 300},
+        result={"summary": {"sensitive_site": 1, "constraint": 5},
+                "groups": {"constraint": {"layers": [{"layer": "cpq_preesistenze", "count": 5}]}},
+                "hits": [{"layer": "schools_state", "name": "Liceo Classico Ennio Quirino Visconti", "distance_m": 280.2},
+                         {"layer": "cpq_preesistenze", "name": "Palazzo Venezia", "distance_m": 25.6}],
+                "municipio": {"id": "1", "name": "I"}},
+        data_kinds={"schools_state": "real"}, sources=[])
+
+
+def test_distance_attributed_to_the_wrong_site_is_blocked() -> None:
+    r = ctx_hits_run()
+    rid = r["run_id"][:12]
+    q = "Cosa c'è entro 300 metri da Piazza Venezia?"
+    assert verify(f"Il Liceo Visconti è a 280,2 m [run:{rid}].", runs(r), question=q).ok
+    assert verify(f"Palazzo Venezia è a 25,6 m [run:{rid}].", runs(r), question=q).ok
+    bad = verify(f"Il Liceo Visconti è a 25,6 m [run:{rid}].", runs(r), question=q)
+    assert [p.code for p in bad.problems] == ["mismatched_entity"]
+
+
+def test_ids_and_counts_never_vouch_for_a_measurement() -> None:
+    r = ctx_hits_run()
+    rid = r["run_id"][:12]
+    assert verify(f"Ci sono 5 preesistenze [run:{rid}].", runs(r)).ok          # a count may be cited as a count
+    bad = verify(f"La preesistenza più vicina è a 5 m [run:{rid}].", runs(r))  # but not as a distance
+    assert "untraced_number" in {p.code for p in bad.problems}

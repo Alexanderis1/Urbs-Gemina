@@ -23,7 +23,7 @@ from agents.envelope import make_envelope
 from agents.llm import LLM, LLMTurn, ToolCall
 from agents.orchestrator import answer
 from agents.tools import ToolSpec, load_tool_specs
-from agents.verifier import verify
+from agents.verifier import auto_cite, verify
 
 SETS = Path(__file__).resolve().parent / "sets"
 PLACEHOLDER = re.compile(r"\{run:([a-z_]+)\}")
@@ -94,7 +94,10 @@ def _check_grounding(case: Mapping[str, Any]) -> list[str]:
         runs[env["run_id"]] = env
         names[name] = env["run_id"]
     text = PLACEHOLDER.sub(lambda m: "[run:" + names.get(m.group(1), "missing")[:12] + "]", str(case["answer"]))
-    report = verify(text, runs)
+    question = str(case.get("question", ""))
+    if case.get("auto_cite"):
+        text = auto_cite(text, runs, question=question)
+    report = verify(text, runs, question=question)
     errors = []
     if report.ok != bool(case["expect_ok"]):
         errors.append(f"verifier ok={report.ok}, expected {case['expect_ok']}: {[p.code for p in report.problems]}")

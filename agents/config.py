@@ -36,6 +36,8 @@ class VerifierConfig:
     exempt_patterns: list[str]
     calibration_words: list[str]
     abbreviations: list[str]
+    generic_name_words: list[str]
+    non_measure_keys: list[str]
     estimate_words: list[str]
     simulated_words: list[str]
 
@@ -52,6 +54,7 @@ class AgentConfig:
     claude_base_url: str
     tool_api_timeout_s: float
     disclosure: dict[str, str]
+    simulated_note: dict[str, str]
     exa: ExaConfig
     monitors: list[Monitor]
     verifier: VerifierConfig
@@ -88,6 +91,7 @@ def load_agent_config(config_dir: Path = CONFIG_DIR) -> AgentConfig:
         claude_base_url=str(raw["claude_api"]["base_url"]),
         tool_api_timeout_s=float(raw["tool_api"]["timeout_s"]),
         disclosure={k: str(raw["disclosure"][k]) for k in ("en", "it")},
+        simulated_note={k: str(raw["disclosure"][f"simulated_note_{k}"]) for k in ("en", "it")},
         exa=ExaConfig(
             api_key_env=str(exa["api_key_env"]),
             endpoint=str(exa["endpoint"]),
@@ -103,6 +107,8 @@ def load_agent_config(config_dir: Path = CONFIG_DIR) -> AgentConfig:
             exempt_patterns=[str(x) for x in v["exempt_patterns"]],
             calibration_words=[str(x) for x in v["calibration_words"]],
             abbreviations=[str(x) for x in v["abbreviations"]],
+            generic_name_words=[str(x) for x in v["generic_name_words"]],
+            non_measure_keys=[str(x) for x in v["non_measure_keys"]],
             estimate_words=[str(x) for x in v["estimate_words"]],
             simulated_words=[str(x) for x in v["simulated_words"]],
         ),

@@ -102,6 +102,49 @@ def _matches(token: str, is_percent: bool, values: Iterable[float]) -> bool:
     return False
 
 
+UNIT_AFTER = re.compile(r"\s*(m|km|metri|metres|meters|v/m)(?![\w/])", re.IGNORECASE)
+NAME_KEYS = ("name", "title", "label", "nome")
+WORD = re.compile(r"[^\W\d_]{4,}", re.UNICODE)
+
+
+def _measure_numbers(value: Any, skip: frozenset[str]) -> Iterator[float]:
+    """Numeric fields only (no digits inside strings), skipping identifier and count keys."""
+    if isinstance(value, bool):
+        return
+    if isinstance(value, (int, float)):
+        if math.isfinite(value):
+            yield float(value)
+    elif isinstance(value, Mapping):
+        for k, v in value.items():
+            if k not in HASH_KEYS and str(k).lower() not in skip:
+                yield from _measure_numbers(v, skip)
+    elif isinstance(value, (list, tuple)):
+        for v in value:
+            yield from _measure_numbers(v, skip)
+
+
+@dataclass(frozen=True)
+class _Record:
+    tokens: frozenset[str]
+    values: tuple[float, ...]
+
+
+def _records(value: Any, skip: frozenset[str], generic: frozenset[str], out: list[_Record]) -> None:
+    """Named records (a site, a layer hit) with the measurements that belong to them."""
+    if isinstance(value, Mapping):
+        name = next((value[k] for k in NAME_KEYS if isinstance(value.get(k), str)), None)
+        if name:
+            toks = frozenset(w.lower() for w in WORD.findall(name) if w.lower() not in generic)
+            vals = tuple(_measure_numbers(value, skip))
+            if toks and vals:
+                out.append(_Record(toks, vals))
+        for v in value.values():
+            _records(v, skip, generic, out)
+    elif isinstance(value, (list, tuple)):
+        for v in value:
+            _records(v, skip, generic, out)
+
+
 def _manifest_sources() -> dict[str, Any]:
     path = ROOT / "data" / "manifest.json"
     try:
@@ -173,6 +216,8 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
     cfg = config or load_agent_config()
     vc = cfg.verifier
     echo = list(_walk_numbers(question))
+    skip = frozenset(k.lower() for k in vc.non_measure_keys)
+    generic = frozenset(w.lower() for w in vc.generic_name_words) | frozenset(w.lower() for w in WORD.findall(question))
     report = VerifierReport()
     manifest = _manifest_sources()
     cited: dict[str, Mapping[str, Any]] = {}
@@ -186,6 +231,8 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
         if not sentence:
             continue
         values: list[float] = []
+        measures: list[float] = []
+        records: list[_Record] = []
         has_citation = False
         for kind, ref in CITATION.findall(sentence):
             has_citation = True
@@ -198,6 +245,9 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
                 # A run that is not ok (not available, refused, error) vouches only for its inputs.
                 keys = ("inputs", "result", "sources") if is_ok(run) else ("inputs",)
                 values.extend(_walk_numbers({k: run.get(k) for k in keys}))
+                measures.extend(_measure_numbers({k: run.get(k) for k in keys if k != "sources"}, skip))
+                if is_ok(run):
+                    _records(run.get("result"), skip, generic, records)
             elif kind == "src":
                 matched = _runs_for_url(ref, runs)
                 if not matched:
@@ -205,12 +255,15 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
                 for run in matched:
                     cited[str(run["run_id"])] = run
                     if is_ok(run):
-                        values.extend(_numbers_for_url(ref, run))
+                        url_nums = _numbers_for_url(ref, run)
+                        values.extend(url_nums)
+                        measures.extend(url_nums)
             else:
                 if ref not in manifest:
                     report.problems.append(Problem("unknown_citation", f"dataset '{ref}' is not in data/manifest.json", sentence))
                 else:
                     values.extend(_walk_numbers(manifest[ref]))
+                    measures.extend(_walk_numbers(manifest[ref]))
 
         body = CITATION.sub(" ", sentence)
         body = URL.sub(" ", body)
@@ -225,6 +278,18 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
                 report.problems.append(Problem("uncited_number", f"'{m.group(0).strip()}' has no run id or source", sentence))
             elif not _matches(token.lstrip("-"), is_percent, values):
                 report.problems.append(Problem("untraced_number", f"'{m.group(0).strip()}' does not appear in the cited tool output", sentence))
+            elif is_percent or UNIT_AFTER.match(body, m.end()):
+                # A measurement: it must come from a measured field, not an id or a count...
+                tok = token.lstrip("-")
+                if not _matches(tok, is_percent, measures):
+                    report.problems.append(Problem("untraced_number", f"'{m.group(0).strip()}' matches only an identifier or a count, not a measurement", sentence))
+                    continue
+                # ...and belong to the site the sentence names, when it names one.
+                words = {w.lower() for w in WORD.findall(body)}
+                named = [r for r in records if r.tokens & words]
+                if named and not any(_matches(tok, is_percent, r.values) for r in named) \
+                        and any(_matches(tok, is_percent, r.values) for r in records):
+                    report.problems.append(Problem("mismatched_entity", f"'{m.group(0).strip()}' belongs to another site in the tool output", sentence))
 
     for run in cited.values():
         result = run.get("result", {})
@@ -270,6 +335,12 @@ def _exact(token: str, is_percent: bool, values: Iterable[float]) -> bool:
 
 def auto_cite(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig | None = None,
               question: str = "") -> str:
+    return auto_cite_marked(text, runs, config, question)[0]
+
+
+def auto_cite_marked(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig | None = None,
+                     question: str = "") -> tuple[str, list[int]]:
+    """Like ``auto_cite``, also returning the indexes of the lines that code cited (cite_mode "auto")."""
     """Attach a citation, by code, to a line that has figures but no citation, when one tool run of
     this turn contains every figure on that line. Figures found in no tool output stay uncited, so
     the verifier still blocks them: this fixes layout (headings, bullets), never content."""
@@ -277,8 +348,9 @@ def auto_cite(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentCon
     echo = list(_walk_numbers(question))
     ok_runs = [r for r in runs.values() if is_ok(r)]
     pools = [(str(r["run_id"]), list(_walk_numbers({k: r.get(k) for k in ("inputs", "result", "sources")}))) for r in ok_runs]
-    out_lines = []
-    for line in text.split("\n"):
+    out_lines: list[str] = []
+    marked: list[int] = []
+    for idx, line in enumerate(text.split("\n")):
         nums = _line_numbers(CITATION.sub(" ", line), cfg, echo)
         if nums and not CITATION.search(line):
             hits = [(sum(_exact(t, pct, vals) for t, pct in nums), i, rid) for i, (rid, vals) in enumerate(pools)
@@ -286,8 +358,21 @@ def auto_cite(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentCon
             if hits:
                 best = max(hits)  # most figures written exactly as in the tool output, then the latest run
                 line = line.rstrip() + f" [run:{best[2][:12]}]"
+                marked.append(idx)
         out_lines.append(line)
-    return "\n".join(out_lines)
+    return "\n".join(out_lines), marked
+
+
+def citation_trace(text: str, runs: Mapping[str, Mapping[str, Any]], auto_lines: Iterable[int]) -> list[dict[str, Any]]:
+    """One entry per citation in the final text: line, cited run or source, and cite_mode explicit|auto."""
+    auto = set(auto_lines)
+    out: list[dict[str, Any]] = []
+    for idx, line in enumerate(text.split("\n")):
+        for n, (kind, ref) in enumerate(CITATION.findall(line)):
+            run = _resolve_run(ref, runs) if kind == "run" else None
+            mode = "auto" if idx in auto and n == len(CITATION.findall(line)) - 1 else "explicit"
+            out.append({"line": idx, "kind": kind, "ref": str(run["run_id"]) if run else ref, "cite_mode": mode})
+    return out
 
 
 def describe_problems(report: VerifierReport) -> str:
