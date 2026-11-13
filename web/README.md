@@ -48,7 +48,10 @@ context list → field range → downloadable cited report) · Scenario lab · D
 - `supabase/functions/tools`: the only path from the browser to the back end. It reads the tier from `user_roles`
   (signed out = citizen), picks the tool API key for that tier, blocks office-only routes, sets the tier on `/ask`,
   and stores manager updates. Routing rules are in `supabase/functions/_shared/policy.ts` (unit-tested).
-- Secrets to add in Lovable Cloud: `TOOL_API_URL`, `TOOL_API_OFFICE_KEY`, `TOOL_API_CITIZEN_KEY` (optional), `ORCHESTRATOR_URL`.
+- Secrets to add in Lovable Cloud: `TOOL_API_URL`, `TOOL_API_OFFICE_KEY`, `TOOL_API_CITIZEN_KEY` (optional), `ORCHESTRATOR_URL`,
+  `ELEVENLABS_API_KEY` (and optionally `ELEVENLABS_OFFICE_AGENT_ID`).
+- Voice: the header button starts the public citizen agent directly; signed-in office users get the private office
+  agent through `POST /voice/signed_url`. The agents move the map with the five client tools of `voice/client_tools.json`.
 - To make someone an officer: insert a row `(user_id, 'office')` in `user_roles` from the Cloud dashboard.
 
 ## Lovable

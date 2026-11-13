@@ -17,6 +17,7 @@
     "@deck.gl/layers": "9.0.38",
     "@deck.gl/mapbox": "9.0.38",
     "@deck.gl/mesh-layers": "9.0.38",
+    "@elevenlabs/react": "0.4.5",
     "@supabase/supabase-js": "2.46.1",
     "h3-js": "4.1.0",
     "maplibre-gl": "4.7.1",

@@ -18,6 +18,7 @@ export interface Env {
 export type Plan =
   | { ok: true; url: string; key: string; body: Record<string, unknown> }
   | { ok: true; table: "sports_manager_updates"; body: Record<string, unknown> }
+  | { ok: true; voice: "office" }
   | { ok: false; status: number; reason: string };
 
 const TOOLS = new Set([
@@ -35,7 +36,7 @@ const TOOLS = new Set([
 ]);
 
 /** Routes the citizen tier cannot call at all (the permit check is an office workflow). */
-const OFFICE_ONLY = new Set(["/tools/context_check", "/sports/manager_update"]);
+const OFFICE_ONLY = new Set(["/tools/context_check", "/sports/manager_update", "/voice/signed_url"]);
 
 const EDITABLE = new Set(["disciplines", "hours", "accessibility", "contact", "name"]);
 
@@ -47,6 +48,8 @@ function withoutTier(body: Record<string, unknown>): Record<string, unknown> {
 export function planForward(path: string, tier: Tier, body: Record<string, unknown>, env: Env): Plan {
   if (OFFICE_ONLY.has(path) && tier !== "office") return { ok: false, status: 403, reason: "office tier only" };
   const key = tier === "office" ? env.TOOL_API_OFFICE_KEY : env.TOOL_API_CITIZEN_KEY;
+
+  if (path === "/voice/signed_url") return { ok: true, voice: "office" };
 
   if (path === "/ask") {
     // TwinQuestion: the tier is set here, from the session, and overrides anything the browser sent.

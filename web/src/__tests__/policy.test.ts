@@ -30,13 +30,13 @@ describe("edge function policy (tier decided on the server)", () => {
 
   it("overwrites any tier the browser tried to send on /ask", () => {
     const p = planForward("/ask", "citizen", { question: "q", tier: "office" }, env);
-    expect(p.ok && p.body).toMatchObject({ question: "q", tier: "citizen", channel: "chat" });
+    expect(p.ok && "body" in p && p.body).toMatchObject({ question: "q", tier: "citizen", channel: "chat" });
     expect(p.ok && "url" in p && p.url).toBe("https://orch.example/ask");
   });
 
   it("strips a tier from tool inputs too", () => {
     const p = planForward("/tools/query_layer", "citizen", { layer: "rain", tier: "office" }, env);
-    expect(p.ok && p.body).toEqual({ layer: "rain" });
+    expect(p.ok && "body" in p && p.body).toEqual({ layer: "rain" });
   });
 });
 
@@ -48,5 +48,14 @@ describe("manager updates are stored in Lovable Cloud, not forwarded", () => {
   it("rejects a person's name as account_ref", () => {
     const body = { facility_id: "f1", field: "hours", value: "9-21", account_ref: "Mario Rossi", confirmed_at: "t" };
     expect(planForward("/sports/manager_update", "office", body, env)).toMatchObject({ ok: false, status: 422 });
+  });
+});
+
+describe("voice signed URL (private office agent)", () => {
+  it("is office only", () => {
+    expect(planForward("/voice/signed_url", "citizen", {}, env)).toMatchObject({ ok: false, status: 403 });
+  });
+  it("asks ElevenLabs for the office agent", () => {
+    expect(planForward("/voice/signed_url", "office", {}, env)).toEqual({ ok: true, voice: "office" });
   });
 });

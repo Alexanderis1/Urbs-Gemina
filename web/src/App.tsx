@@ -2,6 +2,7 @@ import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { AiDisclosure, SampleModeBanner } from "@/components/Banners";
 import { ScreenRouter } from "@/components/ScreenRouter";
 import { Account } from "@/components/Account";
+import { VoiceButton } from "@/components/VoiceButton";
 import { canOpen, type ScreenId } from "@/lib/tiers";
 import { useSession } from "@/lib/runlog";
 import CityView from "@/pages/CityView";
@@ -46,6 +47,7 @@ export default function App() {
             </NavLink>
           ))}
         </nav>
+        <VoiceButton />
         <Account />
       </header>
       <main className="min-h-0 flex-1">

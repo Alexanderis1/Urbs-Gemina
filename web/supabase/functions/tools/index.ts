@@ -1,7 +1,8 @@
 // Lovable Cloud edge function "tools": the only way the browser reaches the tool API and the orchestrator.
 // It holds the API keys (secrets), reads the user's tier from public.user_roles, and forwards.
 //
-// Secrets to set in Lovable Cloud: TOOL_API_URL, TOOL_API_OFFICE_KEY, TOOL_API_CITIZEN_KEY (optional), ORCHESTRATOR_URL.
+// Secrets to set in Lovable Cloud: TOOL_API_URL, TOOL_API_OFFICE_KEY, TOOL_API_CITIZEN_KEY (optional), ORCHESTRATOR_URL,
+// ELEVENLABS_API_KEY and ELEVENLABS_OFFICE_AGENT_ID (default below).
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by the platform.
 import { createClient } from "npm:@supabase/supabase-js@2.46.1";
 import { planForward, type Env, type Tier } from "../_shared/policy.ts";
@@ -48,6 +49,19 @@ Deno.serve(async (req) => {
   };
   const plan = planForward(path, tier, body, env);
   if (!plan.ok) return json(plan.status, { detail: plan.reason });
+
+  if ("voice" in plan) {
+    const agent = Deno.env.get("ELEVENLABS_OFFICE_AGENT_ID") ?? "agent_5801m7b8bx9gedj9fj7r1e3s54vh";
+    const key = Deno.env.get("ELEVENLABS_API_KEY") ?? "";
+    if (!key) return json(503, { detail: "voice not configured" });
+    const r = await fetch(
+      `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agent)}`,
+      { headers: { "xi-api-key": key } },
+    );
+    if (!r.ok) return json(502, { detail: `ElevenLabs HTTP ${r.status}` });
+    const { signed_url } = (await r.json()) as { signed_url: string };
+    return json(200, { signed_url });
+  }
 
   if ("table" in plan) {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
