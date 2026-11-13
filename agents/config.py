@@ -47,6 +47,8 @@ class AgentConfig:
     max_tool_rounds: int
     verifier_retries: int
     tool_api_url_env: str
+    claude_key_envs: list[str]
+    claude_base_url: str
     tool_api_timeout_s: float
     disclosure: dict[str, str]
     exa: ExaConfig
@@ -81,6 +83,8 @@ def load_agent_config(config_dir: Path = CONFIG_DIR) -> AgentConfig:
         max_tool_rounds=int(raw["loop"]["max_tool_rounds"]),
         verifier_retries=int(raw["loop"]["verifier_retries"]),
         tool_api_url_env=str(raw["tool_api"]["base_url_env"]),
+        claude_key_envs=[str(x) for x in raw["claude_api"]["api_key_envs"]],
+        claude_base_url=str(raw["claude_api"]["base_url"]),
         tool_api_timeout_s=float(raw["tool_api"]["timeout_s"]),
         disclosure={k: str(raw["disclosure"][k]) for k in ("en", "it")},
         exa=ExaConfig(

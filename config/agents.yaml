@@ -16,6 +16,11 @@ loop:
   verifier_retries: 1       # one rewrite attempt after the verifier rejects a draft
   basis: "Permit flow needs 4 tool calls; 8 leaves room for clarifying lookups without letting a loop run away."
 
+claude_api:
+  api_key_envs: [CLAUDE_API_KEY, ANTHROPIC_API_KEY]   # first one set wins; values never committed
+  base_url: https://api.anthropic.com
+  basis: "Alessandro stored the key as CLAUDE_API_KEY in the cloud environment (13 Nov 2026)."
+
 tool_api:
   base_url_env: URBS_TOOL_API_URL   # e.g. the Modal URL; read from the environment, never committed
   timeout_s: 60

@@ -139,3 +139,19 @@ def test_anthropic_adapter_parses_blocks_and_uses_config_model() -> None:
     assert sent["model"] == "claude-sonnet-5-5"
     assert "tools" not in sent
     assert turn.tool_calls[0].name == "context_check" and turn.text == "Checking."
+
+
+def test_claude_key_read_from_configured_variables(monkeypatch: Any) -> None:
+    import pytest
+
+    from agents.config import load_agent_config
+    from agents.llm import ClaudeNotConfigured, claude_api_key
+
+    cfg = load_agent_config()
+    for name in cfg.claude_key_envs:
+        monkeypatch.delenv(name, raising=False)
+    with pytest.raises(ClaudeNotConfigured):
+        claude_api_key(cfg)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "b")
+    monkeypatch.setenv("CLAUDE_API_KEY", "a")
+    assert claude_api_key(cfg) == "a"

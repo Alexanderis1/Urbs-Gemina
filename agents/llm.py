@@ -4,6 +4,7 @@ Tests use scripted fakes, so the guardrails are tested without network or API cr
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -35,6 +36,18 @@ class ModelRefused(RuntimeError):
     pass
 
 
+class ClaudeNotConfigured(RuntimeError):
+    """None of the configured key variables is set."""
+
+
+def claude_api_key(cfg: AgentConfig) -> str:
+    for name in cfg.claude_key_envs:
+        value = os.environ.get(name)
+        if value:
+            return value
+    raise ClaudeNotConfigured("set one of " + ", ".join(cfg.claude_key_envs))
+
+
 class AnthropicLLM:
     """Claude through the official SDK. Model and effort come from config/agents.yaml."""
 
@@ -48,7 +61,7 @@ class AnthropicLLM:
         if client is None:
             import anthropic  # optional dependency group "agents"
 
-            client = anthropic.Anthropic()
+            client = anthropic.Anthropic(api_key=claude_api_key(cfg), base_url=cfg.claude_base_url)
         self.client = client
 
     def step(self, system: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> LLMTurn:
