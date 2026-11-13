@@ -1,0 +1,9 @@
+# Downloads and build outputs (never committed; see data/manifest.json)
+data/raw/
+data/processed/
+
+# Python build leftovers
+__pycache__/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
