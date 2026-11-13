@@ -9,6 +9,7 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
 - Only edit the files your brief says you own. Shared files are **append-only**: add your entry, do not rewrite others' entries:
   - `data/manifest.json` (one entry per new source)
   - `pyproject.toml` (add your own optional-dependency group, e.g. `[project.optional-dependencies] model = [...]`; do not change `dependencies`)
+  - `[tool.mypy] files` in `pyproject.toml`: when your folder first contains `.py` files, append it to the list in your own PR (e.g. `"voice"`). Do not add a folder that has no `.py` files on your branch, or mypy fails
 - Contract changes (the interfaces below) go through the hub thread, not edited locally.
 - Explain choices to Alessandro in plain language, give 2-3 options with a recommendation, and a confidence score (C=NN) when unsure.
 
@@ -22,6 +23,9 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
 4. **Tool list and HTTP API**: `POST /tools/<name>` on the tool API for `resolve_place`, `context_check`, `estimate_field`, `query_layer`, `run_scenario`, `legal_lookup`, `find_dataset`, `data_status`. Schemas published by the tools stream in `twin/api/schemas/*.json`; other streams consume them.
 5. **Map data handoff**: static layers as GeoParquet in `data/processed/` (git-ignored) plus tiles (PMTiles) for the viewer; belief layers served as GeoJSON / H3 cell lists via `query_layer`.
 6. **Answer contract**: `agents/prompts/answer_contract.md`.
+7. **Orchestrator hand-over** (chat and voice both use it; WS7 implements, WS8 and WS9 consume), defined in `voice/contract.py` (PR #2) until WS7 moves it to `agents/`:
+   `ask(TwinQuestion{question, tier, language, area, mode, conversation_id}) -> TwinAnswer{text, verified, run_ids, sources, data_kinds, synthetic, missing, map_actions}`. `tier` (citizen | office) is set server-side, never by the caller or the model. `run_ids` are the tool envelope run ids.
+8. **Map actions**: `map_actions` entries are `{"tool": <client tool name>, "args": {...}}`; client tools listed in `voice/client_tools.json` (`fly_to`, `show_area`, `show_layer`, `show_radius`, `open_screen`). WS8's map implements them for both chat and voice.
 
 ---
 
