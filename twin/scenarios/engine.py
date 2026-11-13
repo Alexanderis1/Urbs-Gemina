@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from twin.scenarios import cache, config
+from twin.scenarios import cache, config, layers
 from twin.scenarios.antenna import run_antenna
 from twin.scenarios.area import Area, AreaArg, AreaNotAvailable, AreaTooLarge, check_heavy, resolve_area
 from twin.scenarios.data import ScenarioData
@@ -22,13 +22,16 @@ class Kind:
     runner: Runner
     heavy: bool
     description: str
+    #: WS1 layer files the kind reads; their hashes enter the run id.
+    reads: tuple[str, ...] = ()
 
 
 KINDS: dict[str, Kind] = {
     "antenna": Kind(run_antenna, False,
                     "Add or move an antenna: field P5/P50/P95 and exceedance probability, baseline vs variant"),
     "population_exposure": Kind(run_population_exposure, False,
-                                "Residents in census sections above the EMF thresholds, baseline vs variant"),
+                                "Residents in census sections above the EMF thresholds, baseline vs variant",
+                                ("census_sections.geojson",)),
     "road_closure": Kind(run_road_closure, True,
                          "Close roads on one district: SUMO travel time and delay, baseline vs variant (synthetic demand)"),
 }
@@ -50,6 +53,11 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
     spec = KINDS[kind]
     inputs = {"kind": kind, "area": area, "change": dict(change)}
     snapshots = {**config.config_hashes(), **data.fingerprint()}
+    if isinstance(area, str) and area != "city" and data.area_lookup is None:
+        boundary = "municipi.geojson" if area.startswith("municipio:") else "urban_zones.geojson"
+        snapshots.update(layers.snapshots([boundary]))
+    if data.census is None:
+        snapshots.update(layers.snapshots(list(spec.reads)))
     rid = run_id(TOOL, inputs, snapshots)
     directory = cache_dir if cache_dir is not None else default_cache_dir()
     if use_cache:
@@ -58,7 +66,7 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
             return {**hit, "cached": True}
 
     try:
-        resolved = resolve_area(area, lookup=data.area_lookup)
+        resolved = resolve_area(area, lookup=data.area_lookup or layers.default_area_lookup)
         if spec.heavy:
             check_heavy(resolved)
     except AreaTooLarge as exc:

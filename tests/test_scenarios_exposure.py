@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from twin.scenarios import engine, exposure
+from twin.scenarios import engine, layers
 from twin.scenarios.data import FieldSample, ScenarioData
 
 LON, LAT = 12.4823, 41.8960
@@ -52,7 +52,7 @@ def test_only_aggregates_leave_the_tool(tmp_path: Path) -> None:
 
 
 def test_missing_census_is_not_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(exposure, "census_path", lambda: tmp_path / "missing.geojson")
+    monkeypatch.setattr(layers, "search_dirs", lambda: [tmp_path / "empty"])
     out = engine.run("population_exposure", "city", CHANGE, data=ScenarioData(), cache_dir=tmp_path)
     assert out["status"] == "not_available"
     assert "census" in out["reason"].lower()
@@ -62,7 +62,7 @@ def test_missing_census_is_not_available(tmp_path: Path, monkeypatch: pytest.Mon
 def test_census_file_is_read_when_present(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = tmp_path / "census_sections.geojson"
     path.write_text(json.dumps(CENSUS), encoding="utf-8")
-    monkeypatch.setattr(exposure, "census_path", lambda: path)
+    monkeypatch.setattr(layers, "search_dirs", lambda: [tmp_path])
     out = engine.run("population_exposure", "city", CHANGE, data=ScenarioData(), cache_dir=tmp_path / "c")
     assert out["status"] == "ok"
     assert out["result"]["residents_total"] == 420
