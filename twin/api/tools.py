@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from twin.api import models as m
 from twin.modules.antennas.report import build_permit_report
 from twin.tools.area import AreaTooLarge, resolve_area
-from twin.tools.layers import LayerSnapshot, iter_positions
+from twin.tools.layers import LayerSnapshot
 from twin.tools.data_status import data_status
 from twin.tools.envelope import ToolError, make_envelope
 from twin.tools.estimate_field import estimate_field
@@ -166,24 +166,12 @@ def _census(rt: ToolRuntime) -> LayerSnapshot | None:
 
 
 def _population(rt: ToolRuntime) -> list[Any]:
-    """Census sections -> WS10 PopulationPoint at the section centroid; empty when not built."""
+    """Census sections -> WS10 PopulationPoint list (WS10 owns the conversion); empty when not built."""
     deserts = importlib.import_module("twin.modules.sports.deserts")
     census = _census(rt)
     if census is None:
         return []
-    points = []
-    for feature in census.features:
-        props = feature.get("properties") or {}
-        if props.get("residents") is None:
-            continue
-        positions = list(iter_positions(feature["geometry"]["coordinates"]))
-        points.append(deserts.PopulationPoint(
-            point_id=str(props.get("sez_id")),
-            lon=sum(float(p[0]) for p in positions) / len(positions),
-            lat=sum(float(p[1]) for p in positions) / len(positions),
-            residents=float(props["residents"]), children=float(props.get("children_0_14") or 0),
-            zone=None if props.get("zone") is None else str(props["zone"]),
-            municipio=None if props.get("municipio") is None else str(props["municipio"])))
+    points: list[Any] = deserts.population_from_census({"type": "FeatureCollection", "features": census.features})
     return points
 
 
