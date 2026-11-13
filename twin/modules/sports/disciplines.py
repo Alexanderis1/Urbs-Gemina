@@ -31,6 +31,9 @@ def discipline_id(value: str, config: SportsConfig) -> str | None:
     folded = fold(value).replace(" ", "_")
     if folded in config.disciplines:
         return folded
+    exact = {d.id for d in config.disciplines.values() if fold(value) in (fold(w) for w in d.words)}
+    if len(exact) == 1:
+        return exact.pop()
     found = disciplines_from_text(value, config)
     return min(found) if len(found) == 1 else None
 

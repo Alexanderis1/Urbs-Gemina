@@ -29,6 +29,15 @@ def test_disciplines_from_text_and_osm() -> None:
     assert disciplines_from_osm({"leisure": "swimming_pool"}, CFG) == {"swimming"}
 
 
+def test_discipline_id_prefers_an_exact_word() -> None:
+    from twin.modules.sports.disciplines import discipline_id
+
+    # "pallanuoto" contains "nuoto": the exact word must win (seen in the first real enrichment run).
+    assert discipline_id("Pallanuoto", CFG) == "water_polo"
+    assert discipline_id("calcio a 5", CFG) == "football"
+    assert discipline_id("salvamento", CFG) is None
+
+
 def test_geoserver_adapter_drops_personal_fields_and_private_holder() -> None:
     cands = from_geoserver_sports(geoserver_sports(), CFG, retrieved_at="2026-11-13")
     assert [c.name for c in cands][:2] == ["Centro Sportivo Fulvio Bernardini", "Piscina Comunale Quadraro"]
