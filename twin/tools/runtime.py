@@ -106,6 +106,20 @@ class ToolRuntime:
         return make_envelope(tool, inputs, result, data_kinds, sources, warnings,
                              config_hashes=self.settings.config_hashes(), **kwargs)
 
+    def warm(self) -> dict[str, str]:
+        """Preload providers that build something heavy once per process (e.g. the antenna register fit)."""
+        done: dict[str, str] = {}
+        for layer, provider in self.providers.items():
+            preload = getattr(provider, "sites", None)
+            if not callable(preload):
+                continue
+            try:
+                preload()
+                done[layer] = "ok"
+            except Exception as error:  # noqa: BLE001 - warming is best effort; the tool reports errors later
+                done[layer] = f"failed: {type(error).__name__}"
+        return done
+
     def _build_providers(self) -> dict[str, Provider]:
         active: dict[str, Provider] = {}
         for layer, provider_id in self.settings.providers.items():

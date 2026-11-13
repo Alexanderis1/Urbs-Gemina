@@ -465,3 +465,41 @@ def test_belief_layer_uses_ws5_layer_payload_and_survives_a_failing_feed(
     env = query_layer(runtime, "rain", area=square(200))
     assert env["status"] == "ok" and env["result"]["count"] == 1
     assert any("upstream down" in w or "rain" in w for w in env["warnings"])
+
+
+def test_query_stale_feed_is_named_not_a_silent_zero(runtime: ToolRuntime) -> None:
+    from datetime import datetime, timezone
+
+    provider = runtime.providers["traffic_flow"]
+    provider.last_feed_time = datetime(2026, 11, 13, 6, 27, tzinfo=timezone.utc)  # type: ignore[attr-defined]
+    env = query_layer(runtime, "traffic_flow", area="city", time="2026-11-13T08:00:00Z")
+    assert env["result"]["feed_updated_at"] == "2026-11-13T06:27:00+00:00"
+    assert any("not updated since" in w and "06:27" in w for w in env["warnings"])
+
+
+def test_query_provider_crash_is_not_available(runtime: ToolRuntime) -> None:
+    provider = runtime.providers["traffic_flow"]
+
+    def boom(*args: Any) -> Any:
+        raise RuntimeError("feed parse error")
+
+    provider.fetch = boom  # type: ignore[method-assign]
+    env = query_layer(runtime, "traffic_flow", area="city")
+    assert env["status"] == "not_available" and "feed parse error" in env["reason"]
+
+
+def test_runtime_warm_preloads_slow_providers_and_ignores_failures(runtime: ToolRuntime) -> None:
+    calls: list[str] = []
+
+    class Slow:
+        def sites(self) -> list[Any]:
+            calls.append("sites")
+            return []
+
+    class Broken:
+        def sites(self) -> list[Any]:
+            raise RuntimeError("down")
+
+    runtime.providers = {"antenna_register": Slow(), "other": Broken()}  # type: ignore[dict-item]
+    assert runtime.warm() == {"antenna_register": "ok", "other": "failed: RuntimeError"}
+    assert calls == ["sites"]

@@ -11,6 +11,7 @@ import hmac
 import importlib
 import logging
 import os
+import threading
 from typing import Any, Awaitable, Callable
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
@@ -73,6 +74,20 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
                 if hmac.compare_digest(given.encode(), key.encode()):
                     return role
         return "citizen"
+
+    @app.on_event("startup")
+    def warm_up() -> None:
+        """Build the runtime and preload slow providers in the background, so the first request is fast."""
+        if os.environ.get("URBS_WARMUP", "1") == "0":
+            return
+
+        def run() -> None:
+            try:
+                log.info("warm-up: %s", get_runtime().warm())
+            except Exception:  # noqa: BLE001 - best effort
+                log.exception("warm-up failed")
+
+        threading.Thread(target=run, name="urbs-warmup", daemon=True).start()
 
     @app.exception_handler(ToolError)
     async def tool_error(request: Request, error: ToolError) -> JSONResponse:
