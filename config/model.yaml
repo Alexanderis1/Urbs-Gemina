@@ -1,0 +1,86 @@
+# City model (G0 LoD1 blocks, G2 LiDAR roofs). Owned by workstream WS2.
+# Every assumption carries a `basis:` note. Numbers here feed deterministic code only.
+
+extent:
+  # Whole city by default; the build script also accepts --bbox.
+  area: city
+
+footprints:
+  source: overture_buildings
+  release: "2026-10-21.0"
+  # Overture subtypes/classes kept; underground structures are dropped.
+  drop_underground: true
+  min_area_m2: 4.0
+  basis: "Footprints under 4 m2 are mostly sheds, kiosks and digitising noise (assumption, C=70)."
+
+heights:
+  # Tried in order; the first source that gives a value wins.
+  # Each source is labelled real or estimated and travels with the building as height_source.
+  priority: [osm_tag, gba, raster, floors, default]
+  sources:
+    osm_tag:
+      data_kind: real
+      licence: ODbL
+      basis: "Overture `height` attribute, almost always copied from an OSM height tag set by a mapper."
+    gba:
+      data_kind: estimated
+      # GlobalBuildingAtlas LoD1 (TUM), Parquet tile e010_n45_e015_n40 from Source Cooperative.
+      # Licence CC BY-NC 4.0: chosen by the project owner on 13 Nov 2026 because the project is non-commercial.
+      url: https://data.source.coop/tge-labs/globalbuildingatlas-lod1/e010_n45_e015_n40.parquet
+      path: data/raw/gba/rome_gba_lod1.parquet
+      licence: CC BY-NC 4.0
+      basis: "Machine-learning height from PlanetScope imagery (2019-2023), matched to our footprint by the GBA polygon containing its inner point."
+    raster:
+      data_kind: estimated
+      # Copernicus Urban Atlas Building Height 2012, served by the EEA ImageServer as 10 height classes
+      # (10 m cells, EPSG:3035). It covers the core urban area only, not every corner of Roma Capitale.
+      service: https://copernicus.discomap.eea.europa.eu/arcgis/rest/services/UrbanAtlas/UA_BuildingHeights_2012_10m/ImageServer
+      path: data/raw/urban_atlas_building_height/rome_bh_2012_classes.tif
+      licence: Copernicus open data (attribution)
+      statistic: mode
+      min_valid: 1   # class codes start at 1; 0 = no building
+      # code: [low m, high m, value used as the height]. Class table read from the service on 13 Nov 2026.
+      classes:
+        1: [2, 4, 3]
+        2: [4, 6, 5]
+        3: [6, 8, 7]
+        4: [8, 10, 9]
+        5: [10, 15, 12.5]
+        6: [15, 20, 17.5]
+        7: [20, 30, 25]
+        8: [30, 60, 45]
+        9: [60, 100, 80]
+        10: [100, 368, 110]
+      basis: "Most frequent height class among the 10 m cells inside the footprint, turned into the class midpoint (class 10 capped at 110 m, near the tallest buildings in Rome). Survey date 2012. Coarse: only used when OSM and GBA have no height, and as the independent check."
+    floors:
+      data_kind: estimated
+      metres_per_floor: 3.2
+      licence: ODbL
+      basis: "Typical floor-to-floor height of Roman residential buildings (design proposal, section 4)."
+    default:
+      data_kind: estimated
+      metres: 9.0
+      licence: none
+      basis: "Three floors: placeholder for buildings with no height evidence. Flagged in the honesty panel."
+  clamp_m: [2.0, 160.0]
+  clamp_basis: "No building in Rome exceeds about 140 m (St Peter's dome 136 m); 2 m is a low shed."
+
+terrain:
+  # Copernicus GLO-30 is a surface model: in dense blocks it includes roofs and trees.
+  # Ground under a building is the low percentile of the DEM in a ring around the footprint.
+  source: copernicus_dem_glo30
+  ring_m: 30.0
+  percentile: 10
+  basis: "Low percentile around the footprint approximates bare ground in a DSM (assumption, C=60). Replace with TINITALY 10 m when reachable."
+
+validation:
+  # Agreement between each estimated source and the references, reported per pair.
+  references: [osm_tag, raster]
+  within_m: 3.0
+  basis: "One floor of tolerance. Against Urban Atlas the check is instead: does the height fall inside the building's Urban Atlas class?"
+
+tiles:
+  layer: buildings
+  min_zoom: 12
+  max_zoom: 16
+  basis: "Below z12 one block is under a pixel; z16 keeps full footprint detail for overzoom to z20."
