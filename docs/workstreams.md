@@ -21,7 +21,8 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
    - `"municipio:<n>"` with `n` an integer 1 to 15 (municipio I = `municipio:1`);
    - `"zone:<code>"` with `code` the urban-zone code from layer `DIPDIT:ZoneUrbanistiche`, as a string, upper case (e.g. `zone:1A`);
    - a GeoJSON Polygon or MultiPolygon object in WGS84 (e.g. the 300 m circle around a point, as a 64-vertex polygon).
-   Parsing lives in one place, owned by WS4 (`twin/tools/area.py`); others import it. Heavy tools refuse areas above `heavy_tools_max_area_km2` (status `refused`).
+   Parsing lives in one place, owned by WS4 (`twin/tools/area.py`); others import it. Signature (fixed by the hub):
+   `resolve_area(area: str | Mapping[str, Any]) -> Area`, with frozen dataclass `Area(id: str, kind: Literal["city","municipio","zone","polygon"], geometry: dict[str, Any] (GeoJSON, WGS84), bbox: BBox, area_km2: float)`; invalid ids raise `ValueError`. `id` is the canonical string (`"polygon:<sha256 of geometry, first 12 hex>"` for polygons). Heavy tools refuse areas above `heavy_tools_max_area_km2` (status `refused`).
 3. **Tool response envelope** (every tool, JSON):
    `{ "run_id": str, "tool": str, "inputs": {...}, "result": {...}, "data_kinds": {"<layer>": "real|estimated|simulated"}, "sources": [{"id", "url?", "retrieved_at"}], "synthetic": bool, "warnings": [str] }`.
    Additions agreed 13 Nov (from WS6): top-level `"status": "ok" | "not_available" | "refused"` with `"reason": str` when not ok (`refused` = guardrail, e.g. heavy run on too large an area); top-level `"cached": bool`; `data_kinds` values may also be `"not_available"` for a missing input. Results that are not `ok` are never cached.
