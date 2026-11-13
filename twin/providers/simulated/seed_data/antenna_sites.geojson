@@ -1,0 +1,16362 @@
+{
+"type": "FeatureCollection",
+"basis": "OpenCelliD cells (CC BY-SA 4.0, tokenless PMTiles mirror) inside Roma Capitale, clustered into estimated sites. Cell centroids lie 100 m-1 km from real masts (C=70).",
+"features": [
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.261901,
+41.865398
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.277098,
+41.733901
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2786,
+41.733
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.280102,
+41.729401
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.280818,
+41.733019
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.281011,
+41.730211
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.281639,
+41.741738
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.281737,
+41.738595
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.283401,
+41.731299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.284501,
+41.748899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2864,
+41.7437
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.288299,
+41.748599
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2892,
+41.7503
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.296399,
+41.867699
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.298607,
+41.756732
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.301002,
+41.7596
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.302998,
+41.867899
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.309514,
+41.763673
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3101,
+41.809
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.318898,
+41.8104
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.319714,
+41.768086
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.321301,
+41.806201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3274,
+41.7711
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.329401,
+41.866701
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.329446,
+41.812853
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.329498,
+41.7719
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.332298,
+41.8417
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.335764,
+41.814065
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.335801,
+41.8703
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.339096,
+41.775454
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3399,
+41.870999
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.344701,
+41.8186
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.350701,
+41.779801
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.354298,
+41.7712
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.358101,
+41.8731
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.360601,
+41.879898
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.360894,
+41.784182
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.363299,
+41.785001
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.367998,
+41.816401
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.374602,
+41.788301
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3748,
+41.864399
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.375101,
+41.8607
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.375971,
+41.881598
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.376002,
+41.871298
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.376302,
+41.862901
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.376399,
+41.872201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.378502,
+41.865902
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.378851,
+41.851852
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.379398,
+41.882498
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.380701,
+41.881001
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.380798,
+41.9298
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3809,
+41.933799
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381002,
+41.886101
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381098,
+41.846799
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381302,
+41.926899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381399,
+41.936401
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381501,
+41.924001
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381549,
+41.89155
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381603,
+41.895801
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.381699,
+41.938899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.382101,
+41.897298
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.382198,
+41.899702
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.382198,
+41.905399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3823,
+41.944601
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.382498,
+41.945798
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.38251,
+41.843231
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3826,
+41.899398
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.382799,
+41.921798
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.382901,
+41.950099
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.383003,
+41.921199
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.383201,
+41.886999
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.383201,
+41.951101
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.383298,
+41.8417
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.383502,
+41.902301
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3837,
+41.918501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.38392,
+41.913576
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.384049,
+41.91025
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.384301,
+41.838399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.384397,
+41.791801
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.384749,
+41.913799
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3848,
+41.955301
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.385502,
+41.961999
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.386001,
+41.954699
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.387101,
+41.829601
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.387702,
+41.828198
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.388201,
+41.791701
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.389199,
+41.822802
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.391602,
+41.817201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.392101,
+41.820299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.392498,
+41.7953
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.393441,
+41.961771
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.393541,
+41.817233
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.39365,
+41.79339
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.393699,
+41.815002
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.395502,
+41.963798
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.396301,
+41.884399
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3965,
+41.813299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3968,
+41.7943
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3971,
+41.963798
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.399025,
+41.816697
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.399901,
+41.885502
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.400099,
+41.794
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.402797,
+41.8865
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.402899,
+41.8103
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.404197,
+41.7959
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.404299,
+41.820299
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.405002,
+41.969298
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4071,
+41.968202
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.409499,
+41.797
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.413151,
+41.971251
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.414332,
+41.906938
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.415098,
+41.7983
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.415253,
+41.822868
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.41575,
+41.802998
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.416198,
+41.805402
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.416702,
+41.801499
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.416785,
+41.909843
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.417399,
+41.9729
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.417802,
+41.807501
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.417917,
+41.911026
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.418,
+41.9134
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.418799,
+41.973199
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.420001,
+41.973901
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.421498,
+41.974599
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.423889,
+41.811201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.425147,
+41.833045
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4269,
+41.802299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.427302,
+41.977498
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.428702,
+41.802998
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.428901,
+41.894399
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.431202,
+41.803998
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.433101,
+41.740102
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4336,
+41.893401
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.43433,
+41.83252
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.435198,
+41.979002
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.435402,
+41.980601
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.435499,
+41.980098
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.436228,
+41.756908
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4367,
+41.733501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4367,
+41.748699
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.438175,
+41.820321
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.438299,
+41.762501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.438353,
+41.803143
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.438401,
+41.832399
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.439002,
+41.801099
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.439547,
+41.908383
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 29,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.439898,
+41.850299
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.440562,
+41.895062
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.440613,
+41.832174
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.440997,
+41.848801
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.44103,
+41.768025
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.44211,
+41.852396
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.44225,
+41.98145
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.442397,
+41.814902
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.443299,
+41.801699
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.443713,
+41.896272
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.444302,
+41.7232
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.444302,
+41.832799
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.444387,
+41.855362
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.445702,
+41.779901
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.446221,
+41.857601
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.446297,
+41.721302
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.446413,
+41.834856
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.447698,
+41.783501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4481,
+41.982
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.448502,
+41.817301
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.448599,
+41.801399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.449001,
+41.785901
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.449099,
+41.926
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.449517,
+41.838312
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.450197,
+41.897402
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.450723,
+41.862638
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.451302,
+41.7153
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.451493,
+41.85952
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.451744,
+41.836872
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.451797,
+41.854447
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.452,
+41.8193
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4523,
+41.7944
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.452402,
+41.7159
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.452402,
+41.9822
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.452901,
+41.8362
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4534,
+41.715099
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.453502,
+41.839801
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.45355,
+41.856451
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.453802,
+41.842499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.454001,
+41.981398
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.454199,
+41.820899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.45465,
+41.839701
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4548,
+41.894998
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.455006,
+41.848501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 14,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4551,
+41.8963
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4552,
+41.8415
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.455299,
+41.839701
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.455401,
+41.710899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.455409,
+41.857862
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.456302,
+41.840701
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4566,
+41.838598
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.456801,
+41.8364
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.456897,
+41.848005
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.456999,
+41.824501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.457101,
+41.808101
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.457198,
+41.709801
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.457498,
+41.8419
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.457901,
+41.894499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458201,
+41.927601
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.45825,
+41.864433
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 6,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458276,
+41.8643
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 4,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458298,
+41.835701
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458501,
+41.915701
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458598,
+41.839202
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4587,
+41.8262
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458937,
+41.9069
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 8,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458958,
+41.906734
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 19,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.458968,
+41.837466
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 3,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.459,
+41.858299
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.459199,
+41.926101
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.459403,
+41.908202
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.459597,
+41.864221
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 9,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.459902,
+41.842699
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.460232,
+41.813193
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4604,
+41.800499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.460577,
+41.828078
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.460799,
+41.90525
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.461001,
+41.903
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.461001,
+41.90495
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.461001,
+41.936501
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.46105,
+41.912549
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.461599,
+41.85992
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.462126,
+41.866552
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.462299,
+41.983001
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.462498,
+41.905
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.462552,
+41.866401
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.462798,
+41.911998
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463002,
+41.904201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463099,
+41.828902
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463201,
+41.927402
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463303,
+41.7056
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463399,
+41.9007
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463501,
+41.703798
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463501,
+41.9092
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463651,
+41.9255
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463725,
+41.903675
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463949,
+41.830939
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.463952,
+41.901451
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.464319,
+41.821316
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.464479,
+41.872921
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.464499,
+41.899099
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.464513,
+41.862494
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.465256,
+41.826357
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.465298,
+41.86725
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4654,
+41.801299
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.465466,
+41.920067
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.46565,
+41.900401
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.465701,
+41.9265
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.466199,
+41.86715
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.466243,
+41.873978
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.466301,
+41.899498
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.46635,
+41.872301
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4665,
+41.872401
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.466518,
+41.901554
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.466602,
+41.8699
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.46705,
+41.869601
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467299,
+41.933699
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467367,
+41.823934
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467452,
+41.921601
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467457,
+41.841403
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467498,
+41.905499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467712,
+41.826469
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467937,
+41.862355
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.468098,
+41.833498
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.468501,
+41.872401
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.468552,
+41.833998
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.468603,
+41.871099
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.468675,
+41.984346
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.468916,
+41.867985
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469051,
+41.92745
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.46915,
+41.898051
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4693,
+41.933999
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469799,
+41.835401
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469901,
+41.897601
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469997,
+41.892099
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469997,
+41.9051
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470099,
+41.835301
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470298,
+41.874199
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470402,
+41.98545
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470564,
+41.854716
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4707,
+41.859501
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470802,
+41.908601
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470844,
+41.891567
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.471301,
+41.888002
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.471459,
+41.867752
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.471601,
+41.8912
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4721,
+41.9071
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.472433,
+41.876732
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.472503,
+41.930798
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.472599,
+41.8643
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.472701,
+41.896899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.473302,
+41.896999
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.47335,
+41.69755
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.473385,
+41.918168
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4735,
+41.872501
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.473828,
+41.838743
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.473849,
+41.890502
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.473999,
+41.8761
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474101,
+41.878001
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474198,
+41.824301
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474249,
+41.875201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474434,
+41.89645
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.47475,
+41.854799
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474773,
+41.916206
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4749,
+41.883701
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475201,
+41.8983
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475265,
+41.87908
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475365,
+41.909366
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475399,
+41.883501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475399,
+41.8915
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475649,
+41.890638
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475649,
+41.932349
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4757,
+41.695399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475818,
+41.882643
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475898,
+41.879499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475898,
+41.880701
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475929,
+41.840074
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476175,
+41.886024
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476403,
+41.873699
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476403,
+41.896899
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476499,
+41.8461
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.47669,
+41.918343
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4767,
+41.890048
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476707,
+41.911267
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 14,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476822,
+41.879881
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476901,
+41.881799
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4771,
+41.875401
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.477202,
+41.693801
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.477298,
+41.893001
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4775,
+41.895324
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.477502,
+41.986399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.477599,
+41.880901
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.477701,
+41.694402
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.477787,
+41.88765
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.478049,
+41.91615
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.478302,
+41.887099
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.478398,
+41.861
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.478398,
+41.8815
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.478398,
+41.894699
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.478725,
+41.918125
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 11,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.478999,
+41.986399
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.479046,
+41.839732
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.479657,
+41.897331
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 9,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4799,
+41.692699
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.479981,
+41.875328
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.48008,
+41.845854
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.480099,
+41.899702
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.480201,
+41.887902
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.480699,
+41.902002
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.480699,
+41.906601
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.48072,
+41.87748
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.480762,
+41.894502
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 8,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.480801,
+41.864899
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.480848,
+41.875576
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.481102,
+41.9049
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.481198,
+41.911899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.481516,
+41.894408
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 16,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.481571,
+41.936822
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 9,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.481633,
+41.916479
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.481897,
+41.93894
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 6,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.482162,
+41.87478
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.482201,
+41.889599
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.482502,
+41.986498
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4827,
+41.893734
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.482767,
+41.896859
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483001,
+41.866201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483052,
+41.847049
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483199,
+41.872401
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483301,
+41.873
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483398,
+41.850799
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483398,
+41.986
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483602,
+41.8454
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483602,
+41.915899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483657,
+41.797039
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483698,
+41.892802
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483698,
+41.893201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483814,
+41.938458
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483984,
+41.872298
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.483999,
+41.890701
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.484299,
+41.840601
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.484825,
+41.866124
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485002,
+41.897601
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485098,
+41.8436
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485098,
+41.893301
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.48545,
+41.8811
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485501,
+41.852102
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485602,
+41.986498
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485801,
+41.872501
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485933,
+41.941365
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485999,
+41.9861
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.485999,
+42.0176
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.486453,
+41.938026
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.486501,
+41.896574
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4867,
+41.892552
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.486901,
+41.892332
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4873,
+41.884849
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4874,
+41.906701
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.487502,
+41.8672
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.487536,
+41.914218
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.487622,
+41.853489
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 9,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.487772,
+41.884765
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.487802,
+41.862749
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.487898,
+41.890402
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488,
+41.871598
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488349,
+41.897701
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488499,
+41.850599
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488601,
+41.889399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488902,
+41.886899
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488964,
+41.878374
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.489134,
+41.865832
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.489752,
+41.855485
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.489865,
+41.889867
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.490001,
+41.851598
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.490098,
+41.895102
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.490559,
+41.887957
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.490999,
+41.871598
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.490999,
+41.891001
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.491198,
+41.917599
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.491566,
+41.899833
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4916,
+41.882902
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.491831,
+41.880635
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 7,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4919,
+41.871902
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.492002,
+41.913998
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.492802,
+41.986299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.493102,
+41.869401
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.493102,
+41.871099
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.493601,
+41.870899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.493697,
+41.901199
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.494,
+41.891699
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.494298,
+42.0018
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4944,
+41.939901
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.494733,
+41.882567
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.494899,
+41.8574
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.495098,
+41.986199
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.49513,
+41.934714
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.495133,
+41.902101
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.495475,
+41.88069
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.496203,
+41.889599
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.496701,
+41.870799
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.496798,
+41.902401
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.497345,
+41.870244
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.497932,
+41.901834
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.49902,
+41.897773
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 12,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4994,
+41.933699
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.499598,
+41.928001
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4997,
+41.870799
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.499709,
+41.90073
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.500462,
+41.90252
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.500998,
+41.870999
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.501202,
+41.884699
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.501299,
+41.9004
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5015,
+41.989349
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.501525,
+41.925499
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.501525,
+41.983055
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.502039,
+41.898925
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 14,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.502479,
+41.900892
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 13,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.502652,
+41.928934
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.503387,
+41.959326
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.503646,
+41.965319
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 13,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.503901,
+41.902301
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.504098,
+41.900351
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.504348,
+41.89975
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.504501,
+41.8984
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.504802,
+41.871199
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.504861,
+41.976187
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.505633,
+41.977266
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.505853,
+41.969828
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.505998,
+41.959199
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.505998,
+41.969559
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 26,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.505998,
+41.975899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.506082,
+41.96536
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5061,
+41.959702
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.50622,
+41.89786
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.506262,
+41.955711
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.506268,
+41.950733
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.506449,
+41.8719
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.506599,
+41.977399
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.506843,
+41.87593
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.507052,
+41.79445
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.507208,
+41.978855
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.50755,
+41.980109
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.507608,
+41.946255
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.507721,
+41.949721
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.50777,
+41.944709
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5078,
+41.8892
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.508041,
+41.94467
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.508068,
+41.940049
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.508101,
+41.981498
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.508299,
+41.887598
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.508368,
+41.896977
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.508398,
+41.903072
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5086,
+41.9794
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.508702,
+41.990801
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.509002,
+41.937802
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.509078,
+41.925611
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.509326,
+41.947812
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.509335,
+41.913233
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510198,
+41.951001
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510198,
+41.953602
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5103,
+41.962701
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510445,
+41.934336
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510468,
+41.895633
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510496,
+41.937467
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510499,
+41.958401
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510901,
+41.7944
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5111,
+41.9384
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.511132,
+41.988134
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.511158,
+41.87572
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5114,
+41.875101
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.511435,
+41.987461
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 9,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.511623,
+41.952201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.511802,
+41.896899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512001,
+41.938301
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512078,
+41.926707
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512097,
+41.932598
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512199,
+41.8761
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512221,
+41.990694
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512398,
+41.942901
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512496,
+41.794978
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.512999,
+41.988301
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.513202,
+41.894199
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.513213,
+41.922112
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.513401,
+41.988699
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.513599,
+41.989098
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.513798,
+42.025698
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.514801,
+41.905499
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.515101,
+41.944601
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.515863,
+41.907363
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.515931,
+41.902533
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.516099,
+41.987902
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.516802,
+41.938899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.517102,
+41.935
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.517102,
+41.997399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.51762,
+42.00634
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.518134,
+41.893963
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.518502,
+41.890849
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.518681,
+41.937281
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.518948,
+41.904102
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519021,
+42.00655
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519038,
+41.937362
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519124,
+41.913368
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519302,
+41.986299
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519341,
+41.795811
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519398,
+41.934298
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519402,
+42.005068
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519434,
+41.988231
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.519602,
+41.999699
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.520198,
+42.0064
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.520401,
+41.877602
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.520768,
+41.7953
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.520798,
+41.935599
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5209,
+41.932498
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.521135,
+42.010745
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.522499,
+41.986399
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.522749,
+41.93255
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.522783,
+41.795401
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.522883,
+41.894713
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.522901,
+41.886101
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.522901,
+41.926001
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523007,
+41.892007
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523034,
+41.932968
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 3,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523202,
+41.8964
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5234,
+41.890502
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5234,
+41.932802
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523408,
+41.908878
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523536,
+41.931741
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523803,
+41.887499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523803,
+41.985099
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.523857,
+41.911929
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 10,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.524001,
+41.924401
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5242,
+41.882058
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.524211,
+41.929998
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.524369,
+41.926605
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.524635,
+42.012578
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.524666,
+41.920672
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5248,
+41.893201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.524902,
+41.931002
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.525199,
+41.925375
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.525203,
+41.880901
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.52557,
+41.984443
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5256,
+41.889599
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5259,
+41.884699
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.52594,
+41.987381
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.526002,
+41.9871
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.526414,
+41.928162
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.526472,
+42.025609
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.526699,
+41.884499
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.526699,
+41.9211
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.526994,
+41.938824
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527,
+41.920501
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527,
+42.004698
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527102,
+41.887698
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527402,
+41.918202
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527402,
+41.923
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527402,
+41.924401
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527499,
+42.029898
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527601,
+41.890901
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527799,
+41.932099
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527899,
+41.908199
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527901,
+42.0144
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.527997,
+42.021299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.528201,
+41.9154
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.528201,
+42.015101
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.528298,
+42.036098
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.528715,
+41.921499
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.528805,
+41.908745
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.529199,
+41.897402
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.529218,
+41.910189
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.529313,
+42.01762
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.529398,
+41.912701
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.529398,
+42.0133
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.529866,
+41.912318
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 9,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.529902,
+42.0397
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.530026,
+41.906686
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.530202,
+42.0456
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.530401,
+41.911
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.530561,
+42.042327
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.530583,
+41.909133
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.530948,
+42.006151
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.531002,
+42.015301
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.531002,
+42.053499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.531175,
+42.024424
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.531699,
+41.9029
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.531699,
+41.908501
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.531801,
+41.7964
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.531953,
+42.033616
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532101,
+41.881799
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532101,
+41.9028
+]
+},
+"properties": {
+"net": 895,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532236,
+41.90289
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5323,
+42.039098
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532381,
+42.039411
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532498,
+42.041799
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532566,
+42.033402
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532648,
+42.057898
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532717,
+41.863661
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.532801,
+41.904549
+]
+},
+"properties": {
+"net": 515,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533249,
+41.79625
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533298,
+42.045102
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533501,
+41.879599
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533601,
+41.90905
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533649,
+42.03705
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533652,
+41.906451
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5337,
+41.910098
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533802,
+42.056498
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533898,
+41.908302
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533898,
+41.908401
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.533921,
+41.895152
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.534066,
+41.870365
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.534301,
+42.059065
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.534469,
+41.904373
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.534601,
+41.862502
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.534698,
+42.063201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.534901,
+42.0644
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5351,
+41.7942
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5354,
+41.900999
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5354,
+42.0672
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.535765,
+41.903032
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.535816,
+41.902302
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.536389,
+42.056486
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.536433,
+42.069933
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.536801,
+42.0699
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.536918,
+41.892267
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.536951,
+41.8601
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.536999,
+41.9072
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.536999,
+42.020801
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.537167,
+41.8998
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.537999,
+41.910501
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.538303,
+42.052599
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.538501,
+41.869401
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.538868,
+41.899651
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.538898,
+41.899199
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.539036,
+41.908391
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.539102,
+41.908501
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.539152,
+41.911912
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.539584,
+41.908651
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 13,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5404,
+41.937499
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5406,
+41.894665
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.540688,
+41.892303
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5407,
+41.854799
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.540802,
+41.778901
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.540802,
+41.791301
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.541052,
+41.9074
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.541398,
+41.892299
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.541445,
+41.908695
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.541602,
+41.917599
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.541649,
+41.852824
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.541698,
+41.906102
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.541906,
+41.911486
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.542299,
+41.910302
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.542599,
+41.854199
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.542599,
+42.075701
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.543002,
+41.905699
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.543592,
+42.030699
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.543952,
+41.900312
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.544068,
+41.8536
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.544101,
+41.900001
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.544468,
+41.851333
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5446,
+42.0562
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.544831,
+41.902023
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.545155,
+41.914706
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.545583,
+41.900193
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.546102,
+42.064201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.546304,
+42.029187
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.546552,
+41.908407
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.546618,
+41.800346
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.547009,
+42.038201
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.547145,
+41.939007
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.547401,
+41.9006
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.548098,
+41.9073
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.54857,
+41.86679
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.549513,
+41.901842
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.54974,
+41.901674
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.550451,
+41.901807
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.550686,
+41.911184
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.551199,
+41.905
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM",
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.551199,
+41.905
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.551335,
+41.916746
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.551341,
+41.847859
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.551654,
+41.971387
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.551998,
+41.803398
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.552226,
+41.913191
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.553647,
+41.90228
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.553799,
+41.902076
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.554442,
+41.902173
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.555002,
+41.902501
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.555099,
+41.942199
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.555348,
+41.903575
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.555501,
+41.769799
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.555549,
+42.043
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.555898,
+42.0427
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.555898,
+42.0427
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 10,
+"technologies": [
+"GSM",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.556409,
+41.896545
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.556499,
+41.860201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.55654,
+41.904237
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5574,
+41.909
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.557901,
+42.0449
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.558068,
+41.904256
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.558174,
+41.94342
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.558424,
+41.906011
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5585,
+41.883701
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.559023,
+41.895743
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.559091,
+41.895407
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5591,
+41.883601
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.559401,
+41.903299
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.559599,
+41.856201
+]
+},
+"properties": {
+"net": 99,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.560002,
+41.8493
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5602,
+41.8912
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.560302,
+41.805702
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.560724,
+41.884725
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.561046,
+41.886738
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.56129,
+41.8889
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.563536,
+41.84987
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5638,
+41.889
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.563927,
+41.909979
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 16,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.564072,
+41.904522
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.564299,
+41.717202
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.56493,
+41.906163
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.565098,
+41.965701
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.566094,
+41.905464
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.566101,
+41.894
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.56617,
+41.905658
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.567345,
+41.853554
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 13,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.567399,
+41.8537
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.567399,
+42.045202
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.567902,
+41.906133
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.567943,
+41.901387
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.568276,
+41.906038
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.568402,
+41.81
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.568499,
+41.7239
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.568799,
+41.944073
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.57022,
+41.950136
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.571191,
+42.055973
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.57185,
+41.945707
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.572532,
+41.95427
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.572699,
+41.716901
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.572899,
+42.051531
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.574431,
+41.813891
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.575001,
+41.8099
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5751,
+41.906163
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.575296,
+41.907818
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.575301,
+41.814398
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.575601,
+41.816401
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.576859,
+41.961287
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.577398,
+41.848102
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5775,
+41.9091
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.578702,
+41.806701
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.579201,
+41.909699
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.579399,
+41.820699
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.579399,
+41.9573
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.580769,
+41.909951
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.581197,
+41.956387
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.581829,
+41.825237
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.582079,
+41.82463
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.583176,
+41.801214
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.584811,
+41.911228
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.585402,
+41.912198
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.585998,
+41.7984
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.586293,
+41.911271
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.587301,
+41.833699
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.587398,
+41.911599
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5875,
+41.834502
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.587532,
+41.844834
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.587878,
+41.8428
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.589871,
+41.836383
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 7,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.589899,
+41.856035
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.590025,
+41.798216
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.590134,
+41.837591
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.590166,
+41.853467
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.590198,
+41.851902
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.590346,
+41.797974
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.590702,
+41.8496
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.590901,
+41.848202
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.591193,
+41.839216
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.592016,
+41.840544
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 10,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.592166,
+41.914191
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.592499,
+41.8416
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.592812,
+41.843683
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.593151,
+41.791451
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.594588,
+41.913273
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.594901,
+41.837899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.596201,
+41.8572
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.596248,
+41.943529
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.596474,
+41.914175
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.596866,
+41.8511
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.597,
+41.855901
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.597601,
+41.858499
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.597781,
+41.854588
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.599199,
+41.8536
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.599577,
+41.914922
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.600203,
+41.9152
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.600212,
+41.934619
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.600371,
+41.863328
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.600751,
+41.848979
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.601965,
+41.865829
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.602102,
+41.915899
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.602997,
+41.950702
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.603298,
+41.868298
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.603635,
+41.916801
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.604301,
+41.950299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.604398,
+41.8704
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.604698,
+41.956099
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.605503,
+41.872501
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.607035,
+41.968034
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.607149,
+41.875251
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.608598,
+41.885198
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.609693,
+41.919253
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.610311,
+41.970445
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6104,
+41.917898
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.610415,
+41.880348
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 8,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.610466,
+41.918651
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 10,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.610941,
+41.9646
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6112,
+41.921399
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6115,
+41.961899
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.611946,
+41.883852
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.612863,
+41.8907
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.614198,
+41.888301
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.614402,
+41.914901
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.614534,
+41.918977
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.614703,
+41.890198
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.614819,
+41.891619
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.615144,
+41.894328
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.615201,
+41.896799
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.615335,
+41.902046
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6154,
+41.898899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.615502,
+41.904878
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.615543,
+41.903715
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.615598,
+41.910402
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6157,
+41.912701
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.616832,
+41.922132
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.618302,
+41.935799
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.618459,
+41.915979
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.619348,
+41.92295
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.62072,
+41.922785
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.622465,
+41.92258
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.623163,
+41.918998
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 7,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.624702,
+41.920002
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.624776,
+41.843299
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.628301,
+41.953602
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.629153,
+41.923147
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.632298,
+41.923199
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.633174,
+41.923199
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.635134,
+41.923323
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.635801,
+41.923199
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.637201,
+41.923399
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.63958,
+41.923698
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.64055,
+41.922704
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.642002,
+41.8371
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.646852,
+41.923449
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.649598,
+41.9402
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.651402,
+41.922467
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.651701,
+41.921698
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.653534,
+41.920915
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.657902,
+41.918801
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.658728,
+41.920846
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.659699,
+41.908302
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6603,
+41.9173
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.661802,
+41.909998
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 2,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.662001,
+41.91105
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.662148,
+41.918957
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.662175,
+41.920523
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.662189,
+41.91947
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.665867,
+41.92299
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.671002,
+41.919798
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.676087,
+41.92175
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.678802,
+41.922201
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.689703,
+41.924899
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.690542,
+41.92365
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.693457,
+41.92501
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.697235,
+41.924975
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 6,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7013,
+41.925901
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.702497,
+41.926447
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.702502,
+41.9265
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.702617,
+41.924896
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 5,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7038,
+41.925498
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7049,
+41.926101
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.708398,
+41.926201
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.708835,
+41.926359
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.710098,
+41.9248
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.710854,
+41.926323
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.711169,
+41.918281
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.712297,
+41.9265
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.714537,
+41.925935
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.718601,
+41.9266
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.72175,
+41.926828
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.723402,
+41.926899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.724166,
+41.926396
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 9,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.728299,
+41.9266
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.731908,
+41.91768
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.735,
+41.927601
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.736302,
+41.922522
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 11,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.737103,
+41.926999
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.737103,
+41.927198
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.738918,
+41.926747
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 8,
+"technologies": [
+"LTE",
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.743701,
+41.9281
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.745783,
+41.916766
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.74696,
+41.927588
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.747703,
+41.901498
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.747998,
+41.9134
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"UMTS"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.751603,
+41.9052
+]
+},
+"properties": {
+"net": 10,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.751801,
+41.9051
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.751848,
+41.925673
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 4,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.754933,
+41.926453
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7629,
+41.927099
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.764402,
+41.926899
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.764402,
+41.926899
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.769101,
+41.925498
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.770811,
+41.924353
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.773252,
+41.921688
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 2,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7763,
+41.923802
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.789302,
+41.920165
+]
+},
+"properties": {
+"net": 50,
+"n_cells": 3,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.790902,
+41.921798
+]
+},
+"properties": {
+"net": 88,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.792801,
+41.919
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"LTE"
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8061,
+41.912801
+]
+},
+"properties": {
+"net": 1,
+"n_cells": 1,
+"technologies": [
+"GSM"
+]
+}
+}
+]
+}

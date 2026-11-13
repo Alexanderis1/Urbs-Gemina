@@ -1,12 +1,14 @@
 # One active provider per layer. To go live with the administration's own data,
-# change the value on the right (e.g. sim_loops -> pa_datex) and add credentials.
-# Providers marked "planned" are not implemented yet and are skipped at startup.
+# change the value on the right (e.g. sim_loops -> pa_datex) and add credentials
+# or file paths in config/provider_settings.yaml. No code changes (Gate C).
+# Every provider id is listed in twin/providers/registry.py.
 
-traffic_flow: sim_loops            # later: pa_datex   (Roma Mobilita loop stations, DATEX II)
-antenna_register: sim_register     # planned. later: pa_register (Model A applications)
-emf_measurements: sim_emf_points   # planned. later: arpa_points
-emf_baseline: cartoradio_grid      # planned. restricted: runtime read only, never stored in the repo
-transit: roma_gtfs_rt              # planned. real, open (CC BY-SA)
-air_quality: eea_hourly            # planned. real, open
-rain: dpc_radar                    # planned. real, open
-context_layers: roma_wfs           # real, open (see scripts/fetch_static_layers.py)
+traffic_flow: sim_loops                  # later: pa_datex   (Roma Mobilita loop stations, DATEX II)
+antenna_register: sim_register           # later: pa_register_file (export with Model A fields) or pa_register
+antenna_applications: sim_applications   # demo permit inbox
+emf_measurements: sim_emf_points         # later: arpa_points
+emf_baseline: cartoradio_grid            # restricted: runtime read only, never stored in the repo
+transit: roma_gtfs_rt                    # real, open (CC BY-SA)
+air_quality: eea_hourly                  # real, open
+rain: dpc_radar                          # real, open
+context_layers: roma_wfs                 # real, open (see scripts/fetch_static_layers.py)

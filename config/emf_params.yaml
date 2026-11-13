@@ -5,6 +5,7 @@ model_error_sigma_db:
 
 typical_eirp_w:            # per sector; ASSUMPTIONS until real Model A data is available
   "800":  {value: 1000, basis: assumption}
+  "900":  {value: 1000, basis: assumption}
   "1800": {value: 2000, basis: assumption}
   "2100": {value: 2000, basis: assumption}
   "3500": {value: 5000, basis: "assumption (5G massive MIMO, before statistical power reduction)"}
@@ -13,3 +14,8 @@ simulated_register:
   seed: 42
   sector_azimuths_deg: [0, 120, 240]
   mast_height_above_roof_m: {min: 3, max: 6, basis: assumption}
+  mechanical_tilt_deg: {min: 2, max: 8, basis: "assumption: typical urban macro down-tilt"}
+  eirp_relative_sigma: {value: 0.5, basis: "assumption: synthetic EIRP is uncertain by about a factor of 1.5"}
+  height_sigma_m: {value: 3.0, basis: "assumption: building height not yet from the city model"}
+  technology_shares: {LTE: 0.6, NR: 0.25, UMTS: 0.1, GSM: 0.05, basis: "assumption for generated sites only"}
+  application_dates: {first: "2015-01-01", last: "2026-10-31", basis: "assumption"}
