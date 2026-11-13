@@ -1,4 +1,4 @@
-# Open decisions: 3D viewer and hosting
+# Decisions: 3D viewer, hosting and build organisation
 
 C=NN is a confidence score from 1 to 100. No time estimates.
 
@@ -52,3 +52,22 @@ Lovable hosts the front end and a built-in backend ("Cloud") on Supabase technol
 | H3. Lovable only | Everything in edge functions and SQL | Simplest | No belief layers beyond trivial ones, no simulation: the permit check works, the "twin" part does not |
 
 Recommended: **H1**, with H2 as the fallback for GPU jobs if Modal credit runs out. Whatever is chosen, heavy results (grids, scenario outputs) are precomputed and cached so the live demo never waits on a cold GPU.
+
+## 3. Build organisation (decided 13 Nov 2026)
+
+Decided by Alessandro: no time-based scope cuts. The elements are built in parallel, one agent thread per workstream (WS1 to WS10, see `docs/workstreams.md`). The design hub owns the shared interfaces and records each workstream's final choices here.
+
+## 4. Workstream decisions
+
+| Workstream | Decision | Status |
+|---|---|---|
+| WS6 scenarios | Road closure runs on SUMO only, no simplified fallback model. Scenario kinds: antenna, population_exposure, road_closure (heavy) | Decided by Alessandro |
+| Hub | Tool envelope gains top-level `status` (ok / not_available / refused) + `reason`, `cached`, and `not_available` as a data kind; `run_id` also hashes the driving config files | Agreed |
+| Hub | Area ids: `city`, `municipio:<1-15>`, `zone:<CODE>`, or a GeoJSON polygon (300 m circle as a polygon). One parser in `twin/tools/area.py` | Agreed |
+| WS10 sports | Facility type is public / school / private / unclassified; "private" only when a source states it, never inferred from appearing only in OSM or on the web | Agreed |
+| WS4 tools | Tool list adds `permit_report`, `sports_facilities`, `sport_coverage`; `estimate_field` takes a point or an area | Agreed |
+| Hub | Census sections handed over as `data/processed/census_sections.geojson` with fixed field names (`sez_id`, `residents`, `children_0_14`, `municipio`, `zone`), normalised by WS1 at ingest | Agreed |
+| WS2 city model | Building heights from GlobalBuildingAtlas (CC BY-NC, full coverage) because the project is non-commercial; attribution in DATA_LICENSES and manifest. The rule is open *formats*, met by PMTiles | Decided by Alessandro |
+| Hosting | Static tiles (buildings.pmtiles etc.) hosted on Cloudflare R2, public bucket `urbs-gemina-tiles` with CORS + Range; uploaded by `scripts/build_city_model.py --upload`; the app reads `VITE_BUILDINGS_PMTILES_URL` | Decided by Alessandro |
+| Hub (rule) | Only traffic loop sensors may be simulated. Every other sensor or layer uses real sources + models + sensor fusion, labelled real or estimated. `sim_register` -> estimated register (OpenCelliD + OSM, EIRP fitted to Cartoradio, azimuth unknown, uncalibrated ~9 dB median error); `sim_emf_points` -> real ARPA points (DTS5887 table) + fused field; `sim_applications` dropped. What-if variants may hold hypothetical inputs | Decided by Alessandro |
+| Hosting | buildings.pmtiles live at https://pub-92f3b81279724b93b2c580e6b7c1cb37.r2.dev/buildings.pmtiles (Range 206, CORS for Lovable + localhost) | Done 13 Nov |
