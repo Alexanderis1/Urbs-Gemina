@@ -176,3 +176,27 @@ def test_missing_names_the_flagged_figure() -> None:
     llm = ScriptedLLM([text_turn("There are 4 schools."), text_turn("There are 4 schools.")])
     out = answer("q", llm=llm, gateway=gw, tool_names=["context_check"])
     assert any("'4'" in m for m in out.missing)
+
+
+def test_disclosure_not_repeated_and_synthetic_follows_cited_runs() -> None:
+    real = make_envelope(tool="context_check", inputs={"lon": 1.0}, result={"count": 1, "sites": [{"distance_m": 182.4}]},
+                         data_kinds={"schools": "real"}, sources=[])
+    sim = make_envelope(tool="data_status", inputs={}, result={"layers": 3}, data_kinds={"loops": "simulated"},
+                        sources=[], synthetic=True)
+
+    class TwoRunGateway(FakeGateway):
+        def call(self, name: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
+            self.executed.append(name)
+            return real if name == "context_check" else sim
+
+    gw = TwoRunGateway()
+    gw.specs["data_status"] = ToolSpec("data_status", "status", {"type": "object"})
+    rid = real["run_id"][:12]
+    llm = ScriptedLLM([
+        tool_turn(ToolCall("t1", "context_check", {"lon": 1.0}), ToolCall("t2", "data_status", {})),
+        text_turn(f"Sono un'intelligenza artificiale. Una scuola è a 182 m [run:{rid}]."),
+    ])
+    out = answer("q", llm=llm, gateway=gw, tool_names=["context_check", "data_status"], first_message=True, language="it")
+    assert out.verified, out.problems
+    assert out.text.lower().count("intelligenza artificiale") == 1
+    assert out.synthetic is False and out.data_kinds == {"schools": "real"}

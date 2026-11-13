@@ -246,5 +246,49 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
     return report
 
 
+def _line_numbers(line: str, cfg: AgentConfig, echo: list[float]) -> list[tuple[str, bool]]:
+    body = URL.sub(" ", line)
+    for pat in cfg.verifier.exempt_patterns:
+        body = re.sub(pat, " ", body, flags=re.IGNORECASE)
+    out = []
+    for m in NUMBER.finditer(body):
+        token = m.group(0).rstrip("% ").lstrip("+-")
+        pct = bool(m.group(1))
+        if not (echo and _matches(token, pct, echo)):
+            out.append((token, pct))
+    return out
+
+
+def _exact(token: str, is_percent: bool, values: Iterable[float]) -> bool:
+    readings = [x for x, _ in _readings(token)]
+    for v in values:
+        targets = (abs(v), abs(v) * 100.0) if is_percent else (abs(v),)
+        if any(abs(x - t) < 1e-9 for x in readings for t in targets):
+            return True
+    return False
+
+
+def auto_cite(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig | None = None,
+              question: str = "") -> str:
+    """Attach a citation, by code, to a line that has figures but no citation, when one tool run of
+    this turn contains every figure on that line. Figures found in no tool output stay uncited, so
+    the verifier still blocks them: this fixes layout (headings, bullets), never content."""
+    cfg = config or load_agent_config()
+    echo = list(_walk_numbers(question))
+    ok_runs = [r for r in runs.values() if is_ok(r)]
+    pools = [(str(r["run_id"]), list(_walk_numbers({k: r.get(k) for k in ("inputs", "result", "sources")}))) for r in ok_runs]
+    out_lines = []
+    for line in text.split("\n"):
+        nums = _line_numbers(CITATION.sub(" ", line), cfg, echo)
+        if nums and not CITATION.search(line):
+            hits = [(sum(_exact(t, pct, vals) for t, pct in nums), i, rid) for i, (rid, vals) in enumerate(pools)
+                    if all(_matches(t, pct, vals) for t, pct in nums)]
+            if hits:
+                best = max(hits)  # most figures written exactly as in the tool output, then the latest run
+                line = line.rstrip() + f" [run:{best[2][:12]}]"
+        out_lines.append(line)
+    return "\n".join(out_lines)
+
+
 def describe_problems(report: VerifierReport) -> str:
     return "\n".join(f"- {p.code}: {p.message}" + (f' (in: "{p.sentence}")' if p.sentence else "") for p in report.problems)
