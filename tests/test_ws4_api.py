@@ -83,7 +83,10 @@ def test_data_status_without_body(client: TestClient) -> None:
 def test_tools_of_other_streams_answer_not_available_until_wired(client: TestClient) -> None:
     r = client.post("/tools/legal_lookup", json={"question": "limite di attenzione campi elettromagnetici"})
     assert r.status_code == 200
-    assert r.json()["status"] == "not_available" and r.json()["reason"]  # not wired, or no EXA_API_KEY here
+    env = r.json()
+    assert env["tool"] == "legal_lookup" and env["status"] in ("ok", "not_available")
+    if env["status"] == "not_available":  # WS7 not merged, or no EXA_API_KEY
+        assert env["reason"]
 
 
 def test_run_scenario_refuses_or_reports(client: TestClient) -> None:
