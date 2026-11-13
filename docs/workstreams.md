@@ -16,15 +16,20 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
 ## Shared interfaces (frozen unless the hub changes them)
 
 1. **Provider contract**: `twin/providers/base.py` (`Provider.describe() -> ProviderInfo`, `Provider.fetch(bbox, start, end) -> Iterable[Observation]`, `kind` in open | simulated | pa | restricted, `synthetic`, `redistribution`). Owned by the hub.
-2. **Area argument**: every tool takes `area` = `"city"`, a municipio id, an urban-zone id, or a GeoJSON polygon (see `config/areas.yaml`). Heavy tools refuse areas above `heavy_tools_max_area_km2`.
+2. **Area argument**: every tool takes `area` as one of these, everywhere (tools, `map_actions`, UI, voice):
+   - `"city"`: Roma Capitale;
+   - `"municipio:<n>"` with `n` an integer 1 to 15 (municipio I = `municipio:1`);
+   - `"zone:<code>"` with `code` the urban-zone code from layer `DIPDIT:ZoneUrbanistiche`, as a string, upper case (e.g. `zone:1A`);
+   - a GeoJSON Polygon or MultiPolygon object in WGS84 (e.g. the 300 m circle around a point, as a 64-vertex polygon).
+   Parsing lives in one place, owned by WS4 (`twin/tools/area.py`); others import it. Heavy tools refuse areas above `heavy_tools_max_area_km2` (status `refused`).
 3. **Tool response envelope** (every tool, JSON):
    `{ "run_id": str, "tool": str, "inputs": {...}, "result": {...}, "data_kinds": {"<layer>": "real|estimated|simulated"}, "sources": [{"id", "url?", "retrieved_at"}], "synthetic": bool, "warnings": [str] }`.
    Additions agreed 13 Nov (from WS6): top-level `"status": "ok" | "not_available" | "refused"` with `"reason": str` when not ok (`refused` = guardrail, e.g. heavy run on too large an area); top-level `"cached": bool`; `data_kinds` values may also be `"not_available"` for a missing input. Results that are not `ok` are never cached.
    `run_id` = SHA-256 of tool name + inputs + data snapshot hashes + hashes of the config files that drive the result (thresholds, emf_params, areas, scenarios, beliefs). Estimates carry `p5`, `p50`, `p95` and `calibration: "calibrated|uncalibrated"`.
-4. **Tool list and HTTP API**: `POST /tools/<name>` on the tool API for `resolve_place`, `context_check`, `estimate_field`, `query_layer`, `run_scenario`, `legal_lookup`, `find_dataset`, `data_status`. Schemas published by the tools stream in `twin/api/schemas/*.json`; other streams consume them.
+4. **Tool list and HTTP API**: `POST /tools/<name>` on the tool API for `resolve_place`, `context_check`, `estimate_field`, `query_layer`, `run_scenario`, `legal_lookup`, `find_dataset`, `data_status`. Final schemas published by WS4 in `twin/api/schemas/*.json`. Until then WS7's drafts in `agents/tool_schemas_draft.json` are the reference (`resolve_place {text} -> {lon, lat, municipio, urban_zone}`, `context_check {point:[lon,lat], radius_m}`); WS4 aligns with them or tells the hub what differs.
 5. **Map data handoff**: static layers as GeoParquet in `data/processed/` (git-ignored) plus tiles (PMTiles) for the viewer; belief layers served as GeoJSON / H3 cell lists via `query_layer`.
 6. **Answer contract**: `agents/prompts/answer_contract.md`.
-7. **Orchestrator hand-over** (chat and voice both use it; WS7 implements, WS8 and WS9 consume), defined in `voice/contract.py` (PR #2) until WS7 moves it to `agents/`:
+7. **Orchestrator hand-over** (chat and voice both use it; WS7 implements, WS8 and WS9 consume), implemented by WS7 in `agents/contract.py` (PR #6); voice and web import from there:
    `ask(TwinQuestion{question, tier, language, area, mode, conversation_id}) -> TwinAnswer{text, verified, run_ids, sources, data_kinds, synthetic, missing, map_actions}`. `tier` (citizen | office) is set server-side, never by the caller or the model. `run_ids` are the tool envelope run ids.
 8. **Map actions**: `map_actions` entries are `{"tool": <client tool name>, "args": {...}}`; client tools listed in `voice/client_tools.json` (`fly_to`, `show_area`, `show_layer`, `show_radius`, `open_screen`). WS8's map implements them for both chat and voice.
 
