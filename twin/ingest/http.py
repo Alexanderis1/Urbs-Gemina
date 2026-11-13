@@ -1,6 +1,8 @@
 """The one place where ingest talks to the network, so tests can replace it."""
 from __future__ import annotations
 
+import ssl
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from typing import Callable
@@ -28,6 +30,18 @@ def urllib_fetch(request: HttpRequest) -> bytes:
         headers["Content-Type"] = request.content_type
     method = "POST" if request.body is not None else "GET"
     req = urllib.request.Request(request.url, data=request.body, headers=headers, method=method)
-    with urllib.request.urlopen(req, timeout=request.timeout_s) as response:  # noqa: S310 (hosts come from config)
-        body: bytes = response.read()
-    return body
+    try:
+        with urllib.request.urlopen(req, timeout=request.timeout_s) as response:  # noqa: S310 (hosts come from config)
+            body: bytes = response.read()
+        return body
+    except urllib.error.URLError as error:
+        if "HANDSHAKE_FAILURE" not in str(error.reason):
+            raise
+    # Some public-sector servers (e.g. dati.salute.gov.it) only offer ciphers that OpenSSL 3
+    # rejects at its default security level. Retry once at level 1; certificates and host
+    # names are still verified.
+    context = ssl.create_default_context()
+    context.set_ciphers("DEFAULT:@SECLEVEL=1")
+    with urllib.request.urlopen(req, timeout=request.timeout_s, context=context) as response:  # noqa: S310
+        legacy_body: bytes = response.read()
+    return legacy_body

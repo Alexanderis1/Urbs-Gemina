@@ -225,6 +225,24 @@
       "licence": "Copernicus open data, free reuse with attribution",
       "redistribution": true,
       "status": "verified (downloaded 2026-11-13)"
+    },
+    "salute_open_data": {
+      "kind": "real",
+      "endpoint": "https://www.dati.salute.gov.it",
+      "access": "CSV download, no key",
+      "licence": "Italian Open Data Licence v2.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)",
+      "what": "Ministry of Health open data: hospital beds per structure 2023, family health centres 2022, national pharmacy register (daily); addresses geocoded offline on OSM"
+    },
+    "salute_asl": {
+      "kind": "real",
+      "endpoint": "https://www.dati.salute.gov.it",
+      "access": "CSV download, no key",
+      "licence": "Italian Open Data Licence v2.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)",
+      "what": "Ministry of Health open data: ASL-municipio correspondence with residents 2024 and ASL structures/activity 2022, joined to the Roma Capitale municipi"
     }
   },
   "snapshots": {
@@ -2318,6 +2336,140 @@
         "geojson": {
           "path": "data/processed/rivers_osm.geojson",
           "sha256": "d287d99017f463fbc5f9a69aa213bdf1c66d13e874ca38f4d41918389aec1f86"
+        }
+      },
+      "warnings": []
+    },
+    "hospital_beds_2023": {
+      "source": "salute_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-13T23:10:52Z",
+      "notes": "Hospitals and accredited private clinics in Rome with beds on 1 Jan 2023 (acute, rehabilitation, long-term care). Positions geocoded on OSM addresses.",
+      "request_url": "https://www.dati.salute.gov.it/sites/default/files/2025-07/Posti%20letto%20per%20struttura%20ospedaliera_2023.csv",
+      "raw_sha256": "5678641553a0fdaf9b62891634524d61198af20de24211210e9ea87e5398bbce",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 1714
+      },
+      "geocoding": {
+        "address": 34,
+        "street": 26,
+        "not_found": 3
+      },
+      "status": "ok",
+      "features": 60,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/hospital_beds_2023.parquet",
+          "sha256": "abb112d0418804c9d7f0d11e3384facab9b43ecc3d12c38f938b82bc4ef33d12"
+        },
+        "geojson": {
+          "path": "data/processed/hospital_beds_2023.geojson",
+          "sha256": "b3eeb352a753ce65d377bae79d7e067786a575cbd4bd07ec4bef7e41010b6261"
+        }
+      },
+      "warnings": []
+    },
+    "consultori_roma": {
+      "source": "salute_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-13T23:11:40Z",
+      "notes": "Family health centres (consultori familiari) in Rome, 2022 register",
+      "request_url": "https://www.dati.salute.gov.it/sites/default/files/2024-05/Consultori_familiari.csv",
+      "raw_sha256": "3d65734341c0fb89e2e1e1993cf03df166a53d807b57351cb2c2c5a43919553e",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 2101
+      },
+      "geocoding": {
+        "address": 21,
+        "street": 34,
+        "not_found": 9
+      },
+      "status": "ok",
+      "features": 55,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/consultori_roma.parquet",
+          "sha256": "e1134f4674d066d75fea8c52200e7a3acf0eb78b6e1fe4723c39e1d0dd31cf47"
+        },
+        "geojson": {
+          "path": "data/processed/consultori_roma.geojson",
+          "sha256": "44a8efe2064628a6a149889b9a58990b49a05dbf8ee7eba98c44b626c1af01b3"
+        }
+      },
+      "warnings": []
+    },
+    "pharmacies_roma": {
+      "source": "salute_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-13T23:12:17Z",
+      "notes": "Open pharmacies in Rome from the national register (updated daily). The register's own coordinates are often wrong (e.g. Testaccio placed in Tiburtino), so the address is geocoded on OSM instead.",
+      "request_url": "https://www.dati.salute.gov.it/sites/default/files/opendata/FRM_FARMA_5_20261113.csv",
+      "raw_sha256": "32a38b043e25e9c228022ebfc764126dcdc21e2947c22a73c5cec36a32c51673",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 58421
+      },
+      "geocoding": {
+        "address": 265,
+        "street": 491,
+        "not_found": 74
+      },
+      "status": "ok",
+      "features": 756,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/pharmacies_roma.parquet",
+          "sha256": "6c2c10a8ee9848207d5730315856756fcf3d31f2b26d20dffcd781c784f6bf21"
+        },
+        "geojson": {
+          "path": "data/processed/pharmacies_roma.geojson",
+          "sha256": "9ef04e8af9542010627272b3f270a1c9dca2aaf24337ef9c5e466a582fb43235"
+        }
+      },
+      "warnings": []
+    },
+    "asl_roma": {
+      "source": "salute_asl",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-13T23:12:58Z",
+      "notes": "ASL Roma 1, 2, 3 as unions of their municipi, with 2024 residents, 2022 ASL activity figures and facility counts. The Ministry's 2022 table gives ROMA 1 and ROMA 2 identical GP and paediatrician figures (918 / 171): likely a copy error in the source (C=40 for those two values).",
+      "request_url": [
+        "https://www.dati.salute.gov.it/sites/default/files/2026-05/ASL_comuni_popolazione_2024.csv",
+        "https://www.dati.salute.gov.it/sites/default/files/2024-05/Strutture_e_attivit%C3%A0_ASL.csv"
+      ],
+      "raw_sha256": {
+        "mapping": "8c890e8a10ef0733b75049748faf4a311a25186227d7965c97939a2006010327",
+        "indicators": "da832410b394b466e259bb0051a7a9b7cf5ec98343b0f51adc74aa1079b1e26a"
+      },
+      "missing_inputs": [],
+      "status": "ok",
+      "features": 3,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/asl_roma.parquet",
+          "sha256": "3f3306e15f0562e1c2226bfa1a049c82ac1ae71789ff029fd224298f9648253b"
+        },
+        "geojson": {
+          "path": "data/processed/asl_roma.geojson",
+          "sha256": "e7e7b2453cba8b04b61a14354fdea8684d9635f3427ee0d7f8ae5124392dd2fb"
         }
       },
       "warnings": []

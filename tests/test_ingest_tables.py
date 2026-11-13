@@ -137,3 +137,63 @@ def test_public_bodies_are_geocoded_offline_without_people(tmp_path: Path) -> No
     text = json.dumps(json.loads((tmp_path / "public_bodies_ipa.geojson").read_text(encoding="utf-8")))
     for secret in ("Rossi", "Bianchi", "x@y.it", "Mario"):
         assert secret not in text
+
+
+# --- health system (Ministry of Health open data) --------------------------------
+
+from twin.ingest.tables import aggregate_rows  # noqa: E402
+
+
+def test_bed_rows_are_summed_per_hospital_with_one_column_per_type() -> None:
+    rows = [
+        {"code": "1", "name": "A", "type": "ACUTI", "beds": "1.200"},
+        {"code": "1", "name": "A", "type": "RIABILITAZIONE", "beds": "30"},
+        {"code": "2", "name": "B", "type": "ACUTI", "beds": "10"},
+    ]
+    spec = {"by": ["code"], "first": ["name"], "pivot": {"column": "type", "value": "beds", "prefix": "beds_"},
+            "total": "beds_total"}
+    out = sorted(aggregate_rows(rows, spec), key=lambda r: r["code"])
+    assert out[0] == {"code": "1", "name": "A", "beds_acuti": "1200", "beds_riabilitazione": "30", "beds_total": "1230"}
+    assert out[1]["beds_total"] == "10" and out[1].get("beds_riabilitazione", "0") == "0"
+
+
+ASL_MAP = (
+    "ANNO;CODICE REGIONE;DENOMINAZIONE REGIONE;CODICE AZIENDA;DENOMINAZIONE AZIENDA;CODICE COMUNE;COMUNE;MASCHI;FEMMINE;TOTALE\n"
+    "2024;120;LAZIO ;201;ROMA 1;058091;ROMA (Municipi 1, 2);10;10;1.000\n"
+    "2024;120;LAZIO ;202;ROMA 2;058091;ROMA (Municipi 3);5;5;500\n"
+    "2024;120;LAZIO ;203;ROMA 3;058120;FIUMICINO ;1;1;80\n"
+)
+ASL_FACTS = (
+    "Anno di Riferimento;Codice Regione;Codice Azienda Sanitaria Locale;Regione ;Denominazione ASL;Totale Residenti;"
+    "Totale medici;Totale pediatri;Ambulatori e Laboratori;Numero medio punti di guardia medica;"
+    "Assistenza Domiciliare Integrata Casi Trattati\n"
+    "2022;120;201;LAZIO;ROMA 1;990;10;2;5;1;1.500\n"
+    "2022;120;202;LAZIO;ROMA 2;480;4;1;3;1;700\n"
+)
+
+
+def test_asl_areas_are_built_from_municipi_with_official_figures(tmp_path: Path) -> None:
+    from shapely.geometry import Point, box
+
+    gpd.GeoDataFrame({"municipio": [1, 2, 3]},
+                     geometry=[box(12.40, 41.80, 12.45, 41.85), box(12.45, 41.80, 12.50, 41.85),
+                               box(12.50, 41.80, 12.55, 41.85)], crs="EPSG:4326").to_parquet(tmp_path / "municipi.parquet")
+    gpd.GeoDataFrame({"beds_total": [100, 50]}, geometry=[Point(12.42, 41.82), Point(12.52, 41.82)],
+                     crs="EPSG:4326").to_parquet(tmp_path / "hospital_beds_2023.parquet")
+    gpd.GeoDataFrame({"name": ["c1", "c2"]}, geometry=[Point(12.47, 41.82), Point(12.52, 41.83)],
+                     crs="EPSG:4326").to_parquet(tmp_path / "consultori_roma.parquet")
+
+    def fetch(request: HttpRequest) -> bytes:
+        return (ASL_MAP if "comuni" in request.url.lower() else ASL_FACTS).encode("latin-1")
+
+    entry = ingest_layer(CATALOG.layers["asl_roma"], CATALOG, fetch, tmp_path, NOW)
+    assert entry["status"] == "ok", entry.get("error")
+    frame = gpd.read_parquet(tmp_path / "asl_roma.parquet").set_index("asl_name")
+    assert list(frame.index) == ["ROMA 1", "ROMA 2"]  # Fiumicino is outside Roma Capitale
+    one = frame.loc["ROMA 1"]
+    assert one["municipi"] == "1, 2" and one["residents_2024"] == 1000
+    assert one["gps_2022"] == 10 and one["home_care_cases_2022"] == 1500
+    assert one["hospital_beds"] == 100 and one["consultori"] == 1
+    assert one["beds_per_1000"] == pytest.approx(100.0)
+    assert one["residents_per_gp"] == pytest.approx(99.0)  # official 2022 residents / GPs
+    assert frame.loc["ROMA 2", "consultori"] == 1

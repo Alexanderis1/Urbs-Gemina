@@ -68,6 +68,31 @@ def safe_name(name: str, patterns: Sequence[str], label: str) -> str:
     return label if any(re.search(p, name, re.I) for p in patterns) else name.strip()
 
 
+def italian_int(text: str) -> int:
+    """'1.200' -> 1200 (Italian thousands separator); empty or '-' -> 0."""
+    cleaned = str(text).strip().replace(".", "").split(",")[0]
+    return int(cleaned) if cleaned.lstrip("-").isdigit() else 0
+
+
+def aggregate_rows(rows: list[Row], spec: dict[str, Any]) -> list[Row]:
+    """Sum rows per key. ``pivot`` turns one row per category into one column per category."""
+    by = [str(c) for c in spec["by"]]
+    first = [str(c) for c in spec.get("first") or []]
+    pivot = spec.get("pivot") or {}
+    total = spec.get("total")
+    groups: dict[tuple[str, ...], Row] = {}
+    for row in rows:
+        key = tuple(row.get(c, "") for c in by)
+        group = groups.setdefault(key, {**{c: row.get(c, "") for c in by}, **{c: row.get(c, "") for c in first}})
+        if pivot:
+            column = str(pivot["prefix"]) + normalise_street(row.get(str(pivot["column"]), "")).replace(" ", "_")
+            value = italian_int(row.get(str(pivot["value"]), ""))
+            group[column] = str(italian_int(group.get(column, "0")) + value)
+            if total:
+                group[str(total)] = str(italian_int(group.get(str(total), "0")) + value)
+    return list(groups.values())
+
+
 # --- Addresses ---------------------------------------------------------------------
 
 def normalise_street(text: str) -> str:
@@ -214,12 +239,17 @@ def _selected(rows: list[Row], options: dict[str, Any]) -> tuple[list[Row], int]
     equals = dict(options.get("filter") or {})
     any_of = {str(k): list(v) for k, v in (options.get("filter_in") or {}).items()}
     kept = [r for r in rows if keep_row(r, equals, any_of)]
-    return kept, len(rows) - len(kept)
+    filtered = len(rows) - len(kept)
+    if options.get("aggregate"):
+        kept = aggregate_rows(kept, dict(options["aggregate"]))
+    return kept, filtered
 
 
 def _record(row: Row, options: dict[str, Any]) -> dict[str, Any]:
     columns: dict[str, str] = {str(k): str(v) for k, v in (options.get("columns") or {}).items()}
     record: dict[str, Any] = {out: row.get(source, "") for out, source in columns.items()}
+    for column in options.get("numeric_columns") or []:
+        record[str(column)] = italian_int(record.get(str(column), ""))
     rule = options.get("generic_name")
     if rule and "name" in record:
         record["name"] = safe_name(str(record["name"]), list(rule["patterns"]), str(rule["label"]))

@@ -1,5 +1,7 @@
 import hashlib
 import json
+
+import pytest
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -61,3 +63,34 @@ def test_radar_pull_follows_the_presigned_link(tmp_path: Path) -> None:
     record = pull_feed(CATALOG.live_feeds["dpc_radar_vmi"], fetch, tmp_path, NOW)
     assert record["product_time"] == "2026-11-13T19:20:00Z"
     assert "sig=" not in record["url"]  # presigned query string is not logged
+
+
+def test_fetch_retries_once_with_older_ciphers_on_handshake_failure(monkeypatch: "pytest.MonkeyPatch") -> None:
+    import ssl
+    import urllib.error
+    import urllib.request
+
+    from twin.ingest import http
+
+    contexts: list[object] = []
+
+    class Response:
+        def __enter__(self) -> "Response":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b"ok"
+
+    def fake_urlopen(req: object, timeout: float, context: object = None) -> Response:
+        contexts.append(context)
+        if context is None:
+            raise urllib.error.URLError(ssl.SSLError(1, "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] handshake failure"))
+        return Response()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    assert http.urllib_fetch(http.HttpRequest("https://old-server.example/x.csv")) == b"ok"
+    assert contexts[0] is None and isinstance(contexts[1], ssl.SSLContext)
+    assert contexts[1].verify_mode == ssl.CERT_REQUIRED  # certificates are still checked

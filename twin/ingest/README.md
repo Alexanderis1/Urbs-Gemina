@@ -60,6 +60,21 @@ name (s.a.s., s.n.c., doctors' practices) are replaced by a generic label.
 PTPR (Regione Lazio landscape plan, Tavole A and B plus the PTP 15/12 constraint layers)
 is the official landscape source: those layers carry `theme: landscape_ptpr`.
 
+## Health system of Rome
+
+From the Ministry of Health open data (Italian Open Data Licence v2.0):
+
+- `hospital_beds_2023`: every hospital and accredited clinic in Rome with beds on 1 Jan 2023
+  (`beds_acute`, `beds_rehab`, `beds_long_term`, `beds_total`), one row per structure;
+- `consultori_roma`: family health centres; `pharmacies_roma`: open pharmacies (register
+  updated daily; its own coordinates are often wrong, so addresses are geocoded instead);
+- `asl_roma`: ASL Roma 1, 2 and 3 as unions of their municipi (official ASL-municipio table),
+  with residents, GPs, paediatricians, clinics, out-of-hours points, home care cases, counts of
+  the layers above inside each area and simple ratios (`beds_per_1000`, `residents_per_gp`).
+  Run it after the three facility layers.
+
+All positions come from the offline OSM address geocoder (`geocode_quality`).
+
 ## Flood context (for WS6)
 
 - `flood_hazard_pgra`: ISPRA flood hazard areas, field `hazard` = P3 (20-50 years), P2

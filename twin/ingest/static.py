@@ -27,6 +27,7 @@ from typing import Any, Iterable, Sequence
 from twin.ingest.catalog import BBox, Catalog, LayerSpec
 from twin.ingest.arcgis import export_image, query_features
 from twin.ingest.census import build_census_sections
+from twin.ingest.health_areas import build_asl_areas
 from twin.ingest.osm_extract import extract_file, read_elements
 from twin.ingest.sensitive_sites import build_sensitive_sites
 from twin.ingest.tables import AddressIndex, geocoded_frame, osm_address_records, points_frame, read_table
@@ -274,6 +275,8 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
             entry.update(report)
         elif catalog.sources[layer.source].protocol == "istat_census":
             frame = _census_frame(layer, catalog, fetch, entry)
+        elif catalog.sources[layer.source].protocol == "asl_areas":
+            frame = build_asl_areas(layer, out_dir, fetch, entry)
         elif catalog.sources[layer.source].protocol in ("csv_points", "csv_geocoded"):
             frame = _table_frame(layer, catalog, fetch, entry)
         else:

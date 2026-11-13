@@ -64,6 +64,15 @@ sources:
     # Copernicus Land Monitoring Service, High Resolution Layer Imperviousness Density 2018.
     protocol: arcgis_image
     url: "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer"
+  salute_open_data:
+    # Ministry of Health open data (NSIS statistics). Tables with addresses only; geocoded
+    # offline on the OSM extract like IndicePA.
+    protocol: csv_geocoded
+    url: "https://www.dati.salute.gov.it"
+  salute_asl:
+    # Same portal: ASL-to-municipio table and ASL activity figures, joined to the municipi.
+    protocol: asl_areas
+    url: "https://www.dati.salute.gov.it"
   istat_census:
     protocol: istat_census
     url: "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip"
@@ -340,6 +349,94 @@ layers:
         basis: "IPA lists a building name or a misspelt street for these bodies; replaced by the postal address of the same building"
         "Palazzo Viminale": "Piazza del Viminale, 1"
         "Piazzale della Farnersina, 1": "Piazzale della Farnesina, 1"
+
+  # --- Health system of Rome (ASL Roma 1, 2, 3) ------------------------------------
+  # Ministry of Health open data, Italian Open Data Licence v2.0. Run hospital_beds_2023,
+  # consultori_roma and pharmacies_roma before asl_roma, which counts them per ASL.
+  hospital_beds_2023:
+    source: salute_open_data
+    data_kind: real
+    theme: health_system
+    notes: "Hospitals and accredited private clinics in Rome with beds on 1 Jan 2023 (acute, rehabilitation, long-term care). Positions geocoded on OSM addresses."
+    options:
+      url: "https://www.dati.salute.gov.it/sites/default/files/2025-07/Posti%20letto%20per%20struttura%20ospedaliera_2023.csv"
+      delimiter: ";"
+      encoding: latin-1
+      filter: {Codice Regione: "120", Comune: ROMA}
+      aggregate:
+        by: [Codice struttura]
+        first: [Denominazione struttura, Indirizzo, Descrizione tipo struttura, Codice Azienda]
+        pivot: {column: Tipo di Disciplina, value: Totale posti letto, prefix: beds_}
+        total: beds_total
+      address_column: Indirizzo
+      address_source: osm
+      columns: {facility_code: Codice struttura, name: Denominazione struttura, facility_type: Descrizione tipo struttura,
+                azienda_code: Codice Azienda, beds_acute: beds_acuti, beds_rehab: beds_riabilitazione,
+                beds_long_term: beds_lungodegenza, beds_total: beds_total}
+      numeric_columns: [beds_acute, beds_rehab, beds_long_term, beds_total]
+  consultori_roma:
+    source: salute_open_data
+    data_kind: real
+    theme: health_system
+    notes: "Family health centres (consultori familiari) in Rome, 2022 register"
+    options:
+      url: "https://www.dati.salute.gov.it/sites/default/files/2024-05/Consultori_familiari.csv"
+      delimiter: ";"
+      encoding: latin-1
+      filter: {Codice Regione: "120", Comune: ROMA}
+      address_column: Indirizzo
+      address_source: osm
+      columns: {facility_code: Codice struttura, name: Denominazione struttura, asl_name: Denominazione Azienda,
+                public_or_private: Tipo rapporto con il S.S.N.}
+  pharmacies_roma:
+    source: salute_open_data
+    data_kind: real
+    theme: health_system
+    notes: "Open pharmacies in Rome from the national register (updated daily). The register's own coordinates are often wrong (e.g. Testaccio placed in Tiburtino), so the address is geocoded on OSM instead."
+    options:
+      url: "https://www.dati.salute.gov.it/sites/default/files/opendata/FRM_FARMA_5_20261113.csv"
+      delimiter: ";"
+      encoding: utf-8-sig
+      filter: {comune: ROMA, data_fine_validita: "-"}
+      address_column: indirizzo
+      address_source: osm
+      columns: {pharmacy_code: cod_farmacia, name: descrizione_farmacia, kind: descrizione_tipologia}
+      generic_name:
+        basis: "Pharmacy company names often contain the owners' names; no personal data"
+        patterns: ['\bs\.?\s?a\.?\s?s\b', '\bs\.?\s?n\.?\s?c\b', '\bdott', '\bdr\.', '\bdi\b']
+        label: "Farmacia"
+  asl_roma:
+    source: salute_asl
+    data_kind: real
+    theme: health_system
+    notes: "ASL Roma 1, 2, 3 as unions of their municipi, with 2024 residents, 2022 ASL activity figures and facility counts. The Ministry's 2022 table gives ROMA 1 and ROMA 2 identical GP and paediatrician figures (918 / 171): likely a copy error in the source (C=40 for those two values)."
+    options:
+      mapping_url: "https://www.dati.salute.gov.it/sites/default/files/2026-05/ASL_comuni_popolazione_2024.csv"
+      indicators_url: "https://www.dati.salute.gov.it/sites/default/files/2024-05/Strutture_e_attivit%C3%A0_ASL.csv"
+      encoding: latin-1
+      region_code: "120"
+      comune_code: "058091"
+      municipi_layer: municipi
+      municipio_field: municipio
+      indicator_columns:
+        residents_2022: Totale Residenti
+        children_2022: Residenti in Età Infantile
+        elderly_2022: Residenti Anziani
+        gps_2022: Totale medici
+        pediatricians_2022: Totale pediatri
+        outpatient_clinics_2022: Ambulatori e Laboratori
+        out_of_hours_points_2022: Numero medio punti di guardia medica
+        home_care_cases_2022: Assistenza Domiciliare Integrata Casi Trattati
+      facility_counts:
+        hospitals: {layer: hospital_beds_2023}
+        hospital_beds: {layer: hospital_beds_2023, sum: beds_total}
+        consultori: {layer: consultori_roma}
+        pharmacies: {layer: pharmacies_roma}
+      ratios:
+        basis: "Simple divisions of the official figures above; residents of the same year as the numerator where possible"
+        beds_per_1000: {numerator: hospital_beds, denominator: residents_2024, scale: 1000}
+        residents_per_gp: {numerator: residents_2022, denominator: gps_2022}
+        residents_per_pharmacy: {numerator: residents_2024, denominator: pharmacies}
 
   # --- One merged layer of sensitive sites ------------------------------------
   # Inputs are read from data/processed, in this order. Official layers come first;
