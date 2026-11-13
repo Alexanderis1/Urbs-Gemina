@@ -256,3 +256,19 @@ def test_cams_answers_a_small_area_and_a_now_window() -> None:
     observations = list(provider.fetch(small, now, now))
     assert [obs.observed_at.hour for obs in observations] == [8]
     assert observations[0].values["no2"] == 30.0
+
+
+def test_osm_masts_also_read_from_geojson(tmp_path: Path) -> None:
+    path = tmp_path / "masts.geojson"
+    path.write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [12.4088, 41.8276]},
+         "properties": {"osm_id": "node/1", "man_made": "tower"}},
+        {"type": "Feature", "geometry": None, "properties": {}},
+    ]}), encoding="utf-8")
+    assert read_osm_masts(path) == [(12.4088, 41.8276)]
+
+
+def test_committed_osm_mast_seed_is_configured() -> None:
+    masts_path = SETTINGS.path(str(SETTINGS.section("estimated", "register")["osm_masts_json"]))
+    assert masts_path is not None and masts_path.exists()
+    assert len(read_osm_masts(masts_path)) > 300
