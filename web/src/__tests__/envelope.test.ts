@@ -61,7 +61,7 @@ describe("envelope additions (status, reason, cached, not_available)", () => {
 describe("badge wording", () => {
   it("calls a hypothetical change what-if, and loops simulated", () => {
     expect(badgeText(parseEnvelope({ ...good, data_kinds: { what_if: "simulated", emf: "estimated" } }))).toBe("what-if");
-    expect(badgeText(parseEnvelope({ ...good, data_kinds: { traffic_loops: "simulated" } }))).toBe("simulated");
+    expect(badgeText(parseEnvelope({ ...good, data_kinds: { traffic_flow: "simulated" } }))).toBe("simulated");
     expect(badgeText(parseEnvelope({ ...good, synthetic: false, data_kinds: { emf: "estimated" } }))).toBe("estimated");
   });
 });

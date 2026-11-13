@@ -103,14 +103,15 @@ async function sha(text: string) {
 }
 
 export async function mockSportTool(tool: SportTool, inputs: Record<string, unknown>): Promise<Envelope> {
-  const whatIf = Array.isArray(inputs.open_facilities) && inputs.open_facilities.length > 0;
+  const gyms = inputs.open_school_gyms ?? inputs.open_facilities;
+  const whatIf = Array.isArray(gyms) && gyms.length > 0;
   let result: Record<string, unknown>;
   if (tool === "sports_facilities") {
     const fs = facilities().filter((f) => !inputs.discipline || f.properties.disciplines.includes(String(inputs.discipline)));
     result = { type: "FeatureCollection", count: fs.length, features: fs };
   } else {
     const d = String(inputs.discipline ?? "football");
-    const open = Array.isArray(inputs.open_facilities) ? (inputs.open_facilities as { lon: number; lat: number }[]) : [];
+    const open = whatIf ? (gyms as { lon: number; lat: number }[]) : [];
     const base = coverage(d, []);
     if (open.length) {
       const variant = coverage(d, open.map((o) => [o.lon, o.lat] as [number, number]));

@@ -150,7 +150,7 @@ export default function Sport() {
       await run<WhatIf>("sport_coverage", {
         area: "city",
         discipline: desertDisc,
-        open_facilities: [{ name: "School gym (what-if)", lon: gym.lon, lat: gym.lat }],
+        open_school_gyms: [{ name: "School gym (what-if)", lon: gym.lon, lat: gym.lat }],
       }),
     );
   }

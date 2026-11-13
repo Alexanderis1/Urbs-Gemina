@@ -11,7 +11,6 @@ export interface TwinQuestionBody {
   area: string | null;
   mode: "question" | "briefing";
   conversation_id: string | null;
-  channel: "chat";
 }
 
 export interface TwinAnswer {
@@ -35,7 +34,6 @@ export function buildTwinQuestion(
     area: opts.area ?? null,
     mode: opts.mode ?? "question",
     conversation_id: opts.conversationId ?? null,
-    channel: "chat",
   };
 }
 

@@ -1,8 +1,9 @@
 // Lovable Cloud edge function "tools": the only way the browser reaches the tool API and the orchestrator.
 // It holds the API keys (secrets), reads the user's tier from public.user_roles, and forwards.
 //
-// Secrets to set in Lovable Cloud: TOOL_API_URL, TOOL_API_OFFICE_KEY, TOOL_API_CITIZEN_KEY (optional), ORCHESTRATOR_URL,
-// ELEVENLABS_API_KEY and ELEVENLABS_OFFICE_AGENT_ID (default below).
+// Secrets in Lovable Cloud: URBS_OFFICE_KEY (office key of the tool API), ELEVENLABS_API_KEY.
+// Optional: TOOL_API_URL (default: the public Modal API), TOOL_API_CITIZEN_KEY, ORCHESTRATOR_URL (default <api>/ask),
+// ELEVENLABS_OFFICE_AGENT_ID (default below).
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by the platform.
 import { createClient } from "npm:@supabase/supabase-js@2.46.1";
 import { planForward, type Env, type Tier } from "../_shared/policy.ts";
@@ -42,8 +43,8 @@ Deno.serve(async (req) => {
 
   const { tier, userId } = await tierOf(req);
   const env: Env = {
-    TOOL_API_URL: Deno.env.get("TOOL_API_URL") ?? "",
-    TOOL_API_OFFICE_KEY: Deno.env.get("TOOL_API_OFFICE_KEY") ?? "",
+    TOOL_API_URL: Deno.env.get("TOOL_API_URL") || "https://anzellinialessandroangelo--urbs-gemina-tools-api.us-east.modal.run",
+    TOOL_API_OFFICE_KEY: Deno.env.get("URBS_OFFICE_KEY") ?? Deno.env.get("TOOL_API_OFFICE_KEY") ?? "",
     TOOL_API_CITIZEN_KEY: Deno.env.get("TOOL_API_CITIZEN_KEY") ?? "",
     ORCHESTRATOR_URL: Deno.env.get("ORCHESTRATOR_URL") ?? "",
   };

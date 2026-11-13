@@ -38,64 +38,103 @@ const SAMPLE_RING: number[][] = [
 function sampleCells(layer: string) {
   const rnd = seeded(layer);
   const phase = rnd() * 6;
-  return polygonToCells(SAMPLE_RING, 8).map((h3) => {
-    const [lat, lon] = cellToLatLng(h3);
+  return polygonToCells(SAMPLE_RING, 8).map((cell) => {
+    const [lat, lon] = cellToLatLng(cell);
     const base = Math.sin(lat * 60 + phase) * Math.cos(lon * 45 - phase);
     const centre = Math.exp(-(((lat - 41.9) / 0.05) ** 2 + ((lon - 12.49) / 0.06) ** 2));
-    return { h3, mean: r1(0.5 + 0.3 * base + 0.6 * centre), variance: r1(0.02 + 0.2 * rnd() * (1 - centre)), updated_at: NOW };
+    const mean = r1(0.5 + 0.3 * base + 0.6 * centre);
+    const sd = r1(0.05 + 0.3 * rnd() * (1 - centre));
+    return { cell, mean, sd, p5: r1(Math.max(0, mean - 1.645 * sd)), p50: mean, p95: r1(mean + 1.645 * sd), updated_at: NOW };
   });
 }
+
+const ctxLayer = (layer: string, label: string, hits: { distance_m: number; name: string }[]) => ({
+  layer,
+  label,
+  status: "ok",
+  count: hits.length,
+  hits,
+});
 
 function result(tool: ToolName, inputs: Record<string, unknown>): Record<string, unknown> {
   const rnd = seeded(JSON.stringify(inputs) + tool);
   switch (tool) {
     case "resolve_place":
-      if (typeof inputs.lat === "number" && typeof inputs.lon === "number")
-        return { label: `Point ${inputs.lat.toFixed(5)}, ${inputs.lon.toFixed(5)}`, lat: inputs.lat, lon: inputs.lon };
-      return { label: String(inputs.query ?? "Piazza Venezia, Roma"), lat: 41.8959, lon: 12.4823, municipio: "1" };
-    case "context_check": {
-      const cats = ["school", "hospital", "care home", "playground", "heritage constraint", "existing antenna site"];
-      const kindOf = (c: string) => (c === "existing antenna site" ? "estimated" : "real");
-      const pt = Array.isArray(inputs.point) ? (inputs.point as unknown[]) : [];
-      const lon0 = num(pt[0], 12.4823);
-      const lat0 = num(pt[1], 41.8959);
-      const items = cats.map((category, i) => {
-        const d = Math.round(40 + rnd() * 250);
-        const bearing = rnd() * 2 * Math.PI;
-        return {
-          category,
-          name: `Sample ${category} ${i + 1}`,
-          distance_m: d,
-          data_kind: kindOf(category),
-          lat: lat0 + (d * Math.cos(bearing)) / 111_320,
-          lon: lon0 + (d * Math.sin(bearing)) / (111_320 * Math.cos((lat0 * Math.PI) / 180)),
-        };
-      });
       return {
+        found: true,
+        label: String(inputs.text ?? "Piazza Venezia, Roma"),
+        lon: 12.4823,
+        lat: 41.8959,
+        precision: "sample",
+        method: "sample",
+        municipio: { status: "ok", id: "1", name: "I" },
+        urban_zone: { status: "ok", id: "1A", name: "Centro Storico" },
+        alternatives: [],
+      };
+    case "context_check": {
+      const pt = Array.isArray(inputs.point) ? (inputs.point as unknown[]) : [];
+      const d = () => Math.round(40 + rnd() * 250);
+      return {
+        point: { lon: num(pt[0], 12.4823), lat: num(pt[1], 41.8959) },
         radius_m: num(inputs.radius_m, 300),
-        items: items.sort((a, b) => a.distance_m - b.distance_m),
-        note: "Distances are context for the officer, not a prohibition.",
+        meaning: "Context information only. Not a prohibition.",
+        groups: {
+          sensitive_site: {
+            label: "Sensitive sites (schools, care, health, play areas)",
+            layers: [
+              ctxLayer("schools_state", "State schools", [{ distance_m: d(), name: "Sample school" }]),
+              ctxLayer("hospitals", "Hospitals", []),
+              ctxLayer("playgrounds_osm", "Playgrounds (OpenStreetMap)", [{ distance_m: d(), name: "Sample playground" }]),
+            ],
+          },
+          constraint: {
+            label: "Planning, landscape and heritage constraints",
+            layers: [ctxLayer("unesco", "UNESCO World Heritage site", [{ distance_m: 0, name: "Sample heritage site" }])],
+          },
+        },
       };
     }
     case "estimate_field": {
       const p50 = r1(0.5 + rnd() * 2);
+      // No threshold values here: they come only from config/thresholds.yaml through the real tool.
       return {
+        mode: "point",
         unit: "V/m",
-        estimate: { p5: r1(p50 * 0.4), p50, p95: r1(p50 * 2.6), calibration: "uncalibrated" },
-        exceedance_probability: r1(rnd() * 0.05),
-        threshold_ref: "attention value (config/thresholds.yaml)",
+        p5: r1(p50 * 0.55),
+        p50,
+        p95: r1(p50 * 1.8),
+        calibration: "uncalibrated",
+        model: "sample",
+        exceedance: { attention_value: { probability: 0, source: "config/thresholds.yaml (not loaded in sample mode)" } },
       };
     }
     case "query_layer": {
-      const layer = String(inputs.layer ?? "air_quality");
-      return { layer, unit: "index", cells: sampleCells(layer) };
+      const layer = String(inputs.layer ?? "rain");
+      if (layer === "traffic_flow") {
+        return {
+          type: "observations",
+          provider: "sim_loops",
+          count: 20,
+          truncated: false,
+          observations: Array.from({ length: 20 }, (_, i) => ({
+            id: `sample-loop-${i}`,
+            lon: 12.42 + rnd() * 0.14,
+            lat: 41.86 + rnd() * 0.08,
+            observed_at: NOW,
+            values: { intensity: Math.round(200 + rnd() * 800) },
+            sigma: { intensity: 50 },
+            synthetic: true,
+          })),
+        };
+      }
+      return { type: "belief", layer, unit: "index", calibration: "uncalibrated", cells: sampleCells(layer) };
     }
     case "run_scenario": {
       const b = r1(1 + rnd());
       const v = r1(b * (1.1 + rnd() * 0.5));
       return {
-        kind: String(inputs.kind ?? "antenna_add"),
-        metric: "residents above sample level",
+        kind: String(inputs.kind ?? "antenna"),
+        metric: "residents in cells above the sample level",
         unit: "people",
         baseline: { p5: Math.round(b * 800), p50: Math.round(b * 1000), p95: Math.round(b * 1300), calibration: "uncalibrated" },
         variant: { p5: Math.round(v * 800), p50: Math.round(v * 1000), p95: Math.round(v * 1300), calibration: "uncalibrated" },
@@ -108,20 +147,23 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
     case "data_status":
       return {
         layers: [
-          ["3D buildings (G0)", "OSM / Overture + GlobalBuildingAtlas heights", "estimated"],
-          ["Context layers (schools, hospitals...)", "Roma Capitale GeoServer", "real"],
-          ["Antenna sites", "OpenCelliD + OSM, power from Cartoradio", "estimated"],
-          ["EMF field", "Cartoradio + twin model", "estimated"],
-          ["Traffic loops", "sim_loops", "simulated"],
-          ["Air quality", "EEA stations + model", "estimated"],
-          ["Transit delay", "Roma GTFS-RT", "real"],
+          ["buildings_g0", "OSM / Overture + GlobalBuildingAtlas heights", "estimated"],
+          ["context_layers", "Roma Capitale GeoServer", "real"],
+          ["antenna_register", "OpenCelliD + OSM, power from Cartoradio", "estimated"],
+          ["emf_baseline", "Cartoradio + twin model", "estimated"],
+          ["traffic_flow", "sim_loops", "simulated"],
+          ["air_quality", "EEA stations", "real"],
+          ["transit", "Roma GTFS-RT", "real"],
+          ["rain", "rain gauges + radar, fused", "estimated"],
         ].map(([layer, provider, kind]) => ({
           layer,
-          kind,
           provider: `${provider} (sample)`,
+          status: "active",
+          data_kind: kind,
+          synthetic: kind === "simulated",
           licence: "n/a",
-          last_update: NOW,
-          validation: "not run in sample mode",
+          cadence: "n/a",
+          notes: "Sample mode: not validated.",
         })),
       };
   }
@@ -139,14 +181,14 @@ function kindsFor(tool: ToolName, inputs: Record<string, unknown>): Kinds {
     case "estimate_field":
       return { emf_field: "estimated", antenna_sites: "estimated" };
     case "query_layer": {
-      const layer = String(inputs.layer ?? "air_quality");
-      if (layer === "road_speed") return { road_speed: "estimated", traffic_loops: "simulated" };
-      if (layer === "rain" || layer === "transit_delay") return { [layer]: "real" };
+      const layer = String(inputs.layer ?? "rain");
+      if (layer === "traffic_flow") return { traffic_flow: "simulated" };
+      if (["air_quality", "transit", "micromobility", "schools_state", "hospitals"].includes(layer)) return { [layer]: "real" };
       return { [layer]: "estimated" };
     }
     case "run_scenario": {
       const k: Kinds = { what_if: "simulated", baseline: "estimated" };
-      if (inputs.kind === "road_closure") k.traffic_loops = "simulated";
+      if (inputs.kind === "road_closure") k.traffic_flow = "simulated";
       return k;
     }
     case "legal_lookup":

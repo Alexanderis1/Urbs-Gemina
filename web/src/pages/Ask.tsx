@@ -116,10 +116,21 @@ function AnswerTrace({ a }: { a: TwinAnswer }) {
         <span className={a.verified ? "font-semibold text-real" : "font-semibold text-amber-700"}>
           {a.verified ? "✓ Every figure traced to a run or source" : "⚠ Not verified"}
         </span>
-        {Object.entries(a.data_kinds).map(([l, k]) => (
-          <KindBadge key={l} kind={k} label={l} />
-        ))}
+        {(["real", "estimated", "simulated", "not_available"] as const).map((k) => {
+          const n = Object.values(a.data_kinds).filter((x) => x === k).length;
+          return n ? <KindBadge key={k} kind={k} text={`${n} ${k.replace("_", " ")}`} /> : null;
+        })}
       </div>
+      {Object.keys(a.data_kinds).length > 0 && (
+        <details>
+          <summary className="cursor-pointer">Layers used</summary>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {Object.entries(a.data_kinds).map(([l, k]) => (
+              <KindBadge key={l} kind={k} label={l} />
+            ))}
+          </div>
+        </details>
+      )}
       {a.run_ids.length > 0 && (
         <div>
           Runs:{" "}
@@ -130,7 +141,12 @@ function AnswerTrace({ a }: { a: TwinAnswer }) {
           ))}
         </div>
       )}
-      {a.sources.length > 0 && <div>Sources: {a.sources.join(", ")}</div>}
+      {a.sources.length > 0 && (
+        <details>
+          <summary className="cursor-pointer">Sources ({a.sources.length})</summary>
+          <div className="mt-1 break-all">{a.sources.join(", ")}</div>
+        </details>
+      )}
       {a.missing.length > 0 && <div className="text-amber-700">Missing: {a.missing.join(", ")}</div>}
       {a.map_actions.length > 0 && (
         <div className="flex flex-wrap gap-1">

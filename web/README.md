@@ -12,13 +12,17 @@ npm test           # unit tests (vitest)
 npm run typecheck  # strict TypeScript
 ```
 
-With no `.env.local` the app runs in **sample-data mode**: every tool response is generated locally,
-marked `synthetic: true`, and the whole UI shows SIMULATED badges. Copy `.env.example` to `.env.local` to connect:
+With no `.env.local` the app calls the **live public tool API at the citizen tier** (no key in the browser).
+With Lovable Cloud it goes through the `tools` edge function instead, which adds the office key for signed-in officers.
+`VITE_SAMPLE_MODE=1` switches to built-in placeholder data (marked SAMPLE DATA). Settings in `.env.example`:
 
 | Variable | What it is |
 |---|---|
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | Set by Lovable Cloud. Turns on sign-in and routes calls through the `tools` edge function |
 | `VITE_TOOL_PROXY_URL` | Override for the edge function URL (default `<supabase>/functions/v1/tools`) |
+| `VITE_TOOL_API_URL` | Public tool API used without Cloud (default: the Modal deployment) |
+| `VITE_SAMPLE_MODE` | `1` = placeholder data, no network |
+| `VITE_TREES_PMTILES_URL` | Tree crowns (default: the R2 copy; `off` to disable) |
 | `VITE_BUILDINGS_PMTILES_URL` | G0 block model (`buildings.pmtiles`, 144 MB, not committed). Empty = the public copy on Cloudflare R2; `osm` = base-map OSM buildings; `/buildings.pmtiles` = a local copy in `web/public/` |
 | `VITE_BASEMAP_STYLE` | Base map style (OpenFreeMap, no key). If unreachable the map falls back to a plain background |
 
@@ -48,8 +52,9 @@ context list → field range → downloadable cited report) · Scenario lab · D
 - `supabase/functions/tools`: the only path from the browser to the back end. It reads the tier from `user_roles`
   (signed out = citizen), picks the tool API key for that tier, blocks office-only routes, sets the tier on `/ask`,
   and stores manager updates. Routing rules are in `supabase/functions/_shared/policy.ts` (unit-tested).
-- Secrets to add in Lovable Cloud: `TOOL_API_URL`, `TOOL_API_OFFICE_KEY`, `TOOL_API_CITIZEN_KEY` (optional), `ORCHESTRATOR_URL`,
-  `ELEVENLABS_API_KEY` (and optionally `ELEVENLABS_OFFICE_AGENT_ID`).
+- Secrets to add in Lovable Cloud: `URBS_OFFICE_KEY` (office key of the tool API) and `ELEVENLABS_API_KEY`.
+  Optional: `TOOL_API_URL` (default: the public Modal API), `TOOL_API_CITIZEN_KEY`, `ORCHESTRATOR_URL` (default `<api>/ask`),
+  `ELEVENLABS_OFFICE_AGENT_ID`.
 - Voice: the header button starts the public citizen agent directly; signed-in office users get the private office
   agent through `POST /voice/signed_url`. The agents move the map with the five client tools of `voice/client_tools.json`.
 - To make someone an officer: insert a row `(user_id, 'office')` in `user_roles` from the Cloud dashboard.

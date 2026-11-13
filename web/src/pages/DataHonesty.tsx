@@ -28,22 +28,24 @@ export default function DataHonesty() {
                 <th className="py-1">Layer</th>
                 <th>Kind</th>
                 <th>Provider</th>
+                <th>Status</th>
                 <th>Licence</th>
-                <th>Last update</th>
-                <th>Validation</th>
+                <th>Updates</th>
+                <th>Notes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
               {env.result.layers.map((l) => (
-                <tr key={l.layer}>
-                  <td className="py-1.5 font-medium">{l.layer}</td>
+                <tr key={l.layer} className="align-top">
+                  <td className="py-1.5 font-medium">{l.layer.replace(/_/g, " ")}</td>
                   <td>
-                    <KindBadge kind={l.kind} />
+                    <KindBadge kind={l.data_kind} />
                   </td>
                   <td>{l.provider}</td>
-                  <td>{l.licence}</td>
-                  <td className="whitespace-nowrap">{l.last_update}</td>
-                  <td>{l.validation ?? "—"}</td>
+                  <td className="whitespace-nowrap">{l.status.replace(/_/g, " ")}</td>
+                  <td className="text-xs">{l.licence ?? "—"}</td>
+                  <td className="whitespace-nowrap text-xs">{l.cadence ?? "—"}</td>
+                  <td className="text-xs text-stone-600">{l.notes ?? "—"}</td>
                 </tr>
               ))}
             </tbody>

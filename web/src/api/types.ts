@@ -53,67 +53,72 @@ export interface PolygonGeometry {
   coordinates: number[][][];
 }
 
-// --- Result shapes the UI reads. Provisional until WS4 publishes twin/api/schemas/*.json. ---
+// --- Result shapes the UI reads, as returned by the live tool API (twin/api, 13 Nov 2026). ---
+
+export type { ContextResult as ContextCheckResult } from "@/lib/context";
+
+export interface AreaRef {
+  status: string;
+  id?: string;
+  name?: string;
+}
 
 export interface ResolvePlaceResult {
+  found: boolean;
   lon: number;
   lat: number;
-  municipio?: string | number | null;
-  urban_zone?: string | null;
   label?: string;
+  precision?: string;
+  method?: string;
+  municipio?: AreaRef | null;
+  urban_zone?: AreaRef | null;
+  alternatives?: { lon: number; lat: number; label: string }[];
 }
 
-export interface ContextItem {
-  category: string;
-  name: string;
-  distance_m: number;
-  data_kind: DataKind;
-  lat?: number;
-  lon?: number;
+export interface ThresholdCheck {
+  threshold_v_per_m?: number;
+  source?: string;
+  applies_to?: string;
+  probability?: number;
 }
 
-export interface ContextCheckResult {
-  radius_m: number;
-  items: ContextItem[];
-  note: string;
-}
-
+/** estimate_field in point mode. */
 export interface EstimateFieldResult {
+  mode: "point" | "area";
   unit: string;
-  estimate: Estimate;
-  /** Probability of exceeding the attention value, computed by the tool from config/thresholds.yaml. */
-  exceedance_probability?: number;
-  threshold_ref?: string;
+  p5: number;
+  p50: number;
+  p95: number;
+  calibration: "calibrated" | "uncalibrated";
+  model?: string;
+  averaging_note?: string;
+  exceedance?: Record<string, ThresholdCheck>;
+  baseline?: { value_v_per_m?: number; credit?: string };
 }
 
-export interface LayerCell {
-  h3: string;
-  mean: number;
-  variance: number;
-  updated_at: string;
-}
-
-export interface QueryLayerResult {
-  layer: string;
-  unit: string;
-  cells: LayerCell[];
-}
+/** query_layer: one of belief / observations / aggregate / features; read it with lib/layers.normalizeLayer. */
+export type QueryLayerResult = Record<string, unknown>;
 
 export interface ScenarioResult {
-  kind: string;
-  metric: string;
-  unit: string;
-  baseline: Estimate;
-  variant: Estimate;
+  kind?: string;
+  metric?: string;
+  unit?: string;
+  baseline?: Estimate;
+  variant?: Estimate;
+  [k: string]: unknown;
 }
 
 export interface LayerStatus {
   layer: string;
-  kind: DataKind;
   provider: string;
-  licence: string;
-  last_update: string;
-  validation?: string;
+  status: string;
+  provider_kind?: string;
+  synthetic?: boolean;
+  licence?: string;
+  cadence?: string;
+  notes?: string;
+  data_kind: DataKind;
+  redistribution?: boolean;
 }
 
 export interface DataStatusResult {

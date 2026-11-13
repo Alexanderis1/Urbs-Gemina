@@ -1,4 +1,4 @@
-import { isSampleMode } from "@/api/client";
+import { isDirectMode, isSampleMode } from "@/api/client";
 
 export function AiDisclosure() {
   return (
@@ -10,6 +10,12 @@ export function AiDisclosure() {
 }
 
 export function SampleModeBanner() {
+  if (isDirectMode)
+    return (
+      <div className="border-b border-stone-200 bg-stone-100 px-4 py-1 text-center text-xs text-stone-600">
+        Live data from the public tool API at the citizen tier (no login). Office features need Lovable Cloud sign-in.
+      </div>
+    );
   if (!isSampleMode) return null;
   return (
     <div className="border-b border-amber-300 bg-amber-50 px-4 py-1 text-center text-xs font-medium text-amber-800">

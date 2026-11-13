@@ -5,6 +5,7 @@ import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { Layer } from "@deck.gl/core";
 import { Protocol } from "pmtiles";
 import { onMapAction } from "@/lib/mapbus";
+import { buildingColor, type BuildingView } from "@/lib/buildingStyles";
 
 const STYLE_URL =
   (import.meta.env.VITE_BASEMAP_STYLE as string | undefined) || "https://tiles.openfreemap.org/styles/positron";
@@ -16,6 +17,10 @@ const G0_ATTRIBUTION =
 const G0_DEFAULT = "https://pub-92f3b81279724b93b2c580e6b7c1cb37.r2.dev/buildings.pmtiles";
 const G0_ENV = import.meta.env.VITE_BUILDINGS_PMTILES_URL as string | undefined;
 // Unset = the R2 copy. Set to "osm" to use the base map's OpenStreetMap buildings instead.
+const TREES_ENV = import.meta.env.VITE_TREES_PMTILES_URL as string | undefined;
+const TREES_DEFAULT = "https://pub-92f3b81279724b93b2c580e6b7c1cb37.r2.dev/trees.pmtiles";
+const TREES_RAW = TREES_ENV === undefined || TREES_ENV === "" ? TREES_DEFAULT : TREES_ENV === "off" ? "" : TREES_ENV;
+const TREES_PMTILES = TREES_RAW && typeof window !== "undefined" ? new URL(TREES_RAW, window.location.href).href : TREES_RAW;
 const G0_RAW = G0_ENV === undefined || G0_ENV === "" ? G0_DEFAULT : G0_ENV === "osm" ? "" : G0_ENV;
 // The pmtiles protocol needs an absolute URL; a relative one (e.g. /buildings.pmtiles) is resolved against the page.
 const G0_PMTILES = G0_RAW && typeof window !== "undefined" ? new URL(G0_RAW, window.location.href).href : G0_RAW;
@@ -64,14 +69,34 @@ function addBuildings(map: MlMap) {
         source: "g0",
         "source-layer": "buildings",
         paint: {
-          // Estimated heights (no measured source) are drawn a little lighter.
-          "fill-extrusion-color": ["match", ["get", "data_kind"], "real", "#cfc6b8", "#e3ddd3"],
+          // Estimated heights (no measured source) are drawn a little lighter; other views via buildingView.
+          "fill-extrusion-color": buildingColor("plain"),
           "fill-extrusion-height": ["coalesce", ["get", "height_m"], 9.6],
           "fill-extrusion-opacity": 0.9,
         },
       },
       firstSymbol,
     );
+    if (TREES_PMTILES) {
+      map.addSource("trees", { type: "vector", url: `pmtiles://${TREES_PMTILES}`, attribution: "Trees: Meta / WRI canopy height (CC BY 4.0)" });
+      map.addLayer(
+        {
+          id: "trees-3d",
+          type: "fill-extrusion",
+          source: "trees",
+          "source-layer": "trees",
+          minzoom: 14,
+          layout: { visibility: "none" },
+          paint: {
+            "fill-extrusion-color": "#65a30d",
+            "fill-extrusion-base": ["coalesce", ["get", "base_m"], 0],
+            "fill-extrusion-height": ["coalesce", ["get", "height_m"], 8],
+            "fill-extrusion-opacity": 0.75,
+          },
+        },
+        firstSymbol,
+      );
+    }
     return;
   }
   const src = Object.entries(style.sources).find(([, s]) => s.type === "vector")?.[0];
@@ -100,8 +125,12 @@ export function CityMap({
   initialZoom = 11,
   pitch = 50,
   focus,
+  buildingView = "plain",
+  showTrees = false,
 }: {
   layers: Layer[];
+  buildingView?: BuildingView;
+  showTrees?: boolean;
   /** Camera target set by the screen itself (local, not through the shared map-action bus). */
   focus?: { lon: number; lat: number; zoom: number } | null;
   onClick?: (lngLat: { lat: number; lon: number }) => void;
@@ -165,6 +194,20 @@ export function CityMap({
   useEffect(() => {
     overlayRef.current?.setProps({ layers });
   }, [layers]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (map.getLayer("g0-extrusion")) map.setPaintProperty("g0-extrusion", "fill-extrusion-color", buildingColor(buildingView));
+      if (map.getLayer("trees-3d")) map.setLayoutProperty("trees-3d", "visibility", showTrees ? "visible" : "none");
+    };
+    apply();
+    map.on("styledata", apply);
+    return () => {
+      map.off("styledata", apply);
+    };
+  }, [buildingView, showTrees]);
 
   useEffect(() => {
     if (focus) mapRef.current?.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, pitch: 55 });

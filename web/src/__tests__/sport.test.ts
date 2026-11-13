@@ -62,7 +62,7 @@ describe("sport tools in sample mode", () => {
     const env = await mockSportTool("sport_coverage", {
       area: "municipio:1",
       discipline: "football",
-      open_facilities: [{ name: "Scuola", lon: 12.49, lat: 41.9 }],
+      open_school_gyms: [{ name: "Scuola", lon: 12.49, lat: 41.9 }],
     });
     expect(env.synthetic).toBe(true);
     expect(env.data_kinds.what_if).toBe("simulated");

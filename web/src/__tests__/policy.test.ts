@@ -28,9 +28,10 @@ describe("edge function policy (tier decided on the server)", () => {
     expect(planForward("/tools/drop_database", "office", {}, env)).toMatchObject({ ok: false, status: 404 });
   });
 
-  it("overwrites any tier the browser tried to send on /ask", () => {
+  it("drops any tier the browser tried to send on /ask and uses the key for the session's tier", () => {
     const p = planForward("/ask", "citizen", { question: "q", tier: "office" }, env);
-    expect(p.ok && "body" in p && p.body).toMatchObject({ question: "q", tier: "citizen", channel: "chat" });
+    expect(p.ok && "body" in p && p.body).toEqual({ question: "q" });
+    expect(p.ok && "key" in p && p.key).toBe("");
     expect(p.ok && "url" in p && p.url).toBe("https://orch.example/ask");
   });
 
@@ -57,5 +58,24 @@ describe("voice signed URL (private office agent)", () => {
   });
   it("asks ElevenLabs for the office agent", () => {
     expect(planForward("/voice/signed_url", "office", {}, env)).toEqual({ ok: true, voice: "office" });
+  });
+});
+
+describe("live API routes", () => {
+  it("forwards the permit report for office only", () => {
+    expect(planForward("/reports/permit.md", "citizen", {}, env)).toMatchObject({ ok: false, status: 403 });
+    expect(planForward("/reports/permit.md", "office", { place: "x" }, env)).toEqual({
+      ok: true,
+      url: "https://api.example/reports/permit.md",
+      key: "office-key",
+      body: { place: "x" },
+    });
+  });
+  it("defaults the orchestrator to the tool API's /ask", () => {
+    const p = planForward("/ask", "office", { question: "q" }, { ...env, ORCHESTRATOR_URL: "" });
+    expect(p.ok && "url" in p && p.url).toBe("https://api.example/ask");
+  });
+  it("knows the permit_report tool", () => {
+    expect(planForward("/tools/permit_report", "office", {}, env)).toMatchObject({ ok: true });
   });
 });

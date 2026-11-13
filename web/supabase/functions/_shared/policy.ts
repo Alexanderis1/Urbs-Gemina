@@ -30,13 +30,20 @@ const TOOLS = new Set([
   "legal_lookup",
   "find_dataset",
   "data_status",
+  "permit_report",
   "sports_facilities",
   "sport_coverage",
   "sport_deserts",
 ]);
 
 /** Routes the citizen tier cannot call at all (the permit check is an office workflow). */
-const OFFICE_ONLY = new Set(["/tools/context_check", "/sports/manager_update", "/voice/signed_url"]);
+const OFFICE_ONLY = new Set([
+  "/tools/context_check",
+  "/tools/permit_report",
+  "/reports/permit.md",
+  "/sports/manager_update",
+  "/voice/signed_url",
+]);
 
 const EDITABLE = new Set(["disciplines", "hours", "accessibility", "contact", "name"]);
 
@@ -51,10 +58,17 @@ export function planForward(path: string, tier: Tier, body: Record<string, unkno
 
   if (path === "/voice/signed_url") return { ok: true, voice: "office" };
 
+  const base = env.TOOL_API_URL.replace(/\/$/, "");
+
   if (path === "/ask") {
-    // TwinQuestion: the tier is set here, from the session, and overrides anything the browser sent.
-    return { ok: true, url: env.ORCHESTRATOR_URL, key, body: { ...withoutTier(body), tier, channel: "chat" } };
+    // TwinQuestion: the tier is decided here, from the session; anything the browser sent is dropped.
+    // The orchestrator runs inside the tool API (/ask) unless ORCHESTRATOR_URL points elsewhere.
+    const url = env.ORCHESTRATOR_URL || `${base}/ask`;
+    // The tier travels as the API key (office key or none); the live /ask rejects extra body fields.
+    return { ok: true, url, key, body: withoutTier(body) };
   }
+
+  if (path === "/reports/permit.md") return { ok: true, url: `${base}/reports/permit.md`, key, body: withoutTier(body) };
 
   if (path === "/sports/manager_update") {
     const { facility_id, field, account_ref, confirmed_at } = body;
@@ -68,5 +82,5 @@ export function planForward(path: string, tier: Tier, body: Record<string, unkno
 
   const m = /^\/tools\/([a-z_]+)$/.exec(path);
   if (!m || !TOOLS.has(m[1]!)) return { ok: false, status: 404, reason: "unknown route" };
-  return { ok: true, url: `${env.TOOL_API_URL.replace(/\/$/, "")}/tools/${m[1]}`, key, body: withoutTier(body) };
+  return { ok: true, url: `${base}/tools/${m[1]}`, key, body: withoutTier(body) };
 }
