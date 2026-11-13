@@ -151,7 +151,20 @@ def _sentences(text: str, abbreviations: Iterable[str]) -> list[str]:
     if abbr:
         pat = re.compile(r"(?<![\w.])(" + "|".join(re.escape(a) for a in abbr) + r")\.\s+", re.IGNORECASE)
         text = pat.sub(lambda m: m.group(1) + "." + guard, text)
-    return [s.replace(guard, " ").strip() for s in SENTENCE_SPLIT.split(text)]
+    segments: list[str] = []
+    for line in text.split("\n"):
+        # On one line, a citation covers the uncited sentences just before it (up to the previous
+        # citation), so "- Nidi: 0. Dato reale. [run:x]" is one checked unit. Never across lines.
+        pending: list[str] = []
+        for sent in (x.replace(guard, " ").strip() for x in SENTENCE_SPLIT.split(line)):
+            if not sent:
+                continue
+            pending.append(sent)
+            if CITATION.search(sent):
+                segments.append(" ".join(pending))
+                pending = []
+        segments.extend(pending)
+    return segments
 
 
 def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig | None = None,

@@ -161,3 +161,20 @@ def test_area_names_are_identifiers_not_figures() -> None:
     assert verify(f"Entro 300 m da Piazza Venezia (Municipio 1, zona 1A) ci sono siti a 182 m [run:{rid}].", runs(r),
                   question="Cosa c'è entro 300 metri da Piazza Venezia?").ok
     assert verify(f"In municipio I, urban zone 6B, a school is 182 m away [run:{rid}].", runs(r)).ok
+
+
+def test_citation_at_end_of_line_covers_the_sentences_before_it() -> None:
+    r = context_run()
+    rid = r["run_id"][:12]
+    text = (f"- Scuole: 1 sito, Scuola A, a 182,4 m. Il dato è reale. [run:{rid}]\n"
+            f"- Conteggio: 1. [run:{rid}]")
+    assert verify(text, runs(r)).ok, verify(text, runs(r)).problems
+    # A citation never reaches back across another citation or onto another line.
+    two = f"Count 1 [run:{rid}]. Distance 95 m. Real data [run:{rid}]."
+    assert not verify(two, runs(r)).ok
+    lines = f"A school is 182 m away.\nReal data [run:{rid}]."
+    assert "uncited_number" in {p.code for p in verify(lines, runs(r)).problems}
+
+
+def test_natura_2000_is_a_name() -> None:
+    assert verify("Nessun sito Natura 2000 risulta disponibile: insufficient data.", {}).ok
