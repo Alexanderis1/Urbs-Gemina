@@ -1,0 +1,77 @@
+{
+  "note": "Map client tools of the voice agent. Shared with the web app (WS8): the viewer registers one handler per tool name with the ElevenLabs React SDK (clientTools). Arguments are copied by the voice model from the map_actions returned by ask_twin; the viewer must ignore points outside Rome. All tools are fire-and-forget (expects_response false).",
+  "tools": [
+    {
+      "type": "client",
+      "name": "fly_to",
+      "description": "Move the map camera to a place. Use only the lon, lat and zoom given in a map_actions entry of the last ask_twin result. Never invent coordinates.",
+      "expects_response": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "lon": {"type": "number", "description": "Longitude, copied from map_actions"},
+          "lat": {"type": "number", "description": "Latitude, copied from map_actions"},
+          "zoom": {"type": "number", "description": "Map zoom level, copied from map_actions"},
+          "label": {"type": "string", "description": "Short place name to show on the map"}
+        },
+        "required": ["lon", "lat"]
+      }
+    },
+    {
+      "type": "client",
+      "name": "show_area",
+      "description": "Highlight an operating area on the map: 'city', a municipio id or an urban-zone id from a map_actions entry.",
+      "expects_response": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "area": {"type": "string", "description": "Area id, copied from map_actions"}
+        },
+        "required": ["area"]
+      }
+    },
+    {
+      "type": "client",
+      "name": "show_layer",
+      "description": "Switch a map layer on or off, for example air quality, transit delay, rain, EMF field or schools.",
+      "expects_response": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "layer": {"type": "string", "description": "Layer id as named in map_actions or in the ask_twin data_kinds"},
+          "visible": {"type": "boolean", "description": "true to show, false to hide"}
+        },
+        "required": ["layer", "visible"]
+      }
+    },
+    {
+      "type": "client",
+      "name": "show_radius",
+      "description": "Draw the context circle of a permit check around a point. Office agent only. Use only values from a map_actions entry.",
+      "expects_response": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "lon": {"type": "number", "description": "Longitude, copied from map_actions"},
+          "lat": {"type": "number", "description": "Latitude, copied from map_actions"},
+          "radius_m": {"type": "number", "description": "Radius in metres, copied from map_actions"},
+          "run_id": {"type": "string", "description": "Run id of the context_check, copied from map_actions"}
+        },
+        "required": ["lon", "lat", "radius_m"]
+      }
+    },
+    {
+      "type": "client",
+      "name": "open_screen",
+      "description": "Open a screen of the app when the user asks to see something there.",
+      "expects_response": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "screen": {"type": "string", "enum": ["city", "ask", "permit", "scenario", "honesty"], "description": "Screen to open"}
+        },
+        "required": ["screen"]
+      }
+    }
+  ]
+}

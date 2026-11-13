@@ -1,0 +1,6 @@
+PyYAML>=6
+
+[dev]
+pytest>=8
+mypy>=1.10
+types-PyYAML
