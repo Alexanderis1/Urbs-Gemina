@@ -2,7 +2,7 @@
 import type { Envelope } from "./types";
 import type { Coverage, SportFeature, ZoneRow } from "@/lib/sport";
 
-export const SPORT_TOOLS = ["sports_facilities", "sport_deserts"] as const;
+export const SPORT_TOOLS = ["sports_facilities", "sport_coverage", "sport_deserts"] as const;
 export type SportTool = (typeof SPORT_TOOLS)[number];
 
 const NOW = "2026-11-13T12:00:00Z";
@@ -38,6 +38,8 @@ function facilities(): SportFeature[] {
         kind,
         municipio: String(1 + Math.floor(r() * 15)),
         disciplines,
+        type: (["public", "school", "private", "unclassified"] as const)[Math.floor(r() * 4)]!,
+        accessible: r() < 0.5 ? true : null,
         fields: {
           hours: sample("Mon-Sat 9-21"),
           accessibility: r() < 0.5 ? sample("yes") : { value: null, status: "not_known", sources: [] },

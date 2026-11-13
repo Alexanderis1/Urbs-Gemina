@@ -30,6 +30,10 @@ export interface SportFeature {
     kind: string;
     municipio: string | null;
     disciplines: string[];
+    /** public | school | private | unclassified */
+    type?: FacilityType;
+    /** true / false, or null when no source states it. */
+    accessible?: boolean | null;
     fields: Record<string, SportField>;
     discipline_details: Record<string, SportField>;
     synthetic: boolean;
@@ -80,7 +84,15 @@ export function fieldLabel(f: SportField): string {
   return f.label ?? STATUS_TEXT[f.status];
 }
 
+export type FacilityType = "public" | "school" | "private" | "unclassified";
+export const FACILITY_TYPES: FacilityType[] = ["public", "school", "private", "unclassified"];
+
+export function typeLabel(t: FacilityType | undefined): string {
+  return !t || t === "unclassified" ? "type not known" : t;
+}
+
 export interface SportFilter {
+  type?: FacilityType;
   discipline?: string;
   kind?: string;
   municipio?: string;
@@ -93,10 +105,8 @@ export function filterFacilities(list: SportFeature[], flt: SportFilter): SportF
     if (flt.discipline && !p.disciplines.includes(flt.discipline)) return false;
     if (flt.kind && p.kind !== flt.kind) return false;
     if (flt.municipio && p.municipio !== flt.municipio) return false;
-    if (flt.accessibleOnly) {
-      const a = p.fields.accessibility;
-      if (!a || a.status === "not_known" || !(a.value === true || a.value === "yes")) return false;
-    }
+    if (flt.type && (p.type ?? "unclassified") !== flt.type) return false;
+    if (flt.accessibleOnly && p.accessible !== true) return false;
     return true;
   });
 }

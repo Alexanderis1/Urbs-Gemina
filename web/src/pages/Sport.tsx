@@ -10,6 +10,9 @@ import { MUNICIPI, roman } from "@/lib/area";
 import { useSession } from "@/lib/runlog";
 import {
   EDITABLE_FIELDS,
+  FACILITY_TYPES,
+  typeLabel,
+  type FacilityType,
   buildManagerUpdate,
   displayName,
   fieldLabel,
@@ -40,6 +43,7 @@ export default function Sport() {
   const [kind, setKind] = useState("");
   const [municipio, setMunicipio] = useState("");
   const [accessibleOnly, setAccessibleOnly] = useState(false);
+  const [ftype, setFtype] = useState("");
   const [selected, setSelected] = useState<SportFeature | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,7 +62,7 @@ export default function Sport() {
   useEffect(() => {
     if (tab !== "deserts") return;
     setWhatIf(null);
-    run<Coverage>("sport_deserts", { area: "city", discipline: desertDisc }).then(setDesertEnv, (e: unknown) => setError(String(e)));
+    run<Coverage>("sport_coverage", { area: "city", discipline: desertDisc }).then(setDesertEnv, (e: unknown) => setError(String(e)));
   }, [tab, desertDisc, run]);
 
   const all = facEnv?.result.features ?? [];
@@ -67,9 +71,15 @@ export default function Sport() {
   const shown = useMemo(
     () =>
       tab === "map"
-        ? filterFacilities(all, { discipline: discipline || undefined, kind: kind || undefined, municipio: municipio || undefined, accessibleOnly })
+        ? filterFacilities(all, {
+            discipline: discipline || undefined,
+            kind: kind || undefined,
+            municipio: municipio || undefined,
+            type: (ftype || undefined) as FacilityType | undefined,
+            accessibleOnly,
+          })
         : filterFacilities(all, { discipline: desertDisc }),
-    [all, tab, discipline, kind, municipio, accessibleOnly, desertDisc],
+    [all, tab, discipline, kind, municipio, ftype, accessibleOnly, desertDisc],
   );
 
   const coverage: Coverage | null = whatIf ? whatIf.result.variant : (desertEnv?.result ?? null);
@@ -137,7 +147,7 @@ export default function Sport() {
   async function runWhatIf() {
     if (!gym) return;
     setWhatIf(
-      await run<WhatIf>("sport_deserts", {
+      await run<WhatIf>("sport_coverage", {
         area: "city",
         discipline: desertDisc,
         open_facilities: [{ name: "School gym (what-if)", lon: gym.lon, lat: gym.lat }],
@@ -161,6 +171,7 @@ export default function Sport() {
           <div className="space-y-2">
             <Select label="Discipline" value={discipline} onChange={setDiscipline} options={disciplines} />
             <Select label="Kind" value={kind} onChange={setKind} options={kinds} />
+            <Select label="Type" value={ftype} onChange={setFtype} options={FACILITY_TYPES} show={(t) => typeLabel(t as FacilityType)} />
             <Select label="Municipio" value={municipio} onChange={setMunicipio} options={MUNICIPI} show={(m) => `Municipio ${roman(Number(m))}`} />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={accessibleOnly} onChange={(e) => setAccessibleOnly(e.target.checked)} />
@@ -310,7 +321,8 @@ function FacilityPage({ f, canManage, onClose }: { f: SportFeature; canManage: b
         <div>
           <div className="font-semibold">{displayName(f)}</div>
           <div className="text-xs text-stone-500">
-            {p.kind.replace(/_/g, " ")}
+            {p.kind.replace(/_/g, " ")} · {typeLabel(p.type)} · accessible:{" "}
+            {p.accessible === true ? "yes" : p.accessible === false ? "no" : "not known"}
             {p.municipio ? ` · Municipio ${roman(Number(p.municipio))}` : ""}
           </div>
         </div>
