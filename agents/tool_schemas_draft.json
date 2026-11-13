@@ -1,0 +1,208 @@
+{
+ "note": "DRAFT input schemas used only until WS4 publishes twin/api/schemas/*.json. Published schemas replace these tool by tool. Shapes follow design-proposal section 11 and workstreams.md shared interfaces 2-4.",
+ "tools": [
+  {
+   "name": "resolve_place",
+   "description": "Turn an address or place name in Rome into coordinates, municipio and urban zone.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "context_check",
+   "description": "Sensitive sites, PRG component and constraints within a radius of a point, each with distance and source layer. Context, not a ban.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "point": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[lon, lat] WGS84"
+     },
+     "radius_m": {
+      "type": "number"
+     }
+    },
+    "required": [
+     "point"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "estimate_field",
+   "description": "Electromagnetic field estimate on an area: P5/P50/P95 in V/m, probability of exceeding the attention value, model and calibration status.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "area": {
+      "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon"
+     },
+     "variant": {
+      "type": "object"
+     },
+     "point": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[lon, lat] WGS84; alternative to area"
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "query_layer",
+   "description": "Belief-layer values (mean, uncertainty, data kind) for a layer on an area at a time.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "layer": {
+      "type": "string"
+     },
+     "area": {
+      "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon"
+     },
+     "time": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "layer"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "run_scenario",
+   "description": "Run a what-if scenario on an operating area. Returns baseline vs variant indicators with ranges.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "type": "string"
+     },
+     "area": {
+      "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon"
+     },
+     "change": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "area",
+     "change"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "legal_lookup",
+   "description": "Search official Italian and EU legal sources (Normattiva, Gazzetta Ufficiale, AgID, Garante, ARPA Lazio, Roma Capitale...). Returns quoted text with URL and retrieval time.",
+   "x-untrusted-output": true,
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "question": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "question"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "find_dataset",
+   "description": "Search official open-data portals for a dataset the twin does not have yet. Returns quoted pages with URL.",
+   "x-untrusted-output": true,
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "need": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "need"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "news_search",
+   "description": "Search municipal notices and local news for disruptions (roadworks, strikes, demonstrations). Unverified text.",
+   "x-untrusted-output": true,
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "data_status",
+   "description": "Honesty panel: every layer with its data kind (real, estimated, simulated), provider and last update.",
+   "input_schema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "permit_report",
+   "description": "Cited permit-context report built by code: location, context within the radius, field estimate, provenance. Returns markdown and the inner tool runs.",
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "place": {
+      "type": "string"
+     },
+     "point": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     },
+     "radius_m": {
+      "type": "number"
+     },
+     "proposed_antennas": {
+      "type": "array",
+      "items": {
+       "type": "object"
+      }
+     }
+    },
+    "additionalProperties": false
+   }
+  }
+ ]
+}
