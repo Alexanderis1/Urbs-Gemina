@@ -3,7 +3,11 @@ import math
 from pathlib import Path
 from typing import Any
 
-from twin.scenarios import engine
+import json
+
+import pytest
+
+from twin.scenarios import engine, exposure
 from twin.scenarios.data import FieldSample, ScenarioData
 
 LON, LAT = 12.4823, 41.8960
@@ -16,7 +20,8 @@ def section(east_m: float, sid: str, pop: int, side_m: float = 50.0) -> dict[str
     dx, dy = h / M_PER_DEG_LON, h / M_PER_DEG_LAT
     ring = [[cx - dx, LAT - dy], [cx + dx, LAT - dy], [cx + dx, LAT + dy], [cx - dx, LAT + dy], [cx - dx, LAT - dy]]
     return {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [ring]},
-            "properties": {"SEZ21_ID": sid, "POP21": pop, "phone": "drop me"}}
+            "properties": {"sez_id": sid, "residents": pop, "children_0_14": pop // 10,
+                           "municipio": 1, "zone": "1A", "phone": "drop me"}}
 
 
 CENSUS = {"type": "FeatureCollection", "features": [section(0.0, "near", 120), section(250.0, "far", 300)]}
@@ -32,6 +37,7 @@ def test_residents_near_a_strong_antenna_are_counted(tmp_path: Path) -> None:
     result = out["result"]
     assert result["baseline"]["residents_flagged_attention"] == 0
     assert result["variant"]["residents_flagged_attention"] == 120
+    assert result["variant"]["children_0_14_flagged_attention"] == 12
     assert result["residents_total"] == 420
     assert out["data_kinds"]["census"] == "real"
 
@@ -41,11 +47,22 @@ def test_only_aggregates_leave_the_tool(tmp_path: Path) -> None:
     text = str(out)
     assert "drop me" not in text
     for row in out["result"]["sections"]:
-        assert set(row) <= {"section_id", "residents", "baseline_p50", "variant_p50",
+        assert set(row) <= {"sez_id", "residents", "children_0_14", "baseline_p50", "variant_p50",
                             "baseline_p_exceed_attention", "variant_p_exceed_attention"}
 
 
-def test_missing_census_is_reported(tmp_path: Path) -> None:
+def test_missing_census_is_not_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(exposure, "census_path", lambda: tmp_path / "missing.geojson")
     out = engine.run("population_exposure", "city", CHANGE, data=ScenarioData(), cache_dir=tmp_path)
-    assert out["data_kinds"]["census"] == "not_available"
-    assert out["result"]["residents_total"] is None
+    assert out["status"] == "not_available"
+    assert "census" in out["reason"].lower()
+    assert not list(tmp_path.glob("*.json"))
+
+
+def test_census_file_is_read_when_present(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "census_sections.geojson"
+    path.write_text(json.dumps(CENSUS), encoding="utf-8")
+    monkeypatch.setattr(exposure, "census_path", lambda: path)
+    out = engine.run("population_exposure", "city", CHANGE, data=ScenarioData(), cache_dir=tmp_path / "c")
+    assert out["status"] == "ok"
+    assert out["result"]["residents_total"] == 420

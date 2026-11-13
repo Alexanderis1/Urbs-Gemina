@@ -22,7 +22,7 @@ envelope = engine.run(kind, area, change, data=ScenarioData(...))
 | Kind | Change | Engine | Heavy |
 |---|---|---|---|
 | `antenna` | `{"action": "add", "site": {lon, lat, height_m}, "eirp_w" or "band"}`; `"move"` adds `"from": {...}` | Cartoradio baseline + free-space isotropic worst case; powers combined as log-normal sums (Fenton-Wilkinson). P5/P50/P95 and probability of exceeding the attention value and the limit (`config/thresholds.yaml`) | no |
-| `population_exposure` | same as `antenna` | Field at each census-section centroid; residents in sections flagged (probability ≥ 5%) before and after. Aggregates only | no |
+| `population_exposure` | same as `antenna` | Census sections from `data/processed/census_sections.geojson` (WS1; fields `sez_id`, `residents`, `children_0_14`). Field at each section centroid; residents and children in sections flagged (probability ≥ 5%) before and after. Aggregates only; `not_available` until the file exists | no |
 | `road_closure` | `{"close": {"edges": [...]}}` or `{"close": {"street": "Via del Corso"}}` | SUMO on the district network, synthetic random-trip demand, dynamic rerouting, five demand seeds; baseline, variant and paired difference | yes |
 
 All parameters (grid, sigma, demand density, replicates...) are in `config/scenarios.yaml` with a `basis:` note.
