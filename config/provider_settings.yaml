@@ -1,0 +1,144 @@
+# Settings of each provider (WS3). Which provider is active per layer lives in
+# config/providers.yaml; this file only holds how each provider behaves.
+# Every assumption carries a "basis" note. Antenna/EMF physics parameters stay in
+# config/emf_params.yaml.
+
+simulators:
+  # Bump when a simulator's generation logic changes, so old runs stay traceable.
+  version: "sim-2026.11.13"
+
+  loops:
+    seed: 42
+    n_stations: {value: 93, basis: "mirrors the 93 real Roma Mobilita loop stations (design proposal section 8)"}
+    # Committed seed built by `python -m twin.providers.build_seeds loops`:
+    # centrally controlled vehicle signals on major roads (Roma Capitale layers).
+    # Placeholder positions inside the city bbox are used only if it is missing.
+    stations_path: twin/providers/simulated/seed_data/loop_stations.geojson
+    snap_to_road_m: {value: 40, basis: "assumption: a signal this close to a major road controls it"}
+    min_spacing_m: {value: 600, basis: "assumption: spreads 93 stations over the network instead of clustering downtown"}
+    peak_flow_vph:   # per station, both directions
+      motorway: {min: 3000, max: 6000}
+      trunk: {min: 2000, max: 4000}
+      primary: {min: 1000, max: 2500}
+      secondary: {min: 600, max: 1500}
+      default: {min: 600, max: 2400}
+      basis: "assumption: typical lane capacity x lanes by road class"
+    free_speed_kmh:
+      motorway: 90
+      trunk: 70
+      primary: 50
+      secondary: 50
+      default: 50
+      basis: "Italian limits (Codice della Strada art. 142); GRA posted limits vary, 90 used as an urban-motorway average"
+    noise_flow: {value: 0.08, basis: "assumption"}
+    noise_speed: {value: 0.05, basis: "assumption"}
+
+
+estimated:
+  register:
+    # Raw seed files (git-ignored downloads) take priority over the committed seed.
+    opencellid_csv: data/raw/opencellid/222.csv.gz
+    osm_masts_json: data/raw/osm/rome_masts.json
+    # Committed seed built by `python -m twin.providers.build_seeds sites`
+    # (OpenCelliD mirror, clustered). Used when the raw CSV above is missing.
+    sites_geojson: twin/providers/estimated/seed_data/antenna_sites.geojson
+    mcc: 222
+    operators:   # MNC -> operator. basis: ITU-T E.212 list for Italy (C=85)
+      1: TIM
+      10: Vodafone
+      50: Iliad
+      88: WINDTRE
+      99: WINDTRE
+    # Site id = cell id shifted right by these bits (eNB for LTE). GSM/UMTS cell
+    # ids do not encode the site, so each such cell starts as its own group.
+    site_id_shift_bits: {LTE: 8, NR: 14, basis: "LTE: 28-bit ECI = 20-bit eNB + 8-bit cell; NR: assumes 22-bit gNB id (C=50)"}
+    merge_distance_m: {value: 150, basis: "heuristic; OpenCelliD centroids lie 100 m-1 km from the mast (C=70)"}
+    osm_snap_distance_m: {value: 200, basis: "assumption: an OSM mast this close is taken as the real position"}
+    # Fusion with the Cartoradio grid (see twin/providers/estimated/register.py)
+    peak_min_v_m: {value: 1.5, basis: "assumption: weaker local maxima are noise of the national model"}
+    peak_snap_m: {value: 300, basis: "assumption: within the typical OpenCelliD centroid error (C=70)"}
+    new_site_min_v_m: {value: 3.0, basis: "assumption: a peak this strong with no known site nearby is a site"}
+    fit_radius_m: {value: 500, basis: "assumption: beyond this a site adds little to the ground field"}
+    assumed_height_above_receiver_m: {value: 20, basis: "assumption until heights come from the G0 city model"}
+    position_sigma_osm_m: {value: 30, basis: "assumption: OSM mast mapping accuracy"}
+    position_sigma_peak_m: {value: 75, basis: "half a Cartoradio cell diagonal (100 m Web Mercator = about 74 m on the ground)"}
+    position_sigma_opencellid_m: {value: 300, basis: "OpenCelliD centroids lie 100 m-1 km from the mast (C=70)"}
+
+open:
+  roma_gtfs_rt:
+    vehicle_positions_url: https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb
+    trip_updates_url: https://romamobilita.it/sites/default/files/rome_rtgtfs_trip_updates_feed.pb
+    speed_sigma_kmh: {value: 3.0, basis: "assumption: GPS-derived speed noise"}
+    delay_sigma_s: {value: 60.0, basis: "assumption, used only when the feed gives no 'uncertainty' (Roma's gives about 30 s)"}
+    timeout_s: 30
+
+  eea_hourly:
+    api_url: https://eeadmz1-downloads-api-appservice.azurewebsites.net/ParquetFile/urls
+    metadata_url: https://discomap.eea.europa.eu/map/fme/metadata/PanEuropean_metadata.csv
+    country: IT
+    city: Roma
+    pollutants: [NO2, PM10, PM2.5]
+    dataset: {value: 1, basis: "1 = unverified up-to-date data (E2a), EEA download service docs"}
+    # Hourly "Start" times are station local time; Italy reports in UTC+1.
+    utc_offset_hours: {value: 1, basis: "EEA time zone Etc/GMT-1 for Italian stations (C=75)"}
+    relative_sigma: {value: 0.15, basis: "data quality objective for continuous NO2 measurement, Directive 2008/50/EC Annex I"}
+    pollutant_codes: {NO2: 8, PM10: 5, O3: 7, PM2.5: 6001}
+    timeout_s: 60
+
+  dpc_radar:
+    api_url: https://radar-api.protezionecivile.it
+    origin: https://radar.protezionecivile.it
+    product: {value: SRI, basis: "SRI = surface rainfall intensity in mm/h (DPC radar docs)"}
+    step_minutes: 5
+    max_frames: 12
+    relative_sigma: {value: 0.5, basis: "assumption: radar rain-rate error is large (factor of about 2)"}
+    timeout_s: 60
+
+  arpa_points:
+    # Table of ARPA Lazio measurements (lon, lat, measured_on, e_v_m[, uncertainty_v_m][, location]).
+    # Empty until the Roma Capitale open-data portal (dati.comune.roma.it) answers again.
+    table_path: ""
+    relative_sigma: {value: 0.26, basis: "2 dB expanded instrument uncertainty, typical of broadband field meters (C=60)"}
+
+  bird_gbfs:
+    free_vehicles_url: https://mds.bird.co/gbfs/v2/public/rome/free_bike_status.json
+    timeout_s: 30
+
+  roma_wifi:
+    # Daily anonymised session CSVs, one CKAN dataset per year.
+    dataset: "wifi{year}"
+    hotspot_kml_urls:  # D.192 hotspot maps, read only by build_seeds
+      - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/4d5a48eb-afba-4cf4-8ca5-78295554b9ff/download/digitsecure_apchh202624032026_epgs10780_dim4e5kml.kml
+      - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/01157881-3b0c-4362-8516-8c2b4619972e/download/digit_secure_map_hhc_160226_epgs10780lml.kml
+      - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/84215020-e3c6-4989-b7b4-ca6a955a6646/download/ed140725_digit_mappa_c_hhc_140525_epgs3035_kml.kml
+    max_site_spread_m: {value: 300, basis: "access points of one site sit in one building or square; wider spread means an ambiguous address"}
+    sigma_floor: {value: 1.0, basis: "Poisson counting noise, sqrt(n), never below one session"}
+    timeout_s: 120
+
+  sensor_community:
+    api_url: https://data.sensor.community/airrohr/v1/filter
+    relative_sigma: {value: 0.4, basis: "low-cost SDS011 sensors agree with reference PM within about 30-50% in dry air (C=60)"}
+    humid_threshold_pct: {value: 80, basis: "optical PM sensors over-read in humid air above about 80% RH"}
+    humid_sigma_factor: {value: 2.0, basis: "assumption"}
+    timeout_s: 90
+
+  cams_open_meteo:
+    api_url: https://air-quality-api.open-meteo.com/v1/air-quality
+    step_deg: {value: 0.1, basis: "CAMS European ensemble grid is 0.1 degree"}
+    relative_sigma: {value: 0.5, basis: "assumption: hourly CAMS error at urban scale is of the order of the value"}
+    timeout_s: 60
+
+restricted:
+  cartoradio_grid:
+    url: https://d3r7svb6d8d7og.cloudfront.net/tiles/tiles/cartoradio.tiff
+    data_date: "2026-09-08"
+    credit: "Fonte: Cartoradio - MIMIT/FUB"
+    sigma_db: {value: 4.0, basis: "assumption: same spread as the twin's field model (model_error_sigma_db), C=60"}
+    cap_v_m: {value: 15.0, basis: "maximum in the inspected tile sits exactly on 15.0; read as '15 or more' (C=55)"}
+
+pa:
+  register_file:
+    # Path to the administration's register export (GeoJSON, Model A fields).
+    # Empty until Roma Capitale provides one.
+    path: ""
+    licence: "Roma Capitale, internal use"

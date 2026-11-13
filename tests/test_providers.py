@@ -44,7 +44,7 @@ def test_rush_hour_is_busier_than_night() -> None:
 def test_config_selects_the_active_provider() -> None:
     config = load_config(ROOT / "config" / "providers.yaml")
     assert config["traffic_flow"] == "sim_loops"
-    providers = build_providers(config)
+    providers = build_providers(config, skip_unavailable=True)
     assert providers["traffic_flow"].describe().id == "sim_loops"
 
 
