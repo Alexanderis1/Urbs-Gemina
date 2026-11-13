@@ -38,3 +38,11 @@ api:
   roles: [citizen, office]
   # Layers whose single records are visible to the office tier only.
   office_only_detail_layers: [antenna_register, emf_measurements]
+
+sports:                                   # wiring of the WS10 tools (Challenge 04)
+  facilities_file: processed/sports/facilities.geojson   # written by: python -m twin.modules.sports.pipeline build
+  census_layer: census_sections           # data/raw/census_sections.geojson (WS1), sections with population counts
+  # ISTAT 2021 variable names tried in order (C=50: the joined census table was not inspected yet)
+  section_id_fields: [SEZ21_ID, SEZ2021, sez21_id, SEZ]
+  residents_fields: [POP21, P1, pop_tot, POP_TOT, residents]
+  children_fields: [P_0_14, children, POP_0_14]

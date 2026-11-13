@@ -127,3 +127,12 @@ def test_input_schemas_are_strict() -> None:
             continue
         for obj in _walk(content["input_schema"]):
             assert obj.get("additionalProperties") is False, name
+
+
+def test_sports_tools_are_mounted_and_honest_when_missing(client: TestClient) -> None:
+    listed = {tool["name"] for tool in client.get("/tools").json()}
+    assert {"sports_facilities", "sport_coverage"} <= listed
+    r = client.post("/tools/sports_facilities", json={"area": "municipio:1", "discipline": "swimming"})
+    assert r.status_code == 200 and r.json()["status"] == "not_available"  # module or built layer missing here
+    r = client.post("/tools/sport_coverage", json={"discipline": "swimming", "max_minutes": 90})
+    assert r.status_code == 422

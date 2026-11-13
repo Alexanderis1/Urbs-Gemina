@@ -9,7 +9,8 @@ from pydantic import BaseModel
 
 from twin.api import models as m
 from twin.modules.antennas.report import build_permit_report
-from twin.tools.area import AreaTooLarge, resolve_area
+from twin.tools.area import AreaTooLarge, locate, resolve_area
+from twin.tools.layers import first_property, iter_positions
 from twin.tools.data_status import data_status
 from twin.tools.envelope import ToolError, make_envelope
 from twin.tools.estimate_field import estimate_field
@@ -134,6 +135,83 @@ def _permit_report(rt: ToolRuntime, req: m.PermitReportIn, role: str) -> dict[st
                                radius_m=req.radius_m, role=role)
 
 
+def _sports_area(rt: ToolRuntime, area: Any) -> Any:
+    """WS10 wants zones as polygons; other area forms pass through unchanged."""
+    if isinstance(area, str) and area.lower().startswith(("zone:", "urban_zone:", "zu:")):
+        return resolve_area(area, rt.store, rt.settings).geometry
+    return area
+
+
+def _sports_inputs(rt: ToolRuntime) -> tuple[Any, Any, Any, list[Any]]:
+    """WS10 modules, facility list and config; raises ImportError / OSError when missing."""
+    tools_mod = importlib.import_module("twin.modules.sports.tools")
+    pipeline = importlib.import_module("twin.modules.sports.pipeline")
+    config_mod = importlib.import_module("twin.modules.sports.config")
+    path = rt.settings.paths.data / str(rt.settings.tool("sports", "facilities_file"))
+    return tools_mod, config_mod.load_config(), pipeline, list(pipeline.load_facilities(path))
+
+
+def _population(rt: ToolRuntime) -> list[Any]:
+    """Census sections -> WS10 PopulationPoint (centroid, residents, children); empty when not loaded."""
+    deserts = importlib.import_module("twin.modules.sports.deserts")
+    cfg = rt.settings.tools.get("sports", {})
+    snapshot = rt.store.get(str(cfg.get("census_layer", "census_sections")))
+    if snapshot is None:
+        return []
+    points = []
+    for index, feature in enumerate(snapshot.features):
+        props = feature.get("properties") or {}
+        residents = first_property(props, list(cfg.get("residents_fields", [])))
+        if residents is None:
+            continue
+        children = first_property(props, list(cfg.get("children_fields", []))) or 0
+        positions = list(iter_positions(feature["geometry"]["coordinates"]))
+        lon = sum(float(p[0]) for p in positions) / len(positions)
+        lat = sum(float(p[1]) for p in positions) / len(positions)
+        where = locate(lon, lat, rt.store, rt.settings)
+        points.append(deserts.PopulationPoint(
+            point_id=str(first_property(props, list(cfg.get("section_id_fields", []))) or index),
+            lon=lon, lat=lat, residents=float(residents), children=float(children),
+            zone=where["urban_zone"].get("id"), municipio=where["municipio"].get("id")))
+    return points
+
+
+def _sports_facilities(rt: ToolRuntime, req: m.SportsFacilitiesIn, role: str) -> dict[str, Any]:
+    inputs = req.model_dump(exclude_none=True)
+    try:
+        tools_mod, config, _, facilities = _sports_inputs(rt)
+    except ImportError:
+        return _not_wired("sports_facilities", "twin.modules.sports.tools", "sports_facilities",
+                          "WS10 (sports add-on)", inputs)
+    except OSError as error:
+        return make_envelope("sports_facilities", inputs, None, {"sports_facilities": "not_available"},
+                             status="not_available", reason=f"Facility layer not built yet ({error}). "
+                             "Run: python -m twin.modules.sports.pipeline build")
+    out: dict[str, Any] = tools_mod.sports_facilities(_sports_area(rt, _dump(req.area)), req.discipline,
+                                                      facilities, config, type=req.type,
+                                                      accessible=req.accessible)
+    return out
+
+
+def _sport_coverage(rt: ToolRuntime, req: m.SportCoverageIn, role: str) -> dict[str, Any]:
+    inputs = req.model_dump(exclude_none=True)
+    try:
+        tools_mod, config, _, facilities = _sports_inputs(rt)
+        deserts = importlib.import_module("twin.modules.sports.deserts")
+    except ImportError:
+        return _not_wired("sport_coverage", "twin.modules.sports.tools", "sport_coverage",
+                          "WS10 (sports add-on)", inputs)
+    except OSError as error:
+        return make_envelope("sport_coverage", inputs, None, {"sports_facilities": "not_available"},
+                             status="not_available", reason=f"Facility layer not built yet ({error}). "
+                             "Run: python -m twin.modules.sports.pipeline build")
+    gyms = [deserts.school_gym_facility(g.name, g.lon, g.lat, config, g.disciplines) for g in req.open_school_gyms]
+    out: dict[str, Any] = tools_mod.sport_coverage(_sports_area(rt, _dump(req.area)), req.discipline, facilities,
+                                                   _population(rt), config, max_minutes=req.max_minutes,
+                                                   open_facilities=gyms)
+    return out
+
+
 TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("resolve_place", m.ResolvePlaceIn, lambda rt, req, role: resolve_place(rt, req.text)),
     ToolSpec("context_check", m.ContextCheckIn,
@@ -147,6 +225,8 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("find_dataset", m.FindDatasetIn, _find_dataset, owner="WS7"),
     ToolSpec("data_status", m.DataStatusIn, lambda rt, req, role: data_status(rt)),
     ToolSpec("permit_report", m.PermitReportIn, _permit_report),
+    ToolSpec("sports_facilities", m.SportsFacilitiesIn, _sports_facilities, owner="WS10"),
+    ToolSpec("sport_coverage", m.SportCoverageIn, _sport_coverage, owner="WS10"),
 ]}
 
 

@@ -104,6 +104,32 @@ class PermitReportIn(Strict):
     radius_m: float | None = Field(default=None, gt=0, le=2000)
 
 
+class SportsFacilitiesIn(Strict):
+    """Sports facilities (Challenge 04) in an area: merged official, school and web sources. Web-derived fields are labelled "from the web, unverified"."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    discipline: str | None = Field(default=None, max_length=60)
+    type: Literal["public", "school", "private"] | None = Field(
+        default=None, description="private = known only from OpenStreetMap or the web")
+    accessible: bool | None = Field(default=None, description="true keeps only facilities a source states are accessible")
+
+
+class SchoolGym(Strict):
+    name: str = Field(min_length=1, max_length=120)
+    lon: float = Field(ge=12.0, le=13.1)
+    lat: float = Field(ge=41.4, le=42.4)
+    disciplines: list[str] | None = None
+
+
+class SportCoverageIn(Strict):
+    """Sport deserts: residents without a facility for a discipline within walking time; optional what-if opening school gyms (simulated)."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    discipline: str = Field(min_length=1, max_length=60)
+    max_minutes: float | None = Field(default=None, ge=0, le=60, description="Walking time; default from config")
+    open_school_gyms: list[SchoolGym] = Field(default_factory=list, max_length=10)
+
+
 class SourceOut(BaseModel):
     id: str
     url: str | None = None
