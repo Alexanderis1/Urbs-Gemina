@@ -108,6 +108,7 @@ verifier:
     - '\b[2-6]G\b'
     - '\bP(5|50|95)\b'
     - '\bMunicipio [0-9IVXLC]+\b'
+    - '\b(zona urbana|zona|urban zone|zone)\s+[0-9]+[A-Za-z]?\b'
   # Abbreviations after which a full stop does not end the sentence (legal Italian and English).
   abbreviations: [art, artt, n, nn, co, comma, lett, cfr, es, ecc, sez, pag, pp, p, d.lgs, d.p.r, d.m, l, no, nr, vs, approx, ca]
   calibration_words: [calibrated, uncalibrated, calibrato, non calibrato]

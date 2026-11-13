@@ -153,3 +153,11 @@ def test_source_retrieval_date_may_be_quoted() -> None:
         result={"results": [{"url": "https://www.normattiva.it/x", "title": "Legge 214/2023", "text": "15 V/m"}]},
         data_kinds={"law": "real"}, sources=[{"id": "exa", "url": "https://www.normattiva.it/x", "retrieved_at": "2026-11-13T10:00:00Z"}])
     assert verify("The attention value is 15 V/m (retrieved 2026-11-13) [src:https://www.normattiva.it/x].", runs(legal)).ok
+
+
+def test_area_names_are_identifiers_not_figures() -> None:
+    r = context_run()
+    rid = r["run_id"][:12]
+    assert verify(f"Entro 300 m da Piazza Venezia (Municipio 1, zona 1A) ci sono siti a 182 m [run:{rid}].", runs(r),
+                  question="Cosa c'è entro 300 metri da Piazza Venezia?").ok
+    assert verify(f"In municipio I, urban zone 6B, a school is 182 m away [run:{rid}].", runs(r)).ok
