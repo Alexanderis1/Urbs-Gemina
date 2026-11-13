@@ -9,7 +9,8 @@ import yaml
 
 DataKind = Literal["real", "estimated", "simulated"]
 DATA_KINDS: tuple[str, ...] = ("real", "estimated", "simulated")
-PROTOCOLS = ("wfs", "overpass", "osm_extract", "zip_shapefile", "istat_census", "derived")
+PROTOCOLS = ("wfs", "overpass", "osm_extract", "zip_shapefile", "istat_census", "derived",
+             "csv_points", "csv_geocoded")
 FEED_METHODS = ("get", "eea_parquet_zip", "dpc_radar")
 
 #: (min_lon, min_lat, max_lon, max_lat) in WGS84
@@ -108,6 +109,12 @@ def parse_catalog(raw: dict[str, Any], city_bbox: BBox) -> Catalog:
             raise CatalogError(f"layer {key}: WFS layers need type_name")
         if protocol in ("overpass", "osm_extract") and not layer.selectors:
             raise CatalogError(f"layer {key}: OSM layers need selectors")
+        if protocol in ("csv_points", "csv_geocoded"):
+            needed = ["url", "columns"] + (["lat_column", "lon_column"] if protocol == "csv_points"
+                                           else ["address_column", "address_source"])
+            missing = [name for name in needed if name not in layer.options]
+            if missing:
+                raise CatalogError(f"layer {key}: {protocol} layers need options {missing}")
         layers[key] = layer
 
     feeds: dict[str, FeedSpec] = {}

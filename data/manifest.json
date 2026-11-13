@@ -189,6 +189,24 @@
       "licence": "inherits the licences of its inputs (CC BY for Roma/ISTAT layers, ODbL for OSM rows)",
       "redistribution": true,
       "status": "implemented"
+    },
+    "lazio_open_data": {
+      "kind": "real",
+      "what": "Regione Lazio open data portal (CKAN): accredited private health facilities with coordinates",
+      "endpoint": "https://dati.lazio.it",
+      "access": "CSV download, no key",
+      "licence": "Regione Lazio open data; licence not stated on this dataset (C=60), facility names and positions only are kept",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
+    },
+    "indicepa": {
+      "kind": "real",
+      "what": "IndicePA (IPA), national register of public administrations: head-office addresses, geocoded offline on OSM addr:* tags",
+      "endpoint": "https://indicepa.gov.it/ipa-dati",
+      "access": "CKAN text download, no key",
+      "licence": "CC BY 4.0 (C=80)",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
     }
   },
   "snapshots": {
@@ -2029,35 +2047,149 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "sensitive_sites",
-      "fetched_at": "2026-11-13T22:33:34Z",
+      "fetched_at": "2026-11-13T22:55:06Z",
       "notes": "Official layers first, OSM fills gaps; each row says its source layer and provenance",
       "counts_by_category": {
         "critical_infrastructure": 987,
         "education": 2060,
-        "government": 968,
+        "government": 1007,
         "green": 1858,
         "hazardous_industry": 206,
-        "health": 335
+        "health": 733
       },
       "counts_by_provenance": {
-        "official": 2519,
-        "osm": 3895
+        "official": 3034,
+        "osm": 3817
       },
-      "dropped_duplicates": 1804,
+      "dropped_duplicates": 1884,
       "dropped_no_geometry": 7,
       "missing_inputs": [],
       "status": "ok",
-      "features": 6414,
+      "features": 6851,
       "dropped_fields": [],
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
           "path": "data/processed/sensitive_sites.parquet",
-          "sha256": "5e9191f53c8a90b788c01a6a4daa94728d5dcfebc3b8e0f24722fa0811f99e4b"
+          "sha256": "f162e811004b415c71aa2fd36b728b740c863ba09f90cd4f3c7b461e0ac480bf"
         },
         "geojson": {
           "path": "data/processed/sensitive_sites.geojson",
-          "sha256": "abfa54cfbf0291faf2da2cc3e08540b0eea6d757c4768c39a5b03bb9fffa7e16"
+          "sha256": "6efdf7cd7f8ea22d160b4f83dc2fcc0ca852c81b90794dedc7c9d212dcde6c2b"
+        }
+      },
+      "warnings": []
+    },
+    "health_accredited_lazio": {
+      "source": "lazio_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-13T22:52:15Z",
+      "notes": "Private health facilities accredited by Regione Lazio (list of 26/11/2014, with coordinates). Old list: some may have closed or moved (C=70).",
+      "request_url": "https://dati.lazio.it/dataset/9c87461b-4e37-4357-b70d-85bdc07146c1/resource/1a59e29a-da23-4fb9-8b14-78289f3333cb/download/struttureprivateaccreditate.csv",
+      "raw_sha256": "1726139749cc8be5e09a0f8bd7ee605e2465cc961f281665d95eeb3b05f64900",
+      "skipped_rows": {
+        "filtered": 364,
+        "no_position": 6
+      },
+      "status": "ok",
+      "features": 434,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/health_accredited_lazio.parquet",
+          "sha256": "84bfd7d0ca71cf65d4de250a919382345c7f46b9c958e4a31ebb86aefa8f4a5d"
+        },
+        "geojson": {
+          "path": "data/processed/health_accredited_lazio.geojson",
+          "sha256": "d537f5c3d44bfa549287d89c4fbd5580e8deaeb94249d2b71a2b6bcaf3f52ed6"
+        }
+      },
+      "warnings": []
+    },
+    "public_bodies_ipa": {
+      "source": "indicepa",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-13T22:54:15Z",
+      "notes": "Head offices of national and local public bodies in Rome from IndicePA; position from OSM addresses (geocode_quality address = exact house number, street = centre of the street)",
+      "request_url": "https://indicepa.gov.it/ipa-dati/dataset/502ff370-1b2c-4310-94c7-f39ceb7500e3/resource/3ed63523-ff9c-41f6-a6fe-980f3d9e501f/download/amministrazioni.txt",
+      "raw_sha256": "9f82b46d7c0d1d17aa6dbbe89a674fb6306bd8e07eb0c01e419d6b3d62e8e088",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 23686
+      },
+      "geocoding": {
+        "address": 47,
+        "street": 36,
+        "not_found": 3
+      },
+      "status": "ok",
+      "features": 83,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/public_bodies_ipa.parquet",
+          "sha256": "6cb7279f418752b7fd1b4dcad806567d3dd36f672824ab7e45b3d2c4b1b77de9"
+        },
+        "geojson": {
+          "path": "data/processed/public_bodies_ipa.geojson",
+          "sha256": "33e9d431368ef41bc0c0ecef9e87bc08787d024f84dd4b90d1cd866efc3b47f8"
+        }
+      },
+      "warnings": []
+    },
+    "land_use_2016": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "environment",
+      "fetched_at": "2026-11-13T22:53:12Z",
+      "type_name": "geonode:cus_2016",
+      "notes": "Regione Lazio land use map 1:25,000, 2016 update (Corine-style classes)",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Acus_2016&srsName=EPSG%3A4326&outputFormat=application%2Fjson&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "f07ecdfaef788a1c48ceb0d67a491a377e9d6b03aac3d9d2d95e665c5f2ef534",
+      "status": "ok",
+      "features": 6108,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/land_use_2016.parquet",
+          "sha256": "83e3ea11621b8eb5c67e62df29eaa4160e7d0bd4f002fd1830303739d7af2443"
+        },
+        "geojson": {
+          "path": "data/processed/land_use_2016.geojson",
+          "sha256": "30d4650c4330f641d512059b63dcfcf902451682cdeb8a86d5cc5b622c1fc461"
+        }
+      },
+      "warnings": []
+    },
+    "monumental_trees": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-13T22:53:15Z",
+      "type_name": "geonode:alberi_monumentali",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aalberi_monumentali&srsName=EPSG%3A4326&outputFormat=application%2Fjson&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "5b8abdab638e6d18786e7db211baad9721850687edaff9a1a1837d5597aad369",
+      "status": "ok",
+      "features": 51,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/monumental_trees.parquet",
+          "sha256": "5769251fa3557314d1ca4ec70bdc72602a0cdd93a41fbb4940370b8f6c03bc3f"
+        },
+        "geojson": {
+          "path": "data/processed/monumental_trees.geojson",
+          "sha256": "e92b116fa7481d6ba89452cb19930dc13b6abe2b0d0149099ca96763c72ada0d"
         }
       },
       "warnings": []

@@ -89,3 +89,24 @@ def test_layer_is_written_through_the_normal_ingest_path(processed: Path) -> Non
     assert entry["status"] == "ok", entry.get("error")
     assert entry["counts_by_category"]["health"] == 2
     assert (processed / "sensitive_sites.geojson").exists()
+
+
+def test_official_registers_come_before_osm_and_keep_their_row_label(tmp_path: Path) -> None:
+    write(tmp_path, "health_accredited_lazio", [
+        {"facility_id": "11", "name": "CASA DI CURA ALFA", "geometry": Point(12.52, 41.91)}])
+    write(tmp_path, "public_bodies_ipa", [
+        {"ipa_code": "m_it", "name": "Ministero dell'Interno", "geometry": Point(12.495, 41.90),
+         "body_type": "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato",
+         "geocode_quality": "street", "data_kind": "estimated"}])
+    write(tmp_path, "osm_sensitive_pois", [
+        {"osm_id": "node/2", "amenity": "clinic", "name": "Alfa", "geometry": Point(12.52, 41.91 + 10 * M)},
+        {"osm_id": "node/9", "office": "government", "name": "Viminale",
+         "geometry": Point(12.495, 41.90 + 30 * M)},
+    ])
+    frame, _ = build_sensitive_sites(LAYER, tmp_path)
+    by_id = {row.site_id: row for row in frame.itertuples()}
+    clinic = by_id["health_accredited_lazio:11"]
+    assert (clinic.category, clinic.subtype, clinic.provenance) == ("health", "accredited_facility", "official")
+    ministry = by_id["public_bodies_ipa:m_it"]
+    assert (ministry.category, ministry.subtype, ministry.data_kind) == ("government", "ministry", "estimated")
+    assert "osm_sensitive_pois:node/2" not in by_id and "osm_sensitive_pois:node/9" not in by_id

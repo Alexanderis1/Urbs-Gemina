@@ -55,7 +55,9 @@ def _rows(spec: dict[str, Any], frame: Any, rules: list[dict[str, Any]],
             field = spec.get("subtype_field")
             subtype = _text(row.get(field)) if field else str(spec["subtype"])
             subtype = subtype_map.get(subtype, subtype) or "unspecified"
-        ident = _text(row.get("osm_id")) or _text(row.get("feature_id")) or str(index)
+        id_field = str(spec.get("id", ""))
+        ident = ((_text(row.get(id_field)) if id_field else "") or _text(row.get("osm_id"))
+                 or _text(row.get("feature_id")) or str(index))
         rows.append({
             "site_id": f"{layer}:{ident}",
             "category": category,
@@ -63,7 +65,8 @@ def _rows(spec: dict[str, Any], frame: Any, rules: list[dict[str, Any]],
             "name": _text(row.get(str(spec.get("name", "name")))),
             "source_layer": layer,
             "provenance": str(spec.get("provenance", "official")),
-            "data_kind": "real",
+            # Geocoded registers say per row whether the position is exact (real) or estimated.
+            "data_kind": (_text(row.get(str(spec["data_kind_field"]))) if spec.get("data_kind_field") else "") or "real",
             "geometry": row.geometry,
         })
     return rows

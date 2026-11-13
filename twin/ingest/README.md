@@ -43,6 +43,20 @@ Official layers come first; an OSM feature within `dedupe_m` metres of an offici
 same category is treated as the same site. The recipe (inputs, OSM tag rules, label mapping)
 is in `config/ingest.yaml` under `layers.sensitive_sites.options`.
 
+Two official registers feed it as tables (`twin/ingest/tables.py`):
+
+- `health_accredited_lazio`: Regione Lazio's accredited private health facilities, which
+  come with coordinates (list of 2014, so some may have closed);
+- `public_bodies_ipa`: head offices of ministries, constitutional bodies, authorities and
+  agencies from IndicePA. IPA gives only addresses, so they are matched **offline** against
+  the house numbers in the OSM Lazio extract (no outside geocoder sees the data).
+  `geocode_quality` says `address` (exact house number, `data_kind: real`) or `street`
+  (centre of the street, `data_kind: estimated`).
+
+Only the columns listed under `columns` are kept, so names of owners and managers,
+VAT numbers and e-mails never reach the files. Facility names that contain a person's
+name (s.a.s., s.n.c., doctors' practices) are replaced by a generic label.
+
 PTPR (Regione Lazio landscape plan, Tavole A and B plus the PTP 15/12 constraint layers)
 is the official landscape source: those layers carry `theme: landscape_ptpr`.
 

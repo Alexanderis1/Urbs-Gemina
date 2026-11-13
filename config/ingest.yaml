@@ -46,6 +46,15 @@ sources:
     # Layers built from other processed layers (no download). Run them after their inputs.
     protocol: derived
     url: "data/processed"
+  lazio_open_data:
+    # Regione Lazio CKAN portal; tables that already carry latitude/longitude.
+    protocol: csv_points
+    url: "https://dati.lazio.it"
+  indicepa:
+    # IndicePA (IPA), the national register of public bodies; addresses only, geocoded
+    # offline on the OSM extract's addr:* tags (no outside geocoder sees the data).
+    protocol: csv_geocoded
+    url: "https://indicepa.gov.it/ipa-dati"
   istat_census:
     protocol: istat_census
     url: "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip"
@@ -147,6 +156,8 @@ layers:
   ptpr_b_aree_naturali_protette: {source: lazio_geoserver, type_name: "geonode:aree_naturali_protette1", data_kind: real, theme: environment, clip_to_city: true}
   ptpr_b_usi_civici:     {source: lazio_geoserver, type_name: "geonode:usi_civici", data_kind: real, theme: landscape, clip_to_city: true}
   natura2000:            {source: lazio_geoserver, type_name: "geonode:rete_natura200000", data_kind: real, theme: environment, clip_to_city: true}
+  land_use_2016:         {source: lazio_geoserver, type_name: "geonode:cus_2016", data_kind: real, theme: environment, clip_to_city: true, notes: "Regione Lazio land use map 1:25,000, 2016 update (Corine-style classes)"}
+  monumental_trees:      {source: lazio_geoserver, type_name: "geonode:alberi_monumentali", data_kind: real, theme: landscape, clip_to_city: true}
 
   # More PTPR (Regione Lazio landscape plan). PTPR is the official landscape source of
   # the twin (theme: landscape_ptpr). Tavola C is not published as WFS (C=70).
@@ -224,6 +235,56 @@ layers:
       - 'nwr["office"="diplomatic"]'
       - 'nwr["amenity"="embassy"]'
 
+  # --- Official registers (tables) for sensitive sites --------------------------
+  # Only the columns under "columns" are kept, so owners' names, VAT numbers, managers'
+  # names and e-mails in these tables never reach the files.
+  health_accredited_lazio:
+    source: lazio_open_data
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Private health facilities accredited by Regione Lazio (list of 26/11/2014, with coordinates). Old list: some may have closed or moved (C=70)."
+    options:
+      url: "https://dati.lazio.it/dataset/9c87461b-4e37-4357-b70d-85bdc07146c1/resource/1a59e29a-da23-4fb9-8b14-78289f3333cb/download/struttureprivateaccreditate.csv"
+      delimiter: ","
+      encoding: utf-8-sig
+      filter: {COMUNE: ROMA}
+      lat_column: Latitude
+      lon_column: Longitude
+      columns: {facility_id: ID_PR, name: NOME PRESIDIO}
+      generic_name:
+        basis: "Partnership names (s.a.s., s.n.c.) and doctors' practices contain a person's name by law; no personal data"
+        patterns: ['\bs\.?\s?a\.?\s?s\b', '\bs\.?\s?n\.?\s?c\b', '\bdott', '\bdr\.', '\bprof\.', 'studio medico']
+        label: "Struttura sanitaria accreditata"
+  public_bodies_ipa:
+    source: indicepa
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Head offices of national and local public bodies in Rome from IndicePA; position from OSM addresses (geocode_quality address = exact house number, street = centre of the street)"
+    options:
+      url: "https://indicepa.gov.it/ipa-dati/dataset/502ff370-1b2c-4310-94c7-f39ceb7500e3/resource/3ed63523-ff9c-41f6-a6fe-980f3d9e501f/download/amministrazioni.txt"
+      delimiter: "\t"
+      encoding: utf-8-sig
+      filter: {Comune: Roma}
+      filter_in:
+        tipologia_istat:
+          - "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato"
+          - "Organi Costituzionali e di Rilievo Costituzionale"
+          - "Autorita' Amministrative Indipendenti"
+          - "Agenzie Fiscali"
+          - "Forze di Polizia ad Ordinamento Civile e Militare per la Tutela dell'Ordine e della Sicurezza Pubblica"
+          - "Regioni, Province Autonome e loro Consorzi e Associazioni"
+          - "Citta' Metropolitane"
+          - "Enti Pubblici Non Economici"
+          - "Enti di Previdenza ed Assistenza Sociale in Conto Economico Consolidato pubblici"
+          - "Aziende ed Amministrazioni dello Stato ad Ordinamento Autonomo"
+      address_column: Indirizzo
+      address_source: osm
+      columns: {ipa_code: cod_amm, name: des_amm, body_type: tipologia_istat}
+      address_overrides:
+        basis: "IPA lists a building name or a misspelt street for these bodies; replaced by the postal address of the same building"
+        "Palazzo Viminale": "Piazza del Viminale, 1"
+        "Piazzale della Farnersina, 1": "Piazzale della Farnesina, 1"
+
   # --- One merged layer of sensitive sites ------------------------------------
   # Inputs are read from data/processed, in this order. Official layers come first;
   # a later feature within dedupe_m metres of an already-kept site of the same
@@ -240,6 +301,7 @@ layers:
         - {layer: hospitals, provenance: official, category: health, subtype: hospital, name: DESCRIZION}
         - {layer: emergency_hospitals, provenance: official, category: health, subtype: emergency_department, name: denominazione}
         - {layer: health_care, provenance: official, category: health, subtype: hospital, name: denominaz}
+        - {layer: health_accredited_lazio, provenance: official, category: health, subtype: accredited_facility, name: name, id: facility_id}
         - {layer: care_homes_osm, provenance: osm, category: health, subtype: care_home, name: name}
         - {layer: nidi, provenance: official, category: education, subtype: nursery, name: denominazione}
         - {layer: infanzia, provenance: official, category: education, subtype: preschool, name: denominazione}
@@ -254,9 +316,20 @@ layers:
         - {layer: embassies, provenance: official, category: government, subtype_field: tipologia, name: denominazione}
         - {layer: police_fire, provenance: official, category: government, subtype_field: _tipologia, name: _denominaz}
         - {layer: civil_protection_sites, provenance: official, category: government, subtype: civil_protection, name: denominaz}
+        - {layer: public_bodies_ipa, provenance: official, category: government, subtype_field: body_type, name: name, id: ipa_code, data_kind_field: data_kind}
         - {layer: osm_sensitive_pois, provenance: osm, name: name, osm_rules: true}
       # Official labels (from subtype_field) mapped to the same codes the OSM rules use.
       subtype_map:
+        "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato": ministry
+        "Organi Costituzionali e di Rilievo Costituzionale": constitutional_body
+        "Autorita' Amministrative Indipendenti": independent_authority
+        "Agenzie Fiscali": tax_agency
+        "Forze di Polizia ad Ordinamento Civile e Militare per la Tutela dell'Ordine e della Sicurezza Pubblica": police_hq
+        "Regioni, Province Autonome e loro Consorzi e Associazioni": regional_government
+        "Citta' Metropolitane": metropolitan_city
+        "Enti Pubblici Non Economici": public_agency
+        "Enti di Previdenza ed Assistenza Sociale in Conto Economico Consolidato pubblici": public_agency
+        "Aziende ed Amministrazioni dello Stato ad Ordinamento Autonomo": public_agency
         "Aeroporti": airport
         "Porti": port
         "STAZIONI FERROVIE REGIONALI (FL 1-8)": railway_station

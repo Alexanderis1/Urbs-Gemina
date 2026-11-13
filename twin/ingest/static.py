@@ -28,6 +28,7 @@ from twin.ingest.catalog import BBox, Catalog, LayerSpec
 from twin.ingest.census import build_census_sections
 from twin.ingest.osm_extract import extract_file, read_elements
 from twin.ingest.sensitive_sites import build_sensitive_sites
+from twin.ingest.tables import AddressIndex, geocoded_frame, osm_address_records, points_frame, read_table
 from twin.ingest.http import Fetch, HttpRequest
 from twin.ingest.manifest import record_snapshots, sha256_file
 from twin.ingest.privacy import personal_columns
@@ -218,6 +219,27 @@ def _census_frame(layer: LayerSpec, catalog: Catalog, fetch: Fetch, entry: Entry
     return build_census_sections(layer, shapes, population)
 
 
+def _table_frame(layer: LayerSpec, catalog: Catalog, fetch: Fetch, entry: Entry) -> Any:
+    """An official CSV: points from its own coordinates, or geocoded on OSM addresses offline."""
+    options = layer.options
+    url = str(options["url"])
+    raw = fetch(HttpRequest(url, timeout_s=300.0))
+    entry["request_url"] = url
+    entry["raw_sha256"] = hashlib.sha256(raw).hexdigest()
+    rows = read_table(raw, str(options.get("delimiter", ",")), str(options.get("encoding", "utf-8-sig")))
+    del raw
+    if catalog.sources[layer.source].protocol == "csv_points":
+        frame, report = points_frame(rows, options, catalog.city_bbox)
+    else:
+        extract_url = catalog.sources[str(options["address_source"])].urls[0]
+        path, data = extract_file(extract_url, fetch)
+        entry["address_index_sha256"] = hashlib.sha256(data if data is not None else path.read_bytes()).hexdigest()
+        addresses, roads = osm_address_records(path, catalog.city_bbox)
+        frame, report = geocoded_frame(rows, options, AddressIndex(addresses, roads))
+    entry.update(report)
+    return frame
+
+
 # --- One layer ----------------------------------------------------------------
 
 def _now_iso(now: datetime) -> str:
@@ -244,6 +266,8 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
             entry.update(report)
         elif catalog.sources[layer.source].protocol == "istat_census":
             frame = _census_frame(layer, catalog, fetch, entry)
+        elif catalog.sources[layer.source].protocol in ("csv_points", "csv_geocoded"):
+            frame = _table_frame(layer, catalog, fetch, entry)
         else:
             raw, url = _download(layer, catalog, fetch)
             entry["request_url"] = url
