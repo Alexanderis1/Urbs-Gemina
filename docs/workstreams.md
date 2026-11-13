@@ -13,6 +13,10 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
 - Contract changes (the interfaces below) go through the hub thread, not edited locally.
 - Explain choices to Alessandro in plain language, give 2-3 options with a recommendation, and a confidence score (C=NN) when unsure.
 
+## Data rule (13 Nov 2026)
+
+**Only traffic loop sensors may be simulated.** Every other sensor or layer uses real existing sources, filled in with models and sensor fusion, labelled `real` or `estimated`. What-if variants may contain hypothetical inputs, flagged as such.
+
 ## Shared interfaces (frozen unless the hub changes them)
 
 1. **Provider contract**: `twin/providers/base.py` (`Provider.describe() -> ProviderInfo`, `Provider.fetch(bbox, start, end) -> Iterable[Observation]`, `kind` in open | simulated | pa | restricted, `synthetic`, `redistribution`). Owned by the hub.

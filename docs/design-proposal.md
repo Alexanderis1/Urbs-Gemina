@@ -16,6 +16,7 @@ Decisions already taken (by you):
 |---|---|
 | Whole city first; districts simplify heavy tasks | Every data layer covers all of Rome. Heavy simulations run on an "operating area" (a municipio, an urban zone or a drawn polygon) |
 | Roma Capitale cannot share loop-sensor data and holds no antenna data | **Simulated sensors behind the same interface as real ones.** The PA later swaps in its own access without code changes |
+| **Only traffic loops may be simulated** (13 Nov 2026, supersedes section 8 for every other simulator) | Antenna sites, EMF values and every other layer come from real existing sources (OpenCelliD, OSM, Cartoradio, the ARPA station, EEA, GTFS-RT, radar...) combined with models and sensor fusion, labelled `estimated` where modelled. No synthetic records outside `sim_loops` |
 | Own solution that also satisfies Challenge 02 | The antenna module is one application of the twin, not the whole product |
 | No Avalanche | Provenance is a local hash manifest plus git history. No blockchain |
 | Target Exa, ElevenLabs and Lovable | Each gets a real job in the core flow (section 11) |
@@ -196,6 +197,8 @@ Personal data: drop the contact fields (`ref-nome`, `ref-cell`, telephone, e-mai
 ---
 
 ## 8. Simulated sensors: specification
+
+> **Superseded on 13 Nov 2026:** only `sim_loops` stays simulated. `sim_register` becomes an *estimated* register built from OpenCelliD + OSM, with its unknown parameters (azimuths, EIRP) fitted to the Cartoradio grid by sensor fusion; `sim_emf_points` is replaced by the real ARPA station plus the fused field estimate; `sim_applications` is dropped (the officer enters an application live in the demo). See `docs/decisions.md`.
 
 Each simulator is a provider with a fixed seed and a version, so runs are reproducible.
 
