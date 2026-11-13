@@ -64,3 +64,5 @@ Decided by Alessandro: no time-based scope cuts. The elements are built in paral
 | WS6 scenarios | Road closure runs on SUMO only, no simplified fallback model. Scenario kinds: antenna, population_exposure, road_closure (heavy) | Decided by Alessandro |
 | Hub | Tool envelope gains top-level `status` (ok / not_available / refused) + `reason`, `cached`, and `not_available` as a data kind; `run_id` also hashes the driving config files | Agreed |
 | Hub | Area ids: `city`, `municipio:<1-15>`, `zone:<CODE>`, or a GeoJSON polygon (300 m circle as a polygon). One parser in `twin/tools/area.py` | Agreed |
+| WS10 sports | Facility type is public / school / private / unclassified; "private" only when a source states it, never inferred from appearing only in OSM or on the web | Agreed |
+| WS4 tools | Tool list adds `permit_report`, `sports_facilities`, `sport_coverage`; `estimate_field` takes a point or an area | Agreed |
