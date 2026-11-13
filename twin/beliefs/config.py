@@ -39,6 +39,16 @@ class PriorSpec:
 
 
 @dataclass(frozen=True)
+class FieldSpec:
+    """A gridded real map used as the per-cell starting point (e.g. the Cartoradio grid)."""
+
+    #: Layer name in config/providers.yaml whose provider delivers the map.
+    source: str
+    entity_types: tuple[str, ...]
+    value_key: str
+
+
+@dataclass(frozen=True)
 class LayerSpec:
     name: str
     unit: str
@@ -51,6 +61,12 @@ class LayerSpec:
     #: "loso" (leave-one-station-out check) or "none" (always uncalibrated).
     calibration_method: str
     calibration_note: str
+    #: Layer names in config/providers.yaml whose readings feed this layer (sensor fusion).
+    sources: tuple[str, ...] = ()
+    #: Optional real map that replaces the generic prior cell by cell.
+    prior_field: FieldSpec | None = None
+    #: Only layers explicitly allowed may use simulated readings (project rule: road loops only).
+    allow_simulated: bool = False
 
 
 def grid_resolution(config_dir: Path = CONFIG_DIR) -> int:
@@ -73,6 +89,7 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
         if by_hour is not None and len(by_hour) != 24:
             raise ValueError(f"{name}: mean_by_hour needs 24 values")
         calibration = entry.get("calibration", {})
+        field = entry.get("prior_field")
         specs[str(name)] = LayerSpec(
             name=str(name),
             unit=str(entry["unit"]),
@@ -88,6 +105,15 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
             min_value=float(entry.get("min_value", float("-inf"))),
             calibration_method=str(calibration.get("method", "loso")),
             calibration_note=str(calibration.get("note", "")),
+            sources=tuple(str(x) for x in entry.get("sources", [])),
+            prior_field=None
+            if field is None
+            else FieldSpec(
+                source=str(field["source"]),
+                entity_types=tuple(str(t) for t in field["entity_types"]),
+                value_key=str(field["value_key"]),
+            ),
+            allow_simulated=bool(entry.get("allow_simulated", False)),
         )
     return specs
 

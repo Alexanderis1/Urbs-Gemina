@@ -24,6 +24,7 @@ def spec(correlation_length_km: float = 1.0, tau_hours: float = 1.0) -> LayerSpe
         min_value=0.0,
         calibration_method="loso",
         calibration_note="",
+        allow_simulated=True,
     )
 
 

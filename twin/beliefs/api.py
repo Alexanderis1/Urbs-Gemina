@@ -20,7 +20,7 @@ import hashlib
 import math
 from datetime import datetime, timezone
 from statistics import NormalDist
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 
@@ -28,7 +28,7 @@ from twin.beliefs.calibration import CalibrationReport, CalibrationRules, leave_
 from twin.beliefs.config import LayerSpec, load_calibration_rules, load_specs
 from twin.beliefs.grid import bbox_of_cells, cell_boundary
 from twin.beliefs.layer import BeliefLayer, assimilate, prior_layer
-from twin.providers.base import Observation, Provider
+from twin.providers.base import Observation, Provider, ProviderNotConfigured
 
 Z95 = NormalDist().inv_cdf(0.95)
 
@@ -40,19 +40,62 @@ def layer_names() -> list[str]:
 def build_layer(
     name: str,
     cells: Sequence[str],
-    provider: Provider | None,
+    provider: Provider | Sequence[Provider] | None,
     start: datetime,
     end: datetime,
     observations: Sequence[Observation] | None = None,
     spec: LayerSpec | None = None,
+    prior_provider: Provider | None = None,
 ) -> BeliefLayer:
-    """Prior at ``start``, then every reading of ``provider`` (or ``observations``) up to ``end``."""
+    """Starting map at ``start``, then every reading of the providers up to ``end``.
+
+    Several providers are fused: each reading counts according to its own
+    ``sigma``. ``prior_provider`` delivers a real gridded map (e.g. Cartoradio)
+    used as the per-cell starting point instead of the generic prior.
+    """
     spec = spec or load_specs()[name]
-    layer = prior_layer(spec, cells, start)
+    providers: list[Provider]
+    if provider is None:
+        providers = []
+    elif isinstance(provider, Sequence):
+        providers = list(provider)
+    else:
+        providers = [provider]
+    bbox = bbox_of_cells(cells)
+    field = list(prior_provider.fetch(bbox, start, end)) if prior_provider is not None else None
+    layer = prior_layer(spec, cells, start, prior_field=field)
     readings: list[Observation] = list(observations or [])
-    if provider is not None:
-        readings.extend(provider.fetch(bbox_of_cells(cells), start, end))
+    for p in providers:
+        readings.extend(p.fetch(bbox, start, end))
     return assimilate(layer, readings, until=end)
+
+
+def layer_payload(
+    name: str,
+    cells: Sequence[str],
+    start: datetime,
+    end: datetime,
+    providers: Mapping[str, Provider],
+    threshold: float | None = None,
+) -> dict[str, Any]:
+    """One call for the ``query_layer`` tool: pick the sources named in
+    config/beliefs.yaml from the active providers, build, and query.
+
+    ``providers`` maps layer names of config/providers.yaml to provider objects
+    (the output of ``twin.providers.registry.build_providers``). A layer with no
+    real source connected answers ``not_available`` instead of inventing values.
+    """
+    spec = load_specs()[name]
+    feeds = [providers[s] for s in spec.sources if s in providers]
+    prior = providers.get(spec.prior_field.source) if spec.prior_field is not None else None
+    if not feeds and prior is None:
+        wanted = ", ".join(spec.sources) or "none configured"
+        return not_available(name, f"no real source is connected for this layer yet (sources: {wanted})")
+    try:
+        layer = build_layer(name, cells, feeds, start, end, spec=spec, prior_provider=prior)
+    except ProviderNotConfigured as exc:
+        return not_available(name, str(exc))
+    return query(layer, threshold=threshold)
 
 
 def calibrate(layer: BeliefLayer, observations: Sequence[Observation]) -> BeliefLayer:
@@ -128,7 +171,7 @@ def query(layer: BeliefLayer, cells: Sequence[str] | None = None, threshold: flo
             "unit": layer.spec.unit,
             "as_of": _iso(layer.as_of),
             "grid": f"h3:{layer.resolution}",
-            "method": "P1: per-cell Bayesian update + kriging of residuals, relaxing to the prior",
+            "method": "P1: per-cell Bayesian update + kriging of residuals (sensor fusion weighted by sigma), relaxing to the starting map",
             "n_observations": layer.n_observations,
             "calibration": calibration.status,
             "calibration_report": calibration.as_dict(),

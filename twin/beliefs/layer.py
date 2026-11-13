@@ -51,6 +51,10 @@ class BeliefLayer:
     #: Time the means and variances refer to.
     as_of: datetime
     xy_km: Array
+    #: Per-cell starting point: prior mean = generic prior at that time + offset; prior variance.
+    #: The offset is zero unless a real map (``prior_field``) set the starting point.
+    prior_offset: Array
+    prior_var: Array
     n_observations: int = 0
     sources: tuple[str, ...] = ()
     synthetic: bool = False
@@ -74,23 +78,63 @@ class BeliefLayer:
         return replace(self, calibration=report)
 
 
-def prior_layer(spec: LayerSpec, cells: Sequence[str], at: datetime, resolution: int | None = None) -> BeliefLayer:
-    """A layer that has seen no readings: the prior in every cell."""
+def prior_layer(
+    spec: LayerSpec,
+    cells: Sequence[str],
+    at: datetime,
+    resolution: int | None = None,
+    prior_field: Iterable[Observation] | None = None,
+) -> BeliefLayer:
+    """A layer that has seen no readings.
+
+    Every cell holds the generic prior from the config, except where a real
+    gridded map (``prior_field``, e.g. the Cartoradio grid) has values: there
+    the cell starts from the map's mean, with variance = the map's own error
+    plus the spread of the map values inside the cell.
+    """
     if not cells:
         raise ValueError("a layer needs at least one cell")
     res = resolution if resolution is not None else _resolution_of(cells[0])
     xy = np.array(local_xy_km([cell_center(c) for c in cells]), dtype=np.float64)
     n = len(cells)
+    index = {c: i for i, c in enumerate(cells)}
+    base = spec.prior.mean_at(at)
+    offset = np.zeros(n)
+    prior_var = np.full(n, spec.prior.variance)
+    sources: set[str] = set()
+    synthetic = False
+    if prior_field is not None:
+        key = spec.prior_field.value_key if spec.prior_field is not None else spec.value_key
+        types = spec.prior_field.entity_types if spec.prior_field is not None else spec.entity_types
+        acc: dict[int, list[tuple[float, float]]] = {}
+        for o in prior_field:
+            if o.entity_type not in types or key not in o.values:
+                continue
+            i = index.get(cell_of(o.lon, o.lat, res))
+            if i is None:
+                continue
+            acc.setdefault(i, []).append((o.values[key], o.sigma.get(key, 0.0)))
+            sources.add(o.source_id)
+            synthetic = synthetic or o.synthetic
+        for i, vals in acc.items():
+            values = np.array([v for v, _ in vals])
+            sigmas = np.array([sd for _, sd in vals])
+            offset[i] = float(values.mean()) - base
+            prior_var[i] = max(float(np.mean(sigmas**2) + values.var()), 1e-6 * spec.prior.variance)
     return BeliefLayer(
         spec=spec,
         resolution=res,
         cells=tuple(cells),
-        mean=np.full(n, spec.prior.mean_at(at)),
-        variance=np.full(n, spec.prior.variance),
+        mean=base + offset,
+        variance=prior_var.copy(),
         updated_at=np.full(n, np.nan),
         as_of=_utc(at),
         xy_km=xy.reshape(n, 2),
-        index={c: i for i, c in enumerate(cells)},
+        prior_offset=offset,
+        prior_var=prior_var,
+        sources=tuple(sorted(sources)),
+        synthetic=synthetic,
+        index=index,
     )
 
 
@@ -99,8 +143,12 @@ def assimilate(layer: BeliefLayer, observations: Iterable[Observation], until: d
     spec = layer.spec
     usable: list[Observation] = []
     outside = 0
+    refused = 0
     for o in observations:
         if o.entity_type not in spec.entity_types or spec.value_key not in o.values:
+            continue
+        if o.synthetic and not spec.allow_simulated:
+            refused += 1
             continue
         if cell_of(o.lon, o.lat, layer.resolution) not in layer.index:
             outside += 1
@@ -109,6 +157,8 @@ def assimilate(layer: BeliefLayer, observations: Iterable[Observation], until: d
     usable.sort(key=lambda o: _utc(o.observed_at))
 
     warnings = list(layer.warnings)
+    if refused:
+        warnings.append(f"{refused} simulated readings were refused: this layer is built from real data only")
     if outside:
         warnings.append(f"{outside} readings fell outside the layer's cells and were not used")
     sources = set(layer.sources)
@@ -215,8 +265,10 @@ def _relax(layer: BeliefLayer, moment: datetime) -> BeliefLayer:
         return layer
     prior = layer.spec.prior
     keep = float(np.exp(-hours / layer.spec.relax_tau_hours))
-    mean = prior.mean_at(moment) + (layer.mean - prior.mean_at(layer.as_of)) * keep
-    var = prior.variance + (layer.variance - prior.variance) * keep * keep
+    then = prior.mean_at(layer.as_of) + layer.prior_offset
+    now = prior.mean_at(moment) + layer.prior_offset
+    mean = now + (layer.mean - then) * keep
+    var = layer.prior_var + (layer.variance - layer.prior_var) * keep * keep
     return replace(layer, mean=mean, variance=var, as_of=moment)
 
 

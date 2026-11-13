@@ -16,6 +16,21 @@ For every H3 hexagon of Rome (resolution 9, about 0.11 km²), each dynamic layer
 
 Method P1 = Gaussian-process (kriging) update of the residual between readings and the current belief. With a tiny correlation length it is exactly the per-cell Kalman update in `cell.update`. Only per-cell variances are kept between updates (diagonal approximation).
 
+## Real data only, except road loops
+
+Project rule (Alessandro, 13 Nov 2026): only traffic loops may be simulated. Every other layer refuses synthetic readings (`allow_simulated: false`) and is built from real sensors plus models:
+
+| Layer | Starting point | Real readings fused in |
+|---|---|---|
+| road_speed | hourly city profile | `traffic_flow` (sim_loops, the one simulated input) |
+| air_no2 / pm10 / pm25 | generic prior (CAMS forecast next) | `air_quality`: EEA / ARPA Lazio stations |
+| transit_delay | generic prior | `transit`: GTFS-RT trip updates |
+| rain | generic prior | `rain`: Civil Protection radar |
+| emf | **Cartoradio grid** (`prior_field: emf_baseline`) | `emf_measurements`, real ARPA points only |
+| activity | none | none yet: answers `not_available` |
+
+Sensor fusion: a layer can list several `sources`; every reading is weighted by its own `sigma`, so a precise station counts more than a low-cost sensor. `api.layer_payload(name, cells, start, end, providers)` picks the sources from the config and returns `not_available` when none is connected.
+
 Labels: a layer built from any simulated reading is `simulated` and `synthetic=True`; otherwise `estimated`. EMF and activity are always `uncalibrated` until real measurements exist.
 
 ## For the tool API (WS4)
