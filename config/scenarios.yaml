@@ -21,6 +21,9 @@ antenna:
   baseline_sigma_db:
     value: 4.0
     basis: "assumption (C=60): Cartoradio publishes no uncertainty; same size as the model error"
+  existing_site_sigma_db:
+    value: 9.0
+    basis: "WS3 estimated register (PR #10): EIRP fitted to Cartoradio, uncalibrated, median error about 9 dB; azimuth unknown so sites are isotropic"
   exceedance_report_probability:
     value: 0.05
     basis: "assumption: a point is flagged when the chance of exceeding a threshold is 5% or more"

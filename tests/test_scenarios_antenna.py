@@ -91,6 +91,9 @@ def test_move_removes_the_old_site_estimated_from_cartoradio(tmp_path: Path) -> 
     assert out["synthetic"] is False  # only traffic loops may be simulated
     assert out["data_kinds"]["existing_site"] == "estimated"
     assert any("fitted to cartoradio" in w.lower() for w in out["warnings"])
+    assert any("direction is unknown" in w and "uncalibrated" in w for w in out["warnings"])
+    # the 9 dB uncertainty of the existing site widens the range where its removed share is large
+    assert max(p["variant"]["sigma_db"] for p in out["result"]["points"]) > 4.0
 
 
 def test_simulated_baseline_is_not_accepted() -> None:

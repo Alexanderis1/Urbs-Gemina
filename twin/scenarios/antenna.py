@@ -14,7 +14,7 @@ from twin.scenarios import config
 from twin.scenarios.area import Area
 from twin.scenarios.data import FieldSample, ScenarioData
 from twin.scenarios.geometry import from_xy, to_xy
-from twin.tools.emf import exceedance_probability, field_range, free_space_field
+from twin.tools.emf import Z95, exceedance_probability, field_range, free_space_field
 
 DB_TO_LN = math.log(10.0) / 10.0  # sigma of a power (or field) in dB -> sigma of ln(power)
 
@@ -125,6 +125,7 @@ class FieldModel:
     old: Site | None
     data: ScenarioData
     model_sigma_db: float
+    existing_sigma_db: float
     default_baseline_sigma_db: float
     receptor_m: float
 
@@ -134,13 +135,29 @@ class FieldModel:
         sample = self.data.baseline_field(lon, lat)
         return sample if sample is not None else FieldSample(0.0, 0.0)
 
+    def _residual(self, base: FieldSample, old_median: float) -> FieldSample:
+        """Baseline minus the existing site's (isotropic, uncertain) contribution, as powers.
+
+        The spread of the residual is read off the existing site's own P5/P95:
+        removing a weak estimate leaves more, removing a strong one leaves less.
+        """
+        b2 = base.median_v_per_m ** 2
+        if b2 <= 0.0:
+            return FieldSample(0.0, 0.0)
+        floor = 0.01 * b2
+        old_p5, _, old_p95 = field_range(old_median, self.existing_sigma_db)
+        median = math.sqrt(max(b2 - old_median ** 2, floor))
+        high = math.sqrt(max(b2 - old_p5 ** 2, floor))
+        low = math.sqrt(max(b2 - old_p95 ** 2, floor))
+        spread_db = 20.0 * math.log10(high / low) / (2.0 * Z95)
+        return FieldSample(median, math.hypot(base.sigma_db, spread_db))
+
     def at(self, lon: float, lat: float) -> tuple[FieldSample, FieldSample]:
         base = self.baseline(lon, lat)
         residual = base
         if self.old is not None:
             _, d_old = _distance_3d(self.old, lon, lat, self.receptor_m)
-            old_field = free_space_field(self.old.eirp_w, d_old)
-            residual = FieldSample(math.sqrt(max(base.median_v_per_m ** 2 - old_field ** 2, 0.0)), base.sigma_db)
+            residual = self._residual(base, free_space_field(self.old.eirp_w, d_old))
         _, d_new = _distance_3d(self.new, lon, lat, self.receptor_m)
         new_field = free_space_field(self.new.eirp_w, d_new)
         median, sigma = combine_lognormal([(residual.median_v_per_m, residual.sigma_db),
@@ -164,6 +181,7 @@ def build_model(change: Mapping[str, Any], data: ScenarioData, warnings: list[st
     return FieldModel(
         new=new, old=old, data=data,
         model_sigma_db=float(config.value(config.load("emf_params.yaml"), "model_error_sigma_db")),
+        existing_sigma_db=float(config.value(scen, "existing_site_sigma_db")),
         default_baseline_sigma_db=float(config.value(scen, "baseline_sigma_db")),
         receptor_m=float(config.value(scen, "receptor_height_m")),
     )
@@ -211,9 +229,10 @@ def run_antenna(area: Area, change: Mapping[str, Any], data: ScenarioData) -> di
     if data.baseline_field is None:
         warnings.append("EMF baseline (Cartoradio) not available: the variant shows the changed antenna alone.")
     if model.old is not None:
-        warnings.append("Move: the current site is estimated (OpenCelliD + OSM position, azimuth and EIRP "
-                        "fitted to Cartoradio); its modelled contribution is subtracted from the baseline, "
-                        "so treat the reduction as indicative.")
+        warnings.append("Move: the current site is estimated (OpenCelliD + OSM position, EIRP fitted to Cartoradio). "
+                        "Its direction is unknown, so it is modelled as radiating equally in all directions, and "
+                        "its power is an uncalibrated estimate (about 9 dB median error). Its contribution is "
+                        "subtracted from the baseline, so treat the reduction as indicative.")
     if not rows:
         warnings.append("No grid point of the antenna neighbourhood falls inside the area.")
 
