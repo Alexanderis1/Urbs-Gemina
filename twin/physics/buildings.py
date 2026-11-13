@@ -92,32 +92,40 @@ class Buildings:
     lat0: float
     footprint_m2: F64 = field(default_factory=lambda: np.zeros(0))
     centroids: F64 = field(default_factory=lambda: np.zeros((0, 2)))
+    #: Per building: rings in local metres as (array (n, 2), is_outer), for meshing.
+    rings: list[list[tuple[F64, bool]]] = field(default_factory=list)
     _grid: dict[tuple[int, int], list[int]] = field(default_factory=dict)
     _cell: float = 50.0
 
     @classmethod
     def from_rings(cls, ids: Sequence[str], polygons: Sequence[Sequence[Ring]], heights: F64, height_sd: F64,
-                   lon0: float, lat0: float) -> Buildings:
+                   lon0: float, lat0: float, outer: Sequence[Sequence[bool]] | None = None) -> Buildings:
+        """``polygons[b]`` lists building b's rings; ``outer[b][k]`` says whether ring k is an outer ring
+        (default: only the first ring)."""
         edges: list[F64] = []
         owner: list[NDArray[np.int64]] = []
         bounds = np.zeros((len(ids), 4))
         areas = np.zeros(len(ids))
         cents = np.zeros((len(ids), 2))
+        local_rings: list[list[tuple[F64, bool]]] = []
         for b, polys in enumerate(polygons):
+            local_rings.append([])
             xs_all: list[F64] = []
             ys_all: list[F64] = []
-            for ring in polys:
+            for k, ring in enumerate(polys):
                 arr = np.asarray(ring, dtype=np.float64)
                 if arr.shape[0] < 3:
                     continue
                 x, y = to_local(arr[:, 0], arr[:, 1], lon0, lat0)
+                is_outer = outer[b][k] if outer is not None else k == 0
+                local_rings[b].append((np.stack([x, y], axis=1), bool(is_outer)))
                 e = np.stack([x[:-1], y[:-1], x[1:], y[1:]], axis=1)
                 edges.append(e)
                 owner.append(np.full(e.shape[0], b, dtype=np.int64))
                 xs_all.append(x)
                 ys_all.append(y)
-                # OGC rings: outer counter-clockwise, holes clockwise, so signed areas sum to the net area.
-                areas[b] += 0.5 * float(np.sum(x[:-1] * y[1:] - x[1:] * y[:-1]))
+                ring_area = abs(0.5 * float(np.sum(x[:-1] * y[1:] - x[1:] * y[:-1])))
+                areas[b] += ring_area if is_outer else -ring_area
             if xs_all:
                 xs, ys = np.concatenate(xs_all), np.concatenate(ys_all)
                 bounds[b] = (xs.min(), ys.min(), xs.max(), ys.max())
@@ -127,7 +135,7 @@ class Buildings:
             height_sd=np.asarray(height_sd, dtype=np.float64),
             edges=np.concatenate(edges) if edges else np.zeros((0, 4)),
             edge_building=np.concatenate(owner) if owner else np.zeros(0, dtype=np.int64),
-            bounds=bounds, lon0=lon0, lat0=lat0, footprint_m2=np.abs(areas), centroids=cents,
+            bounds=bounds, lon0=lon0, lat0=lat0, footprint_m2=np.abs(areas), centroids=cents, rings=local_rings,
         )
         city._index()
         return city
@@ -234,7 +242,9 @@ def load_window(lon0: float, lat0: float, radius_m: float, path: Path | None = N
     heights = np.array([float(rows["height_m"][i] or 0.0) for i in keep])
     sd = np.array([float(rows["height_sd_m"][i] or 0.0) for i in keep])
     flat: list[list[Ring]] = []
+    flags: list[list[bool]] = []
     for i in keep:
-        # A MultiPolygon becomes one building with several outer rings (enough for wall crossings).
+        # A MultiPolygon becomes one building with several outer rings.
         flat.append([ring for poly in polys[i] for ring in poly])
-    return Buildings.from_rings([str(rows["id"][i]) for i in keep], flat, heights, sd, lon0, lat0)
+        flags.append([k == 0 for poly in polys[i] for k in range(len(poly))])
+    return Buildings.from_rings([str(rows["id"][i]) for i in keep], flat, heights, sd, lon0, lat0, flags)

@@ -26,6 +26,7 @@ from twin.scenarios import config as scen_config
 from twin.tools.emf import Z95
 
 Auto = Literal["auto"]
+Model = Literal["auto", "raytrace", "building_aware"]
 BuildingsArg = Union[Buildings, None, Auto]
 #: Buildings are loaded this far around a site (beyond it the receptor grid is not evaluated).
 WINDOW_M = 600.0
@@ -88,11 +89,16 @@ def buildings_status() -> dict[str, Any]:
 
 def field_samples(sites: Mapping[str, Any] | Sequence[Mapping[str, Any]], points: Sequence[tuple[float, float]],
                   receptor_h: float | Sequence[float] = 1.5, indoor: bool | Sequence[bool] | Auto = "auto",
-                  buildings: BuildingsArg = "auto", samples: int | None = None) -> FieldResult:
+                  buildings: BuildingsArg = "auto", samples: int | None = None,
+                  model: Model = "auto") -> FieldResult:
     """Monte Carlo field (V/m) at (lon, lat) points from one or more sites, powers summed.
 
     ``indoor="auto"``: a point inside a building footprint is indoors (entry loss applies,
     its own walls do not diffract); any other point is outdoors.
+
+    ``model="auto"`` uses Sionna ray-traced maps when every site has been traced
+    (scripts/raytrace_site.py) and every point lies on the maps; otherwise the CPU
+    building-aware engine. ``"raytrace"`` refuses to fall back.
     """
     site_list = [sites] if isinstance(sites, Mapping) else list(sites)
     if not site_list:
@@ -119,8 +125,45 @@ def field_samples(sites: Mapping[str, Any] | Sequence[Mapping[str, Any]], points
         flags = list(indoor)
     receptors = [Receptor(x=float(xs[k]), y=float(ys[k]), height_m=heights[k], indoor=flags[k])
                  for k in range(len(points))]
-    engine = FieldEngine(buildings=city) if samples is None else FieldEngine(buildings=city, samples=samples)
-    return engine.evaluate(txs, receptors)
+    n_draws = int(config.value("monte_carlo", "samples")) if samples is None else samples
+    if model != "building_aware" and city is not None:
+        traced = _raytraced(site_list, txs, xs, ys, heights, flags, city, n_draws)
+        if traced is not None:
+            return traced
+        if model == "raytrace":
+            raise ValueError("no ray-traced maps cover these sites and points; run scripts/raytrace_site.py")
+    engine = FieldEngine(buildings=city, samples=n_draws)
+    result = engine.evaluate(txs, receptors)
+    result.model = "building_aware" if city is not None else "open_ground"
+    return result
+
+
+def _raytraced(sites: list[Mapping[str, Any]], txs: list[Transmitter], xs: np.ndarray[Any, Any],
+               ys: np.ndarray[Any, Any], heights: list[float], flags: list[bool], city: Buildings,
+               n_draws: int) -> FieldResult | None:
+    from twin.physics import raytrace
+
+    total = np.zeros((len(xs), n_draws))
+    facade = np.zeros(len(xs))
+    seed = int(config.value("monte_carlo", "seed"))
+    for k, (site, tx) in enumerate(zip(sites, txs)):
+        maps = raytrace.load_cached(site, WINDOW_M / 2.0)
+        if maps is None:
+            return None
+        # points in this site's own frame (site at the origin)
+        px = xs - tx.x
+        py = ys - tx.y
+        half = float(maps.meta.get("radius_m", WINDOW_M / 2.0))
+        if np.any(np.abs(px) > half) or np.any(np.abs(py) > half):
+            return None
+        eirps = ([tx.unknown_sector_eirp_w] if tx.sectors is None else [sec.eirp_w for sec in tx.sectors])
+        draws, fac = raytrace.sample_field(maps, eirps, tx.frequency_mhz, np.stack([px, py], axis=1),
+                                           np.asarray(heights), np.asarray(flags), n_draws, seed + k,
+                                           tx.eirp_sigma_db, tx.sectors is None)
+        total += draws ** 2
+        facade = np.maximum(facade, fac)
+    _ = city
+    return FieldResult(np.sqrt(total), facade, model="raytrace")
 
 
 def lognormal_summary(samples: np.ndarray[Any, Any]) -> tuple[float, float]:

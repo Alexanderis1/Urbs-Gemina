@@ -68,6 +68,8 @@ class Receptor:
 class FieldResult:
     samples: F64                       # (receptors, draws) in V/m
     obstructed_share: F64              # (receptors,) share of draws with diffraction loss > 0
+    #: "building_aware" (CPU knife-edge engine), "raytrace" (Sionna RT maps) or "open_ground"
+    model: str = "building_aware"
 
 
 @dataclass

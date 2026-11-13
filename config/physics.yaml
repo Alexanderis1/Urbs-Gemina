@@ -69,3 +69,28 @@ monte_carlo:
   eirp_sigma_db_new_site:
     value: 1.5
     basis: "assumption: a declared EIRP (Modello A) is accurate to about 1-2 dB (cable loss, power setting)"
+
+raytrace:
+  engine: sionna_rt
+  sionna_version: {value: "2.2.0", basis: "NVIDIA Sionna RT, Apache-2.0; pinned so results repeat"}
+  wall_material: {value: brick, basis: "assumption (C=60): Roman buildings are mostly brick and tuff masonry; ITU-R P.2040 'brick'"}
+  wall_thickness_m: {value: 0.4, basis: "assumption: load-bearing masonry walls in central Rome are 0.4-0.8 m"}
+  ground_material: {value: medium_dry_ground, basis: "ITU-R P.527 medium dry ground (asphalt and soil streets)"}
+  cell_size_m: {value: 5.0, basis: "half a typical Roman street width; 120 x 120 cells over a 600 m square"}
+  heights_m:
+    value: [1.5, 10.0, 20.0, 30.0]
+    basis: "street level (head height) and roughly floors 3, 6 and 9, where residents sit in the main beam"
+  samples_per_tx: {value: 2000000, basis: "Sionna default order; radio-map noise under 1 dB in lit cells"}
+  max_depth: {value: 5, basis: "five interactions (reflections / diffractions) capture street-canyon multipath"}
+  yaws_for_unknown_azimuth:
+    value: 12
+    basis: "single-sector maps every 30 deg; any tri-sector orientation offset 0/30/60/90 deg is a sum of three"
+  tilt_deg_when_unknown: {value: 6.0, basis: "middle of the 2-10 deg urban downtilt range in antenna_pattern"}
+  model_error_sigma_db:
+    value: 4.0
+    basis: "IEEE 2026 validation of urban ray tracing: 1.6-3.8 dB median deviation; building heights are not resampled"
+  modal:
+    gpu: {value: L4, basis: "cheapest Modal GPU with enough memory for a 600 m district (24 GB)"}
+    timeout_s: {value: 900, basis: "one district with 12-24 transmitters and 4 heights"}
+    min_containers: {value: 0, basis: "Alessandro's rule: scale to zero, no always-on containers"}
+    scaledown_window_s: {value: 60, basis: "shut the GPU down one minute after the last call"}
