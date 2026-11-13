@@ -16,6 +16,7 @@ import modal
 
 APP_DIR = "/root/app"
 RAW_DIR = f"{APP_DIR}/data/raw"
+PROCESSED_DIR = f"{APP_DIR}/data/processed"
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
@@ -28,10 +29,12 @@ image = (
 )
 
 layers = modal.Volume.from_name("urbs-gemina-layers", create_if_missing=True)
+processed = modal.Volume.from_name("urbs-gemina-processed", create_if_missing=True)
+VOLUMES = {RAW_DIR: layers, PROCESSED_DIR: processed}
 app = modal.App("urbs-gemina-tools")
 
 
-@app.function(image=image, volumes={RAW_DIR: layers}, secrets=[modal.Secret.from_name("urbs-gemina-api")],
+@app.function(image=image, volumes=VOLUMES, secrets=[modal.Secret.from_name("urbs-gemina-api")],
               min_containers=1, timeout=120)
 @modal.concurrent(max_inputs=20)
 @modal.asgi_app()
@@ -41,8 +44,10 @@ def api() -> object:
     return create_app()
 
 
-@app.function(image=image, volumes={RAW_DIR: layers}, timeout=1800)
+@app.function(image=image, volumes=VOLUMES, timeout=1800)
 def fetch_layers() -> None:
-    """Run WS1's downloader inside Modal and keep the GeoJSON files in the volume."""
+    """Run WS1's downloader inside Modal and keep the GeoJSON files in the volume; then build the sports layer."""
     subprocess.run(["python", "scripts/fetch_static_layers.py"], cwd=APP_DIR, check=False)
     layers.commit()
+    subprocess.run(["python", "-m", "twin.modules.sports.pipeline", "build"], cwd=APP_DIR, check=False)
+    processed.commit()
