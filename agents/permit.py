@@ -107,7 +107,7 @@ def permit_context(address: str, *, llm: LLM, gateway: ToolGateway, language: st
     try:
         turn = llm.step(system, messages, [])
         text = turn.text
-        report = verify(text, by_id, cfg)
+        report = verify(text, by_id, cfg, question=address)
         for _ in range(cfg.verifier_retries):
             if report.ok:
                 break
@@ -115,7 +115,7 @@ def permit_context(address: str, *, llm: LLM, gateway: ToolGateway, language: st
                          {"role": "user", "content": "VERIFIER: your draft was blocked. Fix:\n" + describe_problems(report)}]
             turn = llm.step(system, messages, [])
             text = turn.text
-            report = verify(text, by_id, cfg)
+            report = verify(text, by_id, cfg, question=address)
     except ModelRefused:
         text, report = "", VerifierReport(problems=[Problem("model_refused", "the model declined the request")])
 

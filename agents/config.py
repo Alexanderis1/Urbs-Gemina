@@ -35,6 +35,7 @@ class VerifierConfig:
     banned_phrases: list[str]
     exempt_patterns: list[str]
     calibration_words: list[str]
+    abbreviations: list[str]
     estimate_words: list[str]
     simulated_words: list[str]
 
@@ -101,6 +102,7 @@ def load_agent_config(config_dir: Path = CONFIG_DIR) -> AgentConfig:
             banned_phrases=[str(x) for x in v["banned_phrases"]],
             exempt_patterns=[str(x) for x in v["exempt_patterns"]],
             calibration_words=[str(x) for x in v["calibration_words"]],
+            abbreviations=[str(x) for x in v["abbreviations"]],
             estimate_words=[str(x) for x in v["estimate_words"]],
             simulated_words=[str(x) for x in v["simulated_words"]],
         ),

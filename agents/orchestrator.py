@@ -106,14 +106,14 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
     try:
         state = loop.run(question)
         runs = flatten_runs(state.runs)
-        report = verify(state.text, runs, cfg)
+        report = verify(state.text, runs, cfg, question=question)
         attempts = 0
         while (not report.ok) and state.text.strip() and attempts < cfg.verifier_retries:
             attempts += 1
             state = loop.resume(state, "VERIFIER: your draft was blocked. Fix these problems using only the tool "
                                        "outputs above, or answer 'insufficient data':\n" + describe_problems(report))
             runs = flatten_runs(state.runs)
-            report = verify(state.text, runs, cfg)
+            report = verify(state.text, runs, cfg, question=question)
     except ModelRefused:
         state = LoopResult(text="", runs=[], messages=[])
         report = VerifierReport(problems=[Problem("model_refused", "the model declined the request")])

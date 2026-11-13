@@ -129,3 +129,27 @@ def test_envelope_check_accepts_hub_additions() -> None:
     assert check_envelope(context_run()) == []
     bad = dict(context_run(), status="maybe")
     assert check_envelope(bad)
+
+
+def test_numbers_from_the_officers_question_may_be_echoed() -> None:
+    r = context_run()
+    text = f"Within 300 m of Via del Corso 1, one school lies 182 m away [run:{r['run_id'][:12]}]."
+    assert verify(text, runs(r), question="Schools within 300 m of Via del Corso 1?").ok
+    assert not verify("Via del Corso 7 has 3 schools.", runs(r), question="Via del Corso 1?").ok
+
+
+def test_legal_abbreviations_do_not_split_the_sentence() -> None:
+    legal = make_envelope(
+        tool="legal_lookup", inputs={"question": "q"},
+        result={"results": [{"url": "https://www.normattiva.it/x", "title": "Legge 30 dicembre 2023, n. 214", "text": "art. 10: valore di attenzione 15 V/m"}]},
+        data_kinds={"law": "real"}, sources=[{"id": "exa", "url": "https://www.normattiva.it/x", "retrieved_at": "2026-11-13T10:00:00Z"}])
+    text = "The attention value is 15 V/m in art. 10 of Legge 30 dicembre 2023, n. 214 [src:https://www.normattiva.it/x]."
+    assert verify(text, runs(legal)).ok
+
+
+def test_source_retrieval_date_may_be_quoted() -> None:
+    legal = make_envelope(
+        tool="legal_lookup", inputs={"question": "q"},
+        result={"results": [{"url": "https://www.normattiva.it/x", "title": "Legge 214/2023", "text": "15 V/m"}]},
+        data_kinds={"law": "real"}, sources=[{"id": "exa", "url": "https://www.normattiva.it/x", "retrieved_at": "2026-11-13T10:00:00Z"}])
+    assert verify("The attention value is 15 V/m (retrieved 2026-11-13) [src:https://www.normattiva.it/x].", runs(legal)).ok

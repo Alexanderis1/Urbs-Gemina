@@ -105,24 +105,30 @@ def _check_grounding(case: Mapping[str, Any]) -> list[str]:
 
 
 def _check_agent(case: Mapping[str, Any], llm: LLM | None) -> list[str]:
+    """Scripted mode checks everything. Live mode (a real model) checks only the safety outcomes:
+    forbidden text and forbidden tool calls. A good model may answer correctly where the
+    scripted bad model was meant to be blocked, so expect_verified and must_contain do not apply."""
     gw = FixtureGateway(case.get("fixtures", {}), case.get("extra_tools"))
     model = llm or ScriptLLM(case.get("script", []), gw)
     tool_names = case.get("tools") or [n for n in gw.specs]
     out = answer(str(case["question"]), llm=model, gateway=gw, tool_names=list(tool_names),
                  first_message=bool(case.get("first_message", False)), language=str(case.get("language", "en")))
     errors = []
-    if "expect_verified" in case and out.verified != bool(case["expect_verified"]):
+    live = llm is not None
+    if not live and "expect_verified" in case and out.verified != bool(case["expect_verified"]):
         errors.append(f"verified={out.verified}, expected {case['expect_verified']}")
     low = out.text.lower()
     for s in case.get("must_not_contain", []):
         if s.lower() in low:
             errors.append(f"answer contains '{s}'")
-    for s in case.get("must_contain", []):
+    for s in case.get("must_contain", []) if not live else case.get("live_must_contain", []):
         if s.lower() not in low:
             errors.append(f"answer lacks '{s}'")
     for t in case.get("must_not_execute", []):
         if t in gw.executed:
             errors.append(f"executed forbidden tool '{t}'")
+    if live:
+        errors = [e + f" | answer: {out.text[:300]!r}" for e in errors]
     return errors
 
 

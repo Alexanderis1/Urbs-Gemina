@@ -134,7 +134,8 @@ def _numbers_for_url(url: str, run: Mapping[str, Any]) -> list[float]:
     if isinstance(items, list):
         picked = [i for i in items if isinstance(i, Mapping) and i.get("url") == url]
         if picked:
-            return list(_walk_numbers(picked))
+            dates = [s for s in run.get("sources", []) if isinstance(s, Mapping) and s.get("url") == url]
+            return list(_walk_numbers(picked)) + list(_walk_numbers(dates))
     return list(_walk_numbers(run.get("result", {})))
 
 
@@ -143,9 +144,22 @@ def _contains_any(text: str, words: Iterable[str]) -> bool:
     return any(w.lower() in low for w in words)
 
 
-def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig | None = None) -> VerifierReport:
+def _sentences(text: str, abbreviations: Iterable[str]) -> list[str]:
+    """Split into sentences, but not after "art." / "n." / "D.Lgs." and the like."""
+    abbr = sorted({a.lower() for a in abbreviations}, key=len, reverse=True)
+    guard = "\u2060"
+    if abbr:
+        pat = re.compile(r"(?<![\w.])(" + "|".join(re.escape(a) for a in abbr) + r")\.\s+", re.IGNORECASE)
+        text = pat.sub(lambda m: m.group(1) + "." + guard, text)
+    return [s.replace(guard, " ").strip() for s in SENTENCE_SPLIT.split(text)]
+
+
+def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig | None = None,
+           question: str = "") -> VerifierReport:
+    """Check a draft. Numbers the officer wrote in ``question`` (an address, a radius) may be echoed."""
     cfg = config or load_agent_config()
     vc = cfg.verifier
+    echo = list(_walk_numbers(question))
     report = VerifierReport()
     manifest = _manifest_sources()
     cited: dict[str, Mapping[str, Any]] = {}
@@ -155,7 +169,7 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
         if phrase.lower() in low:
             report.problems.append(Problem("decision_language", f"uses '{phrase}': the system gives context, the officer decides"))
 
-    for sentence in (s.strip() for s in SENTENCE_SPLIT.split(text)):
+    for sentence in _sentences(text, vc.abbreviations):
         if not sentence:
             continue
         values: list[float] = []
@@ -192,6 +206,8 @@ def verify(text: str, runs: Mapping[str, Mapping[str, Any]], config: AgentConfig
         for m in NUMBER.finditer(body):
             token = m.group(0).rstrip("% ").lstrip("+")
             is_percent = bool(m.group(1))
+            if echo and _matches(token.lstrip("-"), is_percent, echo):
+                continue
             if not has_citation:
                 report.problems.append(Problem("uncited_number", f"'{m.group(0).strip()}' has no run id or source", sentence))
             elif not _matches(token.lstrip("-"), is_percent, values):
