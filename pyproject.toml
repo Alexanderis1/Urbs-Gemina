@@ -18,4 +18,4 @@ pythonpath = ["."]
 
 [tool.mypy]
 strict = true
-files = ["twin", "scripts"]
+files = ["twin", "scripts", "voice"]
