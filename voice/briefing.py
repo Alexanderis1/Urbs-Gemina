@@ -70,8 +70,9 @@ def build_briefing(
             )
         )
         if not answer.verified:
-            missing = ", ".join(answer.missing) or item.topic
-            parts.append(f"{item.topic}: {phrase(language, 'insufficient_data')} {phrase(language, 'missing_prefix')}{missing}.")
+            # Verifier reasons are English: spoken only in an English briefing.
+            reason = f" {phrase(language, 'missing_prefix')}{', '.join(answer.missing)}." if answer.missing and language == "en" else ""
+            parts.append(f"{item.topic}: {phrase(language, 'insufficient_data')}{reason}")
             continue
         parts.append(answer.text)
         run_ids += [r for r in answer.run_ids if r not in run_ids]

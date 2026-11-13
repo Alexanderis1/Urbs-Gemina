@@ -87,6 +87,7 @@ def _envelope(status: str, speak: str, answer: TwinAnswer | None) -> dict[str, A
         "sources": list(answer.sources) if answer else [],
         "data_kinds": dict(answer.data_kinds) if answer else {},
         "synthetic": answer.synthetic if answer else False,
+        "missing": list(answer.missing) if answer else [],
         "map_actions": safe_map_actions(answer.map_actions) if answer and answer.verified else [],
     }
 
@@ -95,8 +96,12 @@ def to_speech(answer: TwinAnswer, language: Language) -> dict[str, Any]:
     """Response body returned to ElevenLabs for one ``ask_twin`` call."""
     if not answer.verified:
         speak = phrase(language, "insufficient_data")
-        if answer.missing:
+        # The verifier writes its reasons in English: read them aloud only in English,
+        # otherwise point to the screen. They always travel in the payload.
+        if answer.missing and language == "en":
             speak += " " + phrase(language, "missing_prefix") + ", ".join(answer.missing) + "."
+        elif answer.missing:
+            speak += " " + phrase(language, "missing_on_screen")
         return _envelope("insufficient_data", speak, answer)
     speak = clean_for_speech(answer.text)
     if answer.synthetic or "simulated" in answer.data_kinds.values():

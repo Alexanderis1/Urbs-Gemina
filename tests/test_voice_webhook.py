@@ -87,6 +87,14 @@ def test_unverified_answer_becomes_insufficient_data() -> None:
     assert "antenna register" in resp["speak"]
 
 
+def test_italian_speech_does_not_read_english_reasons() -> None:
+    orch = FakeOrchestrator(ok_answer(verified=False, missing=("a figure without a tool run or source",)))
+    _, resp, _ = call({"question": "x", "language": "it"}, orch=orch)
+    assert "figure" not in resp["speak"]
+    assert "schermo" in resp["speak"]
+    assert resp["missing"] == ["a figure without a tool run or source"]
+
+
 def test_simulated_data_is_announced() -> None:
     orch = FakeOrchestrator(ok_answer(synthetic=True, data_kinds={"emf": "simulated"}))
     _, resp, _ = call({"question": "x", "language": "it"}, orch=orch)

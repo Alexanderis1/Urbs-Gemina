@@ -5,6 +5,7 @@ max_spoken_chars: 700   # basis: about 45 seconds of speech; longer answers stay
 it:
   insufficient_data: "Dati insufficienti per rispondere con certezza."
   missing_prefix: "Manca: "
+  missing_on_screen: "I dettagli su cosa manca sono sullo schermo."
   simulated_note: "Attenzione: questa risposta usa anche dati simulati."
   error: "Il gemello digitale non risponde in questo momento. Riprova tra poco."
   briefing_citizen_refused: "Il briefing mattutino è riservato agli uffici. Posso rispondere a una domanda specifica."
@@ -14,6 +15,7 @@ it:
 en:
   insufficient_data: "Insufficient data to answer with confidence."
   missing_prefix: "Missing: "
+  missing_on_screen: "Details of what is missing are on screen."
   simulated_note: "Note: this answer also uses simulated data."
   error: "The digital twin is not responding right now. Please try again shortly."
   briefing_citizen_refused: "The morning briefing is for offices only. I can answer a specific question."
