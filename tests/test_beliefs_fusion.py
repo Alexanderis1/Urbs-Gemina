@@ -156,3 +156,16 @@ def test_cells_outside_the_covered_area_keep_the_prior() -> None:
     out = layer_payload("activity", cells, T0, T0, providers={"micromobility": FakeProvider("bird_gbfs", scooters)})
     rows = {r["cell"]: r for r in out["result"]["cells"]}
     assert rows[cell_of(12.462, 41.882, 9)]["mean"] == pytest.approx(spec.prior.mean)
+
+
+def test_wifi_sessions_layer_reads_hotspot_counts_and_states_its_caveats() -> None:
+    spec = load_specs()["wifi_sessions"]
+    assert spec.source_layers == ("activity_wifi",)
+    cells = cells_in_bbox(WINDOW, 9)
+    site = reading("CrowdFlowObserved", "peopleCount", 56.0, 7.5, "roma_wifi")
+    out = layer_payload("wifi_sessions", cells, T0, T0, providers={"activity_wifi": FakeProvider("roma_wifi", [site])})
+    row = next(r for r in out["result"]["cells"] if r["cell"] == cell_of(*HERE, 9))
+    assert row["mean"] > 40.0
+    assert out["data_kinds"] == {"wifi_sessions": "estimated"}
+    assert any("lower bound" in w for w in out["warnings"])
+    assert any("one day behind" in w for w in out["warnings"])

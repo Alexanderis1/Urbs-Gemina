@@ -151,7 +151,29 @@ layers:
     relax_tau_hours: 1.0
     min_value: 0
     calibration: {method: none, note: "uncalibrated: scooter counts are a proxy for activity; no ground-truth people counts. Roma Wi-Fi sessions (dati.comune.roma.it, daily, by site) are the next candidate"}
+    caveats:
+      - "activity here is parked shared e-scooters per cell, a weak proxy (C=40), not a count of people; see wifi_sessions for people"
     basis: "assumption: shared scooters gather where people go; this misses residents and people who do not use them"
+
+  wifi_sessions:
+    # Real people activity from the City's DigitRoma Wi-Fi (CC BY 4.0), counted per hotspot site and hour.
+    sources: [activity_wifi]   # roma_wifi: CrowdFlowObserved peopleCount, sigma max(1, sqrt(n))
+    unit: sessions/hour
+    entity_types: [CrowdFlowObserved]
+    value_key: peopleCount
+    prior:
+      mean: 0
+      sd: 20
+      basis: "assumption: most hotspots see a few sessions an hour; on 12 Nov 2026 the busiest site (Campidoglio) peaked at 56"
+    correlation_length_km: 0    # a hotspot says nothing about the next street
+    relax_tau_hours: 48         # the files arrive about a day late, so readings must stay meaningful for a day or more
+    min_value: 0
+    calibration: {method: none, note: "uncalibrated: no ground-truth people counts to check against"}
+    caveats:
+      - "Wi-Fi sessions are a lower bound on people: only users of the City's free Wi-Fi are counted"
+      - "Wi-Fi data runs about one day behind: 'now' shows yesterday's same hour"
+      - "only cells with a City hotspot carry data (about 580 sites; 94 had sessions on 12 Nov 2026)"
+    basis: "real counts at fixed sites; no spreading to cells without a hotspot"
 
 calibration_rules:
   interval: 0.90            # we check the 90% range
