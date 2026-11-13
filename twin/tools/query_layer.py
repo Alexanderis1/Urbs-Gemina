@@ -36,6 +36,25 @@ def _parse_time(time: str | None) -> datetime:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
+class _SafeFeed:
+    """A provider whose failures become a warning and no readings, so one feed down does not fail the layer."""
+
+    def __init__(self, name: str, provider: Any, warnings: list[str]) -> None:
+        self._name, self._provider, self._warnings = name, provider, warnings
+
+    def __getattr__(self, attribute: str) -> Any:
+        return getattr(self._provider, attribute)
+
+    def fetch(self, bbox: Any, start: datetime, end: datetime) -> list[Any]:
+        try:
+            return list(self._provider.fetch(bbox, start, end))
+        except ProviderNotConfigured as error:
+            self._warnings.append(f"Feed '{self._name}' not configured, so not used: {error}")
+        except Exception as error:  # noqa: BLE001 - upstream server down or bad payload
+            self._warnings.append(f"Feed '{self._name}' failed, so not used ({type(error).__name__}: {error}).")
+        return []
+
+
 def _belief_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, limit: int,
                   inputs: dict[str, Any], sources: list[Source]) -> dict[str, Any] | None:
     """Belief layer from WS5 (``twin.beliefs``), or ``None`` when the layer is not a belief layer."""
@@ -51,14 +70,22 @@ def _belief_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, li
     geometry = area.geometry
     cells = grid.cells_in_polygon(geometry, bconfig.grid_resolution())
     start = at - timedelta(hours=float(runtime.settings.tool("query_layer", "belief_history_hours")))
-    readings = []
-    for provider in runtime.providers.values():
-        try:
-            readings += [o for o in provider.fetch(area.bbox, start, at) if o.entity_type in spec.entity_types]
-        except ProviderNotConfigured:
-            continue
-    payload: dict[str, Any] = api.query(api.build_layer(layer, cells, None, start, at, observations=readings,
-                                                        spec=spec))
+    feed_warnings: list[str] = []
+    payload_fn = getattr(api, "layer_payload", None)
+    payload: dict[str, Any]
+    if payload_fn is not None:
+        # WS5 picks only the feeds named in config/beliefs.yaml (faster, and applies source conversions).
+        safe = {name: _SafeFeed(name, provider, feed_warnings) for name, provider in runtime.providers.items()}
+        payload = dict(payload_fn(layer, cells, start, at, safe))
+    else:
+        readings = []
+        for provider in runtime.providers.values():
+            try:
+                readings += [o for o in provider.fetch(area.bbox, start, at) if o.entity_type in spec.entity_types]
+            except ProviderNotConfigured:
+                continue
+        payload = api.query(api.build_layer(layer, cells, None, start, at, observations=readings, spec=spec))
+    payload["warnings"] = list(payload.get("warnings", [])) + feed_warnings
     result = dict(payload.get("result") or {})
     all_cells = result.pop("cells", [])
     result.update(type="belief", area=area.describe(), cells=all_cells[:limit], count=len(all_cells),

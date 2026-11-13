@@ -125,6 +125,9 @@ def _run_scenario(rt: ToolRuntime, req: m.RunScenarioIn, role: str) -> dict[str,
     except (area_mod.AreaNotAvailable, ToolError) as error:
         return make_envelope("run_scenario", inputs, None, {}, status="not_available", reason=str(error),
                              config_hashes=rt.settings.config_hashes())
+    except ValueError as error:  # the engine rejects the 'change' shape: tell the caller what it needs
+        return make_envelope("run_scenario", inputs, None, {}, status="refused", reason=str(error),
+                             config_hashes=rt.settings.config_hashes())
     result = out.get("result") or {}
     if "status" not in out:
         out["status"] = result.get("status", "ok") if isinstance(result, dict) else "ok"
