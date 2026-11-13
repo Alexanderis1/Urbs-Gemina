@@ -19,6 +19,8 @@ def test_name_similarity_ignores_generic_words() -> None:
     assert name_similarity("Centro Sportivo Fulvio Bernardini", "Fulvio Bernardini", stop) == 1.0
     assert name_similarity("Piscina Quadraro", "Campo Bocce Cinecitta", stop) < 0.5
     assert name_similarity("", "Anything", stop) == 0.0
+    # Seen on real data: the web writes "Torre Spaccata", the registry "Torrespaccata".
+    assert name_similarity("Piscine di Torre Spaccata", "Piscine Di Torrespaccata", stop) >= 0.92
 
 
 def test_disciplines_from_text_and_osm() -> None:

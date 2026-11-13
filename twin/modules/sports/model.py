@@ -115,7 +115,17 @@ class Facility:
     def with_changes(self, **changes: Any) -> Facility:
         return replace(self, **changes)
 
+    @property
+    def closed(self) -> bool:
+        """True when a source says it is closed: web "appears_closed" or official "attivo = NO"."""
+        flag = self.extra.get("appears_closed")
+        active = self.extra.get("active")
+        return (flag is not None and flag.value is True) or (
+            active is not None and str(active.value).strip().upper() == "NO")
+
     def offers(self, discipline: str, include_unverified: bool = True) -> bool:
+        if self.closed:
+            return False
         value = self.disciplines.get(discipline)
         if value is None:
             return False
@@ -159,6 +169,7 @@ class Facility:
             "municipio": self.fields["municipio"].value,
             "type": self.facility_type,
             "accessible": self.accessible,
+            "closed": self.closed,
             "disciplines": sorted(self.disciplines),
             "fields": {k: v.to_dict() for k, v in self.fields.items()},
             "discipline_details": {k: v.to_dict() for k, v in sorted(self.disciplines.items())},

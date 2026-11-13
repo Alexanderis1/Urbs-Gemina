@@ -182,7 +182,9 @@ def scout_candidates(raw: Sequence[Mapping[str, Any]], config: SportsConfig,
             lon=float(lon) if located else None, lat=float(lat) if located else None,  # type: ignore[arg-type]
             kind=str(item.get("kind") or "sports_centre"), municipio=municipio_id(item.get("municipio")),
             address=str(item["address"]) if item.get("address") else None,
-            disciplines=frozenset(disciplines), attributes={}, url=str(item["source_url"]),
+            disciplines=frozenset(disciplines),
+            attributes={"appears_closed": True} if item.get("appears_closed") is True else {},
+            url=str(item["source_url"]),
             retrieved_at=retrieved_at, confidence=conf,
         ))
     return out, warnings

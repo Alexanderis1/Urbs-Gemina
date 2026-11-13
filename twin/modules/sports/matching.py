@@ -43,7 +43,9 @@ def name_similarity(a: str, b: str, stopwords: Iterable[str]) -> float:
     sa, sb = set(ta), set(tb)
     jaccard = len(sa & sb) / len(sa | sb)
     ratio = SequenceMatcher(None, " ".join(sorted(sa)), " ".join(sorted(sb))).ratio()
-    return round(max(jaccard, ratio), 4)
+    # Same letters, different spacing ("Torre Spaccata" / "Torrespaccata").
+    compact = SequenceMatcher(None, "".join(ta), "".join(tb)).ratio()
+    return round(max(jaccard, ratio, compact), 4)
 
 
 @dataclass(frozen=True)

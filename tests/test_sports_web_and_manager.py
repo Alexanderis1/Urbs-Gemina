@@ -100,9 +100,12 @@ def test_scout_candidates_become_unlocated_web_candidates() -> None:
          "disciplines": ["pallavolo"], "source_url": SRC, "confidence": 0.7},
         {"name": "No source", "municipio": "VII", "confidence": 0.9},
         {"name": "Weak", "source_url": SRC, "confidence": 0.2},
+        {"name": "Piscine di Torre Spaccata", "municipio": "VII", "kind": "pool", "source_url": SRC,
+         "confidence": 0.99, "appears_closed": True},
     ]
     cands, warnings = scout_candidates(raw, CFG, retrieved_at="2026-11-13")
-    assert len(cands) == 1
+    assert len(cands) == 2
+    assert cands[1].attributes == {"appears_closed": True}
     c = cands[0]
     assert c.source == "web" and c.lon is None and c.disciplines == frozenset({"volleyball"})
     assert c.url == SRC

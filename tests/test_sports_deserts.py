@@ -165,3 +165,16 @@ def test_population_from_census_sections() -> None:
     (p,) = population_from_census(fc)
     assert (p.point_id, p.residents, p.children, p.municipio, p.zone) == ("058091000123", 420.0, 55.0, "VII", "10A")
     assert (p.lon, p.lat) == pytest.approx(at(100, 50), abs=1e-9)
+
+
+def test_closed_facilities_do_not_cover_anyone() -> None:
+    from twin.modules.sports.model import FieldValue
+
+    closed = []
+    for f in facilities():
+        if "football" in f.disciplines:
+            f = f.with_changes(extra={**f.extra, "appears_closed": FieldValue(True, "web_unverified")})
+        closed.append(f)
+    result = coverage(POINTS, closed, "football", reach_radius_m(CFG))
+    assert result["residents_uncovered"] == 3500
+    assert result["facilities_offering"] == 0

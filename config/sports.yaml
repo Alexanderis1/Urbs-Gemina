@@ -80,12 +80,12 @@ disciplines:
   basketball: {it: pallacanestro, words: [basket, pallacanestro, basketball]}
   volleyball: {it: pallavolo, words: [pallavolo, volley, volleyball, beachvolley, beach_volleyball]}
   athletics: {it: atletica, words: [atletica, athletics, running, pista di atletica]}
-  fitness: {it: fitness, words: [fitness, palestra pesi, sala pesi, gym, crossfit]}
-  gymnastics: {it: ginnastica, words: [ginnastica, gymnastics, ritmica, artistica]}
+  fitness: {it: fitness, words: [fitness, palestra pesi, sala pesi, gym, crossfit, pilates, yoga, potenziamento muscolare]}
+  gymnastics: {it: ginnastica, words: [ginnastica, gymnastics, ritmica, artistica, posturale]}
   rugby: {it: rugby, words: [rugby, rugby_union, rugby_league]}
   fencing: {it: scherma, words: [scherma, fencing]}
-  martial_arts: {it: arti marziali, words: [judo, karate, taekwondo, arti marziali, martial_arts, boxe, pugilato, boxing, kickboxing, lotta]}
-  dance: {it: danza, words: [danza, ballo, dance]}
+  martial_arts: {it: arti marziali, words: [judo, karate, taekwondo, aikido, tang su do, arti marziali, martial_arts, boxe, pugilato, boxing, kickboxing, lotta]}
+  dance: {it: danza, words: [danza, ballo, balli, dance, tango]}
   skating: {it: pattinaggio, words: [pattinaggio, skating, roller_skating, ice_skating, hockey]}
   cycling: {it: ciclismo, words: [ciclismo, cycling, bmx]}
   bocce: {it: bocce, words: [bocce, boules, bocciofila]}
@@ -93,6 +93,7 @@ disciplines:
   equestrian: {it: equitazione, words: [equitazione, equestr, maneggi, ippodromo, ippic]}
   golf: {it: golf, words: [golf]}
   table_tennis: {it: tennistavolo, words: [tennistavolo, ping pong, table_tennis]}
+  floorball: {it: floorball, words: [floorball, flooball, unihockey]}
   climbing: {it: arrampicata, words: [arrampicata, climbing, boulder]}
   multisport: {it: polivalente, words: [polivalente, multi, multisport, polisportiv]}
 
