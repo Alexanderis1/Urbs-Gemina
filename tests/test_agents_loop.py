@@ -236,3 +236,11 @@ def test_citation_trace_marks_auto_cited_lines() -> None:
     out = answer("q", llm=llm, gateway=G(), tool_names=["context_check"])
     assert out.verified, out.problems
     assert [c["cite_mode"] for c in out.citations] == ["explicit", "auto"]
+
+
+def test_twin_answer_carries_citations() -> None:
+    from agents.orchestrator import Answer, to_twin_answer
+
+    a = Answer(text="t", verified=True, problems=[], runs=[],
+               citations=[{"line": 0, "kind": "run", "ref": "x", "cite_mode": "auto"}])
+    assert to_twin_answer(a).citations[0]["cite_mode"] == "auto"

@@ -213,7 +213,7 @@ class TwinOrchestrator:
 def to_twin_answer(a: Answer) -> TwinAnswer:
     return TwinAnswer(text=a.text, verified=a.verified, run_ids=tuple(str(r["run_id"]) for r in a.runs),
                       sources=tuple(a.sources), data_kinds=a.data_kinds, synthetic=a.synthetic,
-                      missing=tuple(a.missing), map_actions=map_actions(a.runs))
+                      missing=tuple(a.missing), map_actions=map_actions(a.runs), citations=tuple(a.citations))
 
 
 def map_actions(runs: list[dict[str, Any]]) -> tuple[dict[str, Any], ...]:
