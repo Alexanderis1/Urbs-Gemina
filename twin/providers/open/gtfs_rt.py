@@ -13,7 +13,7 @@ the bytes it came from, so every value traces to one snapshot.
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
@@ -138,6 +138,10 @@ class RomaGtfsRtProvider:
         self._trip_updates_source = trip_updates_source or None
         self._speed_sigma = number(config, "speed_sigma_kmh", 3.0)
         self._delay_sigma = number(config, "delay_sigma_s", 60.0)
+        self._max_age_min = number(config, "max_age_minutes", 15.0)
+        self._clock_skew_s = number(config, "clock_skew_s", 120.0)
+        #: Header time of the last positions feed read (None before the first fetch).
+        self.last_feed_time: datetime | None = None
         timeout = number(config, "timeout_s", 30.0)
         self._fetch_bytes = fetch_bytes or (lambda url: http.get_bytes(url, timeout_s=timeout))
 
@@ -160,14 +164,28 @@ class RomaGtfsRtProvider:
 
     def fetch(self, bbox: BBox, start: datetime, end: datetime) -> Iterator[Observation]:
         start, end = _aware(start), _aware(end)
+        # A "now" window still gets the latest positions, which are seconds to minutes old;
+        # a feed older than max_age is not passed off as live (see last_feed_time).
+        start = min(start, end - timedelta(minutes=self._max_age_min))
+        end = end + timedelta(seconds=self._clock_skew_s)
+        positions = self.read()
+        self.last_feed_time = feed_time(positions)
         vehicles = [
-            (obs, trip) for obs, trip in _vehicles(self.read(), self._speed_sigma)
+            (obs, trip) for obs, trip in _vehicles(positions, self._speed_sigma)
             if start <= obs.observed_at <= end and in_bbox(obs.lon, obs.lat, bbox)
         ]
         yield from (obs for obs, _trip in vehicles)
         if self._trip_updates_source is not None and vehicles:
             updates = self.read(self._trip_updates_source)
             yield from join_delays(vehicles, parse_trip_delays(updates), self._delay_sigma, snapshot_id(updates))
+
+
+def feed_time(data: bytes) -> datetime | None:
+    """The feed header time: when the operator last refreshed the snapshot."""
+    feed = _feed(data)
+    if not feed.header.HasField("timestamp") or feed.header.timestamp == 0:
+        return None
+    return datetime.fromtimestamp(int(feed.header.timestamp), tz=timezone.utc)
 
 
 def _aware(moment: datetime) -> datetime:

@@ -38,7 +38,7 @@ estimated:
   register:
     # Raw seed files (git-ignored downloads) take priority over the committed seed.
     opencellid_csv: data/raw/opencellid/222.csv.gz
-    osm_masts_json: data/raw/osm/rome_masts.json
+    osm_masts_json: twin/providers/estimated/seed_data/osm_masts.geojson  # OSM (ODbL) masts and towers, from the ingest stream's Lazio extract
     # Committed seed built by `python -m twin.providers.build_seeds sites`
     # (OpenCelliD mirror, clustered). Used when the raw CSV above is missing.
     sites_geojson: twin/providers/estimated/seed_data/antenna_sites.geojson
@@ -69,6 +69,8 @@ open:
     vehicle_positions_url: https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb
     trip_updates_url: https://romamobilita.it/sites/default/files/rome_rtgtfs_trip_updates_feed.pb
     speed_sigma_kmh: {value: 3.0, basis: "assumption: GPS-derived speed noise"}
+    max_age_minutes: {value: 15, basis: "a live position feed refreshes every 30-60 s; older than this is not live"}
+    clock_skew_s: {value: 120, basis: "operator clocks can run ahead of ours by up to a minute or two"}
     delay_sigma_s: {value: 60.0, basis: "assumption, used only when the feed gives no 'uncertainty' (Roma's gives about 30 s)"}
     timeout_s: 30
 
@@ -84,6 +86,10 @@ open:
     relative_sigma: {value: 0.15, basis: "data quality objective for continuous NO2 measurement, Directive 2008/50/EC Annex I"}
     pollutant_codes: {NO2: 8, PM10: 5, O3: 7, PM2.5: 6001}
     timeout_s: 60
+    lookback_hours: {value: 6, basis: "E2a up-to-date values arrived about 3.7 h late on 13 Nov 2026 (latest 17:00 UTC at 20:43 UTC)"}
+    download_workers: 8
+    cache_minutes: {value: 10, basis: "station files gain one value per hour"}
+    search_buffer_km: {value: 5, basis: "air-quality correlation lengths in config/beliefs.yaml are 3-8 km; a district with no station still gets the nearby ones"}
 
   dpc_radar:
     api_url: https://radar-api.protezionecivile.it
@@ -102,6 +108,8 @@ open:
 
   bird_gbfs:
     free_vehicles_url: https://mds.bird.co/gbfs/v2/public/rome/free_bike_status.json
+    max_age_minutes: {value: 15, basis: "GBFS ttl is 60 s; a snapshot older than this is not current"}
+    clock_skew_s: {value: 120, basis: "operator clocks can run ahead of ours by up to a minute or two"}
     timeout_s: 30
 
   roma_wifi:
@@ -112,6 +120,8 @@ open:
       - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/01157881-3b0c-4362-8516-8c2b4619972e/download/digit_secure_map_hhc_160226_epgs10780lml.kml
       - https://dati.comune.roma.it/catalog/dataset/df7b41a7-3a10-4142-a400-1f6754064402/resource/84215020-e3c6-4989-b7b4-ca6a955a6646/download/ed140725_digit_mappa_c_hhc_140525_epgs3035_kml.kml
     max_site_spread_m: {value: 300, basis: "access points of one site sit in one building or square; wider spread means an ambiguous address"}
+    cache_minutes: {value: 30, basis: "a new daily file appears once a day"}
+    lookback_hours: {value: 36, basis: "each day's file appears the next day (12 Nov file seen on 13 Nov 2026)"}
     sigma_floor: {value: 1.0, basis: "Poisson counting noise, sqrt(n), never below one session"}
     timeout_s: 120
 
@@ -124,6 +134,7 @@ open:
 
   cams_open_meteo:
     api_url: https://air-quality-api.open-meteo.com/v1/air-quality
+    lookback_hours: {value: 1, basis: "hourly model values: a 'now' window still gets the hour it falls in"}
     step_deg: {value: 0.1, basis: "CAMS European ensemble grid is 0.1 degree"}
     relative_sigma: {value: 0.5, basis: "assumption: hourly CAMS error at urban scale is of the order of the value"}
     timeout_s: 60

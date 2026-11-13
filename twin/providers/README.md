@@ -35,7 +35,7 @@ rows; `registry.DATA_KIND` gives the real / estimated / simulated label.
   Free speed and peak flow follow the road class (C=65 that loops sit at such junctions).
   Real bus speeds (`Vehicle.speed_kmh`) are the live correction.
 - **Estimated register**: OpenCelliD cells inside Roma Capitale, grouped by base station
-  and merged within 150 m per operator; moved to an OSM mast within 200 m, else to a
+  and merged within 150 m per operator; moved to an OSM mast within 200 m (`estimated/seed_data/osm_masts.geojson`, 333 masts, ODbL), else to a
   Cartoradio peak within 300 m; strong peaks with no site become sites with operator
   "unknown". Effective EIRP is a non-negative least-squares fit of the free-space model to
   the Cartoradio grid, with a one-sigma range. `fit_error_db` reports the median model-vs-

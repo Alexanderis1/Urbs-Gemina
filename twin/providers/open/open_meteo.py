@@ -9,7 +9,7 @@ point and hour, with a large relative sigma.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Iterator
 
 from twin.providers import http
@@ -30,6 +30,8 @@ def lattice(bbox: BBox, step_deg: float) -> list[tuple[float, float]]:
             points.append((round(lon, 4), round(lat, 4)))
             lon += step_deg
         lat += step_deg
+    if not points:  # an area smaller than one model cell still gets its centre
+        points.append((round((min_lon + max_lon) / 2, 4), round((min_lat + max_lat) / 2, 4)))
     return points
 
 
@@ -81,6 +83,8 @@ class CamsOpenMeteoProvider:
     def fetch(self, bbox: BBox, start: datetime, end: datetime) -> Iterator[Observation]:
         start = start if start.tzinfo is not None else start.replace(tzinfo=timezone.utc)
         end = end if end.tzinfo is not None else end.replace(tzinfo=timezone.utc)
+        # Hourly model values: a "now" window still gets the hour it falls in.
+        start = min(start, end - timedelta(hours=number(self._config, "lookback_hours", 1.0)))
         points = lattice(bbox, number(self._config, "step_deg", 0.1))
         if not points:
             return

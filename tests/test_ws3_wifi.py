@@ -96,3 +96,17 @@ def test_committed_hotspot_seed_covers_the_busiest_sites() -> None:
     for address in ["VIA DELLA STAMPERIA 86", "LARGO GIOVANNI DA VERRAZZANO 7"]:
         lon, lat = sites[address]
         assert 12.2 < lon < 12.9 and 41.6 < lat < 42.1
+
+
+def test_a_now_window_returns_the_latest_published_hours() -> None:
+    package = {"success": True, "result": {"resources": [
+        {"name": "20261112.csv", "url": "https://example.org/20261112.csv"}]}}
+    day = HEADER + _row("12/11/2026 09:10:00", "12/11/2026 09:20:00")
+
+    def fetch(url: str) -> bytes:
+        return json.dumps(package).encode() if "package_show" in url else day.encode()
+
+    provider = RomaWifiProvider(Settings.load(), fetch_bytes=fetch, sites=parse_hotspot_kml(KML))
+    now = datetime(2026, 11, 13, 7, 0, tzinfo=timezone.utc)  # the next morning: today's file is not out yet
+    obs = list(provider.fetch(ROME_BBOX, now, now))
+    assert [o.observed_at for o in obs] == [datetime(2026, 11, 12, 9, tzinfo=timezone.utc)]

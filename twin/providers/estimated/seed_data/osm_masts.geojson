@@ -1,0 +1,5037 @@
+{
+"type": "FeatureCollection",
+"source": "OpenStreetMap contributors (ODbL), communication masts and towers in the Rome bbox, filtered from the Lazio extract by the ingest stream on 13 Nov 2026",
+"features": [
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4088166,
+41.8276284
+]
+},
+"properties": {
+"osm_id": "node/368338942",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4525772,
+41.9244878
+]
+},
+"properties": {
+"osm_id": "node/428640285",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "30"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4500452,
+41.9038967
+]
+},
+"properties": {
+"osm_id": "node/442582179",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4487052,
+41.9013906
+]
+},
+"properties": {
+"osm_id": "node/559990911",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4488616,
+41.9018867
+]
+},
+"properties": {
+"osm_id": "node/559990931",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5317543,
+41.9474409
+]
+},
+"properties": {
+"osm_id": "node/574960616",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4455753,
+41.9192538
+]
+},
+"properties": {
+"osm_id": "node/616883951",
+"man_made": "tower",
+"tower:type": "communication",
+"operator": "RAI"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3252795,
+42.039073
+]
+},
+"properties": {
+"osm_id": "node/618440235",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3206488,
+42.0440798
+]
+},
+"properties": {
+"osm_id": "node/618440255",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.320128,
+42.0441219
+]
+},
+"properties": {
+"osm_id": "node/618440256",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3194841,
+42.044174
+]
+},
+"properties": {
+"osm_id": "node/618440257",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.318977,
+42.0441971
+]
+},
+"properties": {
+"osm_id": "node/618440258",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3186649,
+42.0439364
+]
+},
+"properties": {
+"osm_id": "node/618440259",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3247864,
+42.0392074
+]
+},
+"properties": {
+"osm_id": "node/618440262",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3251422,
+42.0401855
+]
+},
+"properties": {
+"osm_id": "node/618440264",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3252233,
+42.0405516
+]
+},
+"properties": {
+"osm_id": "node/618440265",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3249238,
+42.0408993
+]
+},
+"properties": {
+"osm_id": "node/618440266",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3246863,
+42.0413783
+]
+},
+"properties": {
+"osm_id": "node/618440267",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3245099,
+42.0399001
+]
+},
+"properties": {
+"osm_id": "node/618440273",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3236308,
+42.0432116
+]
+},
+"properties": {
+"osm_id": "node/618440275",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3218167,
+42.0440813
+]
+},
+"properties": {
+"osm_id": "node/618440291",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3214188,
+42.0440175
+]
+},
+"properties": {
+"osm_id": "node/618440292",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3222794,
+42.0441561
+]
+},
+"properties": {
+"osm_id": "node/618440293",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "78"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3234177,
+42.0434708
+]
+},
+"properties": {
+"osm_id": "node/618440300",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3231388,
+42.04381
+]
+},
+"properties": {
+"osm_id": "node/618440301",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3232009,
+42.0445368
+]
+},
+"properties": {
+"osm_id": "node/618440314",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3243814,
+42.0419933
+]
+},
+"properties": {
+"osm_id": "node/618440316",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3240001,
+42.0427625
+]
+},
+"properties": {
+"osm_id": "node/618440317",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3235637,
+42.0448471
+]
+},
+"properties": {
+"osm_id": "node/618440331",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3238399,
+42.0450833
+]
+},
+"properties": {
+"osm_id": "node/618440332",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3243321,
+42.0455043
+]
+},
+"properties": {
+"osm_id": "node/618440338",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3244226,
+42.0460419
+]
+},
+"properties": {
+"osm_id": "node/618440339",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3244776,
+42.0463685
+]
+},
+"properties": {
+"osm_id": "node/618440340",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3245428,
+42.0467557
+]
+},
+"properties": {
+"osm_id": "node/618440341",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3249944,
+42.047151
+]
+},
+"properties": {
+"osm_id": "node/618440342",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.325545,
+42.047633
+]
+},
+"properties": {
+"osm_id": "node/618440345",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3262434,
+42.0482445
+]
+},
+"properties": {
+"osm_id": "node/618440346",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3281797,
+42.0432726
+]
+},
+"properties": {
+"osm_id": "node/618440347",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.327296,
+42.0481084
+]
+},
+"properties": {
+"osm_id": "node/618440350",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3281704,
+42.0479954
+]
+},
+"properties": {
+"osm_id": "node/618440351",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.336288,
+42.041164
+]
+},
+"properties": {
+"osm_id": "node/618442103",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "98"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3369218,
+42.0414899
+]
+},
+"properties": {
+"osm_id": "node/618442104",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "98"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3423073,
+42.0474074
+]
+},
+"properties": {
+"osm_id": "node/618442154",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "94"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.34173,
+42.0469033
+]
+},
+"properties": {
+"osm_id": "node/618442155",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "94"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3424315,
+42.0464704
+]
+},
+"properties": {
+"osm_id": "node/618442156",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "94"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3429821,
+42.0469887
+]
+},
+"properties": {
+"osm_id": "node/618442157",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "94"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4585218,
+41.922388
+]
+},
+"properties": {
+"osm_id": "node/633365814",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4460691,
+41.9105428
+]
+},
+"properties": {
+"osm_id": "node/652445027",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5807511,
+41.7035312
+]
+},
+"properties": {
+"osm_id": "node/900594278",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "186"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5782611,
+41.7031194
+]
+},
+"properties": {
+"osm_id": "node/900594282",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5850691,
+41.7043477
+]
+},
+"properties": {
+"osm_id": "node/900594303",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5846192,
+41.7050136
+]
+},
+"properties": {
+"osm_id": "node/900594347",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5854724,
+41.7036644
+]
+},
+"properties": {
+"osm_id": "node/900594367",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5841412,
+41.8493302
+]
+},
+"properties": {
+"osm_id": "node/907233219",
+"man_made": "tower",
+"tower:type": "communication",
+"operator": "Telecom Italia"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4556605,
+41.9201723
+]
+},
+"properties": {
+"osm_id": "node/1153797444",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "Rai Way"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4243583,
+41.9302745
+]
+},
+"properties": {
+"osm_id": "node/1174511203",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4500798,
+41.9040767
+]
+},
+"properties": {
+"osm_id": "node/1207257702",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4569514,
+41.9150608
+]
+},
+"properties": {
+"osm_id": "node/1212713207",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.451137,
+41.9237672
+]
+},
+"properties": {
+"osm_id": "node/1226777297",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4421149,
+41.9093236
+]
+},
+"properties": {
+"osm_id": "node/1226967497",
+"man_made": "tower",
+"tower:type": "communication",
+"operator": "Rai"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4483725,
+41.9055658
+]
+},
+"properties": {
+"osm_id": "node/1286802567",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.600771,
+41.865153
+]
+},
+"properties": {
+"osm_id": "node/1299426855",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4387672,
+41.9106564
+]
+},
+"properties": {
+"osm_id": "node/1425035205",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5239245,
+41.8000976
+]
+},
+"properties": {
+"osm_id": "node/1555734832",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5237835,
+41.8024851
+]
+},
+"properties": {
+"osm_id": "node/1555734980",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8235555,
+42.1074642
+]
+},
+"properties": {
+"osm_id": "node/1691783894",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8014044,
+42.0604225
+]
+},
+"properties": {
+"osm_id": "node/1703435383",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8015979,
+42.0601706
+]
+},
+"properties": {
+"osm_id": "node/1703435399",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8015443,
+42.0602284
+]
+},
+"properties": {
+"osm_id": "node/1703435425",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8014451,
+42.0603359
+]
+},
+"properties": {
+"osm_id": "node/1703435474",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8015309,
+42.0602921
+]
+},
+"properties": {
+"osm_id": "node/1703435616",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8014853,
+42.0602503
+]
+},
+"properties": {
+"osm_id": "node/1703435832",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.801672,
+42.0600564
+]
+},
+"properties": {
+"osm_id": "node/1703435837",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5100148,
+41.8951767
+]
+},
+"properties": {
+"osm_id": "node/1706520085",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4617076,
+41.9628056
+]
+},
+"properties": {
+"osm_id": "node/1728533021",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3644632,
+41.982913
+]
+},
+"properties": {
+"osm_id": "node/1737737721",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7194066,
+41.6967974
+]
+},
+"properties": {
+"osm_id": "node/1737742183",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7109749,
+41.750464
+]
+},
+"properties": {
+"osm_id": "node/1740750965",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7108334,
+41.7505758
+]
+},
+"properties": {
+"osm_id": "node/1740751055",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6523787,
+42.0445847
+]
+},
+"properties": {
+"osm_id": "node/1781441684",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6212792,
+42.1041275
+]
+},
+"properties": {
+"osm_id": "node/2354576357",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6382777,
+42.0688046
+]
+},
+"properties": {
+"osm_id": "node/2354594109",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6393749,
+42.059809
+]
+},
+"properties": {
+"osm_id": "node/2354597474",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.677359,
+42.0293025
+]
+},
+"properties": {
+"osm_id": "node/2354643963",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6821421,
+41.9826162
+]
+},
+"properties": {
+"osm_id": "node/2354675382",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6935864,
+41.9750516
+]
+},
+"properties": {
+"osm_id": "node/2354677080",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7157161,
+41.9432298
+]
+},
+"properties": {
+"osm_id": "node/2354702951",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7782333,
+41.8623309
+]
+},
+"properties": {
+"osm_id": "node/2354809396",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5486853,
+41.9009513
+]
+},
+"properties": {
+"osm_id": "node/2382071297",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4242344,
+41.914983
+]
+},
+"properties": {
+"osm_id": "node/2383710159",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7528955,
+41.902446
+]
+},
+"properties": {
+"osm_id": "node/3012473494",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7477587,
+41.9142338
+]
+},
+"properties": {
+"osm_id": "node/3012473495",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7483785,
+41.9147991
+]
+},
+"properties": {
+"osm_id": "node/3012473496",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3107666,
+41.8109454
+]
+},
+"properties": {
+"osm_id": "node/3105409034",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7619343,
+41.8899178
+]
+},
+"properties": {
+"osm_id": "node/3283148873",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7560647,
+41.7031016
+]
+},
+"properties": {
+"osm_id": "node/3417240566",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "10",
+"operator": "digitalbyte"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8019137,
+42.0598735
+]
+},
+"properties": {
+"osm_id": "node/3528221200",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7597389,
+41.8912835
+]
+},
+"properties": {
+"osm_id": "node/3843779334",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7682653,
+41.8196176
+]
+},
+"properties": {
+"osm_id": "node/3843798061",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6585021,
+41.8677713
+]
+},
+"properties": {
+"osm_id": "node/3878927134",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.446042,
+41.9092414
+]
+},
+"properties": {
+"osm_id": "node/3883815833",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7101271,
+41.7560957
+]
+},
+"properties": {
+"osm_id": "node/3913323706",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7086538,
+41.7582574
+]
+},
+"properties": {
+"osm_id": "node/3913323707",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7094237,
+41.7515675
+]
+},
+"properties": {
+"osm_id": "node/3913323708",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7098526,
+41.7524105
+]
+},
+"properties": {
+"osm_id": "node/3913323709",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7250344,
+41.8033504
+]
+},
+"properties": {
+"osm_id": "node/3913323710",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6893378,
+41.7269321
+]
+},
+"properties": {
+"osm_id": "node/3913323711",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4463811,
+41.9260191
+]
+},
+"properties": {
+"osm_id": "node/3913323714",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6503879,
+41.7469193
+]
+},
+"properties": {
+"osm_id": "node/3913323716",
+"man_made": "tower",
+"tower:type": "communication",
+"operator": "Ctv"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7106079,
+41.7506607
+]
+},
+"properties": {
+"osm_id": "node/3918726261",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7088909,
+41.7507609
+]
+},
+"properties": {
+"osm_id": "node/3918726262",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7104494,
+41.7507965
+]
+},
+"properties": {
+"osm_id": "node/3918726263",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7090347,
+41.7509646
+]
+},
+"properties": {
+"osm_id": "node/3918726264",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7086067,
+41.7509815
+]
+},
+"properties": {
+"osm_id": "node/3918726265",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7090979,
+41.7510292
+]
+},
+"properties": {
+"osm_id": "node/3918726266",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7105122,
+41.7511121
+]
+},
+"properties": {
+"osm_id": "node/3918726267",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7090846,
+41.7511507
+]
+},
+"properties": {
+"osm_id": "node/3918726268",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7250568,
+41.8030985
+]
+},
+"properties": {
+"osm_id": "node/3918728118",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6821396,
+41.9826199
+]
+},
+"properties": {
+"osm_id": "node/4384529646",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6966284,
+41.9711832
+]
+},
+"properties": {
+"osm_id": "node/4384529647",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7335134,
+41.9360207
+]
+},
+"properties": {
+"osm_id": "node/4384529648",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7710566,
+41.8694207
+]
+},
+"properties": {
+"osm_id": "node/4384529649",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8023991,
+41.8274317
+]
+},
+"properties": {
+"osm_id": "node/4388436429",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8091311,
+41.8077791
+]
+},
+"properties": {
+"osm_id": "node/4388436430",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2433083,
+42.012345
+]
+},
+"properties": {
+"osm_id": "node/4401373571",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2867437,
+41.8963868
+]
+},
+"properties": {
+"osm_id": "node/4436577725",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4542482,
+41.8201233
+]
+},
+"properties": {
+"osm_id": "node/4463337361",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4522734,
+41.8209782
+]
+},
+"properties": {
+"osm_id": "node/4463338823",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4523201,
+41.8209998
+]
+},
+"properties": {
+"osm_id": "node/4463338824",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4522165,
+41.821083
+]
+},
+"properties": {
+"osm_id": "node/4463338825",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2400941,
+41.9638754
+]
+},
+"properties": {
+"osm_id": "node/4506106009",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3755042,
+41.8560551
+]
+},
+"properties": {
+"osm_id": "node/4506175531",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4547768,
+41.8286983
+]
+},
+"properties": {
+"osm_id": "node/4507886854",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3793098,
+41.8467178
+]
+},
+"properties": {
+"osm_id": "node/4507962316",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3565484,
+41.8818783
+]
+},
+"properties": {
+"osm_id": "node/4507968206",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.340777,
+41.8878878
+]
+},
+"properties": {
+"osm_id": "node/4520315522",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7336659,
+41.7475399
+]
+},
+"properties": {
+"osm_id": "node/4623780464",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7338951,
+41.7474563
+]
+},
+"properties": {
+"osm_id": "node/4623780465",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3755758,
+41.8586057
+]
+},
+"properties": {
+"osm_id": "node/4650922163",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4538958,
+41.9104155
+]
+},
+"properties": {
+"osm_id": "node/4683392567",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4386616,
+41.9078919
+]
+},
+"properties": {
+"osm_id": "node/4690492978",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5731478,
+41.9866041
+]
+},
+"properties": {
+"osm_id": "node/4695691235",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5732363,
+41.9858944
+]
+},
+"properties": {
+"osm_id": "node/4695691236",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5794443,
+41.9840681
+]
+},
+"properties": {
+"osm_id": "node/4695691237",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5806996,
+41.9850331
+]
+},
+"properties": {
+"osm_id": "node/4695691238",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5760674,
+41.9844828
+]
+},
+"properties": {
+"osm_id": "node/4695691239",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5771832,
+41.9856113
+]
+},
+"properties": {
+"osm_id": "node/4695691240",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3798842,
+41.8773953
+]
+},
+"properties": {
+"osm_id": "node/4952150385",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7560746,
+41.7032113
+]
+},
+"properties": {
+"osm_id": "node/4983318416",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "10"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8310868,
+41.7984991
+]
+},
+"properties": {
+"osm_id": "node/5078888335",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7848826,
+41.8183815
+]
+},
+"properties": {
+"osm_id": "node/5078888336",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.750041,
+41.8244314
+]
+},
+"properties": {
+"osm_id": "node/5078888337",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7169656,
+41.8266585
+]
+},
+"properties": {
+"osm_id": "node/5078888338",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6698812,
+41.826233
+]
+},
+"properties": {
+"osm_id": "node/5078888339",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "15"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6526095,
+41.8324633
+]
+},
+"properties": {
+"osm_id": "node/5080846222",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6295857,
+41.8427293
+]
+},
+"properties": {
+"osm_id": "node/5080846223",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5867208,
+41.8325249
+]
+},
+"properties": {
+"osm_id": "node/5080846224",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3046189,
+41.8118303
+]
+},
+"properties": {
+"osm_id": "node/5080846225",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3288904,
+41.8104394
+]
+},
+"properties": {
+"osm_id": "node/5344514643",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3289584,
+41.8103874
+]
+},
+"properties": {
+"osm_id": "node/5344514644",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3464256,
+41.8184786
+]
+},
+"properties": {
+"osm_id": "node/5344514646",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6747274,
+41.8194825
+]
+},
+"properties": {
+"osm_id": "node/5401328686",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "15"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6562151,
+41.8308684
+]
+},
+"properties": {
+"osm_id": "node/5409578726",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "15"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6688922,
+41.8259653
+]
+},
+"properties": {
+"osm_id": "node/5409578727",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "15"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6679804,
+41.826871
+]
+},
+"properties": {
+"osm_id": "node/5409578728",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "15"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5498359,
+41.8710938
+]
+},
+"properties": {
+"osm_id": "node/5434893192",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5790973,
+42.0940229
+]
+},
+"properties": {
+"osm_id": "node/5443984635",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5121281,
+41.9881577
+]
+},
+"properties": {
+"osm_id": "node/5443984636",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5069882,
+41.9670152
+]
+},
+"properties": {
+"osm_id": "node/5443984637",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5835085,
+41.8274463
+]
+},
+"properties": {
+"osm_id": "node/5482445074",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5830304,
+41.8253562
+]
+},
+"properties": {
+"osm_id": "node/5482445075",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5823813,
+41.8248375
+]
+},
+"properties": {
+"osm_id": "node/5482445076",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5726375,
+41.8131048
+]
+},
+"properties": {
+"osm_id": "node/5482445077",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5206456,
+41.7981997
+]
+},
+"properties": {
+"osm_id": "node/5482445078",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5206831,
+41.7982636
+]
+},
+"properties": {
+"osm_id": "node/5482445079",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4800986,
+41.7969299
+]
+},
+"properties": {
+"osm_id": "node/5482445080",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4823988,
+41.8015592
+]
+},
+"properties": {
+"osm_id": "node/5482445081",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6540903,
+41.9578421
+]
+},
+"properties": {
+"osm_id": "node/5516475536",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5810984,
+41.958532
+]
+},
+"properties": {
+"osm_id": "node/5601702682",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4099079,
+41.9589635
+]
+},
+"properties": {
+"osm_id": "node/5818191346",
+"man_made": "tower",
+"tower:type": "communication",
+"operator": "TIM"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6742459,
+41.8031185
+]
+},
+"properties": {
+"osm_id": "node/5916082309",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6575926,
+41.810638
+]
+},
+"properties": {
+"osm_id": "node/6068632123",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "27"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6873143,
+41.829413
+]
+},
+"properties": {
+"osm_id": "node/6088879160",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "30"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4238911,
+41.9107825
+]
+},
+"properties": {
+"osm_id": "node/6389106473",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6661973,
+41.8039035
+]
+},
+"properties": {
+"osm_id": "node/7414506322",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4969167,
+41.9819775
+]
+},
+"properties": {
+"osm_id": "node/7737724020",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2964698,
+42.0295926
+]
+},
+"properties": {
+"osm_id": "node/8184636090",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6892584,
+41.8025109
+]
+},
+"properties": {
+"osm_id": "node/8544977446",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6171232,
+41.9404299
+]
+},
+"properties": {
+"osm_id": "node/8571770945",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3591202,
+41.9719428
+]
+},
+"properties": {
+"osm_id": "node/8610689797",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.648239,
+41.6762874
+]
+},
+"properties": {
+"osm_id": "node/8625007433",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2857196,
+42.077549
+]
+},
+"properties": {
+"osm_id": "node/8785219705",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2714339,
+42.0866019
+]
+},
+"properties": {
+"osm_id": "node/8795169014",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.553849,
+41.8810581
+]
+},
+"properties": {
+"osm_id": "node/9165594836",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5465286,
+41.8751568
+]
+},
+"properties": {
+"osm_id": "node/9165594837",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5465585,
+41.8751776
+]
+},
+"properties": {
+"osm_id": "node/9165594838",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7098941,
+41.7515471
+]
+},
+"properties": {
+"osm_id": "node/9300437237",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7099517,
+41.7516792
+]
+},
+"properties": {
+"osm_id": "node/9300437238",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7100121,
+41.7516011
+]
+},
+"properties": {
+"osm_id": "node/9300437239",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7101341,
+41.7516121
+]
+},
+"properties": {
+"osm_id": "node/9300437240",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7100617,
+41.7515091
+]
+},
+"properties": {
+"osm_id": "node/9300437241",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7098176,
+41.7514731
+]
+},
+"properties": {
+"osm_id": "node/9300437242",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7101153,
+41.751392
+]
+},
+"properties": {
+"osm_id": "node/9300437243",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7096205,
+41.7519703
+]
+},
+"properties": {
+"osm_id": "node/9300437244",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7096915,
+41.7519703
+]
+},
+"properties": {
+"osm_id": "node/9300437245",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.709941,
+41.7519573
+]
+},
+"properties": {
+"osm_id": "node/9300437246",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7100791,
+41.7519173
+]
+},
+"properties": {
+"osm_id": "node/9300437247",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7090666,
+41.7515711
+]
+},
+"properties": {
+"osm_id": "node/9300437263",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7090478,
+41.7516762
+]
+},
+"properties": {
+"osm_id": "node/9300437264",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7091645,
+41.7517832
+]
+},
+"properties": {
+"osm_id": "node/9300437265",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7092289,
+41.7518152
+]
+},
+"properties": {
+"osm_id": "node/9300437266",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7101918,
+41.7517247
+]
+},
+"properties": {
+"osm_id": "node/9300437289",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.710008,
+41.7517727
+]
+},
+"properties": {
+"osm_id": "node/9300437290",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7097492,
+41.7523665
+]
+},
+"properties": {
+"osm_id": "node/9300437295",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.289989,
+42.051846
+]
+},
+"properties": {
+"osm_id": "node/9547554120",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8017281,
+42.0599981
+]
+},
+"properties": {
+"osm_id": "node/9548036175",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.801828,
+42.0598986
+]
+},
+"properties": {
+"osm_id": "node/9548036176",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8019681,
+42.0598805
+]
+},
+"properties": {
+"osm_id": "node/9548036177",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3685711,
+42.0217166
+]
+},
+"properties": {
+"osm_id": "node/9578077456",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3598867,
+42.0259638
+]
+},
+"properties": {
+"osm_id": "node/9578081830",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3585135,
+42.0356587
+]
+},
+"properties": {
+"osm_id": "node/9682636441",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3629776,
+42.0497534
+]
+},
+"properties": {
+"osm_id": "node/9682636442",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3254312,
+42.0623909
+]
+},
+"properties": {
+"osm_id": "node/9713563051",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4901397,
+41.8597895
+]
+},
+"properties": {
+"osm_id": "node/9757565549",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6062192,
+41.8486255
+]
+},
+"properties": {
+"osm_id": "node/10230572381",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3763793,
+41.9178517
+]
+},
+"properties": {
+"osm_id": "node/10557119457",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3676121,
+41.9155877
+]
+},
+"properties": {
+"osm_id": "node/10557258344",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5267008,
+41.656158
+]
+},
+"properties": {
+"osm_id": "node/10559829895",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3768967,
+41.9190144
+]
+},
+"properties": {
+"osm_id": "node/10701435826",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4688987,
+41.8637974
+]
+},
+"properties": {
+"osm_id": "node/10752561371",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4561161,
+41.8404305
+]
+},
+"properties": {
+"osm_id": "node/10768713333",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3726768,
+41.8641976
+]
+},
+"properties": {
+"osm_id": "node/10768992180",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3754499,
+41.8585801
+]
+},
+"properties": {
+"osm_id": "node/10768992181",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.379604,
+41.8467277
+]
+},
+"properties": {
+"osm_id": "node/10768992182",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3820873,
+41.8408269
+]
+},
+"properties": {
+"osm_id": "node/10768992183",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4999838,
+41.6784869
+]
+},
+"properties": {
+"osm_id": "node/10811571303",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4853148,
+41.6884698
+]
+},
+"properties": {
+"osm_id": "node/10811597026",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4715372,
+41.8550541
+]
+},
+"properties": {
+"osm_id": "node/10819881733",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4722944,
+41.8552886
+]
+},
+"properties": {
+"osm_id": "node/10819881734",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4722492,
+41.8553118
+]
+},
+"properties": {
+"osm_id": "node/10819881735",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5067304,
+41.6807939
+]
+},
+"properties": {
+"osm_id": "node/10819915722",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5203389,
+41.6647478
+]
+},
+"properties": {
+"osm_id": "node/10843952440",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.520571,
+41.6649141
+]
+},
+"properties": {
+"osm_id": "node/10843952441",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3764746,
+41.9179109
+]
+},
+"properties": {
+"osm_id": "node/10870067587",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3805303,
+41.8732112
+]
+},
+"properties": {
+"osm_id": "node/10924024509",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3851881,
+41.8855169
+]
+},
+"properties": {
+"osm_id": "node/10977171402",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3877036,
+41.8848541
+]
+},
+"properties": {
+"osm_id": "node/10977171403",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4155365,
+41.9129921
+]
+},
+"properties": {
+"osm_id": "node/10977224172",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4135352,
+41.9131858
+]
+},
+"properties": {
+"osm_id": "node/10977247205",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.414175,
+41.9138151
+]
+},
+"properties": {
+"osm_id": "node/10977247206",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4947159,
+41.6703267
+]
+},
+"properties": {
+"osm_id": "node/11007832584",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4946887,
+41.6702809
+]
+},
+"properties": {
+"osm_id": "node/11007832585",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4947818,
+41.6702899
+]
+},
+"properties": {
+"osm_id": "node/11007832586",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4198666,
+41.6591832
+]
+},
+"properties": {
+"osm_id": "node/11067188516",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7324895,
+41.9507532
+]
+},
+"properties": {
+"osm_id": "node/11097398240",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2874516,
+41.8960742
+]
+},
+"properties": {
+"osm_id": "node/11273672821",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6189078,
+42.0561441
+]
+},
+"properties": {
+"osm_id": "node/11477157276",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "Wind"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5876576,
+42.1344163
+]
+},
+"properties": {
+"osm_id": "node/11503856908",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5878279,
+42.1343208
+]
+},
+"properties": {
+"osm_id": "node/11503856909",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.8238591,
+41.7877425
+]
+},
+"properties": {
+"osm_id": "node/11629917130",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7637463,
+41.963372
+]
+},
+"properties": {
+"osm_id": "node/11634211798",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "Wind3"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3242762,
+41.8017638
+]
+},
+"properties": {
+"osm_id": "node/11794990462",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7545602,
+41.955605
+]
+},
+"properties": {
+"osm_id": "node/11877773830",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "TIM"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7554199,
+41.9550056
+]
+},
+"properties": {
+"osm_id": "node/11877773831",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "WindTre"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5383981,
+41.8738435
+]
+},
+"properties": {
+"osm_id": "node/11971651092",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5905775,
+42.1167071
+]
+},
+"properties": {
+"osm_id": "node/12065099547",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "Wind3"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5971468,
+42.0645147
+]
+},
+"properties": {
+"osm_id": "node/12134184616",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "TIM"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3204535,
+41.8064235
+]
+},
+"properties": {
+"osm_id": "node/12140387575",
+"man_made": "mast",
+"tower:type": "communication",
+"operator": "TIM"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5230021,
+41.9332672
+]
+},
+"properties": {
+"osm_id": "node/12140433615",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6738037,
+41.8263061
+]
+},
+"properties": {
+"osm_id": "node/12145426339",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.673846,
+41.8263001
+]
+},
+"properties": {
+"osm_id": "node/12145426340",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6738869,
+41.8262961
+]
+},
+"properties": {
+"osm_id": "node/12145426341",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6741886,
+41.8262651
+]
+},
+"properties": {
+"osm_id": "node/12145426342",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.673968,
+41.8262861
+]
+},
+"properties": {
+"osm_id": "node/12145426343",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6755176,
+41.8274958
+]
+},
+"properties": {
+"osm_id": "node/12145426344",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5722979,
+41.8524691
+]
+},
+"properties": {
+"osm_id": "node/12326789357",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6920368,
+41.8549426
+]
+},
+"properties": {
+"osm_id": "node/12351571863",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6246041,
+41.9395736
+]
+},
+"properties": {
+"osm_id": "node/12655881789",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7271557,
+41.8327724
+]
+},
+"properties": {
+"osm_id": "node/12749563857",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7269874,
+41.8254325
+]
+},
+"properties": {
+"osm_id": "node/12749563972",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6980588,
+42.0396612
+]
+},
+"properties": {
+"osm_id": "node/12811957121",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4979353,
+41.9099886
+]
+},
+"properties": {
+"osm_id": "node/12814130216",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5045883,
+41.9069293
+]
+},
+"properties": {
+"osm_id": "node/12814137348",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.2506483,
+41.7934073
+]
+},
+"properties": {
+"osm_id": "node/12814151057",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5609965,
+41.8902667
+]
+},
+"properties": {
+"osm_id": "node/12848525144",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5649629,
+41.888619
+]
+},
+"properties": {
+"osm_id": "node/12881051420",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5694923,
+41.8900856
+]
+},
+"properties": {
+"osm_id": "node/12881092550",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.5668389,
+41.8892078
+]
+},
+"properties": {
+"osm_id": "node/12881092551",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3648751,
+41.981791
+]
+},
+"properties": {
+"osm_id": "node/13208925283",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3637677,
+41.9809247
+]
+},
+"properties": {
+"osm_id": "node/13208925284",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3657935,
+41.9809316
+]
+},
+"properties": {
+"osm_id": "node/13208925285",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3628622,
+41.9798772
+]
+},
+"properties": {
+"osm_id": "node/13208925286",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3613829,
+41.9804551
+]
+},
+"properties": {
+"osm_id": "node/13208925287",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3617743,
+41.9803349
+]
+},
+"properties": {
+"osm_id": "node/13208925288",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3619517,
+41.9806335
+]
+},
+"properties": {
+"osm_id": "node/13208925289",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3615682,
+41.9807421
+]
+},
+"properties": {
+"osm_id": "node/13208925290",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3602559,
+41.9797143
+]
+},
+"properties": {
+"osm_id": "node/13208925291",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3599664,
+41.9807565
+]
+},
+"properties": {
+"osm_id": "node/13208925292",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3603098,
+41.9817844
+]
+},
+"properties": {
+"osm_id": "node/13208925293",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3632262,
+41.9823048
+]
+},
+"properties": {
+"osm_id": "node/13208925294",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3663944,
+41.9819005
+]
+},
+"properties": {
+"osm_id": "node/13208925295",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3634551,
+41.9776907
+]
+},
+"properties": {
+"osm_id": "node/13208925296",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3641329,
+41.9773449
+]
+},
+"properties": {
+"osm_id": "node/13208925297",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3608331,
+41.9786115
+]
+},
+"properties": {
+"osm_id": "node/13208925298",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3596099,
+41.9770036
+]
+},
+"properties": {
+"osm_id": "node/13208925299",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3601399,
+41.9758606
+]
+},
+"properties": {
+"osm_id": "node/13208925300",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.358701,
+41.9758148
+]
+},
+"properties": {
+"osm_id": "node/13208950901",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3569618,
+41.9752778
+]
+},
+"properties": {
+"osm_id": "node/13208950902",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3562398,
+41.9763289
+]
+},
+"properties": {
+"osm_id": "node/13208950903",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3578839,
+41.9782668
+]
+},
+"properties": {
+"osm_id": "node/13208950904",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3569213,
+41.9784452
+]
+},
+"properties": {
+"osm_id": "node/13208950905",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3571874,
+41.9786896
+]
+},
+"properties": {
+"osm_id": "node/13208950906",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3568639,
+41.9788777
+]
+},
+"properties": {
+"osm_id": "node/13208950907",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3565847,
+41.9786469
+]
+},
+"properties": {
+"osm_id": "node/13208950908",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.357948,
+41.9795501
+]
+},
+"properties": {
+"osm_id": "node/13208950909",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3577023,
+41.9805213
+]
+},
+"properties": {
+"osm_id": "node/13208950910",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4961617,
+42.1020339
+]
+},
+"properties": {
+"osm_id": "node/13253039690",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6170349,
+41.828709
+]
+},
+"properties": {
+"osm_id": "node/13327575924",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6173812,
+42.0632204
+]
+},
+"properties": {
+"osm_id": "node/13337720964",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6175044,
+42.063232
+]
+},
+"properties": {
+"osm_id": "node/13337720965",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7455186,
+41.9626209
+]
+},
+"properties": {
+"osm_id": "node/13444838003",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7460866,
+41.9623432
+]
+},
+"properties": {
+"osm_id": "node/13444838004",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7898049,
+41.8162628
+]
+},
+"properties": {
+"osm_id": "node/13653527761",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.6664846,
+41.8999952
+]
+},
+"properties": {
+"osm_id": "node/14075618145",
+"man_made": "mast",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.7557162,
+41.7019708
+]
+},
+"properties": {
+"osm_id": "node/14227453575",
+"man_made": "mast",
+"tower:type": "communication",
+"height": "10"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.325641,
+42.0383056
+]
+},
+"properties": {
+"osm_id": "way/48728220",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "76"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3312575,
+42.0522993
+]
+},
+"properties": {
+"osm_id": "way/48733716",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "106"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3281993,
+42.0432767
+]
+},
+"properties": {
+"osm_id": "way/48733776",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4882924,
+41.8005654
+]
+},
+"properties": {
+"osm_id": "way/568893010",
+"man_made": "tower",
+"tower:type": "communication",
+"height": "187"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4946395,
+41.9979027
+]
+},
+"properties": {
+"osm_id": "way/897669241",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4327199,
+42.0288968
+]
+},
+"properties": {
+"osm_id": "way/899428464",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.4695746,
+42.0365385
+]
+},
+"properties": {
+"osm_id": "way/903822982",
+"man_made": "tower",
+"tower:type": "communication"
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.3355174,
+42.1150704
+]
+},
+"properties": {
+"osm_id": "way/1006510860",
+"man_made": "tower",
+"tower:type": "communication"
+}
+}
+]
+}

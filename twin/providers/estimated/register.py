@@ -234,11 +234,16 @@ def fit_effective_eirp(sites: Sequence[tuple[float, float]], cells: Sequence[Ras
 
 # --- provider -------------------------------------------------------------------
 
+#: Fitted registers per (area, settings), kept in memory for the process only.
+_REGISTER_CACHE: dict[tuple[object, str, str], tuple[list[EstimatedSite], float, float]] = {}
+
+
 class EstimatedRegisterProvider:
     def __init__(self, settings: Settings | None = None, cartoradio: CartoradioGridProvider | None = None,
                  area: BBox = ROME_BBOX) -> None:
         self._settings = settings or Settings.load()
         self._config = self._settings.section("estimated", "register")
+        self._shared = cartoradio is None  # injected grids (tests) never use the process cache
         self._cartoradio = cartoradio or CartoradioGridProvider(self._settings)
         self._area = area
         self._sites: list[EstimatedSite] | None = None
@@ -261,8 +266,18 @@ class EstimatedRegisterProvider:
         )
 
     def sites(self) -> list[EstimatedSite]:
+        """The fused register. The fit takes about 20 s, so it is held in memory for the process
+        (never written to disk: Cartoradio-derived data is runtime only)."""
         if self._sites is None:
-            self._sites = self._build()
+            key = (self._area, repr(sorted(self._config.items(), key=str)),
+                   repr(self._settings.section("restricted", "cartoradio_grid")))
+            cached = _REGISTER_CACHE.get(key) if self._shared else None
+            if cached is None:
+                sites = self._build()
+                cached = (sites, self._background, self._fit_error_db)
+                if self._shared:
+                    _REGISTER_CACHE[key] = cached
+            self._sites, self._background, self._fit_error_db = cached
         return self._sites
 
     @property

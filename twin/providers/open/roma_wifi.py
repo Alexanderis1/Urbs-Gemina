@@ -21,6 +21,7 @@ import csv
 import json
 import math
 import re
+import time
 import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -177,6 +178,20 @@ def _decode(raw: bytes) -> str:
         return raw.decode("cp1252")
 
 
+#: url -> (monotonic time, bytes). Daily files and the dataset listing, per process.
+_CACHE: dict[str, tuple[float, bytes]] = {}
+
+
+def _cached_get(url: str, ttl_s: float, timeout_s: float) -> bytes:
+    now = time.monotonic()
+    hit = _CACHE.get(url)
+    if hit is not None and now - hit[0] < ttl_s:
+        return hit[1]
+    data = http.get_bytes(url, timeout_s=timeout_s)
+    _CACHE[url] = (now, data)
+    return data
+
+
 class RomaWifiProvider:
     def __init__(self, settings: Settings | None = None, fetch_bytes: Callable[[str], bytes] | None = None,
                  sites: Sites | None = None) -> None:
@@ -184,8 +199,13 @@ class RomaWifiProvider:
         config = settings.section("open", PROVIDER_ID)
         self._dataset = text(config, "dataset", "wifi{year}")
         self._sigma_floor = number(config, "sigma_floor", 1.0)
+        self._lookback_h = number(config, "lookback_hours", 36.0)
         timeout = number(config, "timeout_s", 120.0)
-        self._fetch = fetch_bytes or (lambda url: http.get_bytes(url, timeout_s=timeout))
+        if fetch_bytes is not None:
+            self._fetch = fetch_bytes
+        else:
+            ttl_s = number(config, "cache_minutes", 30.0) * 60.0
+            self._fetch = lambda url: _cached_get(url, ttl_s, timeout)
         self.sites: Sites = sites if sites is not None else load_sites()
         self.unmatched_sessions = 0
 
@@ -219,6 +239,9 @@ class RomaWifiProvider:
     def fetch(self, bbox: BBox, start: datetime, end: datetime) -> Iterator[Observation]:
         start = start if start.tzinfo is not None else start.replace(tzinfo=timezone.utc)
         end = end if end.tzinfo is not None else end.replace(tzinfo=timezone.utc)
+        # The city publishes each day's file the next day: a "now" window looks back far
+        # enough to reach the latest published hours. observed_at says when they were.
+        start = min(start, end - timedelta(hours=self._lookback_h))
         first, last = start.astimezone(ROME).date(), end.astimezone(ROME).date() + timedelta(days=1)
         days = {first + timedelta(days=i) for i in range((last - first).days + 1)}
         sessions: list[Session] = []

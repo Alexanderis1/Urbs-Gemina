@@ -15,12 +15,14 @@ from __future__ import annotations
 import csv
 import io
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Iterable, Iterator, Mapping
 
 from twin.providers import http
 from twin.providers.base import BBox, Observation, ProviderInfo
-from twin.providers.geo import in_bbox
+from twin.providers.geo import expand_bbox, in_bbox
 from twin.providers.settings import Settings, integer, number
 
 PROVIDER_ID = "eea_hourly"
@@ -97,7 +99,8 @@ class EeaHourlyProvider:
         self._config = settings.section("open", PROVIDER_ID)
         timeout = number(self._config, "timeout_s", 60.0)
         self._post = http_post or (lambda url, body: http.post_json(url, body, timeout_s=timeout).decode("utf-8-sig"))
-        self._get = http_get or (lambda url: http.get_bytes(url, timeout_s=timeout))
+        self._default_get: Callable[[str], bytes] = lambda url: http.get_bytes(url, timeout_s=timeout)
+        self._get = http_get or self._default_get
         codes = self._config.get("pollutant_codes", {}) or {}
         self._pollutant_names = {int(code): str(name) for name, code in codes.items()}
         self._stations: dict[str, tuple[float, float]] | None = None
@@ -126,24 +129,57 @@ class EeaHourlyProvider:
 
     def stations(self) -> dict[str, tuple[float, float]]:
         if self._stations is None:
-            raw = self._get(str(self._config.get("metadata_url")))
-            self._stations = read_station_metadata(raw.decode("utf-8", errors="replace"))
+            url = str(self._config.get("metadata_url"))
+            if url not in _STATION_CACHE or self._get is not self._default_get:
+                raw = self._get(url)
+                stations = read_station_metadata(raw.decode("utf-8", errors="replace"))
+                if self._get is not self._default_get:
+                    self._stations = stations
+                    return stations
+                _STATION_CACHE[url] = stations
+            self._stations = _STATION_CACHE[url]
         return self._stations
 
     def fetch(self, bbox: BBox, start: datetime, end: datetime) -> Iterator[Observation]:
         start, end = _aware(start), _aware(end)
-        stations = {code: pos for code, pos in self.stations().items() if in_bbox(pos[0], pos[1], bbox)}
+        # Up-to-date (E2a) values arrive a few hours late: a "now" window looks back far enough
+        # to hold the latest hours. observed_at always says when each value was measured.
+        start = min(start, end - timedelta(hours=number(self._config, "lookback_hours", 6.0)))
+        # A district may hold no station: nearby stations still describe it (their real
+        # positions are kept, so the belief layer weighs them by distance).
+        search = expand_bbox(bbox, number(self._config, "search_buffer_km", 5.0) * 1000.0)
+        stations = {code: pos for code, pos in self.stations().items() if in_bbox(pos[0], pos[1], search)}
         offset = number(self._config, "utc_offset_hours", 1.0)
         rel_sigma = number(self._config, "relative_sigma", 0.15)
-        for url in self.parquet_urls():
-            code = station_code(url)
-            if code is not None and code not in stations:
-                continue
-            data = self._get(url)
+        wanted = [url for url in self.parquet_urls()
+                  if (code := station_code(url)) is None or code in stations]
+        workers = max(1, integer(self._config, "download_workers", 8))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            files = list(pool.map(self._get_cached, wanted))
+        for url, data in zip(wanted, files):
             source = f"{PROVIDER_ID}@{url.rsplit('/', 1)[-1]}"
             for obs in parse_rows(read_parquet_rows(data), stations, self._pollutant_names, offset, rel_sigma, source):
                 if start <= obs.observed_at <= end:
                     yield obs
+
+    def _get_cached(self, url: str) -> bytes:
+        """Station files change once an hour: keep each for ``cache_minutes`` (per process)."""
+        if self._get is not self._default_get:  # injected (tests): no shared cache
+            return self._get(url)
+        ttl = number(self._config, "cache_minutes", 10.0) * 60.0
+        now = time.monotonic()
+        hit = _FILE_CACHE.get(url)
+        if hit is not None and now - hit[0] < ttl:
+            return hit[1]
+        data = self._get(url)
+        _FILE_CACHE[url] = (now, data)
+        return data
+
+
+#: url -> (monotonic time, bytes) of recently downloaded station files.
+_FILE_CACHE: dict[str, tuple[float, bytes]] = {}
+#: metadata url -> station positions (the station list changes rarely; one read per process).
+_STATION_CACHE: dict[str, dict[str, tuple[float, float]]] = {}
 
 
 def _aware(moment: datetime) -> datetime:
