@@ -200,3 +200,39 @@ def test_disclosure_not_repeated_and_synthetic_follows_cited_runs() -> None:
     assert out.verified, out.problems
     assert out.text.lower().count("intelligenza artificiale") == 1
     assert out.synthetic is False and out.data_kinds == {"schools": "real"}
+
+
+def test_self_disclosure_dropped_anywhere_and_simulated_label_added_by_code() -> None:
+    from agents.orchestrator import _drop_self_disclosure
+
+    t = _drop_self_disclosure("Ecco i dati.\nNota: sono un'intelligenza artificiale e non decido io.\nFine.")
+    assert "intelligenza" not in t and "Ecco i dati." in t and "Fine." in t
+    sim = make_envelope(tool="query_layer", inputs={"layer": "traffic"}, result={"mean": 42.0},
+                        data_kinds={"traffic": "simulated"}, sources=[], synthetic=True)
+
+    class SimGateway(FakeGateway):
+        def call(self, name: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
+            self.executed.append(name)
+            return sim
+
+    gw = SimGateway()
+    gw.specs["query_layer"] = ToolSpec("query_layer", "layer", {"type": "object"})
+    llm = ScriptedLLM([tool_turn(ToolCall("t1", "query_layer", {"layer": "traffic"})),
+                       text_turn(f"La velocità media è 42 km/h [run:{sim['run_id'][:12]}].")])
+    out = answer("q", llm=llm, gateway=gw, tool_names=["query_layer"], language="it")
+    assert out.verified, out.problems
+    assert "simulat" in out.text.lower()
+
+
+def test_citation_trace_marks_auto_cited_lines() -> None:
+    env = FakeGateway().call("context_check", {"lon": 1.0})
+    rid = env["run_id"][:12]
+
+    class G(FakeGateway):
+        pass
+
+    llm = ScriptedLLM([tool_turn(ToolCall("t1", "context_check", {"lon": 1.0})),
+                       text_turn(f"Una scuola è a 182 m [run:{rid}].\n- Distanza: 182,4 m")])
+    out = answer("q", llm=llm, gateway=G(), tool_names=["context_check"])
+    assert out.verified, out.problems
+    assert [c["cite_mode"] for c in out.citations] == ["explicit", "auto"]

@@ -17,7 +17,7 @@ from agents.llm import LLM, AnthropicLLM, ModelRefused
 from agents.loop import AgentLoop, LoopResult
 from agents.prompting import system_prompt
 from agents.tools import CompositeGateway, HttpToolGateway, LocalWebTools, ToolGateway, load_tool_specs
-from agents.verifier import Problem, VerifierReport, auto_cite, describe_problems, verify
+from agents.verifier import Problem, VerifierReport, auto_cite_marked, citation_trace, describe_problems, verify
 
 LOG = logging.getLogger("urbs.agents")
 
@@ -60,6 +60,8 @@ class Answer:
     warnings: list[str] = field(default_factory=list)
     #: Runs the verified answer actually cites; labels (data kinds, SIMULATED) follow these.
     cited_run_ids: list[str] = field(default_factory=list)
+    #: Tool trace of citations: {"line", "kind", "ref", "cite_mode": "explicit" | "auto"}.
+    citations: list[dict[str, Any]] = field(default_factory=list)
 
     def _label_runs(self) -> list[dict[str, Any]]:
         if self.verified and self.cited_run_ids:
@@ -117,13 +119,33 @@ def _finalise(text: str, report: VerifierReport, state: LoopResult, language: st
                   cited_run_ids=list(report.cited_runs) if verified else [])
 
 
-SELF_DISCLOSURE = re.compile(r"^\W*(i am|i'm|sono)\b[^.\n\d]{0,160}\b(ai|ia|intelligenza artificiale|artificial intelligence)\b[^.\n\d]*[.!]?\s*",
-                             re.IGNORECASE)
+SELF_DISCLOSURE = re.compile(
+    r"\b(i am|i'm|sono)\s+(an?\s+|un['’]?\s*|una\s+)?(assistente\s+(di\s+)?|assistant\s+)?"
+    r"(ai|ia|intelligenza artificiale|artificial intelligence)\b", re.IGNORECASE)
+_SENT = re.compile(r"[^.!?\n]*[.!?]?")
 
 
 def _drop_self_disclosure(text: str) -> str:
-    """The code adds the disclosure line; drop the model's own if it opens with one (no figures in it)."""
-    return SELF_DISCLOSURE.sub("", text, count=1).lstrip()
+    """Code adds the disclosure line; drop any sentence where the model discloses itself again
+    (only sentences without figures, so nothing factual is lost)."""
+    out_lines = []
+    for line in text.split("\n"):
+        kept = [m.group(0) for m in _SENT.finditer(line)
+                if m.group(0).strip() and not (SELF_DISCLOSURE.search(m.group(0)) and not re.search(r"\d", m.group(0)))]
+        new = "".join(kept).strip()
+        if new or not line.strip():
+            out_lines.append(new if line.strip() else line)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(out_lines)).strip()
+
+
+def _label_simulated(state: LoopResult, runs: dict[str, dict[str, Any]], cfg: AgentConfig, question: str,
+                     language: str) -> VerifierReport:
+    """Verify; if the only gap is a missing SIMULATED label, add the fixed note by code and re-verify."""
+    report = verify(state.text, runs, cfg, question=question)
+    if report.problems and all(p.code == "missing_simulated_label" for p in report.problems):
+        state.text = state.text.rstrip() + "\n\n" + cfg.simulated_note.get(language, cfg.simulated_note["en"])
+        report = verify(state.text, runs, cfg, question=question)
+    return report
 
 
 def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[str] | None = None,
@@ -135,8 +157,8 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
     try:
         state = loop.run(question)
         runs = flatten_runs(state.runs)
-        state.text = auto_cite(state.text, runs, cfg, question=question)
-        report = verify(state.text, runs, cfg, question=question)
+        state.text, auto_lines = auto_cite_marked(state.text, runs, cfg, question=question)
+        report = _label_simulated(state, runs, cfg, question, language)
         attempts = 0
         while (not report.ok) and state.text.strip() and attempts < cfg.verifier_retries:
             attempts += 1
@@ -144,15 +166,19 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
                                        "outputs above, or answer 'insufficient data'. Write the corrected answer only: do not mention "
                                        "this correction or talk about run ids.\n" + describe_problems(report))
             runs = flatten_runs(state.runs)
-            state.text = auto_cite(state.text, runs, cfg, question=question)
-            report = verify(state.text, runs, cfg, question=question)
+            state.text, auto_lines = auto_cite_marked(state.text, runs, cfg, question=question)
+            report = _label_simulated(state, runs, cfg, question, language)
     except ModelRefused:
         state = LoopResult(text="", runs=[], messages=[])
+        auto_lines = []
         report = VerifierReport(problems=[Problem("model_refused", "the model declined the request")])
     if not report.ok:
         # Codes and flagged figures only: no draft text in logs (guardrail 11, privacy).
         LOG.warning("verifier blocked answer: %s", "; ".join(f"{p.code} {p.message}" for p in report.problems))
-    return _finalise(state.text, report, state, language, first_message, cfg)
+    out = _finalise(state.text, report, state, language, first_message, cfg)
+    if out.verified:
+        out.citations = citation_trace(state.text, flatten_runs(state.runs), auto_lines)
+    return out
 
 
 class TwinOrchestrator:

@@ -28,7 +28,9 @@ tool_api:
 disclosure:
   en: "I am an AI assistant of the Urbs Gemina digital twin. I support decisions; the official decides."
   it: "Sono un assistente di intelligenza artificiale del gemello digitale Urbs Gemina. Supporto le decisioni; decide il funzionario."
-  basis: "AI Act art. 50 (transparency), Legge 132/2025 art. 14."
+  simulated_note_en: "Note: part of the data used here is simulated, not measured."
+  simulated_note_it: "Nota: parte dei dati usati qui è simulata, non misurata."
+  basis: "AI Act art. 50 (transparency), Legge 132/2025 art. 14. Simulated note: guardrail 7, added by code when a cited run is synthetic."
 
 exa:
   api_key_env: EXA_API_KEY
@@ -113,6 +115,13 @@ verifier:
     - '\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*[0-9])[0-9a-f]{8,64}\b'   # run ids and hashes written in prose
   # Abbreviations after which a full stop does not end the sentence (legal Italian and English).
   abbreviations: [art, artt, n, nn, co, comma, lett, cfr, es, ecc, sez, pag, pp, p, d.lgs, d.p.r, d.m, l, no, nr, vs, approx, ca]
+  # Words too common in place names to identify a record ("Liceo", "Via"...). Used to check that a
+  # distance is attributed to the right site.
+  generic_name_words: [liceo, scuola, istituto, statale, statali, classico, scientifico, comprensivo, asilo, nido, nidi,
+                       ospedale, centro, roma, piazza, largo, viale, chiesa, della, dello, degli, delle, dei, parco,
+                       area, zona, sito, siti, edificio, school, hospital, site, street, square]
+  # Keys whose numbers are identifiers or counts: they never vouch for a measurement with a unit.
+  non_measure_keys: [id, code, municipio, urban_zone, zone, count, counts, n, number, year, summary]
   calibration_words: [calibrated, uncalibrated, calibrato, non calibrato]
   estimate_words: [estimate, stima]
   simulated_words: [simulated, simulato, simulata, synthetic, sintetico]
