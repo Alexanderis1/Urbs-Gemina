@@ -251,3 +251,47 @@ def test_cartoradio_default_source_is_a_remote_range_read() -> None:
     from twin.providers.restricted.cartoradio import CartoradioGridProvider
 
     assert CartoradioGridProvider(SETTINGS).source.startswith("/vsicurl/https://")
+
+
+def test_eea_hourly_answers_a_now_window_with_the_latest_hours_and_nearby_stations() -> None:
+    """EEA up-to-date data lags a few hours, and a district may hold no station: look back and around."""
+    from twin.providers.open.eea import EeaHourlyProvider
+
+    parquet = _eea_parquet()
+    provider = EeaHourlyProvider(
+        SETTINGS, http_post=lambda url, body: "ParquetFileUrl\nhttps://example.test/IT/SPO.IT0953A.parquet\n",
+        http_get=lambda url: METADATA.encode() if url.endswith(".csv") else parquet)
+    now = datetime(2026, 11, 13, 21, 43, tzinfo=timezone.utc)
+    # A small box 2 km south of the station (12.5069, 41.9327), asked for "now" only.
+    small = (12.495, 41.905, 12.515, 41.915)
+    observations = list(provider.fetch(small, now, now))
+    assert [obs.observed_at.hour for obs in observations] == [17, 19]
+    assert (observations[0].lon, observations[0].lat) == (12.5069, 41.9327)
+
+
+def test_http_get_retries_a_reset_connection(monkeypatch: pytest.MonkeyPatch) -> None:
+    import urllib.error
+
+    from twin.providers import http
+
+    attempts: list[int] = []
+
+    class _Answer:
+        def __enter__(self) -> "_Answer":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b"ok"
+
+    def flaky(request: object, timeout: float) -> _Answer:
+        attempts.append(1)
+        if len(attempts) < 2:
+            raise urllib.error.URLError(ConnectionResetError(104, "reset"))
+        return _Answer()
+
+    monkeypatch.setattr(http.urllib.request, "urlopen", flaky)
+    monkeypatch.setattr(http, "RETRY_PAUSE_S", 0.0)
+    assert http.get_bytes("https://example.test/x") == b"ok" and len(attempts) == 2
