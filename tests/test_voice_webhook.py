@@ -95,6 +95,13 @@ def test_italian_speech_does_not_read_english_reasons() -> None:
     assert resp["missing"] == ["a figure without a tool run or source"]
 
 
+def test_repeated_ai_disclosure_is_dropped_from_speech() -> None:
+    text = f"Sono un assistente di intelligenza artificiale. Nel Municipio I il PM10 è 20 [run {RUN}]."
+    _, resp, _ = call({"question": "x", "language": "it"}, orch=FakeOrchestrator(ok_answer(text=text)))
+    assert "intelligenza artificiale" not in resp["speak"]
+    assert resp["speak"].startswith("Nel Municipio I il PM10 è 20")
+
+
 def test_simulated_data_is_announced() -> None:
     orch = FakeOrchestrator(ok_answer(synthetic=True, data_kinds={"emf": "simulated"}))
     _, resp, _ = call({"question": "x", "language": "it"}, orch=orch)
