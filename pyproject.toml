@@ -7,6 +7,7 @@ dependencies = ["PyYAML>=6"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "mypy>=1.10", "types-PyYAML"]
+api = ["fastapi>=0.110", "pydantic>=2", "uvicorn>=0.29", "httpx>=0.27"]   # WS4: tool API (httpx for its tests)
 
 [tool.setuptools.packages.find]
 include = ["twin*"]

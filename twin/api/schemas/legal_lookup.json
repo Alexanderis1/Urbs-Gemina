@@ -1,0 +1,29 @@
+{
+  "name": "legal_lookup",
+  "description": "Search official legal sources (normattiva, gazzetta ufficiale, AgID, ...) and return URLs with retrieval time.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Search official legal sources (normattiva, gazzetta ufficiale, AgID, ...) and return URLs with retrieval time.",
+    "properties": {
+      "question": {
+        "maxLength": 500,
+        "minLength": 3,
+        "title": "Question",
+        "type": "string"
+      }
+    },
+    "required": [
+      "question"
+    ],
+    "title": "LegalLookupIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/legal_lookup"
+  },
+  "owner": "WS7"
+}

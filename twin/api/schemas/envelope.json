@@ -1,0 +1,126 @@
+{
+  "$defs": {
+    "SourceOut": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "retrieved_at": {
+          "title": "Retrieved At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "retrieved_at"
+      ],
+      "title": "SourceOut",
+      "type": "object"
+    }
+  },
+  "description": "Response of every tool (shared interface 3).",
+  "properties": {
+    "run_id": {
+      "description": "SHA-256 of tool name + inputs + data snapshot hashes + config file hashes",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "tool": {
+      "title": "Tool",
+      "type": "string"
+    },
+    "status": {
+      "description": "not_available: an input is missing; refused: a guardrail said no",
+      "enum": [
+        "ok",
+        "not_available",
+        "refused"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Why the status is not ok",
+      "title": "Reason"
+    },
+    "inputs": {
+      "additionalProperties": true,
+      "title": "Inputs",
+      "type": "object"
+    },
+    "result": {
+      "title": "Result"
+    },
+    "data_kinds": {
+      "additionalProperties": {
+        "enum": [
+          "real",
+          "estimated",
+          "simulated",
+          "not_available"
+        ],
+        "type": "string"
+      },
+      "title": "Data Kinds",
+      "type": "object"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/SourceOut"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "cached": {
+      "default": false,
+      "title": "Cached",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "run_id",
+    "tool",
+    "status",
+    "inputs",
+    "result",
+    "data_kinds",
+    "sources",
+    "synthetic",
+    "warnings"
+  ],
+  "title": "EnvelopeOut",
+  "type": "object"
+}

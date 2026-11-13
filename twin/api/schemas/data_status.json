@@ -1,0 +1,19 @@
+{
+  "name": "data_status",
+  "description": "Honesty panel: every layer with provider, real/estimated/simulated, licence and last update.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Honesty panel: every layer with provider, real/estimated/simulated, licence and last update.",
+    "properties": {},
+    "title": "DataStatusIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/data_status"
+  },
+  "owner": "WS4"
+}

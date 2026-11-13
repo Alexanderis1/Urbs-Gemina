@@ -12,3 +12,15 @@ grid:
   system: h3
   city_resolution: 9
 heavy_tools_max_area_km2: 40   # micro traffic simulation and ray tracing refuse larger areas
+
+# --- WS4 tool API: how the "area" argument is resolved (added 2026-11-13) ---
+# Accepted values: "city", "municipio:<id>" (e.g. municipio:I or municipio:1),
+# "zone:<id>" (urban zone code) or a GeoJSON Polygon / MultiPolygon / Feature.
+city_area_km2:
+  value: 1287.36
+  basis: "ISTAT surface of Roma Capitale"
+# Field names are tried in order; the GeoServer property names were not read yet (C=50).
+municipio_id_fields: [MUNICIPIO, municipio, NUM_MUN, num_mun, COD_MUN, cod_mun, ID, id]
+municipio_name_fields: [NOME, nome, DENOMINAZ, denominazione, MUNICIPIO, municipio]
+urban_zone_id_fields: [CODZU, codzu, COD_ZU, cod_zu, ZONA_URB, CODICE, codice, ID, id]
+urban_zone_name_fields: [NOME, nome, DEN_ZU, den_zu, DENOMINAZ, denominazione]

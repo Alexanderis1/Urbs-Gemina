@@ -1,0 +1,40 @@
+# Assumptions used by the deterministic tools (WS4). Every number has a basis.
+
+data_kind_by_provider_kind:
+  basis: "restricted = Cartoradio, which is itself a model estimate (design proposal 9a)"
+  open: real
+  pa: real
+  simulated: simulated
+  restricted: estimated
+
+estimate_field:
+  baseline_layer: emf_baseline              # layer name in config/providers.yaml
+  baseline_value_keys: [electricField, e_field_v_per_m, field_v_per_m, value]   # electricField = WS5 / Smart Data Models key
+  baseline_search_radius_m: {value: 150, basis: "one and a half Cartoradio cells (100 m, about 74 m on the ground)"}
+  baseline_sigma_db: {value: 3.0, basis: "assumption (C=60): Cartoradio publishes no uncertainty"}
+  baseline_cap_v_per_m: {value: 15.0, basis: "Cartoradio maximum sits exactly on 15.0 in the inspected tile; treat as '15 or more' (C=55)"}
+  receptor_height_m: {value: 1.5, basis: "standard head height for exposure assessment"}
+  default_antenna_height_m: {value: 25.0, basis: "assumption: rooftop mast on a 7-storey building"}
+  model: "free-space far field, isotropic (worst case, no antenna pattern, no building loss)"
+  monte_carlo: {samples: 4000, area_samples: 400, seed: 20261113, basis: "fixed seed so results are reproducible"}
+  area_max_points: {value: 400, basis: "cap on sample points for an area summary"}
+
+geocoder:
+  nominatim_url: "https://nominatim.openstreetmap.org/search"
+  user_agent: "urbs-gemina/0.1 (open-source hackathon prototype)"
+  timeout_s: 10
+  max_results: 3
+
+query_layer:
+  default_limit: 500
+  max_limit: 5000
+  window_minutes: {value: 15, basis: "one provider cadence step or more for live layers"}
+  belief_history_hours: {value: 3, basis: "readings older than a few relax time constants no longer move a belief layer"}
+  aggregate_cell_m: {value: 500, basis: "citizen tier sees counts on a 500 m grid, not single sites"}
+
+api:
+  # Keys come from the environment variable URBS_API_KEYS as "key:role,key:role".
+  # No key or an unknown key means the citizen tier.
+  roles: [citizen, office]
+  # Layers whose single records are visible to the office tier only.
+  office_only_detail_layers: [antenna_register, emf_measurements]

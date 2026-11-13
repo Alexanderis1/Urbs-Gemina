@@ -1,0 +1,29 @@
+{
+  "name": "find_dataset",
+  "description": "Find an open dataset for a need: publisher, licence, format, update cadence.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Find an open dataset for a need: publisher, licence, format, update cadence.",
+    "properties": {
+      "need": {
+        "maxLength": 500,
+        "minLength": 3,
+        "title": "Need",
+        "type": "string"
+      }
+    },
+    "required": [
+      "need"
+    ],
+    "title": "FindDatasetIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/find_dataset"
+  },
+  "owner": "WS7"
+}

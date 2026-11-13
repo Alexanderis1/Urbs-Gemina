@@ -1,0 +1,35 @@
+# Layers checked by context_check for Challenge 02 (antenna permits).
+# Keys match the files written by scripts/fetch_static_layers.py (data/raw/<key>.geojson).
+# A layer that is listed here but not downloaded yet is reported "not_available", never as empty.
+basis: "Challenge 02 brief and docs/data-inventory.md (300 m context: sensitive sites and constraints)"
+
+# Property names tried in order to label a hit. GeoServer field names not read yet (C=50).
+name_fields: [nome, NOME, denominazione, DENOMINAZIONE, denominazi, DENOMINAZI, name, NAME, descrizione, DESCRIZIONE, tipo, TIPO]
+
+groups:
+  sensitive_site: "Sensitive sites (schools, care, health, play areas)"
+  constraint: "Planning, landscape and heritage constraints"
+
+layers:
+  schools_state:        {label: "State schools", group: sensitive_site, data_kind: real}
+  nidi:                 {label: "Municipal nurseries (nidi)", group: sensitive_site, data_kind: real}
+  infanzia:             {label: "Municipal pre-schools", group: sensitive_site, data_kind: real}
+  hospitals:            {label: "Hospitals", group: sensitive_site, data_kind: real}
+  health_care:          {label: "Health and care facilities (Roma 241)", group: sensitive_site, data_kind: real}
+  care_homes_osm:       {label: "Care homes (RSA, OpenStreetMap)", group: sensitive_site, data_kind: real}
+  playgrounds_osm:      {label: "Playgrounds (OpenStreetMap)", group: sensitive_site, data_kind: real}
+  unesco:               {label: "UNESCO World Heritage site", group: constraint, data_kind: real}
+  unesco_buffer:        {label: "UNESCO buffer zone", group: constraint, data_kind: real}
+  protected_areas:      {label: "Protected areas", group: constraint, data_kind: real}
+  natura2000:           {label: "Natura 2000 sites", group: constraint, data_kind: real}
+  rete_ecologica_poly:  {label: "Ecological network (areas)", group: constraint, data_kind: real}
+  rete_ecologica_line:  {label: "Ecological network (lines)", group: constraint, data_kind: real}
+  cpq_morfologie:       {label: "Carta per la Qualita: urban morphologies", group: constraint, data_kind: real}
+  cpq_preesistenze:     {label: "Carta per la Qualita: archaeological and historic remains", group: constraint, data_kind: real}
+  cpq_spazi_aperti:     {label: "Carta per la Qualita: open spaces", group: constraint, data_kind: real}
+  cpq_edilizia_speciale: {label: "Carta per la Qualita: special buildings", group: constraint, data_kind: real}
+  ptpr_tavola_a:        {label: "PTPR Tavola A (landscape systems)", group: constraint, data_kind: real}
+  ptpr_tavola_b:        {label: "PTPR Tavola B (landscape constraints)", group: constraint, data_kind: real}
+  sitap_art136:         {label: "Landscape constraint art. 136 D.Lgs. 42/2004", group: constraint, data_kind: real}
+  sitap_art142:         {label: "Landscape constraint art. 142 D.Lgs. 42/2004", group: constraint, data_kind: real}
+  prg_sistemi_regole:   {label: "PRG component (Sistemi e Regole)", group: constraint, data_kind: real}

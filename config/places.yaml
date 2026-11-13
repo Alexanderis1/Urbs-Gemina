@@ -1,0 +1,11 @@
+# Saved demo places so the demo never depends on a live geocoder.
+# Coordinates are approximate (from general knowledge, C=80); re-check with Nominatim
+# when network access is available and replace with the returned values.
+basis: "manual list of demo places; approximate centroids"
+places:
+  - {name: "Piazza Venezia", aliases: ["piazza venezia, roma"], lon: 12.4823, lat: 41.8960}
+  - {name: "Colosseo", aliases: ["colosseum", "piazza del colosseo"], lon: 12.4922, lat: 41.8902}
+  - {name: "Piazza San Pietro", aliases: ["st peter's square", "san pietro"], lon: 12.4573, lat: 41.9022}
+  - {name: "Stazione Termini", aliases: ["termini", "roma termini"], lon: 12.5016, lat: 41.9010}
+  - {name: "Piazza del Popolo", aliases: [], lon: 12.4763, lat: 41.9109}
+  - {name: "Villa Borghese", aliases: [], lon: 12.4853, lat: 41.9142}
