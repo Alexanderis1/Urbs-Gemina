@@ -68,3 +68,4 @@ Decided by Alessandro: no time-based scope cuts. The elements are built in paral
 | WS4 tools | Tool list adds `permit_report`, `sports_facilities`, `sport_coverage`; `estimate_field` takes a point or an area | Agreed |
 | Hub | Census sections handed over as `data/processed/census_sections.geojson` with fixed field names (`sez_id`, `residents`, `children_0_14`, `municipio`, `zone`), normalised by WS1 at ingest | Agreed |
 | WS2 city model | Building heights from GlobalBuildingAtlas (CC BY-NC, full coverage) because the project is non-commercial; attribution in DATA_LICENSES and manifest. The rule is open *formats*, met by PMTiles | Decided by Alessandro |
+| Hosting | Static tiles (buildings.pmtiles etc.) hosted on Cloudflare R2, public bucket `urbs-gemina-tiles` with CORS + Range; uploaded by `scripts/build_city_model.py --upload`; the app reads `VITE_BUILDINGS_PMTILES_URL` | Decided by Alessandro |
