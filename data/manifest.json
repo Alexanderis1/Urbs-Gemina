@@ -198,6 +198,15 @@
       "licence": "Copernicus DEM licence: free, attribution ('produced using Copernicus WorldDEM-30 (c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH 2014-2018')",
       "redistribution": true,
       "status": "verified (WS2)"
+    },
+    "mase_lidar_download_api": {
+      "kind": "real",
+      "what": "MASE LiDAR DSM First and DTM, 1 m, flown 2008-2011: 1,265 surveyed 1 km tiles over Roma Capitale (far more than the Tiber strip)",
+      "endpoint": "https://sim.mase.gov.it/core/api/esri/api/v1/downloads",
+      "access": "POST a tile list (grid: gis.platform.sim.mase.gov.it Grigliato_lidar layer 2), poll the session, download the ZIP; see scripts/build_lidar.py",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "download tested 13 Nov 2026; tiles align with Overture footprints within 1 m"
     }
   },
   "snapshots": {}

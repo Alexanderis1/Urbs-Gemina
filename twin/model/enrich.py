@@ -13,6 +13,7 @@ ENRICHMENTS: dict[str, list[str]] = {
     "ground_motion": ["vertical_mm_yr", "east_mm_yr", "los_asc_mm_yr", "los_desc_mm_yr", "n_ps_asc", "n_ps_desc"],
     "ortho_facts": ["roof_material", "share_terracotta", "share_light_flat", "share_green", "shadow_length_m",
                     "h_shadow"],
+    "lidar_heights": ["h_lidar_raw", "ground_lidar_m", "n_px_lidar"],
 }
 
 

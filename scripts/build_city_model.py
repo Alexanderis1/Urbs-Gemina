@@ -106,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     t0 = time.time()
 
     import geopandas as gpd
+    import numpy as np
     import pyarrow.parquet as pq
 
     from twin.model.lod1 import build_lod1, frame_from_overture
@@ -154,6 +155,40 @@ def main(argv: list[str] | None = None) -> int:
     model.attrs.update(model_attrs)
     if enrichments:
         log(f"joined per-building facts: {', '.join(enrichments)}")
+    lidar_stats: dict[str, Any] = {}
+    if "h_lidar_raw" in model.columns:
+        import yaml
+
+        from twin.model.lidar import apply_lidar
+
+        lc = yaml.safe_load(open(args.config, encoding="utf-8"))["lidar"]
+        model["h_fused"] = model["height_m"].astype("float64")
+        model, lidar_stats = apply_lidar(
+            model, model["h_lidar_raw"].to_numpy(dtype="float64"), sd_m=float(lc["sd_m"]),
+            min_height_m=float(lc["min_height_m"]), survey=str(lc["survey"]),
+        )
+        model.loc[model["height_source"] == "lidar", "height_licence"] = "CC BY 4.0"
+        # Correct the fused height where LiDAR did not see the building, if a spatial hold-out says it helps.
+        from twin.model.lidar import fit_linear, holdout_correction
+
+        seen = (model["height_source"] == "lidar").to_numpy()
+        pts = model.geometry.representative_point()
+        cells = ((pts.x // 0.02).astype(int) + (pts.y // 0.02).astype(int)).to_numpy()
+        hx, hy = model["h_fused"].to_numpy(dtype="float64"), model["h_lidar"].to_numpy(dtype="float64")
+        check = holdout_correction(hx[seen], hy[seen], cells[seen])
+        lidar_stats["correction_holdout"] = check
+        if check["mae_after_m"] < check["mae_before_m"]:
+            fit = fit_linear(hx[seen], hy[seen])
+            rest = ~seen
+            model.loc[rest, "height_m"] = np.clip(fit.apply(hx[rest]), hc.clamp[0], hc.clamp[1])
+            model.loc[rest, "height_sd_m"] = np.hypot(model.loc[rest, "height_sd_m"].fillna(0).to_numpy(), fit.sd_m)
+            model["height_corrected"] = rest
+            lidar_stats["correction"] = fit.as_dict()
+            log(f"LiDAR correction applied to {int(rest.sum()):,} buildings: {fit.as_dict()}")
+        g = model["ground_lidar_m"].astype("float64")
+        model["ground_m"] = g.where(g.notna(), model["ground_m"])
+        model["roof_m"] = model["ground_m"] + model["height_m"]
+        log(f"LiDAR heights used for {lidar_stats['replaced']:,} buildings")
     parquet = args.out / "buildings_lod1.parquet"
     model.to_parquet(parquet, write_covering_bbox=True)
     outputs = {"buildings_lod1.parquet": parquet}
@@ -175,6 +210,12 @@ def main(argv: list[str] | None = None) -> int:
                 agreements.append(compare_heights(
                     list(model[f"h_{src}"]), list(model[f"h_{ref}"]), source=src, reference=ref, within_m=within
                 ))
+    if lidar_stats:
+        ref = model["h_lidar"].where(model["h_lidar"] >= lidar_stats.get("min_height_m", 2.0))
+        for src in ("fused", "osm_tag", "gba", "raster", "floors"):
+            agreements.append(compare_heights(
+                list(model[f"h_{src}"]), list(ref), source=src, reference="lidar", within_m=within
+            ))
     shares = source_shares(model["height_source"])
     notes = [
         "osm_tag = height measured by OpenStreetMap mappers (real). gba = GlobalBuildingAtlas machine-learning "
@@ -202,6 +243,12 @@ def main(argv: list[str] | None = None) -> int:
             for k, v in model.attrs["calibration"].items() if v.get("role") == "measurement"
         ]
         notes.append("Calibration against OSM measured heights: " + "; ".join(cal_rows) + ".")
+    if lidar_stats:
+        notes.insert(0, (
+            f"LiDAR (MASE, CC BY 4.0, flown {lidar_stats['survey']}) measured {lidar_stats['covered']:,} buildings: "
+            f"their height is now the LiDAR one (real, +-0.5 m). 'lidar' rows score every other source against it. "
+            f"{lidar_stats['newer_than_survey']:,} footprints look newer than the survey and keep the fused height."
+        ))
     report = render_report(len(model), shares, agreements, notes)
     (args.out / "height_check.md").write_text(report, encoding="utf-8")
 
@@ -217,6 +264,7 @@ def main(argv: list[str] | None = None) -> int:
         "enrichments": enrichments,
         "calibration": model.attrs.get("calibration", {}),
         "conflict_share": float(model["height_conflict"].mean()),
+        "lidar": lidar_stats,
         "inputs": {k: ({"file": str(p.relative_to(ROOT)), "sha256": sha256(p)} if p else None) for k, p in inputs.items()},
         "outputs": {k: {"sha256": sha256(p), "bytes": p.stat().st_size} for k, p in outputs.items()},
         "seconds": round(time.time() - t0, 1),

@@ -142,6 +142,22 @@ ground_motion:
   heading_deg: {asc: -10.0, desc: -170.0}
   basis: "Sentinel-1 IW over Rome: incidence about 39 degrees mid-swath, track heading about -10 (asc) and -170 (desc) degrees (typical values, C=70; the layer does not publish per-point geometry). Points within 3 m of a footprint count for that building (roofs and facades); coherence below 0.7 is too noisy."
 
+lidar:
+  # MASE "Banca Dati PST" airborne LiDAR, 1 m, CC BY 4.0. Download API used by the sim.mase.gov.it PST web app.
+  grid: https://gis.platform.sim.mase.gov.it/portalgis/rest/services/Hosted/Grigliato_lidar/FeatureServer/2
+  backend: https://sim.mase.gov.it
+  canale: PST2
+  prodotto: LIDAR_2014
+  layers: {dsm: dsm_first_1x1, dtm: dtm_1x1}
+  max_tiles_per_request: 20
+  parallel_requests: 3
+  survey: "2008-2011"
+  quantile: 0.9
+  min_px: 4
+  sd_m: 0.5
+  min_height_m: 2.0
+  basis: "Roof height = 90th percentile of DSM First minus DTM inside the footprint eroded by 1 m, so chimneys and trees over the edge do not count (standard LoD1 practice). sd 0.5 m: LiDAR vertical accuracy is about 0.15 m, the rest is roof shape inside one block (C=70). A footprint under 2 m in the LiDAR was probably built after the survey, so it keeps the fused height. The web app allows 20 tiles per request; 3 requests at a time keeps the load on the public service modest."
+
 tiles:
   layer: buildings
   min_zoom: 12
