@@ -1,8 +1,8 @@
 """Build the committed seed files that place simulated sensors in realistic spots.
 
-    python -m twin.providers.simulated.build_seeds            # both seeds
-    python -m twin.providers.simulated.build_seeds loops      # loop stations only
-    python -m twin.providers.simulated.build_seeds sites      # antenna sites only
+    python -m twin.providers.build_seeds            # both seeds
+    python -m twin.providers.build_seeds loops      # simulated loop station positions
+    python -m twin.providers.build_seeds sites      # estimated antenna site positions
 
 Loop stations: Roma Capitale's own traffic-signal register (``DIPMOB:Semafori``)
 gives the signalised junctions. Junctions run by a central traffic-control
@@ -12,9 +12,10 @@ network (``DIPPC:grande_viabilita``, motorway to secondary), then spread the
 stations out with a minimum spacing. Road class and name come from the road.
 
 Antenna sites: OpenCelliD cells inside Roma Capitale (tokenless PMTiles mirror,
-zoom 14), clustered into sites as in ``register.cluster_sites``.
+zoom 14), clustered into sites as in ``estimated.sites.cluster_sites``.
 
-Both outputs are small GeoJSON files under ``seed_data/``, committed so runs are
+Both outputs are small GeoJSON files under ``simulated/seed_data/`` and
+``estimated/seed_data/``, committed so runs are
 reproducible offline. Licences: Roma Capitale GeoPortale (credit, CC BY assumed
 C=60), road geometry derived from OSM (ODbL), OpenCelliD (CC BY-SA 4.0).
 """
@@ -33,11 +34,11 @@ from typing import Any, Iterable, Mapping, Sequence
 from twin.providers.geo import distance_m
 from twin.providers.http import USER_AGENT
 from twin.providers.settings import Settings, integer, number
-from twin.providers.simulated.register import Cell, cluster_sites
+from twin.providers.estimated.sites import Cell, cluster_sites
 
-SEED_DIR = Path(__file__).resolve().parent / "seed_data"
-LOOPS_FILE = SEED_DIR / "loop_stations.geojson"
-SITES_FILE = SEED_DIR / "antenna_sites.geojson"
+PROVIDERS_DIR = Path(__file__).resolve().parent
+LOOPS_FILE = PROVIDERS_DIR / "simulated" / "seed_data" / "loop_stations.geojson"
+SITES_FILE = PROVIDERS_DIR / "estimated" / "seed_data" / "antenna_sites.geojson"
 
 SIGNALS_LAYER = "DIPMOB:Semafori"
 ROADS_LAYER = "DIPPC:grande_viabilita"
@@ -262,7 +263,7 @@ def main(argv: Sequence[str]) -> int:
             n_stations=integer(config, "n_stations", 93), snap_m=number(config, "snap_to_road_m", 40.0),
             spacing_m=number(config, "min_spacing_m", 600.0), seed=integer(config, "seed", 42)))
     if "sites" in what:
-        config = settings.section("simulators", "register")
+        config = settings.section("estimated", "register")
         polygons = polygons_of(fetch_layer(MUNICIPI_LAYER, timeout_s=180))
         shifts = {str(k): int(v) for k, v in (config.get("site_id_shift_bits", {}) or {}).items() if k != "basis"}
         from twin.providers.base import ROME_BBOX

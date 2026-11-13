@@ -26,12 +26,14 @@ def test_every_configured_provider_is_known_and_labelled() -> None:
 
 
 def test_the_default_config_builds_every_layer_offline() -> None:
-    providers = build_providers(load_config(ROOT / "config" / "providers.yaml"), settings=SETTINGS)
+    providers = build_providers(load_config(ROOT / "config" / "providers.yaml"), settings=SETTINGS,
+                                skip_unavailable=True)
     for layer, provider in providers.items():
         assert provider.describe().layer == layer
     assert providers["emf_baseline"].describe().redistribution is False
-    for layer in ("traffic_flow", "antenna_register", "emf_measurements", "antenna_applications"):
-        assert providers[layer].describe().synthetic is True
+    assert providers["antenna_register"].describe().redistribution is False
+    # The rule since 13 Nov 2026: only the road loops are simulated.
+    assert [layer for layer, p in providers.items() if p.describe().synthetic] == ["traffic_flow"]
 
 
 def _register_export(tmp_path: Path) -> Path:
@@ -48,10 +50,11 @@ def _register_export(tmp_path: Path) -> Path:
 
 def test_gate_c_switching_the_register_in_yaml_changes_the_data(tmp_path: Path) -> None:
     providers_yaml = tmp_path / "providers.yaml"
-    providers_yaml.write_text("antenna_register: sim_register\n", encoding="utf-8")
-    simulated = build_providers(load_config(providers_yaml), settings=SETTINGS)["antenna_register"]
-    sim_obs = list(simulated.fetch(ROME_BBOX, T0, T0))
-    assert sim_obs and all(obs.synthetic for obs in sim_obs)
+    from twin.providers.registry import FACTORIES
+
+    providers_yaml.write_text("antenna_register: est_register\n", encoding="utf-8")
+    estimated = build_providers(load_config(providers_yaml), settings=SETTINGS)["antenna_register"]
+    assert estimated.describe().id == "est_register" and "est_register" in FACTORIES
 
     # Only YAML changes from here on: point the layer at the administration's export.
     providers_yaml.write_text("antenna_register: pa_register_file\n", encoding="utf-8")
@@ -63,7 +66,7 @@ def test_gate_c_switching_the_register_in_yaml_changes_the_data(tmp_path: Path) 
     real_obs = list(real.fetch(ROME_BBOX, T0, T0))
     assert len(real_obs) == 1 and real_obs[0].synthetic is False
     assert real_obs[0].values["total_eirp_w"] == 4500.0
-    assert real_obs[0].entity_type == sim_obs[0].entity_type == "AntennaSite"
+    assert real_obs[0].entity_type == "AntennaSite"
 
 
 def test_pa_register_without_an_export_says_what_is_missing() -> None:
@@ -80,7 +83,10 @@ def test_data_status_lists_every_layer_honestly() -> None:
     assert rows["emf_baseline"]["redistribution"] is False
     assert "Cartoradio" in rows["emf_baseline"]["notes"]
     assert rows["context_layers"]["state"] == "active"
-    assert all(row["state"] == "active" for row in rows.values())
+    assert rows["emf_measurements"]["state"] == "needs_access"  # until the ARPA table is loaded
+    assert rows["antenna_register"]["data_kind"] == "estimated"
+    assert [layer for layer, row in rows.items() if row["data_kind"] == "simulated"] == ["traffic_flow"]
+    assert all(row["state"] == "active" for layer, row in rows.items() if layer != "emf_measurements")
 
 
 def test_data_status_reports_providers_that_need_access(tmp_path: Path) -> None:

@@ -142,7 +142,7 @@ def test_eea_hourly_values_get_coordinates_and_utc_times() -> None:
     provider = EeaHourlyProvider(SETTINGS, http_post=post, http_get=get)
     assert provider.describe().kind == "open" and not provider.describe().synthetic
     observations = list(provider.fetch(ROME_BBOX, datetime(2026, 11, 13, 16, tzinfo=timezone.utc), NOW + timedelta(hours=2)))
-    assert calls[0]["countries"] == ["IT"] and calls[0]["pollutants"] == ["NO2"]
+    assert calls[0]["countries"] == ["IT"] and calls[0]["pollutants"] == ["NO2", "PM10", "PM2.5"]
     assert [obs.observed_at for obs in observations] == [
         datetime(2026, 11, 13, 17, tzinfo=timezone.utc), datetime(2026, 11, 13, 19, tzinfo=timezone.utc)]
     assert all(type(obs.observed_at) is datetime for obs in observations)

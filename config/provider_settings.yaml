@@ -10,7 +10,7 @@ simulators:
   loops:
     seed: 42
     n_stations: {value: 93, basis: "mirrors the 93 real Roma Mobilita loop stations (design proposal section 8)"}
-    # Committed seed built by `python -m twin.providers.simulated.build_seeds loops`:
+    # Committed seed built by `python -m twin.providers.build_seeds loops`:
     # centrally controlled vehicle signals on major roads (Roma Capitale layers).
     # Placeholder positions inside the city bbox are used only if it is missing.
     stations_path: twin/providers/simulated/seed_data/loop_stations.geojson
@@ -33,14 +33,15 @@ simulators:
     noise_flow: {value: 0.08, basis: "assumption"}
     noise_speed: {value: 0.05, basis: "assumption"}
 
+
+estimated:
   register:
-    # Seed files (git-ignored downloads). Without them every site position is
-    # generated, and records carry source_id "sim_register:generated".
+    # Raw seed files (git-ignored downloads) take priority over the committed seed.
     opencellid_csv: data/raw/opencellid/222.csv.gz
     osm_masts_json: data/raw/osm/rome_masts.json
-    # Committed seed built by `python -m twin.providers.simulated.build_seeds sites`
+    # Committed seed built by `python -m twin.providers.build_seeds sites`
     # (OpenCelliD mirror, clustered). Used when the raw CSV above is missing.
-    sites_geojson: twin/providers/simulated/seed_data/antenna_sites.geojson
+    sites_geojson: twin/providers/estimated/seed_data/antenna_sites.geojson
     mcc: 222
     operators:   # MNC -> operator. basis: ITU-T E.212 list for Italy (C=85)
       1: TIM
@@ -53,36 +54,15 @@ simulators:
     site_id_shift_bits: {LTE: 8, NR: 14, basis: "LTE: 28-bit ECI = 20-bit eNB + 8-bit cell; NR: assumes 22-bit gNB id (C=50)"}
     merge_distance_m: {value: 150, basis: "heuristic; OpenCelliD centroids lie 100 m-1 km from the mast (C=70)"}
     osm_snap_distance_m: {value: 200, basis: "assumption: an OSM mast this close is taken as the real position"}
-    fallback_n_sites: {value: 1500, basis: "assumption: order of magnitude of macro sites per operator mix in Rome (C=40)"}
-    fallback_spread_km: {value: 6.0, basis: "assumption: site density falls off like a Gaussian around the centre"}
-    building_height_m: {value: 18, basis: "assumption until heights come from the G0 city model"}
-    status_shares: {authorised: 0.85, pending: 0.10, under_review: 0.05, basis: "assumption"}
-    technology_bands_mhz:   # bands a site of this technology is given
-      GSM: ["900"]
-      UMTS: ["2100"]
-      LTE: ["800", "1800"]
-      NR: ["3500"]
-
-  emf_points:
-    seed: 42
-    n_points: {value: 40, basis: "assumption: comparable to a municipal monitoring campaign"}
-    cadence_minutes: 60
-    distance_from_site_m: {min: 30, max: 250, basis: "points are placed near installations, like real campaigns"}
-    radius_m: {value: 1000, basis: "sites further away contribute negligibly in free space"}
-    background_v_m: {value: 0.2, basis: "assumption: diffuse field from distant sources"}
-    off_axis_factor: {value: 0.1, basis: "assumption: ground points sit about 20 dB (in power) below the main beam"}
-    load_profile: {night: 0.35, peak: 1.0, basis: "assumption: network traffic share by hour"}
-
-  applications:
-    seed: 42
-    # Synthetic new-installation requests used only to demonstrate the workflow.
-    # Positions are approximate public places, to be geocoded by resolve_place.
-    items:
-      - {id: sim-app-001, address: "Piazza Venezia", lon: 12.4823, lat: 41.8960, operator: TIM, technology: NR, submitted: "2026-10-02"}
-      - {id: sim-app-002, address: "Piazza Bologna", lon: 12.5196, lat: 41.9128, operator: Vodafone, technology: LTE, submitted: "2026-10-09"}
-      - {id: sim-app-003, address: "Piazza dei Re di Roma", lon: 12.5103, lat: 41.8832, operator: WINDTRE, technology: NR, submitted: "2026-10-17"}
-      - {id: sim-app-004, address: "Piazzale Ostiense", lon: 12.4818, lat: 41.8752, operator: Iliad, technology: LTE, submitted: "2026-10-28"}
-      - {id: sim-app-005, address: "Largo di Torre Argentina", lon: 12.4767, lat: 41.8955, operator: TIM, technology: LTE, submitted: "2026-11-05"}
+    # Fusion with the Cartoradio grid (see twin/providers/estimated/register.py)
+    peak_min_v_m: {value: 1.5, basis: "assumption: weaker local maxima are noise of the national model"}
+    peak_snap_m: {value: 300, basis: "assumption: within the typical OpenCelliD centroid error (C=70)"}
+    new_site_min_v_m: {value: 3.0, basis: "assumption: a peak this strong with no known site nearby is a site"}
+    fit_radius_m: {value: 500, basis: "assumption: beyond this a site adds little to the ground field"}
+    assumed_height_above_receiver_m: {value: 20, basis: "assumption until heights come from the G0 city model"}
+    position_sigma_osm_m: {value: 30, basis: "assumption: OSM mast mapping accuracy"}
+    position_sigma_peak_m: {value: 75, basis: "half a Cartoradio cell diagonal (100 m Web Mercator = about 74 m on the ground)"}
+    position_sigma_opencellid_m: {value: 300, basis: "OpenCelliD centroids lie 100 m-1 km from the mast (C=70)"}
 
 open:
   roma_gtfs_rt:
@@ -97,7 +77,7 @@ open:
     metadata_url: https://discomap.eea.europa.eu/map/fme/metadata/PanEuropean_metadata.csv
     country: IT
     city: Roma
-    pollutants: [NO2]
+    pollutants: [NO2, PM10, PM2.5]
     dataset: {value: 1, basis: "1 = unverified up-to-date data (E2a), EEA download service docs"}
     # Hourly "Start" times are station local time; Italy reports in UTC+1.
     utc_offset_hours: {value: 1, basis: "EEA time zone Etc/GMT-1 for Italian stations (C=75)"}
@@ -112,6 +92,29 @@ open:
     step_minutes: 5
     max_frames: 12
     relative_sigma: {value: 0.5, basis: "assumption: radar rain-rate error is large (factor of about 2)"}
+    timeout_s: 60
+
+  arpa_points:
+    # Table of ARPA Lazio measurements (lon, lat, measured_on, e_v_m[, uncertainty_v_m][, location]).
+    # Empty until the Roma Capitale open-data portal (dati.comune.roma.it) answers again.
+    table_path: ""
+    relative_sigma: {value: 0.26, basis: "2 dB expanded instrument uncertainty, typical of broadband field meters (C=60)"}
+
+  bird_gbfs:
+    free_vehicles_url: https://mds.bird.co/gbfs/v2/public/rome/free_bike_status.json
+    timeout_s: 30
+
+  sensor_community:
+    api_url: https://data.sensor.community/airrohr/v1/filter
+    relative_sigma: {value: 0.4, basis: "low-cost SDS011 sensors agree with reference PM within about 30-50% in dry air (C=60)"}
+    humid_threshold_pct: {value: 80, basis: "optical PM sensors over-read in humid air above about 80% RH"}
+    humid_sigma_factor: {value: 2.0, basis: "assumption"}
+    timeout_s: 90
+
+  cams_open_meteo:
+    api_url: https://air-quality-api.open-meteo.com/v1/air-quality
+    step_deg: {value: 0.1, basis: "CAMS European ensemble grid is 0.1 degree"}
+    relative_sigma: {value: 0.5, basis: "assumption: hourly CAMS error at urban scale is of the order of the value"}
     timeout_s: 60
 
 restricted:

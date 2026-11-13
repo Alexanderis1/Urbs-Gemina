@@ -2,8 +2,8 @@
 
 Switch ``antenna_register: pa_register_file`` in config/providers.yaml and set
 ``pa.register_file.path`` in config/provider_settings.yaml: the twin then reads
-real records with the same field names as the simulated register (Model A
-fields, see ``twin.providers.simulated.register.MODEL_A_FIELDS``). No code
+real records with the same field names as the estimated register (Model A
+fields, see ``twin.providers.estimated.register.MODEL_A_FIELDS``). No code
 changes. Records are real, so ``synthetic=False``.
 """
 from __future__ import annotations

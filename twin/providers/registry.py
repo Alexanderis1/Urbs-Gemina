@@ -12,16 +12,18 @@ from typing import Callable, Literal
 import yaml
 
 from twin.providers.base import Provider, ProviderNotConfigured
+from twin.providers.estimated.register import EstimatedRegisterProvider
 from twin.providers.open.dpc_radar import DpcRadarProvider
+from twin.providers.open.arpa_points import ArpaPointsProvider
 from twin.providers.open.eea import EeaHourlyProvider
+from twin.providers.open.gbfs import GbfsProvider
 from twin.providers.open.gtfs_rt import RomaGtfsRtProvider
+from twin.providers.open.open_meteo import CamsOpenMeteoProvider
+from twin.providers.open.sensor_community import SensorCommunityProvider
 from twin.providers.pa.register_file import PaRegisterFileProvider
 from twin.providers.restricted.cartoradio import CartoradioGridProvider
 from twin.providers.settings import Settings
-from twin.providers.simulated.applications import SimApplicationsProvider
-from twin.providers.simulated.emf_points import SimEmfPointsProvider
 from twin.providers.simulated.loops import SimLoopsProvider
-from twin.providers.simulated.register import SimRegisterProvider
 
 Factory = Callable[[Settings], Provider]
 DataKind = Literal["real", "estimated", "simulated"]
@@ -36,33 +38,36 @@ def _not_configured(provider_id: str, hint: str) -> Factory:
 
 #: Every provider id that may appear in providers.yaml.
 FACTORIES: dict[str, Factory] = {
-    # simulated (fill the three gaps the administration confirmed, plus the demo inbox)
+    # simulated: only the road loops, which have no open real equivalent
     "sim_loops": SimLoopsProvider.from_settings,
-    "sim_register": SimRegisterProvider,
-    "sim_emf_points": SimEmfPointsProvider,
-    "sim_applications": SimApplicationsProvider,
+    # estimated: real sources fused with a physical model
+    "est_register": EstimatedRegisterProvider,
     # open, real
     "roma_gtfs_rt": RomaGtfsRtProvider,
     "eea_hourly": EeaHourlyProvider,
     "dpc_radar": DpcRadarProvider,
+    "arpa_points": ArpaPointsProvider,
+    "bird_gbfs": GbfsProvider,
+    "sensor_community": SensorCommunityProvider,
+    "cams_open_meteo": CamsOpenMeteoProvider,
     # restricted: runtime read only
     "cartoradio_grid": CartoradioGridProvider,
     # the administration's own data
     "pa_register_file": PaRegisterFileProvider,
     "pa_datex": _not_configured("pa_datex", "Needs Roma Mobilita DATEX II credentials."),
     "pa_register": _not_configured("pa_register", "Needs the administration's installation register."),
-    "arpa_points": _not_configured("arpa_points", "Needs ARPA Lazio measurement-point access."),
 }
 
 #: real | estimated | simulated label of each provider's data (shown in the honesty panel).
 DATA_KIND: dict[str, DataKind] = {
     "sim_loops": "simulated",
-    "sim_register": "simulated",
-    "sim_emf_points": "simulated",
-    "sim_applications": "simulated",
+    "est_register": "estimated",
     "roma_gtfs_rt": "real",
     "eea_hourly": "real",
     "dpc_radar": "real",
+    "bird_gbfs": "real",
+    "sensor_community": "real",
+    "cams_open_meteo": "estimated",
     "cartoradio_grid": "estimated",
     "roma_wfs": "real",
     "pa_register_file": "real",
@@ -88,11 +93,13 @@ def build_provider(provider_id: str, settings: Settings | None = None) -> Provid
 
 
 def build_providers(config: dict[str, str], skip_unknown: bool = True,
-                    settings: Settings | None = None) -> dict[str, Provider]:
+                    settings: Settings | None = None, skip_unavailable: bool = False) -> dict[str, Provider]:
     """Instantiate the active provider of each layer.
 
     Layers whose provider is not a ``Provider`` (e.g. ``roma_wfs``, a static
-    reader used at ingest) are skipped when ``skip_unknown`` is True.
+    reader used at ingest) are skipped when ``skip_unknown`` is True. Layers
+    whose provider has no access yet raise ``ProviderNotConfigured``, or are
+    left out when ``skip_unavailable`` is True (``data_status`` explains why).
     """
     settings = settings or Settings.load()
     active: dict[str, Provider] = {}
@@ -102,5 +109,9 @@ def build_providers(config: dict[str, str], skip_unknown: bool = True,
                 continue
             known = ", ".join(sorted(FACTORIES))
             raise KeyError(f"Unknown provider '{provider_id}' for layer '{layer}'. Known: {known}")
-        active[layer] = FACTORIES[provider_id](settings)
+        try:
+            active[layer] = FACTORIES[provider_id](settings)
+        except ProviderNotConfigured:
+            if not skip_unavailable:
+                raise
     return active

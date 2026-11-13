@@ -8,7 +8,7 @@ dependencies = ["PyYAML>=6"]
 [project.optional-dependencies]
 dev = ["pytest>=8", "mypy>=1.10", "types-PyYAML"]
 # WS3 live providers: GTFS-RT protobuf, EEA parquet, radar and Cartoradio GeoTIFF reads
-providers = ["gtfs-realtime-bindings>=1.0", "protobuf>=4", "pyarrow>=14", "rasterio>=1.3", "numpy>=1.24"]
+providers = ["gtfs-realtime-bindings>=1.0", "protobuf>=4", "pyarrow>=14", "rasterio>=1.3", "numpy>=1.24", "scipy>=1.10"]
 # WS3 seed building only (python -m twin.providers.simulated.build_seeds sites).
 # mapbox-vector-tile pins protobuf<7: install this group in its own environment if it clashes.
 seeds = ["pmtiles>=3", "mapbox-vector-tile>=2"]
