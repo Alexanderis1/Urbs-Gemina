@@ -110,6 +110,7 @@ verifier:
     - '\bMunicipio [0-9IVXLC]+\b'
     - '\b(zona urbana|zona|urban zone|zone)\s+[0-9]+[A-Za-z]?\b'
     - '\bNatura 2000\b'
+    - '\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*[0-9])[0-9a-f]{8,64}\b'   # run ids and hashes written in prose
   # Abbreviations after which a full stop does not end the sentence (legal Italian and English).
   abbreviations: [art, artt, n, nn, co, comma, lett, cfr, es, ecc, sez, pag, pp, p, d.lgs, d.p.r, d.m, l, no, nr, vs, approx, ca]
   calibration_words: [calibrated, uncalibrated, calibrato, non calibrato]

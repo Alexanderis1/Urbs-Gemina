@@ -178,3 +178,21 @@ def test_citation_at_end_of_line_covers_the_sentences_before_it() -> None:
 
 def test_natura_2000_is_a_name() -> None:
     assert verify("Nessun sito Natura 2000 risulta disponibile: insufficient data.", {}).ok
+
+
+def test_auto_cite_attaches_the_run_that_holds_every_figure_on_a_line() -> None:
+    from agents.verifier import auto_cite
+
+    r, f = context_run(), field_run()
+    text = "**Siti sensibili: 1**\n- Scuola A: 182,4 m\n- Distanza inventata: 95 m"
+    fixed = auto_cite(text, runs(r, f))
+    lines = fixed.splitlines()
+    assert lines[0].endswith(f"[run:{r['run_id'][:12]}]")
+    assert lines[1].endswith(f"[run:{r['run_id'][:12]}]")
+    assert "[run:" not in lines[2]  # 95 is in no tool output: left uncited, so still blocked
+    report = verify(fixed, runs(r, f))
+    assert [p.code for p in report.problems] == ["uncited_number"]
+
+
+def test_hex_ids_in_prose_are_not_figures() -> None:
+    assert verify("The run id is 80811ab03827; insufficient data otherwise.", {}).ok

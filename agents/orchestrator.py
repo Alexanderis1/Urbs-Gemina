@@ -17,7 +17,7 @@ from agents.llm import LLM, AnthropicLLM, ModelRefused
 from agents.loop import AgentLoop, LoopResult
 from agents.prompting import system_prompt
 from agents.tools import CompositeGateway, HttpToolGateway, LocalWebTools, ToolGateway, load_tool_specs
-from agents.verifier import Problem, VerifierReport, describe_problems, verify
+from agents.verifier import Problem, VerifierReport, auto_cite, describe_problems, verify
 
 LOG = logging.getLogger("urbs.agents")
 
@@ -58,17 +58,25 @@ class Answer:
     runs: list[dict[str, Any]]
     blocked_calls: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    #: Runs the verified answer actually cites; labels (data kinds, SIMULATED) follow these.
+    cited_run_ids: list[str] = field(default_factory=list)
+
+    def _label_runs(self) -> list[dict[str, Any]]:
+        if self.verified and self.cited_run_ids:
+            index = flatten_runs(self.runs)
+            return [index[i] for i in self.cited_run_ids if i in index]
+        return self.runs
 
     @property
     def data_kinds(self) -> dict[str, str]:
         out: dict[str, str] = {}
-        for r in self.runs:
+        for r in self._label_runs():
             out.update({str(k): str(v) for k, v in r.get("data_kinds", {}).items()})
         return out
 
     @property
     def synthetic(self) -> bool:
-        return any(r.get("synthetic") is True for r in self.runs)
+        return any(r.get("synthetic") is True for r in self._label_runs())
 
     @property
     def sources(self) -> list[str]:
@@ -103,9 +111,19 @@ def _finalise(text: str, report: VerifierReport, state: LoopResult, language: st
         text = INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " " + (
             "Problem found: " if language == "en" else "Problema: ") + "; ".join(missing) + "."
     if first_message:
-        text = cfg.disclosure.get(language, cfg.disclosure["en"]) + "\n\n" + text
+        text = cfg.disclosure.get(language, cfg.disclosure["en"]) + "\n\n" + _drop_self_disclosure(text)
     return Answer(text=text, verified=verified, problems=problems, runs=state.runs,
-                  blocked_calls=state.blocked_calls, warnings=state.warnings)
+                  blocked_calls=state.blocked_calls, warnings=state.warnings,
+                  cited_run_ids=list(report.cited_runs) if verified else [])
+
+
+SELF_DISCLOSURE = re.compile(r"^\W*(i am|i'm|sono)\b[^.\n\d]{0,160}\b(ai|ia|intelligenza artificiale|artificial intelligence)\b[^.\n\d]*[.!]?\s*",
+                             re.IGNORECASE)
+
+
+def _drop_self_disclosure(text: str) -> str:
+    """The code adds the disclosure line; drop the model's own if it opens with one (no figures in it)."""
+    return SELF_DISCLOSURE.sub("", text, count=1).lstrip()
 
 
 def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[str] | None = None,
@@ -117,13 +135,16 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
     try:
         state = loop.run(question)
         runs = flatten_runs(state.runs)
+        state.text = auto_cite(state.text, runs, cfg, question=question)
         report = verify(state.text, runs, cfg, question=question)
         attempts = 0
         while (not report.ok) and state.text.strip() and attempts < cfg.verifier_retries:
             attempts += 1
             state = loop.resume(state, "VERIFIER: your draft was blocked. Fix these problems using only the tool "
-                                       "outputs above, or answer 'insufficient data':\n" + describe_problems(report))
+                                       "outputs above, or answer 'insufficient data'. Write the corrected answer only: do not mention "
+                                       "this correction or talk about run ids.\n" + describe_problems(report))
             runs = flatten_runs(state.runs)
+            state.text = auto_cite(state.text, runs, cfg, question=question)
             report = verify(state.text, runs, cfg, question=question)
     except ModelRefused:
         state = LoopResult(text="", runs=[], messages=[])
