@@ -17,6 +17,10 @@ envelope = engine.run(kind, area, change, data=ScenarioData(...))
 - `run_id` = SHA-256 of inputs + data fingerprints + hashes of the config files that drive results. Results with status `ok` are cached in `data/cache/scenarios/<run_id>.json` (git-ignored: may contain Cartoradio-derived values).
 - Data are injected by the caller (`ScenarioData`): Cartoradio baseline function, census sections, SUMO network, boundary lookup. Missing inputs are reported as `not_available`, never filled in silently.
 
+## Live inputs
+
+`twin.scenarios.baselines.live_data(kind, area, change)` returns a `ScenarioData` with the real Cartoradio baseline (WS3 provider `cartoradio_grid`, read by byte range for just the window the run needs, held in memory only). The tool API should call `engine.run(kind, area, change, data=live_data(kind, area, change))`. Census and boundaries are read from WS1 layers automatically.
+
 ## Kinds
 
 Only traffic may be simulated. The EMF baseline (Cartoradio) and the existing antenna register (OpenCelliD + OSM, parameters fitted to Cartoradio) are `estimated`; a simulated baseline is refused.

@@ -6,6 +6,7 @@ gives the range of each indicator.
 """
 from __future__ import annotations
 
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -27,11 +28,13 @@ def sumo_home() -> Path | None:
     env = os.environ.get("SUMO_HOME")
     if env and Path(env).is_dir():
         return Path(env)
-    try:
-        import sumo  # type: ignore[import-untyped,import-not-found,unused-ignore]  # pip: eclipse-sumo
-    except ImportError:
+    # Locate the pip package (eclipse-sumo) without importing it: importing it sets PROJ_DATA to
+    # SUMO's own PROJ database, which breaks rasterio / GDAL in the same process.
+    spec = importlib.util.find_spec("sumo")
+    if spec is None or not spec.submodule_search_locations:
         return None
-    return Path(str(sumo.SUMO_HOME))
+    home = Path(list(spec.submodule_search_locations)[0])
+    return home if (home / "bin").is_dir() else None
 
 
 def sumo_binary(name: str) -> str | None:
@@ -46,8 +49,19 @@ def _cfg() -> dict[str, Any]:
     return {key: config.value(section, key) for key in section}
 
 
+def _sumo_env() -> dict[str, str]:
+    """Environment for SUMO tools only: its own SUMO_HOME and PROJ database (never set in this process)."""
+    env = dict(os.environ)
+    home = sumo_home()
+    if home is not None:
+        env.setdefault("SUMO_HOME", str(home))
+        if (home / "data" / "proj").is_dir() and not (env.get("PROJ_LIB") or env.get("PROJ_DATA")):
+            env["PROJ_LIB"] = env["PROJ_DATA"] = str(home / "data" / "proj")
+    return env
+
+
 def _run(cmd: Sequence[str], env: Mapping[str, str] | None = None, cwd: Path | None = None) -> None:
-    proc = subprocess.run(list(cmd), capture_output=True, text=True, env=dict(env) if env else None, cwd=cwd)
+    proc = subprocess.run(list(cmd), capture_output=True, text=True, env=dict(env) if env else _sumo_env(), cwd=cwd)
     if proc.returncode != 0:
         raise RuntimeError(f"{Path(cmd[0]).name} failed: {proc.stderr.strip()[-800:]}")
 
@@ -221,7 +235,7 @@ def run_road_closure(area: Area, change: Mapping[str, Any], data: ScenarioData) 
     closed = _closed_edges(change, edges)
     home = sumo_home()
     assert home is not None
-    env = {**os.environ, "SUMO_HOME": str(home)}
+    env = _sumo_env()
 
     unknown = sorted(set(data.loop_counts_veh_per_h) - set(edges))
     loops = {e: float(v) for e, v in data.loop_counts_veh_per_h.items() if e in edges}
