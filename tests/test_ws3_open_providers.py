@@ -295,3 +295,15 @@ def test_http_get_retries_a_reset_connection(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr(http.urllib.request, "urlopen", flaky)
     monkeypatch.setattr(http, "RETRY_PAUSE_S", 0.0)
     assert http.get_bytes("https://example.test/x") == b"ok" and len(attempts) == 2
+
+
+def test_gtfs_rt_answers_a_now_window_and_reports_the_feed_time() -> None:
+    from twin.providers.open.gtfs_rt import RomaGtfsRtProvider
+
+    provider = RomaGtfsRtProvider(SETTINGS, source="https://example.test/positions.pb",
+                                  fetch_bytes=lambda url: _gtfs_feed())
+    later = NOW + timedelta(minutes=3)  # positions are a few minutes old when asked about "now"
+    assert len(list(provider.fetch(ROME_BBOX, later, later))) == 2
+    assert provider.last_feed_time is not None and provider.last_feed_time <= later
+    # A feed hours old is not passed off as live.
+    assert list(provider.fetch(ROME_BBOX, NOW + timedelta(hours=3), NOW + timedelta(hours=3))) == []
