@@ -5,6 +5,7 @@ report the run id, never their own numbers.
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any, Mapping, Sequence
 
 from twin.modules.sports.config import SportsConfig
@@ -71,13 +72,24 @@ def _kinds(facilities: Sequence[Facility]) -> dict[str, str]:
     return kinds
 
 
+FACILITY_TYPES = ("public", "school", "private")
+
+
 def sports_facilities(area: Area, discipline: str | None, facilities: Sequence[Facility], config: SportsConfig,
                       include_unverified: bool = True, snapshot_hashes: Mapping[str, str] | None = None,
-                      retrieved: Mapping[str, str] | None = None) -> dict[str, Any]:
-    """Merged facility map, filtered by area and discipline, as a GeoJSON FeatureCollection."""
+                      retrieved: Mapping[str, str] | None = None, type: str | None = None,
+                      accessible: bool | None = None) -> dict[str, Any]:
+    """Merged facility map as a GeoJSON FeatureCollection.
+
+    Filters: area, discipline, ``type`` (public | school | private) and ``accessible``
+    (True keeps only facilities a source states are accessible; None = no filter).
+    """
     _check_discipline(discipline, config)
+    if type is not None and type not in FACILITY_TYPES:
+        raise ValueError(f"type must be one of {FACILITY_TYPES}")
     parsed = parse_area(area)
-    inputs = {"area": _area_input(area), "discipline": discipline, "include_unverified": include_unverified}
+    inputs = {"area": _area_input(area), "discipline": discipline, "include_unverified": include_unverified,
+              "type": type, "accessible": accessible}
     if parsed[0] == "zone":
         return make_envelope("sports_facilities", inputs, None, {"facilities": "not_available"}, [], synthetic=False,
                              warnings=[], snapshot_hashes=snapshot_hashes, status="not_available",
@@ -86,11 +98,17 @@ def sports_facilities(area: Area, discipline: str | None, facilities: Sequence[F
         f for f in facilities
         if _in_area(f.lon, f.lat, f.fields["municipio"].value, None, parsed)
         and (discipline is None or f.offers(discipline, include_unverified))
+        and (type is None or f.facility_type == type)
+        and (accessible is None or f.accessible is accessible)
     ]
     warnings = []
     unlocated = sum(1 for f in selected if f.lon is None)
     if unlocated:
         warnings.append(f"{unlocated} facilities have no coordinates yet and are not drawn on the map")
+    if accessible is not None:
+        warnings.append("facilities whose accessibility is not known are left out by the accessible filter")
+    if type == "private":
+        warnings.append("'private' means known only from OpenStreetMap or the web; ownership is not verified")
     if any(f.fields["accessibility"].status == "not_known" for f in selected):
         warnings.append("accessibility is 'not known' unless a source states it")
     result = {"type": "FeatureCollection", "count": len(selected), "features": [f.to_feature() for f in selected]}
@@ -99,15 +117,21 @@ def sports_facilities(area: Area, discipline: str | None, facilities: Sequence[F
                          snapshot_hashes=snapshot_hashes)
 
 
-def sport_deserts(area: Area, discipline: str, facilities: Sequence[Facility], population: Sequence[PopulationPoint],
-                  config: SportsConfig, open_facilities: Sequence[Facility] = (), include_unverified: bool = True,
-                  snapshot_hashes: Mapping[str, str] | None = None,
-                  retrieved: Mapping[str, str] | None = None) -> dict[str, Any]:
-    """Coverage of ``discipline`` in ``area``; with ``open_facilities`` it is the what-if.
+def sport_coverage(area: Area, discipline: str, facilities: Sequence[Facility],
+                   population: Sequence[PopulationPoint], config: SportsConfig, max_minutes: float | None = None,
+                   open_facilities: Sequence[Facility] = (), include_unverified: bool = True,
+                   snapshot_hashes: Mapping[str, str] | None = None,
+                   retrieved: Mapping[str, str] | None = None, tool: str = "sport_coverage") -> dict[str, Any]:
+    """The "sport deserts" map: coverage of ``discipline`` in ``area`` within ``max_minutes`` of walking
+    (default from config). With ``open_facilities`` it is the what-if.
 
     Facilities outside the area still count: people cross borders to play.
     """
     _check_discipline(discipline, config)
+    if max_minutes is not None:
+        if not 0 < max_minutes <= 60:
+            raise ValueError("max_minutes must be between 0 and 60")
+        config = replace(config, reach=replace(config.reach, walk_minutes=float(max_minutes)))
     parsed = parse_area(area)
     points = [p for p in population if _in_area(p.lon, p.lat, p.municipio, p.zone, parsed)]
     radius = reach_radius_m(config)
@@ -119,7 +143,7 @@ def sport_deserts(area: Area, discipline: str, facilities: Sequence[Facility], p
     warnings = ["reach is a straight-line estimate of a "
                 f"{config.reach.walk_minutes:g}-minute walk (detour factor {config.reach.detour_factor:g})"]
     if not population:
-        return make_envelope("sport_deserts", {"area": _area_input(area), "discipline": discipline},
+        return make_envelope(tool, {"area": _area_input(area), "discipline": discipline, "max_minutes": max_minutes},
                              None, {"population": "not_available"}, [], synthetic=False, warnings=warnings,
                              snapshot_hashes=snapshot_hashes, status="not_available",
                              reason="census population points are not loaded")
@@ -127,7 +151,13 @@ def sport_deserts(area: Area, discipline: str, facilities: Sequence[Facility], p
         warnings.append("no population points in this area")
     kinds = {**_kinds(list(facilities) + list(open_facilities)), "population": "real", "reach": "estimated"}
     inputs = {"area": _area_input(area), "discipline": discipline, "include_unverified": include_unverified,
-              "open_facilities": [f.to_feature() for f in open_facilities]}
+              "max_minutes": max_minutes, "open_facilities": [f.to_feature() for f in open_facilities]}
     sources = _sources_for(facilities, retrieved) + [{"id": "istat_census_2021", "retrieved_at": "unknown"}]
-    return make_envelope("sport_deserts", inputs, result, kinds, sources,
+    return make_envelope(tool, inputs, result, kinds, sources,
                          synthetic=bool(open_facilities), warnings=warnings, snapshot_hashes=snapshot_hashes)
+
+
+def sport_deserts(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """Earlier name of :func:`sport_coverage`, kept for callers already using it."""
+    kwargs.setdefault("tool", "sport_deserts")
+    return sport_coverage(*args, **kwargs)

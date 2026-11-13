@@ -125,3 +125,24 @@ def test_area_ids_follow_the_shared_contract() -> None:
     assert env["status"] == "not_available" and env["reason"]
     empty = sport_deserts(area="city", discipline="football", facilities=facilities(), population=[], config=CFG)
     assert empty["status"] == "not_available" and empty["data_kinds"]["population"] == "not_available"
+
+
+def test_type_and_accessible_filters_and_max_minutes() -> None:
+    from twin.modules.sports.tools import sport_coverage
+
+    env = sports_facilities(area="city", discipline=None, facilities=facilities(), config=CFG, type="private")
+    assert [f["properties"]["name"] for f in env["result"]["features"]] == ["Gym Private Club"]
+    env = sports_facilities(area="city", discipline=None, facilities=facilities(), config=CFG, type="public")
+    assert env["result"]["count"] == 3
+    env = sports_facilities(area="city", discipline=None, facilities=facilities(), config=CFG, accessible=True)
+    assert env["result"]["count"] == 0  # nothing states accessibility in the fixtures
+    with pytest.raises(ValueError):
+        sports_facilities(area="city", discipline=None, facilities=facilities(), config=CFG, type="castle")
+    # 2 min = 123 m straight line: only p1 (100 m from the football centre) is covered.
+    short = sport_coverage(area="city", discipline="football", facilities=facilities(), population=POINTS,
+                           config=CFG, max_minutes=2)
+    assert short["tool"] == "sport_coverage" and short["inputs"]["max_minutes"] == 2
+    assert short["result"]["residents_uncovered"] == 2500
+    long = sport_coverage(area="city", discipline="football", facilities=facilities(), population=POINTS,
+                          config=CFG, max_minutes=40)  # 40 min = 2462 m straight line: p3 at 2.1 km is covered
+    assert long["result"]["residents_uncovered"] == 2000

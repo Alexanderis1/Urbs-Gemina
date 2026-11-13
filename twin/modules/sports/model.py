@@ -117,6 +117,26 @@ class Facility:
             return False
         return include_unverified or value.status != "web_unverified"
 
+    @property
+    def facility_type(self) -> str:
+        """public | school | private. "private" means: known only from OSM or the web (estimated)."""
+        if self.fields["kind"].value == "school_gym":
+            return "school"
+        if any(SOURCE_STATUS.get(m.split(":", 1)[0]) in ("official", "manager_confirmed") for m in self.members):
+            return "public"
+        return "private"
+
+    @property
+    def accessible(self) -> bool | None:
+        """True/False only when a source states it; None means "not known"."""
+        acc = self.fields.get("accessibility", NOT_KNOWN)
+        if acc.status == "not_known" or acc.value in (None, ""):
+            return None
+        text = str(acc.value).strip().lower()
+        if text in ("false", "no", "non accessibile", "not accessible") or text.startswith(("non ", "not ", "no ")):
+            return False
+        return True
+
     def to_feature(self) -> dict[str, Any]:
         """GeoJSON Feature for the map and the facility page."""
         geometry = None if self.lon is None or self.lat is None else {
@@ -126,6 +146,8 @@ class Facility:
             "name": self.fields["name"].value,
             "kind": self.fields["kind"].value,
             "municipio": self.fields["municipio"].value,
+            "type": self.facility_type,
+            "accessible": self.accessible,
             "disciplines": sorted(self.disciplines),
             "fields": {k: v.to_dict() for k, v in self.fields.items()},
             "discipline_details": {k: v.to_dict() for k, v in sorted(self.disciplines.items())},
