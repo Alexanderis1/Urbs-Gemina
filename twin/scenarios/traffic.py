@@ -206,10 +206,10 @@ def run_road_closure(area: Area, change: Mapping[str, Any], data: ScenarioData) 
     kinds = {"road_network": data.road_network_kind if data.road_network else "not_available",
              "traffic_demand": "simulated"}
     reason = None
-    if sumo_binary("sumo") is None or sumo_binary("netconvert") is None or sumo_home() is None:
-        reason = "SUMO is not installed on this server (pip install eclipse-sumo)."
-    elif data.road_network is None or not data.road_network.exists():
+    if data.road_network is None or not data.road_network.exists():
         reason = "No road network is loaded for this area; build one from OpenStreetMap first."
+    elif sumo_binary("sumo") is None or sumo_binary("netconvert") is None or sumo_home() is None:
+        reason = "SUMO is not installed on this server (pip install eclipse-sumo)."
     if reason is not None:
         return {"result": {"status": "not_available", "reason": reason}, "data_kinds": kinds,
                 "sources": [], "synthetic": True, "warnings": [reason, SYNTHETIC_DEMAND]}

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Mapping, Protocol
 
 from twin.providers.base import Provider, ProviderNotConfigured
-from twin.providers.registry import FACTORIES
+from twin.providers.registry import FACTORIES, build_provider
 from twin.tools.context_check import distance_to_geometry_m
 from twin.tools.envelope import Source, make_envelope, utc_now
 from twin.tools.geocode import Nominatim
@@ -106,11 +106,10 @@ class ToolRuntime:
     def _build_providers(self) -> dict[str, Provider]:
         active: dict[str, Provider] = {}
         for layer, provider_id in self.settings.providers.items():
-            factory = FACTORIES.get(provider_id)
-            if factory is None:
+            if provider_id not in FACTORIES:
                 continue
             try:
-                active[layer] = factory()
+                active[layer] = build_provider(provider_id)
             except ProviderNotConfigured:
                 continue
         return active

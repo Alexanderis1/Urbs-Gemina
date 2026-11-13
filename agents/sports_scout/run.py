@@ -17,7 +17,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 
-from exa_agent import run_agent, structured  # noqa: E402
+from exa_agent import run_agent, structured  # type: ignore[import-not-found]  # noqa: E402
 
 ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"]
 
