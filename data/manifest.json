@@ -272,6 +272,24 @@
       "licence": "CC BY 4.0 (Copernicus CEMS)",
       "redistribution": true,
       "status": "verified 2026-11-13"
+    },
+    "copernicus_hrl_tree_cover": {
+      "kind": "real",
+      "what": "Tree Cover Density 2018, 20 m, 0-100 % (Copernicus HRL), Rome window; heatwave scenario",
+      "endpoint": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_TreeCoverDensity_2018/ImageServer",
+      "access": "exportImage, no key (scripts/fetch_heat_layers.py)",
+      "licence": "Copernicus free and open data policy",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "istat_census_ages": {
+      "kind": "real",
+      "what": "Residents aged 65+ and 75+ per 2021 census section (P27+P28+P29, P29); heatwave scenario",
+      "endpoint": "https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip",
+      "access": "zip download, no key (scripts/fetch_heat_layers.py)",
+      "licence": "CC BY 4.0 (ISTAT)",
+      "redistribution": true,
+      "status": "verified"
     }
   },
   "snapshots": {}

@@ -61,3 +61,49 @@ def test_live_data_uses_the_provider_and_labels_it_estimated(tmp_path: Path) -> 
     assert out["data_kinds"]["emf_baseline"] == "estimated"
     peak = min(out["result"]["points"], key=lambda p: p["distance_m"])
     assert peak["baseline"]["p50"] == pytest.approx(12.0)
+
+
+def _forecast(lon: float, lat: float, hour: int, speed: float, from_deg: float) -> Observation:
+    return Observation(entity_id=f"urn:ngsi-ld:WeatherForecast:x-{lon}", entity_type="WeatherForecast", lon=lon,
+                       lat=lat, observed_at=datetime(2026, 11, 14, hour, tzinfo=timezone.utc),
+                       values={"wind_speed_ms": speed, "wind_direction_deg": from_deg, "temperature_c": 15.0},
+                       sigma={}, source_id="om_weather_forecast@test", synthetic=False)
+
+
+def test_wind_forecast_is_taken_nearest_the_site_and_hour() -> None:
+    from twin.scenarios.baselines import wind_at
+
+    class Fake:
+        def fetch(self, bbox: object, start: object, end: object) -> list[Observation]:
+            return [_forecast(12.50, 41.90, 10, 2.0, 270.0), _forecast(12.50, 41.90, 12, 5.0, 90.0),
+                    _forecast(12.90, 41.60, 12, 9.0, 0.0)]
+
+    speed, from_deg = wind_at(12.51, 41.91, datetime(2026, 11, 14, 11, 50, tzinfo=timezone.utc), Fake())
+    assert (speed, from_deg) == (5.0, 90.0)
+
+
+def test_live_data_for_a_plume_reads_the_wind_forecast() -> None:
+    class Fake:
+        def fetch(self, bbox: object, start: object, end: object) -> list[Observation]:
+            return [_forecast(12.30, 41.80, 12, 4.0, 200.0)]
+
+    change = {"lon": 12.3, "lat": 41.8, "wind": "forecast", "at": "2026-11-14T12:00:00Z"}
+    data = live_data("chemical_plume", "city", change, provider=Fake())
+    assert data.wind == (4.0, 200.0)
+    assert live_data("chemical_plume", "city", {"lon": 12.3, "lat": 41.8,
+                                                "wind": {"speed_ms": 3, "from_deg": 0}}).wind is None
+
+
+def test_live_data_for_a_heatwave_reads_daily_max_and_min() -> None:
+    class Fake:
+        def fetch(self, bbox: object, start: object, end: object) -> list[Observation]:
+            out = []
+            for hour, temp in ((4, 21.0), (14, 36.0), (23, 25.0)):
+                o = _forecast(12.5, 41.9, hour, 2.0, 0.0)
+                out.append(Observation(entity_id=o.entity_id, entity_type=o.entity_type, lon=o.lon, lat=o.lat,
+                                       observed_at=o.observed_at, values={"temperature_c": temp},
+                                       sigma={"temperature_c": 1.2}, source_id=o.source_id, synthetic=False))
+            return out
+
+    data = live_data("heatwave", "city", {"temperature": "forecast"}, provider=Fake())
+    assert data.temperature == {"2026-11-14": [(12.5, 41.9, 36.0, 21.0, 1.2)]}

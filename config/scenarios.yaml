@@ -315,3 +315,41 @@ emergency_access:
   seed:
     value: 17
     basis: "fixed"
+
+heatwave:
+  heavy: false
+  cell_m:
+    value: 100
+    basis: "map cell; Copernicus rasters are 20 m and are averaged into it"
+  impervious_file:
+    value: imperviousness_2018.tif
+    basis: "Copernicus HRL Imperviousness Density 2018, 0-100 %"
+  tree_cover_file:
+    value: tree_cover_2018.tif
+    basis: "Copernicus HRL Tree Cover Density 2018, 0-100 % (scripts/fetch_heat_layers.py)"
+  ages_file:
+    value: census_ages.csv
+    basis: "ISTAT 2021 residents aged 65+ and 75+ per census section (scripts/fetch_heat_layers.py)"
+  forecast_scale_m:
+    value: 2200
+    basis: "ICON-2I grid spacing: the forecast is read as the average of this neighbourhood, and local differences are added around it"
+  coefficients:
+    value:
+      day: {impervious: [2.0, 0.8], trees: [4.0, 1.5]}
+      night: {impervious: [4.0, 1.5], trees: [1.5, 0.7]}
+    basis: "assumption (C=40): °C change for going from 0 to 100 % sealed ground or tree cover, relative to the neighbourhood average; [mean, sigma]. Order of magnitude from Rome urban heat island studies (night UHI 3-4 °C) and European tree-cooling studies (about 1 °C less air temperature per 16 % more tree cover)"
+  forecast_sigma_c:
+    value: 1.5
+    basis: "assumption: day-ahead error of daily max and min 2 m temperature when the provider gives none"
+  crown_area_m2:
+    value: 163
+    basis: "WS2 tree layer: median crown radius 7.2 m, used to turn added tree cover into a number of trees"
+  hot_probability:
+    value: 0.5
+    basis: "a cell is on the hot map when at least half of the ensemble members pass the threshold"
+  members:
+    value: 40
+    basis: "ensemble size"
+  seed:
+    value: 23
+    basis: "fixed"

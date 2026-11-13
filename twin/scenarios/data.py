@@ -57,6 +57,8 @@ class ScenarioData:
     wind: tuple[float, float] | None = None
     #: Rainfall in mm over the scenario duration as (lon, lat, mm) cells, keyed "radar" (real) or "forecast".
     rain_mm: Mapping[str, Sequence[tuple[float, float, float]]] = field(default_factory=dict)
+    #: Air temperature forecast per day (ISO date) as (lon, lat, max °C, min °C, sigma °C) points. Estimated.
+    temperature: Mapping[str, Sequence[tuple[float, float, float, float, float]]] = field(default_factory=dict)
     #: Boundary lookup for named areas (municipi, urban zones).
     area_lookup: AreaLookup | None = None
     #: Data snapshot hashes (from the manifest) that enter the run id.
@@ -80,9 +82,11 @@ class ScenarioData:
         if self.observed_speeds_m_per_s and "observed_speeds" not in out:
             out["observed_speeds"] = _json_hash(self.observed_speeds_m_per_s)
         for key, value in (("rivers", self.rivers), ("river_levels", self.river_levels), ("rain_mm", self.rain_mm),
-                           ("river_discharge", self.river_discharge)):
+                           ("river_discharge", self.river_discharge), ("temperature", self.temperature)):
             if value and key not in out:
                 out[key] = _json_hash(value)
+        if self.facilities is not None and "facilities" not in out:
+            out["facilities"] = hashlib.sha256(json.dumps([list(f) for f in self.facilities]).encode()).hexdigest()
         if self.wind is not None and "wind" not in out:
             out["wind"] = f"{self.wind[0]:.2f}@{self.wind[1]:.0f}"
         if self.dtm is not None and "dtm" not in out:

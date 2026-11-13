@@ -68,3 +68,14 @@ emergency_response:
     value: 15
     source: "assumption (C=35): no legal target found"
     confidence: 35
+
+heat:
+  # Heat thresholds used by the heatwave scenario (WS6).
+  hot_day_tmax_c:
+    value: 35
+    source: "assumption (C=55): 'very hot day' (daily maximum 35 °C or more), as used in SNPA/ISPRA climate indicators; the Ministry of Health bulletin for Rome uses city-specific apparent-temperature levels that are not published as fixed numbers"
+    confidence: 55
+  tropical_night_tmin_c:
+    value: 20
+    source: "ETCCDI climate index TR: tropical night when the daily minimum stays above 20 °C"
+    confidence: 90

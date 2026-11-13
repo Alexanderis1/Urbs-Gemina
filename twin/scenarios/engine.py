@@ -12,6 +12,7 @@ from twin.scenarios.data import ScenarioData
 from twin.scenarios.envelope import envelope, run_id
 from twin.scenarios.exposure import run_population_exposure
 from twin.scenarios.flood import run_rain_flood, run_river_flood
+from twin.scenarios.heat import run_heatwave
 from twin.scenarios.access import run_emergency_access
 from twin.scenarios.plume import run_chemical_plume
 from twin.scenarios.traffic import run_road_closure, run_traffic_event
@@ -52,6 +53,10 @@ KINDS: dict[str, Kind] = {
                            "possibly exceeded, residents and sensitive sites, beside the official damage zones",
                            ("seveso_perimeters.geojson", "hazardous_sites.geojson", "seveso_damage_zones.geojson",
                             "census_sections.geojson", "sensitive_sites.geojson")),
+    "heatwave": Kind(run_heatwave, False,
+                     "Day and night temperatures street by street from the forecast, sealed ground and tree cover; "
+                     "residents, children and over-65s above heat thresholds; what-if: plant trees or remove paving",
+                     ("imperviousness_2018.tif", "tree_cover_2018.tif", "census_ages.csv", "census_sections.geojson")),
     "emergency_access": Kind(run_emergency_access, True,
                              "Residents that fire, police or ambulances reach within their target time, before and "
                              "after road closures, a closed area or a flood footprint",
