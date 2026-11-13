@@ -116,7 +116,7 @@
       "access": "no key",
       "licence": "operator terms",
       "redistribution": "check terms",
-      "status": "verified"
+      "status": "verified 2026-11-13 (about 4,000 vehicles); provider implemented"
     },
     "roma_ckan": {
       "kind": "real",
@@ -147,30 +147,104 @@
     },
     "sim_loops": {
       "kind": "simulated",
-      "what": "Road loop stations (flow, speed, occupancy)",
+      "what": "Road loop stations (flow, speed, occupancy) at 93 centrally controlled signals on major roads",
       "endpoint": "twin/providers/simulated/loops.py",
       "access": "generated",
       "licence": "none",
       "redistribution": true,
-      "status": "implemented"
+      "status": "implemented",
+      "seed": "twin/providers/simulated/seed_data/loop_stations.geojson (from Roma Capitale DIPMOB:Semafori + DIPPC:grande_viabilita)"
     },
     "sim_register": {
       "kind": "simulated",
       "what": "Antenna installation register seeded from OpenCelliD and OSM",
-      "endpoint": "planned",
+      "endpoint": "twin/providers/simulated/register.py",
       "access": "generated",
       "licence": "inherits CC BY-SA / ODbL from its seeds",
       "redistribution": true,
-      "status": "planned"
+      "status": "removed 2026-11-13 (rule: only road loops are simulated)",
+      "seed": "twin/providers/simulated/seed_data/antenna_sites.geojson (OpenCelliD mirror, clustered)"
     },
     "sim_emf_points": {
       "kind": "simulated",
       "what": "EMF monitoring points",
-      "endpoint": "planned",
+      "endpoint": "twin/providers/simulated/emf_points.py",
       "access": "generated",
       "licence": "none",
       "redistribution": true,
-      "status": "planned"
+      "status": "removed 2026-11-13 (rule: only road loops are simulated)"
+    },
+    "sim_applications": {
+      "kind": "simulated",
+      "what": "Demonstration inbox of new-installation applications",
+      "endpoint": "twin/providers/simulated/applications.py",
+      "access": "generated",
+      "licence": "none",
+      "redistribution": true,
+      "status": "removed 2026-11-13 (rule: only road loops are simulated)"
+    },
+    "roma_gtfs_rt_trip_updates": {
+      "kind": "real",
+      "what": "Bus/tram trip updates (delay at next stop)",
+      "endpoint": "https://romamobilita.it/sites/default/files/rome_rtgtfs_trip_updates_feed.pb",
+      "access": "no key",
+      "licence": "CC BY-SA",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "eea_station_metadata": {
+      "kind": "real",
+      "what": "EEA sampling point and station coordinates (join on station EoI code)",
+      "endpoint": "https://discomap.eea.europa.eu/map/fme/metadata/PanEuropean_metadata.csv",
+      "access": "no key; tab-separated",
+      "licence": "EEA open",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "roma_semafori": {
+      "kind": "real",
+      "what": "Traffic signals with control system (seed for simulated loop positions)",
+      "endpoint": "https://geoportale.comune.roma.it/geoserver/ows (DIPMOB:Semafori, DIPPC:grande_viabilita)",
+      "access": "WFS, no login",
+      "licence": "credit Roma Capitale - GeoPortale (CC BY assumed, C=60); road geometry OSM-derived (ODbL)",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "est_register": {
+      "kind": "estimated",
+      "what": "Antenna sites: OpenCelliD clusters + OSM masts + Cartoradio peaks, effective EIRP fitted to the Cartoradio grid",
+      "endpoint": "twin/providers/estimated/register.py",
+      "access": "computed at runtime",
+      "licence": "derived from CC BY-SA / ODbL / Cartoradio (restricted)",
+      "redistribution": false,
+      "status": "implemented, uncalibrated"
+    },
+    "arpa_points": {
+      "kind": "real",
+      "what": "ARPA Lazio EMF measurements at addresses (art. 14 L. 36/2001)",
+      "endpoint": "https://dati.comune.roma.it (dataset DTS5887, 2013-2017)",
+      "access": "CKAN; portal answered 502 on 2026-11-13",
+      "licence": "Roma Capitale open data, credit ARPA Lazio",
+      "redistribution": true,
+      "status": "provider ready, table not loaded"
+    },
+    "sensor_community": {
+      "kind": "real",
+      "what": "Citizen PM10/PM2.5 sensors (low-cost)",
+      "endpoint": "https://data.sensor.community/airrohr/v1/filter/box=...",
+      "access": "no key; use HTTP/1.1",
+      "licence": "ODbL",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "cams_open_meteo": {
+      "kind": "estimated",
+      "what": "CAMS Europe air-quality model (NO2, PM10, PM2.5)",
+      "endpoint": "https://air-quality-api.open-meteo.com/v1/air-quality",
+      "access": "no key, multi-point",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
     },
     "mim_school_buildings": {
       "kind": "real",
