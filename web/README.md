@@ -34,8 +34,12 @@ context list → field range → downloadable cited report) · Scenario lab · D
 - Orchestrator hand-over (`TwinQuestion` / `TwinAnswer`): `src/api/twin.ts`. The browser never sends the tier.
 - Map actions shared with the voice agent (`voice/client_tools.json`): `src/lib/mapActions.ts`.
   The voice widget calls `window.urbsMap.dispatch({ tool, args })`; invalid actions and points outside Rome are dropped.
-- Result shapes in `src/api/types.ts` marked "provisional" follow the design until the tools stream publishes
-  `twin/api/schemas/*.json`.
+- Tool inputs follow `agents/tool_schemas_draft.json` until the tools stream publishes `twin/api/schemas/*.json`
+  (e.g. `resolve_place {text}`, `context_check {point: [lon, lat]}`, `estimate_field {area}` with the 300 m circle as a
+  64-vertex polygon). Envelopes with `status` `not_available` or `refused` show their `reason` instead of a result.
+- Area ids: `city`, `municipio:1`..`municipio:15`, `zone:<CODE>`, or a GeoJSON polygon.
+- Sport screen: `sports_facilities` and `sport_deserts` from the sports module (PR #5); manager updates go to
+  `POST <proxy>/sports/manager_update` as `{facility_id, field, value, account_ref: "org:<slug>", confirmed_at}`.
 
 ## Lovable
 

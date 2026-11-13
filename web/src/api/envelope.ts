@@ -1,4 +1,4 @@
-import { DATA_KINDS, type DataKind, type Envelope } from "./types";
+import { DATA_KINDS, STATUSES, type DataKind, type Envelope, type ToolStatus } from "./types";
 
 function fail(msg: string): never {
   throw new Error(`Invalid tool envelope: ${msg}`);
@@ -24,13 +24,18 @@ export function parseEnvelope(raw: unknown): Envelope {
   }
   if (typeof raw.synthetic !== "boolean") fail("missing synthetic flag");
   if (!Array.isArray(raw.warnings)) fail("missing warnings");
+  if (raw.status !== undefined) {
+    if (!STATUSES.includes(raw.status as ToolStatus)) fail(`unknown status "${String(raw.status)}"`);
+    if (raw.status !== "ok" && (typeof raw.reason !== "string" || !raw.reason)) fail("status is not ok but no reason given");
+  }
   return raw as unknown as Envelope;
 }
 
-const RANK: Record<DataKind, number> = { real: 0, estimated: 1, simulated: 2 };
+const RANK: Record<DataKind, number> = { real: 0, estimated: 1, simulated: 2, not_available: 3 };
 
 /** The badge for a whole response: SIMULATED if anything synthetic is in it, else the weakest layer kind. */
 export function envelopeBadge(env: Envelope): DataKind {
+  if (env.status && env.status !== "ok") return "not_available";
   if (env.synthetic) return "simulated";
   let worst: DataKind = "real";
   for (const k of Object.values(env.data_kinds)) if (RANK[k] > RANK[worst]) worst = k;
@@ -40,3 +45,6 @@ export function envelopeBadge(env: Envelope): DataKind {
 export function layerBadges(env: Envelope): [string, DataKind][] {
   return Object.entries(env.data_kinds).sort(([a], [b]) => a.localeCompare(b));
 }
+
+/** True when the tool produced a usable result. */
+export const isOk = (env: Envelope) => (env.status ?? "ok") === "ok";

@@ -1,8 +1,11 @@
 // Mirrors the shared "tool response envelope" contract (plan/workstreams.md, shared interface 3).
 // Do not change these shapes here: contract changes go through the design hub.
 
-export const DATA_KINDS = ["real", "estimated", "simulated"] as const;
+export const DATA_KINDS = ["real", "estimated", "simulated", "not_available"] as const;
 export type DataKind = (typeof DATA_KINDS)[number];
+
+export const STATUSES = ["ok", "not_available", "refused"] as const;
+export type ToolStatus = (typeof STATUSES)[number];
 
 export const TOOL_NAMES = [
   "resolve_place",
@@ -31,6 +34,10 @@ export interface Envelope<R = unknown> {
   sources: SourceRef[];
   synthetic: boolean;
   warnings: string[];
+  /** Added 13 Nov: "ok" when absent. "refused" = guardrail (e.g. heavy run on too large an area). */
+  status?: ToolStatus;
+  reason?: string;
+  cached?: boolean;
 }
 
 export interface Estimate {
@@ -49,10 +56,11 @@ export interface PolygonGeometry {
 // --- Result shapes the UI reads. Provisional until WS4 publishes twin/api/schemas/*.json. ---
 
 export interface ResolvePlaceResult {
-  label: string;
-  lat: number;
   lon: number;
-  municipio?: string;
+  lat: number;
+  municipio?: string | number | null;
+  urban_zone?: string | null;
+  label?: string;
 }
 
 export interface ContextItem {

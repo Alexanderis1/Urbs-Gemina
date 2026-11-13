@@ -40,7 +40,7 @@ export default function Ask() {
 
   async function sampleAnswer(q: string): Promise<TwinAnswer> {
     // No language model in sample mode. One real tool call (to the sample tools) shows the trace format.
-    const place = await run<ResolvePlaceResult>("resolve_place", { query: q });
+    const place = await run<ResolvePlaceResult>("resolve_place", { text: q });
     return parseTwinAnswer({
       text: "The assistant is not connected yet, so this is not an answer. It shows how answers will look: sources, run ids, data kinds and map buttons.",
       verified: false,
@@ -50,7 +50,7 @@ export default function Ask() {
       synthetic: true,
       missing: ["orchestrator (agents workstream)"],
       map_actions: [
-        { tool: "fly_to", args: { lon: place.result.lon, lat: place.result.lat, zoom: 15, label: place.result.label } },
+        { tool: "fly_to", args: { lon: place.result.lon, lat: place.result.lat, zoom: 15, label: place.result.label ?? q } },
         { tool: "show_layer", args: { layer: "air_quality", visible: true } },
       ],
     });

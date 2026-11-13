@@ -12,8 +12,14 @@ export function RunMeta({ env, compact = false }: { env: Envelope; compact?: boo
         <code className="rounded bg-stone-100 px-1" title={env.run_id}>
           {env.tool} · run {shortId(env.run_id)}
         </code>
+        {env.cached && <span className="text-stone-400">cached</span>}
         {!compact && layerBadges(env).map(([l, k]) => <KindBadge key={l} kind={k} label={l} />)}
       </div>
+      {env.status && env.status !== "ok" && (
+        <p className="font-medium text-red-700">
+          {env.status === "refused" ? "Refused" : "Not available"}: {env.reason}
+        </p>
+      )}
       {!compact && (
         <ul className="list-inside list-disc">
           {env.sources.map((s) => (

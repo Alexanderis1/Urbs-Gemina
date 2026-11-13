@@ -54,8 +54,9 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
       return { label: String(inputs.query ?? "Piazza Venezia, Roma"), lat: 41.8959, lon: 12.4823, municipio: "1" };
     case "context_check": {
       const cats = ["school", "hospital", "care home", "playground", "heritage constraint", "existing antenna site"];
-      const lat0 = num(inputs.lat, 41.8959);
-      const lon0 = num(inputs.lon, 12.4823);
+      const pt = Array.isArray(inputs.point) ? (inputs.point as unknown[]) : [];
+      const lon0 = num(pt[0], 12.4823);
+      const lat0 = num(pt[1], 41.8959);
       const items = cats.map((category, i) => {
         const d = Math.round(40 + rnd() * 250);
         const bearing = rnd() * 2 * Math.PI;

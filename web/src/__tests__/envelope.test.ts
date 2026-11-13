@@ -42,3 +42,18 @@ describe("tool response envelope", () => {
     ]);
   });
 });
+
+describe("envelope additions (status, reason, cached, not_available)", () => {
+  it("accepts a not_available result with a reason", () => {
+    const env = parseEnvelope({ ...good, status: "not_available", reason: "layer not loaded", cached: false, data_kinds: { emf: "not_available" } });
+    expect(env.status).toBe("not_available");
+    expect(env.reason).toBe("layer not loaded");
+  });
+  it("treats a missing status as ok (older tools)", () => {
+    expect(parseEnvelope(good).status ?? "ok").toBe("ok");
+  });
+  it("rejects an unknown status or a non-ok status without reason", () => {
+    expect(() => parseEnvelope({ ...good, status: "maybe" })).toThrow(/status/);
+    expect(() => parseEnvelope({ ...good, status: "refused" })).toThrow(/reason/);
+  });
+});

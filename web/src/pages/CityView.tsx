@@ -8,6 +8,7 @@ import { RunMeta } from "@/components/RunMeta";
 import { areaToArg, type Area } from "@/lib/area";
 import { confidenceAlpha, rampColor } from "@/lib/colors";
 import { onMapAction, registerCityView } from "@/lib/mapbus";
+import { isOk } from "@/api/envelope";
 import { areaFromId } from "@/lib/mapActions";
 import { useSession } from "@/lib/runlog";
 import type { Envelope, LayerCell, QueryLayerResult } from "@/api/types";
@@ -54,10 +55,10 @@ export default function CityView() {
   useEffect(() => {
     if (!layer) return setEnv(null);
     if (area.type === "zone" && !area.id) return;
-    const at = new Date(Date.now() - hoursAgo * 3600_000).toISOString();
+    const time = new Date(Date.now() - hoursAgo * 3600_000).toISOString();
     let live = true;
     setError(null);
-    run<QueryLayerResult>("query_layer", { layer, area: areaToArg(area), at })
+    run<QueryLayerResult>("query_layer", { layer, area: areaToArg(area), time })
       .then((e) => live && setEnv(e))
       .catch((e: unknown) => live && setError(String(e)));
     return () => {
@@ -67,7 +68,7 @@ export default function CityView() {
 
   const layers = useMemo(() => {
     const out: Layer[] = [];
-    if (env) {
+    if (env && isOk(env)) {
       const cells = env.result.cells;
       const maxMean = Math.max(...cells.map((c) => c.mean), 1e-9);
       const maxVar = Math.max(...cells.map((c) => c.variance), 0);

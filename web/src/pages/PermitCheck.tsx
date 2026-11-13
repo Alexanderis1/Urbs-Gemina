@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { CityMap } from "@/map/CityMap";
 import { roman } from "@/lib/area";
+import { circlePolygon } from "@/lib/geo";
+import { isOk } from "@/api/envelope";
 import { KindBadge } from "@/components/Badge";
 import { RangeBar } from "@/components/RangeBar";
 import { RunMeta } from "@/components/RunMeta";
@@ -26,21 +28,35 @@ export default function PermitCheck() {
   const [place, setPlace] = useState<Envelope<ResolvePlaceResult> | null>(null);
   const [ctx, setCtx] = useState<Envelope<ContextCheckResult> | null>(null);
   const [field, setField] = useState<Envelope<EstimateFieldResult> | null>(null);
+  const [site, setSite] = useState<{ lon: number; lat: number; label: string } | null>(null);
 
-  async function check(input: { query: string } | { lat: number; lon: number }) {
+  async function check(input: { text: string } | { lat: number; lon: number }) {
     setBusy(true);
     setError(null);
+    setPlace(null);
+    setCtx(null);
+    setField(null);
     try {
-      const p = await run<ResolvePlaceResult>("resolve_place", input);
-      const { lat, lon } = p.result;
-      setPlace(p);
+      let lon: number;
+      let lat: number;
+      let label: string;
+      if ("text" in input) {
+        const p = await run<ResolvePlaceResult>("resolve_place", { text: input.text });
+        setPlace(p);
+        if (!isOk(p)) return;
+        ({ lon, lat } = p.result);
+        label = p.result.label ?? input.text;
+      } else {
+        ({ lon, lat } = input);
+        label = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      }
+      setSite({ lon, lat, label });
       // radius_m is not sent: context_check takes it from config/thresholds.yaml (antenna_context.radius_m).
-      const [c, f] = await Promise.all([
-        run<ContextCheckResult>("context_check", { lat, lon }),
-        run<EstimateFieldResult>("estimate_field", { lat, lon }),
-      ]);
+      const c = await run<ContextCheckResult>("context_check", { point: [lon, lat] });
       setCtx(c);
-      setField(f);
+      if (!isOk(c)) return;
+      // The field estimate covers the same circle, sent as the hub's 64-vertex polygon.
+      setField(await run<EstimateFieldResult>("estimate_field", { area: circlePolygon(lon, lat, c.result.radius_m) }));
     } catch (e) {
       setError(String(e));
     } finally {
@@ -48,11 +64,11 @@ export default function PermitCheck() {
     }
   }
 
-  const focus = useMemo(() => (place ? { lon: place.result.lon, lat: place.result.lat, zoom: 16 } : null), [place]);
+  const focus = useMemo(() => (site ? { lon: site.lon, lat: site.lat, zoom: 16 } : null), [site]);
 
   const layers = useMemo(() => {
-    if (!place || !ctx) return [];
-    const centre = [place.result.lon, place.result.lat] as [number, number];
+    if (!site || !ctx || !isOk(ctx)) return [];
+    const centre = [site.lon, site.lat] as [number, number];
     const items = ctx.result.items.filter((i): i is ContextItem & { lat: number; lon: number } => i.lat != null && i.lon != null);
     return [
       new ScatterplotLayer({
@@ -91,7 +107,7 @@ export default function PermitCheck() {
         getColor: [30, 30, 30],
       }),
     ];
-  }, [place, ctx]);
+  }, [site, ctx]);
 
   return (
     <div className="flex h-full">
@@ -100,7 +116,7 @@ export default function PermitCheck() {
           className="space-y-2"
           onSubmit={(e) => {
             e.preventDefault();
-            void check({ query });
+            void check({ text: query });
           }}
         >
           <div className="label">Proposed antenna site</div>
@@ -111,14 +127,20 @@ export default function PermitCheck() {
           <p className="text-xs text-stone-500">Or click a point on the map.</p>
         </form>
         {error && <p className="text-sm text-red-700">{error}</p>}
-        {place && (
+        {(site || place) && (
           <div className="card space-y-1">
-            <div className="font-medium">{place.result.label}</div>
-            {place.result.municipio && <div className="text-xs text-stone-500">Municipio {roman(Number(place.result.municipio))}</div>}
-            <RunMeta env={place} compact />
+            <div className="font-medium">{site?.label ?? "Address not found"}</div>
+            {place?.result.municipio != null && (
+              <div className="text-xs text-stone-500">
+                Municipio {roman(Number(place.result.municipio))}
+                {place.result.urban_zone ? ` · zone ${place.result.urban_zone}` : ""}
+              </div>
+            )}
+            {place && <RunMeta env={place} compact />}
           </div>
         )}
-        {ctx && (
+        {ctx && !isOk(ctx) && <RunMeta env={ctx} />}
+        {ctx && isOk(ctx) && (
           <div className="card space-y-2">
             <div className="label">Within {ctx.result.radius_m} m</div>
             <p className="text-xs italic text-stone-600">{ctx.result.note}</p>
@@ -137,7 +159,8 @@ export default function PermitCheck() {
             <RunMeta env={ctx} />
           </div>
         )}
-        {field && (
+        {field && !isOk(field) && <RunMeta env={field} />}
+        {field && isOk(field) && (
           <div className="card space-y-2">
             <div className="label">Estimated electric field at the site</div>
             <RangeBar e={field.result.estimate} unit={field.result.unit} max={Math.max(field.result.estimate.p95 * 1.2, 1)} />
@@ -150,8 +173,11 @@ export default function PermitCheck() {
             <RunMeta env={field} />
           </div>
         )}
-        {place && ctx && field && (
-          <button className="btn-ghost w-full" onClick={() => download("permit-context-report.md", buildCitedReport(place.result.label, [place, ctx, field]))}>
+        {site && ctx && field && (
+          <button
+            className="btn-ghost w-full"
+            onClick={() => download("permit-context-report.md", buildCitedReport(site.label, place ? [place, ctx, field] : [ctx, field]))}
+          >
             Download cited report
           </button>
         )}
