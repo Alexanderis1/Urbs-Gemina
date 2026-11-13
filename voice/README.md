@@ -9,7 +9,7 @@ Two ElevenLabs voice agents that talk to the same orchestrator and guardrails as
 
 ## How a spoken question flows
 
-1. The agent opens with an AI disclosure (`agents.yaml`, first message in Italian and English).
+1. The agent opens with an AI disclosure (`agents.yaml`). Italian only (decision of 13 Nov 2026); English texts stay in the files so it can be switched on later.
 2. For any question about Rome it calls the one webhook tool `ask_twin` (question, optional area, language, mode).
 3. `webhook.handle_ask_twin` checks the per-agent secret header. **The secret decides the tier** (office or citizen); the model cannot choose it.
 4. The question goes to the orchestrator (`contract.Orchestrator`, built by the agents stream). The briefing is a fixed list of questions in `briefing.yaml`, each sent to the orchestrator too.
@@ -41,6 +41,16 @@ python -m voice.push_agent --role citizen
 ```
 
 The tool API needs `VOICE_SECRET_OFFICE` and `VOICE_SECRET_CITIZEN` (same values as the ElevenLabs workspace secrets) and mounts `handle_ask_twin(body, headers, orchestrator, secrets_from_env())` at `POST /voice/ask_twin`.
+
+## Where the keys live (never in git, never in chat)
+
+| Key | Stored in | Used by |
+|---|---|---|
+| `ELEVENLABS_API_KEY` | Lovable Cloud Secrets | Edge function that asks ElevenLabs for a signed URL for the private office agent |
+| `ELEVENLABS_API_KEY` | Your own shell (or this project's cloud environment variables) when running `push_agent` | Creating / updating the agents |
+| `VOICE_SECRET_OFFICE`, `VOICE_SECRET_CITIZEN` | Tool API host secrets (e.g. Modal secret) **and** ElevenLabs workspace secrets | Checking who calls `ask_twin` |
+
+The webhook itself does not need the ElevenLabs key.
 
 ## Not verified yet
 

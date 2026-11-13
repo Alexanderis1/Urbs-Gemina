@@ -66,12 +66,16 @@ def test_client_tools_file_is_valid_and_shared_with_web() -> None:
         assert t["type"] == "client" and t["parameters"]["type"] == "object"
 
 
-def test_language_detection_enabled_for_italian_and_english() -> None:
-    p = build_agent_payload("office", webhook_url="https://x/y", secret_id="s")
+@pytest.mark.parametrize("role", ["office", "citizen"])
+def test_italian_only_with_a_voice(role: str) -> None:
+    p = build_agent_payload(role, webhook_url="https://x/y", secret_id="s")
     cc = p["conversation_config"]
     assert cc["agent"]["language"] == "it"
-    assert set(cc["language_presets"]) == {"en"}
-    assert "language_detection" in cc["agent"]["prompt"]["built_in_tools"]
+    assert cc["language_presets"] == {}
+    assert "language_detection" not in cc["agent"]["prompt"]["built_in_tools"]
+    hook = next(t for t in tools(p) if t["name"] == "ask_twin")
+    assert hook["api_schema"]["request_body_schema"]["properties"]["language"]["enum"] == ["it"]
+    assert cc["tts"]["voice_id"]
 
 
 def test_unknown_role_rejected() -> None:

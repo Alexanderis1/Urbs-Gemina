@@ -36,7 +36,7 @@ def _contract_rules() -> str:
     return "\n".join(line for line in lines if line.startswith("- "))
 
 
-def ask_twin_tool(webhook_url: str, secret_id: str) -> dict[str, Any]:
+def ask_twin_tool(webhook_url: str, secret_id: str, languages: list[str]) -> dict[str, Any]:
     return {
         "type": "webhook",
         "name": "ask_twin",
@@ -60,7 +60,7 @@ def ask_twin_tool(webhook_url: str, secret_id: str) -> dict[str, Any]:
                         "type": "string",
                         "description": "Optional: 'city', a municipio id such as 'municipio:I', or an urban-zone id",
                     },
-                    "language": {"type": "string", "enum": ["it", "en"], "description": "Language of the conversation"},
+                    "language": {"type": "string", "enum": languages, "description": "Language of the conversation"},
                     "mode": {
                         "type": "string",
                         "enum": ["question", "briefing"],
@@ -73,6 +73,19 @@ def ask_twin_tool(webhook_url: str, secret_id: str) -> dict[str, Any]:
     }
 
 
+def _language_tools(other_languages: list[str]) -> dict[str, Any]:
+    if not other_languages:
+        return {}
+    return {
+        "language_detection": {
+            "type": "system",
+            "name": "language_detection",
+            "description": "Switch language when the user speaks another supported language or asks to switch.",
+            "params": {"system_tool_type": "language_detection"},
+        }
+    }
+
+
 def build_agent_payload(role: str, *, webhook_url: str, secret_id: str, voice_id: str | None = None) -> dict[str, Any]:
     if role not in TIERS:
         raise ValueError(f"role must be one of {TIERS}")
@@ -82,6 +95,7 @@ def build_agent_payload(role: str, *, webhook_url: str, secret_id: str, voice_id
     wanted = set(agent["client_tools"])
     client_tools = [t for t in load_client_tools() if t["name"] in wanted]
     default_lang = common["default_language"]
+    languages = [default_lang, *common["other_languages"]]
     first = agent["first_message"]
     tts: dict[str, Any] = {"model_id": common["tts_model_id"]}
     if voice_id or common.get("voice_id"):
@@ -98,15 +112,8 @@ def build_agent_payload(role: str, *, webhook_url: str, secret_id: str, voice_id
                     "llm": common["llm"],
                     "temperature": common["temperature"],
                     "timezone": common["timezone"],
-                    "tools": [ask_twin_tool(webhook_url, secret_id), *client_tools],
-                    "built_in_tools": {
-                        "language_detection": {
-                            "type": "system",
-                            "name": "language_detection",
-                            "description": "Switch between Italian and English when the user speaks the other language or asks to switch.",
-                            "params": {"system_tool_type": "language_detection"},
-                        }
-                    },
+                    "tools": [ask_twin_tool(webhook_url, secret_id, languages), *client_tools],
+                    "built_in_tools": _language_tools(common["other_languages"]),
                 },
             },
             "language_presets": {

@@ -7,10 +7,13 @@ common:
   temperature: 0.2
   # basis: low-latency multilingual TTS model for Italian and English (C=70 on the id).
   tts_model_id: eleven_flash_v2_5
-  # Chosen by ear in the ElevenLabs voice library; set before pushing.
-  voice_id: ""
+  # basis: "Fabi", native Italian male voice from the ElevenLabs library, made for news reading
+  # and tutorials, supports Flash (ID read from a third-party catalogue, C=75). Community
+  # voices may need "Add to my voices" in ElevenLabs first. Override with ELEVENLABS_VOICE_ID.
+  voice_id: Ha21jUwaMwdgQvqNslSM
+  # basis: Alessandro, 13 Nov 2026: Italian only. Add codes here to enable auto-switching.
   default_language: it
-  other_languages: [en]
+  other_languages: []
   timezone: Europe/Rome
 
 office:
