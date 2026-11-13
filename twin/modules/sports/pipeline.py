@@ -16,6 +16,7 @@ never treated as empty:
 from __future__ import annotations
 
 import csv
+import re
 import hashlib
 import json
 import sys
@@ -112,6 +113,8 @@ def load_candidates(config: SportsConfig, raw: Path = RAW) -> tuple[list[Candida
     ]
     for key, filename, loader in loaders:
         path = raw / filename
+        if not path.exists() and (raw.parent / "processed" / filename).exists():
+            path = raw.parent / "processed" / filename  # cleaned copy written by the static-data stream
         if not path.exists():
             status[key] = {"status": "not_available", "file": filename}
             warnings.append(f"{key}: not available ({filename} missing)")
@@ -172,6 +175,63 @@ def enrich_and_confirm(facilities: list[Facility], config: SportsConfig,
 
 
 Geocoder = Callable[[str], Mapping[str, Any]]
+
+
+def address_key(address: str) -> tuple[str, str | None]:
+    """'Via T. Mommsen, 20, Roma' -> ('via mommsen', '20'). Street words + house number, for exact matching."""
+    from twin.modules.sports.disciplines import fold
+
+    text = re.sub(r"[.,;:'’/()\-]", " ", fold(address))
+    tokens = [t for t in text.split() if t not in ("roma", "rm", "n", "snc")]
+    number = next((re.match(r"\d+", t).group(0) for t in tokens if re.match(r"\d+", t)), None)  # type: ignore[union-attr]
+    words = [t for t in tokens if not t[0].isdigit() and len(t) > 1]
+    return " ".join(words), number
+
+
+def locate_from_school_register(cands: list[Candidate], schools: Mapping[str, Any],
+                                ) -> tuple[list[Candidate], int, list[str]]:
+    """Give school gyms without coordinates the position of the state-school building at the same
+    address and municipio (DIPSCU:mv_portale_rete_statale). Exact street + house number only."""
+    from twin.modules.sports.sources import municipio_id
+
+    book: dict[tuple[str, str | None, str | None], list[dict[str, Any]]] = {}
+    for f in schools.get("features", []):
+        props = f.get("properties") or {}
+        coords = (f.get("geometry") or {}).get("coordinates")
+        if not coords or not props.get("indirizzo"):
+            continue
+        street, number = address_key(str(props["indirizzo"]))
+        book.setdefault((street, number, municipio_id(props.get("municipio"))), []).append(
+            {"lon": float(coords[0]), "lat": float(coords[1]), "id": props.get("meccanografico") or props.get("feature_id")})
+    out: list[Candidate] = []
+    located = 0
+    warnings: list[str] = []
+    for c in cands:
+        if c.located or not c.address or c.kind != "school_gym":
+            out.append(c)
+            continue
+        street, number = address_key(c.address)
+        hits = book.get((street, number, c.municipio)) if number else None
+        if not hits and number and street:
+            # Fallback: street names are written with or without first names ("Via Stabilini" /
+            # "Via Pasquale Stabilini"): same last street word, number and municipio, if unique.
+            last = street.split()[-1]
+            keys = [k for k in book if k[1] == number and k[2] == c.municipio and k[0].split()[-1:] == [last]]
+            hits = book[keys[0]] if len(keys) == 1 else None
+        if not hits:
+            out.append(c)
+            continue
+        from twin.modules.sports.geo import distance_m
+
+        if max(distance_m(hits[0]["lon"], hits[0]["lat"], h["lon"], h["lat"]) for h in hits) > 100.0:
+            warnings.append(f"{c.key}: school buildings more than 100 m apart at {c.address}; left unlocated")
+            out.append(c)
+            continue
+        out.append(replace(c, lon=hits[0]["lon"], lat=hits[0]["lat"], attributes={
+            **c.attributes, "located_by": {"source": "roma_schools_state", "school_id": hits[0]["id"],
+                                           "rule": "same street, house number and municipio"}}))
+        located += 1
+    return out, located, warnings
 
 
 def default_geocoder() -> Geocoder | None:
@@ -239,6 +299,13 @@ def build(config: SportsConfig | None = None, raw: Path = RAW, out: Path = OUT,
     """``geocoder=True`` uses resolve_place if installed; ``None``/``False`` skips geocoding."""
     config = config or load_config()
     cands, status, warnings = load_candidates(config, raw)
+    for schools_path in (raw / "schools_state.geojson", raw.parent / "processed" / "schools_state.geojson"):
+        if schools_path.exists():
+            cands, n, more = locate_from_school_register(
+                cands, json.loads(schools_path.read_text(encoding="utf-8")))
+            status["school_register_locations"] = {"status": "ok", "located": n, "sha256": _sha(schools_path)}
+            warnings.extend(more)
+            break
     coder = default_geocoder() if geocoder is True else (geocoder or None)
     cands, status["geocoding"], more_geo = geocode_candidates(cands, coder, raw / "sports_geocode_cache.json")
     warnings.extend(more_geo)

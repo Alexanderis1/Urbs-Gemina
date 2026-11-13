@@ -81,3 +81,30 @@ def test_geocoding_locates_house_matches_only_and_caches(tmp_path: Path) -> None
     assert len(located) == 1 and "geocoded" in located[0]["properties"]["extra"]
     build(raw=raw, out=out, geocoder=fake)
     assert len(calls) == 2  # second build answered from the cache
+
+
+def test_school_gyms_take_the_school_building_position(tmp_path: Path) -> None:
+    from twin.modules.sports.pipeline import address_key
+
+    assert address_key("Via T. Mommsen, 20, Roma") == ("via mommsen", "20")
+    assert address_key("VIA T MOMMSEN 20") == ("via mommsen", "20")
+    raw, out = tmp_path / "raw", tmp_path / "out"
+    (raw / "sports_web").mkdir(parents=True)
+    (raw / "schools_state.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [12.55, 41.86, 50.0]},
+         "properties": {"meccanografico": "RMEE000001", "indirizzo": "VIA GELA 22", "municipio": "VII"}},
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [12.50, 41.90]},
+         "properties": {"meccanografico": "RMEE000002", "indirizzo": "VIA GELA 22", "municipio": "I"}},
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [12.56, 41.85]},
+         "properties": {"meccanografico": "RMEE000003", "indirizzo": "VIA PASQUALE STABILINI 19", "municipio": "VII"}}]}))
+    (raw / "sports_web" / "scout_VII.json").write_text(json.dumps({"retrieved_at": "2026-11-13", "candidates": [
+        {"name": "IC Mommsen Primaria Verdi", "address": "Via Gela, 22", "municipio": "VII", "kind": "school_gym",
+         "source_url": "https://x.example/a", "confidence": 0.9, "disciplines": ["judo"]},
+        {"name": "IC Stabilini Primaria Fellini", "address": "Via Stabilini, 19", "municipio": "VII",
+         "kind": "school_gym", "source_url": "https://x.example/b", "confidence": 0.9}]}))
+    summary = build(raw=raw, out=out, geocoder=None)
+    assert summary["sources"]["school_register_locations"]["located"] == 2
+    features = json.loads((out / "facilities.geojson").read_text(encoding="utf-8"))["features"]
+    feature = next(f for f in features if "Verdi" in f["properties"]["name"])
+    assert feature["geometry"]["coordinates"] == [12.55, 41.86]
+    assert feature["properties"]["extra"]["located_by"]["value"]["school_id"] == "RMEE000001"
