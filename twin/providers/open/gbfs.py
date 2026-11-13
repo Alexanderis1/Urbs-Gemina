@@ -8,7 +8,7 @@ end, and their counts change with operator rebalancing.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Iterator
 
 from twin.providers import http
@@ -55,6 +55,8 @@ class GbfsProvider:
         config = settings.section("open", PROVIDER_ID)
         self._url = str(config.get("free_vehicles_url", DEFAULT_URL))
         timeout = number(config, "timeout_s", 30.0)
+        self._max_age_min = number(config, "max_age_minutes", 15.0)
+        self._clock_skew_s = number(config, "clock_skew_s", 120.0)
         self._fetch = fetch_bytes or (lambda url: http.get_bytes(url, timeout_s=timeout))
 
     def describe(self) -> ProviderInfo:
@@ -72,6 +74,10 @@ class GbfsProvider:
     def fetch(self, bbox: BBox, start: datetime, end: datetime) -> Iterator[Observation]:
         start = start if start.tzinfo is not None else start.replace(tzinfo=timezone.utc)
         end = end if end.tzinfo is not None else end.replace(tzinfo=timezone.utc)
+        # One snapshot of parked vehicles: valid for "now" if no older than max_age, and the
+        # operator's clock may run a little ahead of ours.
+        start = min(start, end - timedelta(minutes=self._max_age_min))
+        end = end + timedelta(seconds=self._clock_skew_s)
         feed = json.loads(self._fetch(self._url).decode("utf-8"))
         for obs in parse_free_vehicles(feed, PROVIDER_ID):
             if start <= obs.observed_at <= end and in_bbox(obs.lon, obs.lat, bbox):

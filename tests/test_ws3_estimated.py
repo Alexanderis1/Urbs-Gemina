@@ -272,3 +272,16 @@ def test_committed_osm_mast_seed_is_configured() -> None:
     masts_path = SETTINGS.path(str(SETTINGS.section("estimated", "register")["osm_masts_json"]))
     assert masts_path is not None and masts_path.exists()
     assert len(read_osm_masts(masts_path)) > 300
+
+
+def test_gbfs_snapshot_answers_a_now_window_despite_clock_skew() -> None:
+    from datetime import timedelta
+
+    from twin.providers.open.gbfs import GbfsProvider
+
+    feed = {"last_updated": int((T0 + timedelta(seconds=30)).timestamp()), "data": {"bikes": [
+        {"lat": 41.9, "lon": 12.5, "is_disabled": False, "is_reserved": False}]}}
+    provider = GbfsProvider(SETTINGS, fetch_bytes=lambda url: json.dumps(feed).encode())
+    assert len(list(provider.fetch(ROME_BBOX, T0, T0))) == 1  # feed clock 30 s ahead of ours
+    assert len(list(provider.fetch(ROME_BBOX, T0 + timedelta(minutes=5), T0 + timedelta(minutes=5)))) == 1
+    assert list(provider.fetch(ROME_BBOX, T0 + timedelta(hours=2), T0 + timedelta(hours=2))) == []
