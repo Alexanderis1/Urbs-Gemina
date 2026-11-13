@@ -70,9 +70,14 @@ def read_opencellid_csv(path: Path, mcc: int, bbox: BBox = ROME_BBOX) -> list[Ce
 
 
 def read_osm_masts(path: Path) -> list[tuple[float, float]]:
-    """Positions of masts/towers from an Overpass JSON answer (nodes or way centres)."""
+    """Positions of masts/towers from an Overpass JSON answer (nodes or way centres) or GeoJSON points."""
     data = json.loads(path.read_text(encoding="utf-8"))
     masts: list[tuple[float, float]] = []
+    for feature in data.get("features", []):
+        geometry = feature.get("geometry") or {}
+        if geometry.get("type") == "Point":
+            lon, lat = geometry["coordinates"][:2]
+            masts.append((float(lon), float(lat)))
     for element in data.get("elements", []):
         if "lon" in element and "lat" in element:
             masts.append((float(element["lon"]), float(element["lat"])))

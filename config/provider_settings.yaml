@@ -38,7 +38,7 @@ estimated:
   register:
     # Raw seed files (git-ignored downloads) take priority over the committed seed.
     opencellid_csv: data/raw/opencellid/222.csv.gz
-    osm_masts_json: data/raw/osm/rome_masts.json
+    osm_masts_json: twin/providers/estimated/seed_data/osm_masts.geojson  # OSM (ODbL) masts and towers, from the ingest stream's Lazio extract
     # Committed seed built by `python -m twin.providers.build_seeds sites`
     # (OpenCelliD mirror, clustered). Used when the raw CSV above is missing.
     sites_geojson: twin/providers/estimated/seed_data/antenna_sites.geojson
