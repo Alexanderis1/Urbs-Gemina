@@ -10,7 +10,9 @@ Run from the repository root. The static layers live in the Modal volume
 """
 from __future__ import annotations
 
+import shutil
 import subprocess
+from pathlib import Path
 
 import modal
 
@@ -27,6 +29,9 @@ image = (
     .add_local_dir("scripts", f"{APP_DIR}/scripts", ignore=["**/__pycache__"])
     .add_local_file("data/manifest.json", f"{APP_DIR}/data/manifest.json")
 )
+SEED_DIR = f"{APP_DIR}/seed"
+if Path("data/raw/sports_web").is_dir():  # WS10 agent outputs, copied into the volume by fetch_layers
+    image = image.add_local_dir("data/raw/sports_web", f"{SEED_DIR}/sports_web")
 
 layers = modal.Volume.from_name("urbs-gemina-layers", create_if_missing=True)
 processed = modal.Volume.from_name("urbs-gemina-processed", create_if_missing=True)
@@ -48,6 +53,9 @@ def api() -> object:
 def fetch_layers() -> None:
     """Run WS1's downloader inside Modal and keep the GeoJSON files in the volume; then build the sports layer."""
     subprocess.run(["python", "scripts/fetch_static_layers.py"], cwd=APP_DIR, check=False)
+    if Path(f"{SEED_DIR}/sports_web").is_dir():
+        shutil.copytree(f"{SEED_DIR}/sports_web", f"{RAW_DIR}/sports_web", dirs_exist_ok=True)
     layers.commit()
     subprocess.run(["python", "-m", "twin.modules.sports.pipeline", "build"], cwd=APP_DIR, check=False)
+    layers.commit()  # keeps the sports geocode cache
     processed.commit()

@@ -344,3 +344,11 @@ def test_resolve_entry_point_for_other_modules() -> None:
 
     env = resolve("41.896, 12.4823")
     assert env["status"] == "ok" and env["result"]["lon"] == 12.4823
+
+
+def test_nominatim_precision_labels() -> None:
+    from twin.tools.geocode import nominatim_precision
+
+    assert nominatim_precision({"category": "place", "type": "house", "addresstype": "place"}) == "house"
+    assert nominatim_precision({"category": "building", "type": "yes", "addresstype": "building"}) == "house"
+    assert nominatim_precision({"category": "highway", "type": "residential", "addresstype": "road"}) == "road"

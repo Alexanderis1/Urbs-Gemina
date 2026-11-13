@@ -76,6 +76,13 @@ def _http_get_json(url: str, user_agent: str, timeout_s: float) -> Any:
         return json.load(response)
 
 
+def nominatim_precision(row: Mapping[str, Any]) -> str:
+    """'house' for an address point or a building, else Nominatim's addresstype (road, suburb, ...)."""
+    if row.get("type") == "house" or row.get("category") == "building" or row.get("addresstype") == "building":
+        return "house"
+    return str(row.get("addresstype") or row.get("type") or "unknown")
+
+
 class Nominatim:
     def __init__(self, base_url: str, user_agent: str, timeout_s: float = 10.0, max_results: int = 3,
                  bbox: BBox = ROME_BBOX, fetcher: Fetcher | None = None) -> None:
@@ -102,7 +109,7 @@ class Nominatim:
         rows = self._fetch(url) or []
         return tuple(
             Candidate(lon=float(row["lon"]), lat=float(row["lat"]), label=str(row.get("display_name", text)),
-                      source=NOMINATIM_SOURCE, precision=str(row.get("addresstype") or row.get("type") or "unknown"),
+                      source=NOMINATIM_SOURCE, precision=nominatim_precision(row),
                       url=self.base_url)
             for row in rows
         )
