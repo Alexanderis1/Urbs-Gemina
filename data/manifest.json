@@ -207,6 +207,24 @@
       "licence": "CC BY 4.0 (C=80)",
       "redistribution": true,
       "status": "verified (downloaded 2026-11-13)"
+    },
+    "ispra_flood": {
+      "kind": "real",
+      "what": "ISPRA national mosaic of flood hazard areas, PGRA scenarios P3/P2/P1 (v5.0, 2020)",
+      "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer",
+      "access": "ArcGIS REST query, no key",
+      "licence": "CC BY-SA 4.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13); the sdi.isprambiente.it WFS resets cloud connections"
+    },
+    "copernicus_hrl": {
+      "kind": "real",
+      "what": "Copernicus HRL Imperviousness Density 2018 (share of sealed soil, 0-100 %)",
+      "endpoint": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer",
+      "access": "ArcGIS ImageServer exportImage, no key",
+      "licence": "Copernicus open data, free reuse with attribution",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
     }
   },
   "snapshots": {
@@ -2190,6 +2208,116 @@
         "geojson": {
           "path": "data/processed/monumental_trees.geojson",
           "sha256": "e92b116fa7481d6ba89452cb19930dc13b6abe2b0d0149099ca96763c72ada0d"
+        }
+      },
+      "warnings": []
+    },
+    "flood_hazard_pgra": {
+      "source": "ispra_flood",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-13T22:59:40Z",
+      "notes": "P3 = frequent floods (return period 20-50 years), P2 = 100-200 years, P1 = rare or extreme events. Areas overlap: a P3 area is also inside P2 and P1.",
+      "request_url": "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer/0/query?where=1%3D1&geometry=12.234%2C41.655%2C12.856%2C42.141&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&outSR=4326&returnGeometry=true&resultOffset=0&resultRecordCount=1000&orderByFields=objectid&f=geojson",
+      "raw_sha256": "9281e5d27106707565874f71dcd8d93109008d4b25a253ce8bc98570c8c6ea28",
+      "status": "ok",
+      "features": 1008,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/flood_hazard_pgra.parquet",
+          "sha256": "685ee02822c3172f527a28f391c2c915c6fbd69525f7194d14c8fe62afe4530c"
+        },
+        "geojson": {
+          "path": "data/processed/flood_hazard_pgra.geojson",
+          "sha256": "bf79c2cc91cffa58fff3a5a3cb86c8d02c7a47431a22063ff7d105215cd62482"
+        }
+      },
+      "warnings": []
+    },
+    "imperviousness_2018": {
+      "source": "copernicus_hrl",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-13T22:59:51Z",
+      "notes": "Share of sealed soil per 20 m pixel, 0-100 %, 255 = no data. Native 10 m resampled by the server with nearest neighbour.",
+      "raw_sha256": "622d33ae6fc927577a3aebb4e63867859860ed1b8da6e5d2378b2e986b99792f",
+      "value_range": [
+        0,
+        100
+      ],
+      "units": "percent sealed",
+      "status": "ok",
+      "request_url": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer/exportImage?bbox=4506280.0%2C2064180.0%2C4559760.0%2C2119700.0&bboxSR=3035&imageSR=3035&size=2674%2C2776&format=tiff&pixelType=U8&noData=255&interpolation=RSP_NearestNeighbor&f=image",
+      "width": 2674,
+      "height": 2776,
+      "bounds": [
+        4506280.0,
+        2064180.0,
+        4559760.0,
+        2119700.0
+      ],
+      "crs": "EPSG:3035",
+      "pixel_m": 20.0,
+      "files": {
+        "cog": {
+          "path": "data/processed/imperviousness_2018.tif",
+          "sha256": "a43787fd1552c666db0b8be6849d1d5d4285793d0254e134aea956007073b6bf"
+        }
+      },
+      "warnings": []
+    },
+    "road_underpasses_osm": {
+      "source": "osm",
+      "data_kind": "estimated",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-13T23:00:03Z",
+      "notes": "Road sections below ground level (tunnel or layer < 0) where water collects; OSM mapping is incomplete (C=70)",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 3429,
+      "dropped_fields": [
+        "ref_name"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/road_underpasses_osm.parquet",
+          "sha256": "de24309c5d05de599091530867f40a313e886ac24000ca89e87869beba83c759"
+        },
+        "geojson": {
+          "path": "data/processed/road_underpasses_osm.geojson",
+          "sha256": "3414a9632283803f8deae83388075bfb132c29a1bfde7e0dae50eb82f2cc705a"
+        }
+      },
+      "warnings": []
+    },
+    "rivers_osm": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-13T23:01:09Z",
+      "notes": "River, stream and canal centrelines (relations skipped; their member ways are included)",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 1301,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/rivers_osm.parquet",
+          "sha256": "8435b48a992498d1f93b349e9b5fe8821e34159c9e366962eedb5bb56f733b71"
+        },
+        "geojson": {
+          "path": "data/processed/rivers_osm.geojson",
+          "sha256": "d287d99017f463fbc5f9a69aa213bdf1c66d13e874ca38f4d41918389aec1f86"
         }
       },
       "warnings": []

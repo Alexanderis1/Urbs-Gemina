@@ -60,6 +60,16 @@ name (s.a.s., s.n.c., doctors' practices) are replaced by a generic label.
 PTPR (Regione Lazio landscape plan, Tavole A and B plus the PTP 15/12 constraint layers)
 is the official landscape source: those layers carry `theme: landscape_ptpr`.
 
+## Flood context (for WS6)
+
+- `flood_hazard_pgra`: ISPRA flood hazard areas, field `hazard` = P3 (20-50 years), P2
+  (100-200 years), P1 (rare). Queried from ISPRA's ArcGIS service with the city bbox and
+  clipped to it. The areas overlap (P3 is inside P2 and P1).
+- `imperviousness_2018`: Copernicus share of sealed soil, written as a Cloud Optimized
+  GeoTIFF `data/processed/imperviousness_2018.tif` (EPSG:3035, 20 m, 0-100 %, 255 = no data).
+- `road_underpasses_osm` (tunnel or layer < 0 roads) and `rivers_osm` (river, stream,
+  canal) are OSM **lines** (`options.lines: true`) with a short fixed schema (`keep_columns`).
+
 ## Live feeds
 
 ```

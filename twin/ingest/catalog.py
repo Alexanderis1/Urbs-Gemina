@@ -10,7 +10,7 @@ import yaml
 DataKind = Literal["real", "estimated", "simulated"]
 DATA_KINDS: tuple[str, ...] = ("real", "estimated", "simulated")
 PROTOCOLS = ("wfs", "overpass", "osm_extract", "zip_shapefile", "istat_census", "derived",
-             "csv_points", "csv_geocoded")
+             "csv_points", "csv_geocoded", "arcgis_features", "arcgis_image")
 FEED_METHODS = ("get", "eea_parquet_zip", "dpc_radar")
 
 #: (min_lon, min_lat, max_lon, max_lat) in WGS84

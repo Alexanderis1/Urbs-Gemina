@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 from twin.ingest.catalog import BBox, Catalog, LayerSpec
+from twin.ingest.arcgis import export_image, query_features
 from twin.ingest.census import build_census_sections
 from twin.ingest.osm_extract import extract_file, read_elements
 from twin.ingest.sensitive_sites import build_sensitive_sites
@@ -64,7 +65,7 @@ def overpass_query(selectors: Sequence[str], bbox: BBox, timeout_s: int = 180) -
 
 
 def overpass_to_geojson(payload: dict[str, Any]) -> FeatureCollection:
-    """Nodes become points; ways and relations become their centre point."""
+    """Nodes become points; ways become lines when they carry a geometry, else their centre point."""
     features: list[dict[str, Any]] = []
     for element in payload.get("elements", []):
         if element.get("type") == "node":
@@ -76,9 +77,10 @@ def overpass_to_geojson(payload: dict[str, Any]) -> FeatureCollection:
             continue
         osm_id = f"{element['type']}/{element['id']}"
         properties = {"osm_id": osm_id, **(element.get("tags") or {})}
-        features.append({"type": "Feature", "id": osm_id,
-                         "geometry": {"type": "Point", "coordinates": [lon, lat]},
-                         "properties": properties})
+        line = element.get("geometry") or []
+        geometry = ({"type": "LineString", "coordinates": [[p["lon"], p["lat"]] for p in line]} if len(line) >= 2
+                    else {"type": "Point", "coordinates": [lon, lat]})
+        features.append({"type": "Feature", "id": osm_id, "geometry": geometry, "properties": properties})
     return {"type": "FeatureCollection", "features": features}
 
 
@@ -131,9 +133,13 @@ def _download(layer: LayerSpec, catalog: Catalog, fetch: Fetch) -> tuple[bytes, 
         url = source.urls[0]
         path, data = extract_file(url, fetch)
         digest_source = data if data is not None else path.read_bytes()
-        payload = read_elements(path, layer.selectors, catalog.city_bbox)
+        payload = read_elements(path, layer.selectors, catalog.city_bbox, lines=bool(layer.options.get("lines")))
         payload["extract_sha256"] = hashlib.sha256(digest_source).hexdigest()
         return json.dumps(payload, ensure_ascii=False).encode("utf-8"), url
+    if source.protocol == "arcgis_features":
+        features, urls = query_features(layer, source.urls[0], catalog.city_bbox, fetch)
+        collection = {"type": "FeatureCollection", "features": features}
+        return json.dumps(collection, ensure_ascii=False).encode("utf-8"), urls[0]
     if source.protocol == "zip_shapefile":
         url = source.urls[0]
         return fetch(HttpRequest(url, timeout_s=600.0)), url
@@ -200,7 +206,7 @@ def _frame_from_zip(raw: bytes, filters: dict[str, Any]) -> Any:
 
 def _to_frame(layer: LayerSpec, catalog: Catalog, raw: bytes) -> Any:
     protocol = catalog.sources[layer.source].protocol
-    if protocol == "wfs":
+    if protocol in ("wfs", "arcgis_features"):
         return _frame_from_features(_parse_geojson(raw).get("features", []))
     if protocol in ("overpass", "osm_extract"):
         return _frame_from_features(overpass_to_geojson(json.loads(raw))["features"])
@@ -260,6 +266,8 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
     if layer.notes:
         entry["notes"] = layer.notes
     raw_elements: list[dict[str, Any]] | None = None
+    if catalog.sources[layer.source].protocol == "arcgis_image":
+        return _ingest_raster(layer, catalog, fetch, out_dir, root, entry)
     try:
         if catalog.sources[layer.source].protocol == "derived":
             frame, report = build_sensitive_sites(layer, out_dir)
@@ -290,6 +298,17 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
         columns = [c for c in frame.columns if c != frame.geometry.name]
         dropped = personal_columns(columns, catalog.privacy_patterns, layer.drop_fields)
         frame = frame.drop(columns=dropped)
+        if layer.options.get("clip_geometry") and len(frame):
+            # Cut polygons that reach beyond the city bbox (e.g. a flood plain along the Tiber).
+            frame = frame.clip(catalog.city_bbox)
+            frame = frame[~frame.geometry.is_empty]
+        keep = layer.options.get("keep_columns")
+        if keep:
+            # A short, stable schema for other workstreams; missing tags become empty columns.
+            for column in keep:
+                if column not in frame.columns:
+                    frame[column] = None
+            frame = frame[[*keep, frame.geometry.name]]
 
         out_dir.mkdir(parents=True, exist_ok=True)
         parquet = out_dir / f"{layer.key}.parquet"
@@ -316,6 +335,28 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
                    for name, path in extra_files.items()},
             },
             warnings=["0 features in the requested area"] if len(frame) == 0 else [],
+        )
+    except Exception as error:  # noqa: BLE001 - any failure marks the layer unavailable
+        entry.update(status="not_available", error=f"{type(error).__name__}: {error}"[:500])
+    return entry
+
+
+def _ingest_raster(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path,
+                   root: Path | None, entry: Entry) -> Entry:
+    """Image services: one Cloud Optimized GeoTIFF instead of GeoParquet/GeoJSON."""
+    try:
+        path = out_dir / f"{layer.key}.tif"
+        details = export_image(layer, catalog.sources[layer.source].urls[0], catalog.city_bbox, fetch, path)
+        raw = details.pop("raw")
+        entry["raw_sha256"] = hashlib.sha256(raw).hexdigest()
+        del raw
+        for key in ("value_range", "units"):
+            if key in layer.options:
+                entry[key] = layer.options[key]
+        entry.update(
+            status="ok", **details,
+            files={"cog": {"path": _rel(path, root or out_dir), "sha256": sha256_file(path)}},
+            warnings=[],
         )
     except Exception as error:  # noqa: BLE001 - any failure marks the layer unavailable
         entry.update(status="not_available", error=f"{type(error).__name__}: {error}"[:500])
@@ -355,7 +396,10 @@ def run(keys: Iterable[str], catalog: Catalog, fetch: Fetch, out_dir: Path, mani
                              now or datetime.now(timezone.utc), root=root)
         record_snapshots(manifest_path, {key: entry})  # write after each layer: a crash keeps progress
         if entry["status"] == "ok":
-            log(f"ok   {key:30s} {entry['features']:>7} features  dropped={entry['dropped_fields']}")
+            if "features" in entry:
+                log(f"ok   {key:30s} {entry['features']:>7} features  dropped={entry['dropped_fields']}")
+            else:
+                log(f"ok   {key:30s} raster {entry.get('width')}x{entry.get('height')} px")
         else:
             failures += 1
             log(f"FAIL {key:30s} {entry['error']}")

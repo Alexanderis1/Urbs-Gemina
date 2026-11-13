@@ -55,6 +55,15 @@ sources:
     # offline on the OSM extract's addr:* tags (no outside geocoder sees the data).
     protocol: csv_geocoded
     url: "https://indicepa.gov.it/ipa-dati"
+  ispra_flood:
+    # ISPRA national mosaic of flood hazard areas (PGRA scenarios, v5.0 2020). The WFS on
+    # sdi.isprambiente.it resets cloud connections; the ArcGIS MapServer works.
+    protocol: arcgis_features
+    url: "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer"
+  copernicus_hrl:
+    # Copernicus Land Monitoring Service, High Resolution Layer Imperviousness Density 2018.
+    protocol: arcgis_image
+    url: "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer"
   istat_census:
     protocol: istat_census
     url: "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip"
@@ -234,6 +243,53 @@ layers:
       - 'nwr["office"="government"]'
       - 'nwr["office"="diplomatic"]'
       - 'nwr["amenity"="embassy"]'
+
+  # --- Flood context for WS6 (lines, short schema) ------------------------------
+  road_underpasses_osm:
+    source: osm
+    data_kind: estimated
+    theme: flood
+    notes: "Road sections below ground level (tunnel or layer < 0) where water collects; OSM mapping is incomplete (C=70)"
+    selectors:
+      - 'way["highway"]["tunnel"="yes"]'
+      - 'way["highway"]["tunnel"="building_passage"]'
+      - 'way["highway"]["layer"="-1"]'
+      - 'way["highway"]["layer"="-2"]'
+    options: {lines: true, keep_columns: [osm_id, name, highway, tunnel, layer]}
+  rivers_osm:
+    source: osm
+    data_kind: real
+    theme: flood
+    notes: "River, stream and canal centrelines (relations skipped; their member ways are included)"
+    selectors:
+      - 'way["waterway"="river"]'
+      - 'way["waterway"="stream"]'
+      - 'way["waterway"="canal"]'
+    options: {lines: true, keep_columns: [osm_id, name, waterway]}
+
+  flood_hazard_pgra:
+    source: ispra_flood
+    data_kind: real
+    theme: flood
+    notes: "P3 = frequent floods (return period 20-50 years), P2 = 100-200 years, P1 = rare or extreme events. Areas overlap: a P3 area is also inside P2 and P1."
+    options:
+      sublayers: {P3: 0, P2: 1, P1: 2}
+      class_field: hazard
+      constants: {source: "ISPRA mosaic v5.0 (2020)", data_kind: real}
+      clip_geometry: true
+      keep_columns: [hazard, source, data_kind]
+  imperviousness_2018:
+    source: copernicus_hrl
+    data_kind: real
+    theme: flood
+    notes: "Share of sealed soil per 20 m pixel, 0-100 %, 255 = no data. Native 10 m resampled by the server with nearest neighbour."
+    options:
+      basis: "20 m keeps the city in one request (the server allows at most 4100 pixels in height) and is finer than the flood model grid"
+      epsg: 3035
+      pixel_m: 20
+      nodata: 255
+      value_range: [0, 100]
+      units: "percent sealed"
 
   # --- Official registers (tables) for sensitive sites --------------------------
   # Only the columns under "columns" are kept, so owners' names, VAT numbers, managers'

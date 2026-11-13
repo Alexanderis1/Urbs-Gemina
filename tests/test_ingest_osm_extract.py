@@ -59,3 +59,40 @@ def test_ways_become_centre_points_in_overpass_json(tmp_path: Path) -> None:
     assert way["center"]["lat"] == pytest.approx(41.81, abs=1e-6)
     assert way["center"]["lon"] == pytest.approx(12.41, abs=1e-6)
     assert way["tags"] == {"leisure": "pitch", "sport": "soccer"}
+
+
+def test_key_only_conditions_are_parsed() -> None:
+    assert parse_selector('way["highway"]["tunnel"="yes"]') == [("highway", None), ("tunnel", "yes")]
+
+
+LINES_XML = """<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="test">
+  <node id="1" version="1" lat="41.90" lon="12.50"/>
+  <node id="2" version="1" lat="41.90" lon="12.51"/>
+  <node id="3" version="1" lat="41.91" lon="12.52"/>
+  <way id="30" version="1"><nd ref="1"/><nd ref="2"/>
+    <tag k="highway" v="primary"/><tag k="tunnel" v="yes"/><tag k="name" v="Sottopasso Uno"/><tag k="surface" v="asphalt"/></way>
+  <way id="31" version="1"><nd ref="2"/><nd ref="3"/><tag k="railway" v="rail"/><tag k="tunnel" v="yes"/></way>
+  <way id="32" version="1"><nd ref="1"/><nd ref="3"/><tag k="highway" v="residential"/><tag k="layer" v="-1"/></way>
+  <way id="40" version="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/><tag k="waterway" v="river"/><tag k="name" v="Tevere"/></way>
+</osm>
+"""
+
+
+def test_underpasses_and_rivers_are_lines_with_few_columns(tmp_path: Path) -> None:
+    def fetch(request: HttpRequest) -> bytes:
+        return LINES_XML.encode()
+
+    entry = ingest_layer(CATALOG.layers["road_underpasses_osm"], CATALOG, fetch, tmp_path, NOW)
+    assert entry["status"] == "ok", entry.get("error")
+    frame = gpd.read_parquet(tmp_path / "road_underpasses_osm.parquet")
+    assert sorted(frame["osm_id"]) == ["way/30", "way/32"]  # the railway tunnel is not a road
+    assert set(frame.geom_type) == {"LineString"}
+    assert set(frame.columns) == {"osm_id", "name", "highway", "tunnel", "layer", "geometry"}
+
+    entry = ingest_layer(CATALOG.layers["rivers_osm"], CATALOG, fetch, tmp_path, NOW)
+    assert entry["status"] == "ok", entry.get("error")
+    rivers = gpd.read_parquet(tmp_path / "rivers_osm.parquet")
+    (river,) = rivers.itertuples()
+    assert river.name == "Tevere" and river.waterway == "river"
+    assert len(river.geometry.coords) == 3
