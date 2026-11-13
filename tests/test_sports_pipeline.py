@@ -24,7 +24,7 @@ def test_build_merges_enriches_confirms_and_reports_missing(tmp_path: Path) -> N
         {"name": "Palestra IC Anagni", "municipio": "VII", "source_url": "https://x.example/a", "confidence": 0.8,
          "disciplines": ["pallavolo"]}]}), encoding="utf-8")
 
-    first = build(raw=raw, out=out)
+    first = build(raw=raw, out=out, geocoder=None)
     assert first["sources"]["roma_pools"]["status"] == "not_available"
     assert first["sources"]["roma_sports_municipal"]["records"] == 3
     layer = json.loads((out / "facilities.geojson").read_text(encoding="utf-8"))
@@ -36,7 +36,7 @@ def test_build_merges_enriches_confirms_and_reports_missing(tmp_path: Path) -> N
     (raw / "sports_manager_updates.jsonl").write_text(json.dumps({
         "facility_id": fid, "field": "disciplines", "value": ["calcio", "padel"], "account_ref": "org:asd",
         "confirmed_at": "2026-11-14T09:00:00Z"}) + "\n", encoding="utf-8")
-    second = build(raw=raw, out=out)
+    second = build(raw=raw, out=out, geocoder=None)
     assert second["manager_updates_applied"] == 1
     layer = json.loads((out / "facilities.geojson").read_text(encoding="utf-8"))
     bern = next(f for f in layer["features"] if f["id"] == fid)
@@ -56,3 +56,28 @@ def test_load_facilities_round_trips(tmp_path: Path) -> None:
     path.write_text(json.dumps({"type": "FeatureCollection", "features": [f.to_feature() for f in facilities]}))
     loaded = load_facilities(path)
     assert [f.to_feature() for f in loaded] == [f.to_feature() for f in facilities]
+
+
+def test_geocoding_locates_house_matches_only_and_caches(tmp_path: Path) -> None:
+    raw, out = tmp_path / "raw", tmp_path / "out"
+    (raw / "sports_web").mkdir(parents=True)
+    (raw / "sports_web" / "scout_VII.json").write_text(json.dumps({"retrieved_at": "2026-11-13", "candidates": [
+        {"name": "IC Mommsen Primaria Verdi", "address": "Via Gela, 22", "municipio": "VII",
+         "source_url": "https://x.example/a", "confidence": 0.9, "disciplines": ["judo"]},
+        {"name": "Campo Vago", "address": "Via Lunga", "municipio": "VII",
+         "source_url": "https://x.example/b", "confidence": 0.9}]}), encoding="utf-8")
+    calls: list[str] = []
+
+    def fake(text: str) -> dict[str, object]:
+        calls.append(text)
+        precise = "Gela" in text
+        return {"status": "ok", "run_id": "r" * 64, "result": {
+            "lon": 12.53, "lat": 41.87, "precision": "house" if precise else "street", "label": text}}
+
+    summary = build(raw=raw, out=out, geocoder=fake)
+    assert summary["sources"]["geocoding"] == {"to_geocode": 2, "located": 1}
+    layer = json.loads((out / "facilities.geojson").read_text(encoding="utf-8"))
+    located = [f for f in layer["features"] if f["geometry"]]
+    assert len(located) == 1 and "geocoded" in located[0]["properties"]["extra"]
+    build(raw=raw, out=out, geocoder=fake)
+    assert len(calls) == 2  # second build answered from the cache

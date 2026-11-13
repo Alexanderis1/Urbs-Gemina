@@ -19,12 +19,13 @@ import csv
 import hashlib
 import json
 import sys
+import time
 from dataclasses import replace
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Mapping
 
 from twin.modules.sports.config import SportsConfig, load_config
 from twin.modules.sports.deserts import PopulationPoint, population_from_census
@@ -39,6 +40,8 @@ ROOT = Path(__file__).resolve().parents[3]
 RAW = ROOT / "data" / "raw"
 OUT = ROOT / "data" / "processed" / "sports"
 OVERPASS = "https://overpass-api.de/api/interpreter"
+#: Geocoder precisions good enough to put a facility on the map (house number level).
+GEOCODE_PRECISE = frozenset({"house", "house_number", "address", "building", "rooftop"})
 
 
 def overpass_query(bbox: tuple[float, float, float, float] = ROME_BBOX) -> str:
@@ -168,9 +171,77 @@ def enrich_and_confirm(facilities: list[Facility], config: SportsConfig,
     return sorted(by_id.values(), key=lambda f: f.facility_id), audit, warnings
 
 
-def build(config: SportsConfig | None = None, raw: Path = RAW, out: Path = OUT) -> dict[str, Any]:
+Geocoder = Callable[[str], Mapping[str, Any]]
+
+
+def default_geocoder() -> Geocoder | None:
+    """WS4's resolve_place (returns the tool envelope), or None when it is not installed."""
+    try:
+        from twin.tools.resolve_place import resolve  # type: ignore[import-not-found, unused-ignore]
+    except ImportError:
+        return None
+    geocoder: Geocoder = resolve
+    return geocoder
+
+
+def geocode_candidates(cands: list[Candidate], geocoder: Geocoder | None, cache_path: Path,
+                       pause_s: float = 1.0) -> tuple[list[Candidate], dict[str, Any], list[str]]:
+    """Give coordinates to records that have an address but no position.
+
+    Results are cached (one request per address, ever) and kept only when the
+    geocoder matched a house number; a street-level match stays unlocated.
+    Geocoded positions are estimated and say so in ``geocoded``.
+    """
+    todo = [c for c in cands if not c.located and c.address]
+    status: dict[str, Any] = {"to_geocode": len(todo), "located": 0}
+    if not todo:
+        return cands, status, []
+    cache: dict[str, Any] = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
+    warnings: list[str] = []
+    out: list[Candidate] = []
+    asked = 0
+    for c in cands:
+        if c.located or not c.address:
+            out.append(c)
+            continue
+        query = f"{c.address}, Roma"
+        if query not in cache:
+            if geocoder is None:
+                out.append(c)
+                continue
+            if asked:
+                time.sleep(pause_s)
+            asked += 1
+            env = geocoder(query)
+            cache[query] = {"status": env.get("status"), "result": env.get("result"), "run_id": env.get("run_id")}
+        hit = cache[query]
+        result = hit.get("result") or {}
+        if hit.get("status") != "ok" or result.get("lon") is None:
+            warnings.append(f"{c.key}: address not found ({query})")
+            out.append(c)
+            continue
+        if str(result.get("precision", "")).lower() not in GEOCODE_PRECISE:
+            warnings.append(f"{c.key}: only a {result.get('precision')!r} match for {query}; left unlocated")
+            out.append(c)
+            continue
+        geocoded = {"precision": result.get("precision"), "label": result.get("label"), "run_id": hit.get("run_id")}
+        out.append(replace(c, lon=float(result["lon"]), lat=float(result["lat"]),
+                           attributes={**c.attributes, "geocoded": geocoded}))
+        status["located"] += 1
+    cache_path.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
+    if geocoder is None and status["located"] < len(todo):
+        warnings.append("geocoder (twin.tools.resolve_place) not available: some records stay unlocated")
+    return out, status, warnings
+
+
+def build(config: SportsConfig | None = None, raw: Path = RAW, out: Path = OUT,
+          geocoder: Geocoder | None | bool = True) -> dict[str, Any]:
+    """``geocoder=True`` uses resolve_place if installed; ``None``/``False`` skips geocoding."""
     config = config or load_config()
     cands, status, warnings = load_candidates(config, raw)
+    coder = default_geocoder() if geocoder is True else (geocoder or None)
+    cands, status["geocoding"], more_geo = geocode_candidates(cands, coder, raw / "sports_geocode_cache.json")
+    warnings.extend(more_geo)
     facilities, report = build_facilities(cands, config)
     facilities, audit, more = enrich_and_confirm(facilities, config, raw)
     warnings.extend(more)

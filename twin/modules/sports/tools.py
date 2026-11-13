@@ -67,6 +67,8 @@ def _kinds(facilities: Sequence[Facility]) -> dict[str, str]:
     kinds = {"facilities": "real"}
     if any(v.status == "web_unverified" for f in facilities for v in (*f.disciplines.values(), *f.fields.values())):
         kinds["web_fields"] = "estimated"
+    if any("geocoded" in f.extra for f in facilities):
+        kinds["geocoded_locations"] = "estimated"
     if any(f.synthetic for f in facilities):
         kinds["what_if_facilities"] = "simulated"
     return kinds
