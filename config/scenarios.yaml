@@ -205,10 +205,41 @@ rain_flood:
   rain_relative_sigma:
     value: 0.5
     basis: "radar rainfall error, same as the dpc_radar provider (relative_sigma); applied to hypothetical totals too"
-  drainage_capacity_mm_h:
-    value: 20
+  sewer_design_rain:
+    value:
+      short: {a: 111.6, n: 0.73, max_h: 0.807}
+      long: {a: 102.0, n: 0.31}
+      areal: {a1: -0.052, a2: 0.002, n1: 0.0175}
+      min_tc_h: 0.25
+      inlet_time_h: 0.05
+      pipe_speed_m_s: 1.0
+    basis: "Comune di Roma, Dip. XII, 'Criteri per il dimensionamento dei condotti fognari della citta' di Roma' (2000): H = a t^n mm (t in h); a' = a(1 + a1 A + a2 A^2), n' = n + n1 A with A in km2; concentration time = length / 1 m/s + 0.05 h, at least 0.25 h. Basins under 10 km2 only (larger ones are streams here)"
+  sewer_flow_length:
+    value: {coefficient_km: 1.5, exponent: 0.6}
+    basis: "assumption (C=50): longest flow path L = 1.5 A^0.6 km (Hack's law), used for the concentration time because the pipe layout is not open"
+  sewer_efficiency:
+    value: 0.3
     sigma_ln: 0.4
-    basis: "assumption (C=40): urban sewers drain about 20 mm/h over sealed surfaces; Roma's network design return period is not published"
+    basis: "assumption (C=35): share of the design capacity that works in a real storm (clogged street drains, sediment, pre-1960 pipes sized before the rules). It puts drainage at about 50 mm/h on small streets and 30-35 mm/h at valley collectors; Rome reports street flooding from about 30-40 mm/h. To be calibrated against reported flood events"
+  sewer_min_runoff_coefficient:
+    value: 0.2
+    basis: "assumption: lowest design runoff coefficient of a sewered basin (Fruhling scale, green districts)"
+  outfalls_file:
+    value: sewer_outfalls.geojson
+    basis: "ACEA ATO2 outfall points, SIITevere open data (scripts/fetch_sewer_layers.py)"
+  outfall_rivers:
+    value: {tevere: ["F. Tevere"], aniene: ["F. Aniene"]}
+    basis: "receiving-water names in the ACEA layer for outfalls directly on each river"
+  outfall_reach_m:
+    value: 500
+    basis: "assumption: sewer flow reaching the river within this distance of an outfall leaves through it"
+  outfall_height_m:
+    value: 2.0
+    sigma_ln: 0.5
+    basis: "assumption (C=35): outfall mouths sit about 2 m above the ordinary river level; their real levels are not published"
+  blocked_outfall_residual:
+    value: 0.3
+    basis: "assumption (C=35): share of capacity left when the outfall is under water (flap gates shut; interceptor sewers and pumps still take part of the flow)"
   infiltration_mm_h:
     value: 10
     sigma_ln: 0.5

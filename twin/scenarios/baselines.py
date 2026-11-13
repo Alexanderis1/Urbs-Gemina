@@ -78,11 +78,17 @@ def live_data(kind: str, area: AreaArg, change: Mapping[str, Any], provider: _Fe
     """ScenarioData with the live inputs this run needs (Cartoradio, discharge forecast, rainfall)."""
     if kind == "river_flood":
         return ScenarioData(river_discharge=river_discharge(), **overrides)
-    if kind == "rain_flood" and change.get("source") in ("radar", "forecast"):
-        bbox = resolve_area(area, lookup=overrides.get("area_lookup") or layers.default_area_lookup).bbox
-        hours = float(change.get("duration_h", 1.0))
-        return ScenarioData(rain_mm={str(change["source"]): rainfall(str(change["source"]), bbox, hours)},
-                            **overrides)
+    if kind == "rain_flood":
+        river = change.get("river")
+        if isinstance(river, Mapping) and "forecast_day" in river \
+                and "river_discharge" not in overrides:
+            overrides["river_discharge"] = river_discharge()
+        if change.get("source") in ("radar", "forecast"):
+            bbox = resolve_area(area, lookup=overrides.get("area_lookup") or layers.default_area_lookup).bbox
+            hours = float(change.get("duration_h", 1.0))
+            return ScenarioData(rain_mm={str(change["source"]): rainfall(str(change["source"]), bbox, hours)},
+                                **overrides)
+        return ScenarioData(**overrides)
     if kind == "chemical_plume" and change.get("wind") == "forecast":
         from twin.scenarios.plume import find_site
 

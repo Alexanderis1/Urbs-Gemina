@@ -107,3 +107,13 @@ def test_live_data_for_a_heatwave_reads_daily_max_and_min() -> None:
 
     data = live_data("heatwave", "city", {"temperature": "forecast"}, provider=Fake())
     assert data.temperature == {"2026-11-14": [(12.5, 41.9, 36.0, 21.0, 1.2)]}
+
+
+def test_live_data_for_rain_with_a_river_forecast_adds_discharge(monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.scenarios import baselines
+
+    monkeypatch.setattr(baselines, "river_discharge", lambda: {"tevere_ripetta": [("2026-11-14", 1500.0, 300.0)]})
+    change = {"rain_mm": 40, "river": {"gauge": "tevere_ripetta", "forecast_day": "peak"}}
+    data = live_data("rain_flood", "city", change)
+    assert data.river_discharge == {"tevere_ripetta": [("2026-11-14", 1500.0, 300.0)]}
+    assert live_data("rain_flood", "city", {"rain_mm": 40}).river_discharge == {}

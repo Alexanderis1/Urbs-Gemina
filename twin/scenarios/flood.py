@@ -22,7 +22,7 @@ from twin.providers.base import BBox
 from twin.scenarios import config, impacts, layers
 from twin.scenarios.area import Area
 from twin.scenarios.data import ScenarioData
-from twin.scenarios import hydro
+from twin.scenarios import hydro, sewer
 from twin.scenarios.terrain import BoolArray, FloatArray, Grid, load_dtm, mask_to_geojson, rasterize_mask
 
 
@@ -495,36 +495,74 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
     members = int(cfg["members"])
     rel = float(cfg["rain_relative_sigma"])
     sigma_rain = math.sqrt(math.log(1 + rel * rel))
-    drain_cfg, infil_cfg = config.load("scenarios.yaml")["rain_flood"]["drainage_capacity_mm_h"], \
-        config.load("scenarios.yaml")["rain_flood"]["infiltration_mm_h"]
+    infil_cfg = config.load("scenarios.yaml")["rain_flood"]["infiltration_mm_h"]
     flat_rain = rain.ravel()
-    flat_sealed = sealed.ravel()
+    flat_sealed = np.nan_to_num(sealed.ravel())
     valid = ~np.isnan(z)
+
+    # sewers: Rome design rules on the terrain, outfalls, and the river when one is given
+    net = sewer.network(grid, sealed, channels)
+    stage: Stage | None = None
+    if isinstance(change.get("river"), Mapping):
+        try:
+            stage = _stage(dict(change["river"]), data, warnings)
+        except LookupError as exc:
+            return _not_available(str(exc), {"river_level": "not_available"})
+    outfalls = sewer.load_outfalls(stage.river if stage is not None else None)
+    sink_outfall = sewer.outfall_sinks(grid, net, outfalls or [])
+    served = sorted({int(k) for k in sink_outfall[sink_outfall >= 0].tolist()})
+    blocked = np.zeros((members, len(outfalls or [])), dtype=bool)
+    if stage is not None and outfalls:
+        rises = np.random.default_rng(int(cfg["seed"]) + 1).normal(stage.rise_m, max(stage.sigma_m, 1e-6), members)
+        taper = sewer.outfall_taper(grid, outfalls, _normal_level(stage.river))
+        blocked = sewer.blocked_outfalls(rises, taper, np.random.default_rng(int(cfg["seed"]) + 2))
+    eff = sewer.efficiency(members, rng)
+    inlet = sewer.inlet_rate_mm_h(grid.cell_area)
+    pipe_m3 = sewer.rain_capacity_m3(net, grid.cell_area, duration)
+    r_mult = np.exp(rng.normal(-sigma_rain ** 2 / 2, sigma_rain, members))
+    infil = float(infil_cfg["value"]) * np.exp(rng.normal(0.0, float(infil_cfg["sigma_ln"]), members))
+
     depth = np.zeros((members, len(hollows)))
     wet_area = np.zeros((members, len(hollows)))
     overflow = np.zeros((members, len(hollows)))
-    for m in range(members):
-        r_mult = math.exp(rng.normal(-sigma_rain ** 2 / 2, sigma_rain))
-        drain = float(drain_cfg["value"]) * math.exp(rng.normal(0.0, float(drain_cfg["sigma_ln"])))
-        infil = float(infil_cfg["value"]) * math.exp(rng.normal(0.0, float(infil_cfg["sigma_ln"])))
-        r = flat_rain * r_mult
-        runoff_mm = flat_sealed * np.clip(r - drain * duration, 0, None) + \
-            (1 - flat_sealed) * np.clip(r - infil * duration, 0, None)
-        volume = np.bincount(pit_label[valid], weights=runoff_mm[valid] / 1000.0 * grid.cell_area,
-                             minlength=dep.count + 1)
-        for i, h in enumerate(hollows):
-            v = float(volume[h["label"]])
-            if v <= 0:
-                continue
-            if v >= h["capacity"]:
-                lvl = h["level"]
-                overflow[m, i] = v - h["capacity"]
-            else:
-                # between two breakpoints the volume grows linearly with the level
-                j = int(np.searchsorted(h["breaks"], v, side="right")) - 1
-                lvl = float(h["zs"][j] + (v - h["breaks"][j]) / (grid.cell_area * (j + 1)))
-            depth[m, i] = lvl - float(h["zs"][0])
-            wet_area[m, i] = float((h["zs"] < lvl).sum()) * grid.cell_area
+    surcharge_total = np.zeros(members)
+    surcharge_mean = np.zeros(z.size)
+    surcharge_seen = np.zeros(z.size)
+    in_area_flat = in_area.ravel()
+    chunk = 8
+    for start in range(0, members, chunk):
+        ms = list(range(start, min(start + chunk, members)))
+        caught = np.zeros((len(ms), z.size))
+        pipe_cap = np.zeros((len(ms), z.size))
+        surface = np.zeros((len(ms), z.size))
+        factor = sewer.capacity_factor(net, sink_outfall, blocked[ms])
+        for k, m in enumerate(ms):
+            r = flat_rain * r_mult[m]
+            into_drains = np.minimum(r, eff[m] * inlet * duration)
+            caught[k] = np.where(valid, flat_sealed * into_drains / 1000.0 * grid.cell_area, 0.0)
+            runoff_mm = flat_sealed * (r - into_drains) + (1 - flat_sealed) * np.clip(r - infil[m] * duration, 0, None)
+            surface[k] = np.where(valid, runoff_mm / 1000.0 * grid.cell_area, 0.0)
+            pipe_cap[k] = eff[m] * pipe_m3 * factor[k]
+        surcharge, _ = sewer.route(net.receiver, net.order, net.sink, caught, pipe_cap)
+        surcharge_mean += surcharge.sum(axis=0) / members
+        surcharge_seen += (surcharge > 1.0).sum(axis=0) / members
+        for k, m in enumerate(ms):
+            surcharge_total[m] = float(surcharge[k][in_area_flat].sum())
+            to_pits = surface[k] + surcharge[k]
+            volume = np.bincount(pit_label[valid], weights=to_pits[valid], minlength=dep.count + 1)
+            for i, h in enumerate(hollows):
+                v = float(volume[h["label"]])
+                if v <= 0:
+                    continue
+                if v >= h["capacity"]:
+                    lvl = h["level"]
+                    overflow[m, i] = v - h["capacity"]
+                else:
+                    # between two breakpoints the volume grows linearly with the level
+                    j = int(np.searchsorted(h["breaks"], v, side="right")) - 1
+                    lvl = float(h["zs"][j] + (v - h["breaks"][j]) / (grid.cell_area * (j + 1)))
+                depth[m, i] = lvl - float(h["zs"][0])
+                wet_area[m, i] = float((h["zs"] < lvl).sum()) * grid.cell_area
 
     wet_p50 = np.zeros(grid.shape, dtype=bool)
     probability = np.zeros(grid.shape)
@@ -565,20 +603,54 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
         "total_depth_index": impacts.quantiles(totals.tolist()),
         "footprint_p50": mask_to_geojson(grid, wet_p50),
     }
+    result["sewer"] = _sewer_summary(grid, in_area_flat, eff, inlet, served, blocked, outfalls,
+                                     surcharge_total, surcharge_mean, surcharge_seen)
     result["residents"] = impacts.residents(grid, data, {"p50": wet_p50})
     result["sensitive_sites"] = impacts.sensitive_sites(grid, probability, 0.2)
     kinds = {"terrain": str(grid.source.get("kind", "estimated")), "rain": rain_kind, "imperviousness": sealed_kind,
-             "drainage": "estimated", "census": "real" if result["residents"] is not None else "not_available",
+             "drainage": "estimated", "outfalls": "real" if outfalls is not None else "not_available", "census": "real" if result["residents"] is not None else "not_available",
              "sensitive_sites": "real" if result["sensitive_sites"] is not None else "not_available"}
     warnings += [
-        "Drain capacity and infiltration are assumptions (config/scenarios.yaml); no sewer network data is open.",
+        "Sewer capacity follows Rome's design rules on the terrain (Comune di Roma 2000) times an efficiency "
+        "assumption (C=35); the real pipe map is not open, so pipes are taken to follow the terrain.",
         "Water that overflows a full hollow is not passed on downhill (no cascade), so downstream hotspots can be understated.",
         f"Terrain at {grid.cell:g} m resolves streets and squares, not single underpasses: treat hotspots as areas to check.",
     ]
     if under is None:
         warnings.append("Underpass layer not loaded yet: hotspots are not matched to underpasses.")
+    if outfalls is None:
+        warnings.append("Sewer outfall layer not loaded (scripts/fetch_sewer_layers.py): river backflow is left out.")
+    if stage is not None:
+        kinds["river_level"] = stage.kind
+        warnings.append(f"River {stage.river} raised {stage.rise_m:.2f} m (sigma {stage.sigma_m:.2f} m): outfalls under "
+                        "water keep only part of their basin's capacity (assumption, config/scenarios.yaml).")
     return {"result": result, "data_kinds": kinds, "sources": _terrain_source(grid), "synthetic": False,
             "warnings": warnings}
+
+
+def _sewer_summary(grid: Grid, in_area: npt.NDArray[np.bool_], eff: FloatArray, inlet: float, served: list[int],
+                   blocked: npt.NDArray[np.bool_], outfalls: list[sewer.Outfall] | None, surcharge_total: FloatArray,
+                   surcharge_mean: FloatArray, surcharge_seen: FloatArray) -> dict[str, Any]:
+    n_blocked = blocked[:, served].sum(axis=1) if served else np.zeros(blocked.shape[0])
+    top = np.argsort(-np.where(in_area, surcharge_mean, 0.0))[:15]
+    points: list[dict[str, Any]] = []
+    for i in top.tolist():
+        if surcharge_mean[i] <= 1.0 or not in_area[i]:
+            continue
+        r, c = divmod(i, grid.shape[1])
+        lons, lats = grid.lonlat(np.asarray([r], dtype=np.int64), np.asarray([c], dtype=np.int64))
+        points.append({"lon": round(lons[0], 6), "lat": round(lats[0], 6), "mean_m3": round(float(surcharge_mean[i]), 1),
+                       "probability": round(float(surcharge_seen[i]), 3)})
+    return {
+        "model": "rome_design_rules",
+        "efficiency": impacts.quantiles(eff.tolist()),
+        "street_drain_rate_mm_h": impacts.quantiles((eff * inlet).tolist()),
+        "outfalls_considered": len(served),
+        "outfalls_blocked": impacts.quantiles(n_blocked.astype(float).tolist()),
+        "blocked": sewer.summary(outfalls or [], blocked, served),
+        "surcharge_m3": impacts.quantiles(surcharge_total.tolist()),
+        "surcharge_points": points,
+    }
 
 
 def _underpasses() -> list[tuple[float, float, str]] | None:

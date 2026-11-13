@@ -290,6 +290,24 @@
       "licence": "CC BY 4.0 (ISTAT)",
       "redistribution": true,
       "status": "verified"
+    },
+    "acea_sewer_outfalls": {
+      "kind": "real",
+      "what": "ACEA ATO2 sewer outfall points on the Tiber basin (280); rain flood river backflow",
+      "endpoint": "https://dati-siitevere.cittametropolitanaroma.it/dataset/punti-di-scarico",
+      "access": "GeoJSON download, no key; host blocked from the cloud sandbox, fetched via Modal (scripts/fetch_sewer_layers.py)",
+      "licence": "CC BY 4.0 (ACEA ATO2, SIITevere)",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "roma_sewer_design_rules": {
+      "kind": "real",
+      "what": "Comune di Roma (Dip. XII, 2000) sewer sizing rules and design rain curve, used as parameters in config/scenarios.yaml",
+      "endpoint": "https://www.studiopetrillo.com/files/Progetto%20fogne%20linee%20guida%20DIP-TP%20XII.pdf",
+      "access": "PDF, read once; numbers copied to config with a basis note",
+      "licence": "public administration document",
+      "redistribution": true,
+      "status": "verified"
     }
   },
   "snapshots": {}
