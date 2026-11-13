@@ -78,6 +78,13 @@ def test_italian_only_with_a_voice(role: str) -> None:
     assert cc["tts"]["voice_id"]
 
 
+def test_office_agent_is_private_and_citizen_public() -> None:
+    office = build_agent_payload("office", webhook_url="https://x/y", secret_id="s")
+    citizen = build_agent_payload("citizen", webhook_url="https://x/y", secret_id="s")
+    assert office["platform_settings"]["auth"]["enable_auth"] is True
+    assert citizen["platform_settings"]["auth"]["enable_auth"] is False
+
+
 def test_unknown_role_rejected() -> None:
     with pytest.raises(ValueError):
         build_agent_payload("admin", webhook_url="https://x/y", secret_id="s")

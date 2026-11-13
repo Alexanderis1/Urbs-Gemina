@@ -2,14 +2,14 @@
 # with `python -m voice.push_agent --role office|citizen`.
 common:
   # basis: the voice model only relays ask_twin answers, so a fast model keeps latency low.
-  # Exact model id accepted by ElevenLabs not verified (C=60); the dashboard list is authoritative.
-  llm: claude-haiku-4-5
+  # Id checked against GET /v1/convai/llm/list on 13 Nov 2026.
+  llm: claude-haiku-5-5
   temperature: 0.2
   # basis: low-latency multilingual TTS model for Italian and English (C=70 on the id).
   tts_model_id: eleven_flash_v2_5
-  # basis: "Fabi", native Italian male voice from the ElevenLabs library, made for news reading
-  # and tutorials, supports Flash (ID read from a third-party catalogue, C=75). Community
-  # voices may need "Add to my voices" in ElevenLabs first. Override with ELEVENLABS_VOICE_ID.
+  # basis: "Fabi", native Italian male library voice for informative/educational use.
+  # Found in the ElevenLabs shared library and added to the account on 13 Nov 2026.
+  # Override with ELEVENLABS_VOICE_ID.
   voice_id: Ha21jUwaMwdgQvqNslSM
   # basis: Alessandro, 13 Nov 2026: Italian only. Add codes here to enable auto-switching.
   default_language: it
@@ -18,6 +18,8 @@ common:
 
 office:
   name: "Urbs Gemina - Office"
+  # basis: office data must not be public; the web app gets a signed URL for logged-in officers.
+  private: true
   prompt_file: prompts/office.md
   client_tools: [fly_to, show_area, show_layer, show_radius, open_screen]
   first_message:
@@ -26,6 +28,7 @@ office:
 
 citizen:
   name: "Urbs Gemina - Citizen line"
+  private: false
   prompt_file: prompts/citizen.md
   client_tools: [fly_to, show_area, show_layer, open_screen]
   first_message:

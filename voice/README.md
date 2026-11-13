@@ -52,7 +52,21 @@ The tool API needs `VOICE_SECRET_OFFICE` and `VOICE_SECRET_CITIZEN` (same values
 
 The webhook itself does not need the ElevenLabs key.
 
+## Live agents (created 13 Nov 2026)
+
+| Agent | ElevenLabs id | Access |
+|---|---|---|
+| Office | `agent_5801m7b8bx9gedj9fj7r1e3s54vh` | Private: the web app asks for a signed URL (`GET /v1/convai/conversation/get-signed-url?agent_id=...`) from an edge function |
+| Citizen line | `agent_1501m7b8c0zpfxm9r3wq8cg1sz9b` | Public: the widget can use the id directly |
+
+Both use `claude-haiku-5-5`, the Italian voice "Fabi" (`Ha21jUwaMwdgQvqNslSM`) and `eleven_flash_v2_5`; ElevenLabs accepted all three. The webhook URL is still a placeholder: once the tool API is deployed, run
+
+```bash
+VOICE_WEBHOOK_URL=https://<tool-api>/voice/ask_twin python -m voice.push_agent --role office
+VOICE_WEBHOOK_URL=https://<tool-api>/voice/ask_twin python -m voice.push_agent --role citizen
+VOICE_SECRET_OFFICE=... VOICE_SECRET_CITIZEN=... python -m voice.push_agent --set-secrets   # same values as the tool API
+```
+
 ## Not verified yet
 
-- Exact ElevenLabs LLM id (`claude-haiku-4-5`) and TTS id (`eleven_flash_v2_5`), C=60-70. A dry run plus one push will confirm.
 - Whether ElevenLabs sends the body flat or wrapped in `parameters`: the handler accepts both.

@@ -103,6 +103,7 @@ def build_agent_payload(role: str, *, webhook_url: str, secret_id: str, voice_id
     return {
         "name": agent["name"],
         "tags": ["urbs-gemina", role],
+        "platform_settings": {"auth": {"enable_auth": bool(agent["private"])}},
         "conversation_config": {
             "agent": {
                 "first_message": first[default_lang],
