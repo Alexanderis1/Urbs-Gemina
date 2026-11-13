@@ -35,6 +35,19 @@ Outputs in `data/processed/model/` (git-ignored):
 | `height_check.md` | Validation report for the honesty panel |
 | `build.json` | Same numbers as JSON, plus SHA-256 of every input and output |
 
+## Publishing the tiles
+
+`--upload` copies the outputs to any S3-compatible bucket (Cloudflare R2, AWS S3, MinIO), set only by environment variables:
+
+```bash
+export URBS_TILES_S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com
+export URBS_TILES_BUCKET=urbs-gemina URBS_TILES_PREFIX=model
+export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...
+python scripts/build_city_model.py --upload
+```
+
+The bucket needs public read and a CORS rule that allows `GET`/`HEAD` with the `Range` header, because the viewer reads PMTiles by byte ranges.
+
 ## Viewer handoff (WS8)
 
 PMTiles source layer `buildings`, zoom 12-16 (overzoom above 16). Feature properties:

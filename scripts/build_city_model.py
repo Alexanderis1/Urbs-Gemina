@@ -96,6 +96,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--config", type=Path, default=ROOT / "config" / "model.yaml")
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--no-tiles", action="store_true")
+    ap.add_argument(
+        "--upload", action="store_true",
+        help="copy the outputs to the S3-compatible bucket named by URBS_TILES_* env vars (see twin/model/upload.py)",
+    )
     args = ap.parse_args(argv)
     bbox: BBox = (args.bbox[0], args.bbox[1], args.bbox[2], args.bbox[3])
     cfg = load_model_config(args.config)
@@ -195,6 +199,17 @@ def main(argv: list[str] | None = None) -> int:
         "seconds": round(time.time() - t0, 1),
     }
     (args.out / "build.json").write_text(json.dumps(build, indent=2), encoding="utf-8")
+    if args.upload:
+        import os
+
+        from twin.model.upload import target_from_env, upload
+
+        target = target_from_env(os.environ)
+        if target is None:
+            raise SystemExit("--upload needs URBS_TILES_S3_ENDPOINT and URBS_TILES_BUCKET")
+        files = list(outputs.values()) + [args.out / "height_check.md", args.out / "build.json"]
+        for key in upload(files, target):
+            log(f"uploaded {target.endpoint}/{key}")
     log(f"done in {build['seconds']} s -> {args.out}")
     print(report)
     return 0
