@@ -1,0 +1,186 @@
+# Static context layers and live feeds pulled by twin/ingest (workstream WS1).
+#
+# Every layer says what kind of data it is (real | estimated | simulated) and
+# which manifest source it comes from (data/manifest.json "sources").
+# Run:  python scripts/fetch_static_layers.py [layer ...]
+#       python -m twin.ingest.live [feed ...]
+
+# Fields whose NAME matches one of these patterns are dropped from every
+# feature before anything touches the disk (hard rule: no personal data).
+# Matching is case-insensitive, Python regular expressions on the field name.
+privacy:
+  basis: "CLAUDE.md hard rule; design-proposal section 7 lists ref-nome, ref-cell, telefono, e-mail on DIPPC:241"
+  drop_field_patterns:
+    - '^ref[-_]'                 # ref-nome, ref-cell, ref_mail (Roma 241)
+    - 'referent'                 # referente, nome_referente
+    - '(^|[^a-z])tel'            # tel, telefono, fax_tel (not "castello")
+    - 'phone'                    # phone, contact:phone, operator:phone (OSM)
+    - 'fax'
+    - 'mail'                     # e-mail, email, contact:email
+    - '(^|[^a-z])cell'           # cell, cellulare
+    - '(^|[^a-z])pec($|[^a-z])'  # certified e-mail address
+    - '^contact:'                # every OSM contact:* tag
+    - 'cognome'
+    - 'codice_fiscale'
+
+# Roma Capitale bounding box from config/areas.yaml is used to clip regional
+# and national layers. Whole city by default.
+sources:
+  roma_geoserver:
+    protocol: wfs
+    url: "https://geoportale.comune.roma.it/geoserver/ows"
+  lazio_geoserver:
+    protocol: wfs
+    url: "https://geoportale.regione.lazio.it/geoserver/ows"
+  sitap:
+    protocol: wfs
+    url: "https://sitap.cultura.gov.it/geoserver/ows"
+  osm:
+    protocol: overpass
+    # Tried in order. overpass-api.de reset connections from the cloud sandbox on 2026-11-13.
+    urls:
+      - "https://overpass-api.de/api/interpreter"
+      - "https://overpass.kumi.systems/api/interpreter"
+      - "https://overpass.private.coffee/api/interpreter"
+  istat_census:
+    protocol: istat_census
+    url: "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip"
+
+layers:
+  # --- Boundaries -----------------------------------------------------------
+  municipi:              {source: roma_geoserver, type_name: "DIPPC:210_RomaCapitale_Municipi", data_kind: real, theme: boundaries}
+  # DIPDIT:ZoneUrbanistiche returns a server error ("variable not found in subplan target list").
+  urban_zones:           {source: roma_geoserver, type_name: "DIPPC:rc_zone_urbanistiche", data_kind: real, theme: boundaries, notes: "155 zones; code_zu is the zone code, municipi the municipio"}
+  census_sections:
+    source: istat_census
+    data_kind: real
+    theme: boundaries
+    # ISTAT municipality code of Roma Capitale (PRO_COM 58091).
+    filter: {PRO_COM: 58091}
+    notes: "ISTAT 2021 census sections of Roma Capitale with residents and children 0-14 (census at 31 Dec 2021)"
+    # Output fields are fixed by the hub contract: sez_id, residents, children_0_14, municipio, zone.
+    options:
+      shapes_member: "SHP/R12_21_WGS84.shp"
+      zones_member: "TAB/ASC3_R12_21.csv"        # COM_ASC3 -> urban-zone code (COD_ASC3_T)
+      population_url: "https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip"
+      population_member: "Roma_indicatori_2021_sezioni.xlsx"
+      population_sheet: "Roma_2021"
+      residents_column: P1                         # Popolazione residente - totale
+      children_columns: [P14, P15, P16]            # eta < 5, 5-9, 10-14
+
+  # --- Planning and heritage (Roma Capitale) --------------------------------
+  rete_ecologica_poly:   {source: roma_geoserver, type_name: "DIPAU:ReteEcologicaPoligono", data_kind: real, theme: planning}
+  rete_ecologica_line:   {source: roma_geoserver, type_name: "DIPAU:ReteEcologicaLinea", data_kind: real, theme: planning}
+  cpq_morfologie:        {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Morfologie_Poligono", data_kind: real, theme: planning}
+  cpq_preesistenze:      {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Preesistenze_Poligono", data_kind: real, theme: heritage}
+  cpq_spazi_aperti:      {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Elementi_Spazi_Aperti_Poligono", data_kind: real, theme: heritage}
+  cpq_edilizia_speciale: {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Edifici_Edilizia_Speciale", data_kind: real, theme: heritage}
+  unesco:                {source: roma_geoserver, type_name: "SOVR:SitoUnescoPoly", data_kind: real, theme: heritage}
+  unesco_buffer:         {source: roma_geoserver, type_name: "SOVR:buffer_zone", data_kind: real, theme: heritage}
+  protected_areas:       {source: roma_geoserver, type_name: "DIPPC:235_AreeProtette", data_kind: real, theme: environment}
+  ptpr_paesaggi_roma:    {source: roma_geoserver, type_name: "REGLAZ:tavola_a_paesaggi", data_kind: real, theme: landscape, clip_to_city: true, notes: "PTPR Tavola A cascaded from Lazio; the full layer covers the whole region"}
+  acoustic_zoning:       {source: roma_geoserver, type_name: "DIPAMB:ZonizzazioneAcustica", data_kind: real, theme: environment, notes: "2002 zoning, not hit-tested before"}
+
+  # --- Sensitive sites for the 300 m antenna context (Challenge 02) ---------
+  schools_state:         {source: roma_geoserver, type_name: "DIPSCU:mv_portale_rete_statale", data_kind: real, theme: sensitive_sites}
+  nidi:                  {source: roma_geoserver, type_name: "DIPSCU:mv_portale_nidi_capitolini", data_kind: real, theme: sensitive_sites}
+  infanzia:              {source: roma_geoserver, type_name: "DIPSCU:mv_portale_infanzia_capitolina", data_kind: real, theme: sensitive_sites}
+  hospitals:             {source: roma_geoserver, type_name: "DIPAMB:Ospedali", data_kind: real, theme: sensitive_sites, notes: "38 features, looks incomplete (C=60)"}
+  health_care:
+    source: roma_geoserver
+    type_name: "DIPPC:241_ServiziSanitarieAssistenziali"
+    data_kind: real
+    theme: sensitive_sites
+    # Named explicitly as well, in case a pattern above ever misses them.
+    drop_fields: ["ref-nome", "ref-cell", "telefono", "e-mail"]
+  care_homes_osm:
+    source: osm
+    data_kind: real
+    theme: sensitive_sites
+    selectors: ['nwr["amenity"="nursing_home"]', 'nwr["social_facility"="nursing_home"]', 'nwr["social_facility"="assisted_living"]']
+    notes: "No official RSA layer exists; OSM is incomplete"
+  playgrounds_osm:
+    source: osm
+    data_kind: real
+    theme: sensitive_sites
+    selectors: ['nwr["leisure"="playground"]']
+    notes: "No official playground layer exists; OSM is incomplete"
+
+  # --- Antenna seeds (used by WS3 sim_register) ------------------------------
+  masts_osm:
+    source: osm
+    data_kind: real
+    theme: antennas
+    selectors: ['nwr["man_made"="mast"]["tower:type"="communication"]', 'nwr["man_made"="tower"]["tower:type"="communication"]']
+    notes: "About 191 mobile masts in Roma Capitale were counted earlier (C=80)"
+
+  # --- Sports (Challenge 04, consumed by WS10) -------------------------------
+  sports_municipal:      {source: roma_geoserver, type_name: "DIPPC:243_ServiziSportivi", data_kind: real, theme: sports}
+
+  # --- Regional landscape plan (Regione Lazio PTPR), clipped to Rome --------
+  ptpr_a_aree_tutela_dm: {source: lazio_geoserver, type_name: "geonode:ptpr_tavola_a_aree_tutela_dm_57472580c4fa53a68da4d38bd9ee2093", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_ex_1497_ab:     {source: lazio_geoserver, type_name: "geonode:ex_1497_ab", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_ex_1497_cd:     {source: lazio_geoserver, type_name: "geonode:ptpr_tavola_b_ex_1497_cd_468ef73f428b4e868f9cac53332be356", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_boschi:         {source: lazio_geoserver, type_name: "geonode:boschi", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_acque_pubbliche: {source: lazio_geoserver, type_name: "geonode:acque_pubbliche0", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_aree_archeologiche: {source: lazio_geoserver, type_name: "geonode:aree_archeologiche", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_decreti_archeologici: {source: lazio_geoserver, type_name: "geonode:decreti_archeologici", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_punti_archeologici: {source: lazio_geoserver, type_name: "geonode:punti_archeologici", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_centri_storici: {source: lazio_geoserver, type_name: "geonode:centri_storici", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_aree_naturali_protette: {source: lazio_geoserver, type_name: "geonode:aree_naturali_protette1", data_kind: real, theme: environment, clip_to_city: true}
+  ptpr_b_usi_civici:     {source: lazio_geoserver, type_name: "geonode:usi_civici", data_kind: real, theme: landscape, clip_to_city: true}
+  natura2000:            {source: lazio_geoserver, type_name: "geonode:rete_natura200000", data_kind: real, theme: environment, clip_to_city: true}
+
+  # --- National landscape constraints (MiC SITAP), clipped to Rome ----------
+  sitap_art136_cd:       {source: sitap, type_name: "sitap_ws_clone:LAZIO_art_136_c_d", data_kind: real, theme: landscape, clip_to_city: true}
+  sitap_art136_ab:       {source: sitap, type_name: "sitap_ws_clone:LAZIO_art_136_a_b", data_kind: real, theme: landscape, clip_to_city: true, notes: "type name guessed from the c_d layer; marked not_available if wrong"}
+
+# Live public feeds. Each pull stores the raw bytes under data/snapshots/<feed>/
+# with its SHA-256 in data/snapshots/<feed>/index.jsonl. Parsing is done by the
+# WS3 providers, which can read these snapshot files.
+live_feeds:
+  gtfs_rt_vehicle_positions:
+    source: roma_gtfs_rt
+    data_kind: real
+    method: get
+    url: "https://romamobilita.it/wp-content/uploads/shared/rome_rtgtfs_vehicle_positions_feed.pb"
+    extension: pb
+    cadence: "30 s upstream; pull every 60 s"
+  gtfs_rt_trip_updates:
+    source: roma_gtfs_rt
+    data_kind: real
+    method: get
+    url: "https://romamobilita.it/wp-content/uploads/shared/rome_rtgtfs_trip_updates_feed.pb"
+    extension: pb
+    cadence: "30 s upstream; pull every 60 s"
+  gtfs_rt_service_alerts:
+    source: roma_gtfs_rt
+    data_kind: real
+    method: get
+    url: "https://romamobilita.it/wp-content/uploads/shared/rome_rtgtfs_service_alerts_feed.pb"
+    extension: pb
+    cadence: "pull every 5 min"
+  eea_no2_hourly:
+    source: eea_hourly
+    data_kind: real
+    method: eea_parquet_zip
+    url: "https://eeadmz1-downloads-api-appservice.azurewebsites.net/ParquetFile"
+    # Last 48 hours of unverified (E2a) hourly data for Rome.
+    request: {countries: ["IT"], cities: ["Roma"], pollutants: ["NO2", "PM10", "PM2.5", "O3"], dataset: 1, aggregationType: "hour", lookback_hours: 48}
+    extension: zip
+    cadence: "hourly"
+  dpc_radar_vmi:
+    source: dpc_radar
+    data_kind: real
+    method: dpc_radar
+    url: "https://radar-api.protezionecivile.it"
+    product_type: VMI
+    extension: tif
+    cadence: "every 5 min"
+  bird_gbfs_vehicles:
+    source: bird_gbfs
+    data_kind: real
+    method: get
+    url: "https://mds.bird.co/gbfs/v2/public/rome/free_bike_status.json"
+    extension: json
+    cadence: "every 5 min"
