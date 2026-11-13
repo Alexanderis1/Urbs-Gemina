@@ -67,3 +67,4 @@ Decided by Alessandro: no time-based scope cuts. The elements are built in paral
 | WS10 sports | Facility type is public / school / private / unclassified; "private" only when a source states it, never inferred from appearing only in OSM or on the web | Agreed |
 | WS4 tools | Tool list adds `permit_report`, `sports_facilities`, `sport_coverage`; `estimate_field` takes a point or an area | Agreed |
 | Hub | Census sections handed over as `data/processed/census_sections.geojson` with fixed field names (`sez_id`, `residents`, `children_0_14`, `municipio`, `zone`), normalised by WS1 at ingest | Agreed |
+| WS2 city model | Building heights from GlobalBuildingAtlas (CC BY-NC, full coverage) because the project is non-commercial; attribution in DATA_LICENSES and manifest. The rule is open *formats*, met by PMTiles | Decided by Alessandro |
