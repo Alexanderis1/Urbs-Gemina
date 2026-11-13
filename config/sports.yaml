@@ -121,6 +121,8 @@ coverage:
     condominium pools) and 1,842 more are unnamed with no access tag; they are very likely the
     same kind (C=85). They stay on the map; they just do not count as "a pool you can use".
     Facilities a source tags access=private or access=no never count.
+    Unnamed OSM pitches with no access tag (about 3,000) DO count, shown as "access not known":
+    decided by Alessandro on 13 Nov 2026 (football/basketball coverage may be optimistic).
 
 # Disciplines assumed for a school gym opened to the community in the what-if,
 # when the user does not say which ones.
