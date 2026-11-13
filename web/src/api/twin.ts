@@ -22,6 +22,46 @@ export interface TwinAnswer {
   synthetic: boolean;
   missing: string[];
   map_actions: MapAction[];
+  /** Tool trace from WS7: one entry per citation tag in the text. Empty when the orchestrator sends none. */
+  citations: Citation[];
+}
+
+/** Citation tag kinds, as in agents/verifier.py CITATION: [run:...], [src:...], [data:...]. */
+export const CITATION_KINDS = ["run", "src", "data"] as const;
+export type CitationKind = (typeof CITATION_KINDS)[number];
+
+export interface Citation {
+  /** 0-based index of the line in answer.text split on newlines. */
+  line: number;
+  kind: CitationKind;
+  ref: string;
+  /** "auto" means code attached it after checking every figure on the line against one tool run. */
+  cite_mode: "explicit" | "auto";
+}
+
+function parseCitations(v: unknown): Citation[] {
+  if (!Array.isArray(v)) return [];
+  const out: Citation[] = [];
+  for (const c of v) {
+    if (typeof c !== "object" || c === null) continue;
+    const r = c as Record<string, unknown>;
+    if (typeof r.line !== "number" || !Number.isInteger(r.line) || r.line < 0) continue;
+    if (!CITATION_KINDS.includes(r.kind as CitationKind) || typeof r.ref !== "string" || !r.ref) continue;
+    out.push({ line: r.line, kind: r.kind as CitationKind, ref: r.ref, cite_mode: r.cite_mode === "auto" ? "auto" : "explicit" });
+  }
+  return out;
+}
+
+const TAG = /\s*\[(run|src|data):[^\]\s]+\]/g;
+
+/** Answer lines that carry citations, with the tags removed from the shown text. */
+export function citationRows(a: TwinAnswer): { line: number; text: string; citations: Citation[] }[] {
+  const lines = a.text.split("\n");
+  const byLine = new Map<number, Citation[]>();
+  for (const c of a.citations) byLine.set(c.line, [...(byLine.get(c.line) ?? []), c]);
+  return [...byLine.entries()]
+    .sort(([x], [y]) => x - y)
+    .map(([line, citations]) => ({ line, text: (lines[line] ?? "").replace(TAG, "").trim(), citations }));
 }
 
 export function buildTwinQuestion(
@@ -55,5 +95,6 @@ export function parseTwinAnswer(raw: unknown): TwinAnswer {
     synthetic: d.synthetic !== false,
     missing: strs(d.missing),
     map_actions: parseMapActions(d.map_actions),
+    citations: parseCitations(d.citations),
   };
 }

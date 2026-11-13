@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { isSampleMode, proxyFetch } from "@/api/client";
-import { buildTwinQuestion, parseTwinAnswer, type Language, type TwinAnswer } from "@/api/twin";
+import { buildTwinQuestion, citationRows, parseTwinAnswer, type Citation, type Language, type TwinAnswer } from "@/api/twin";
 import { KindBadge } from "@/components/Badge";
 import { dispatchMapAction } from "@/lib/mapbus";
 import { shortId } from "@/lib/format";
@@ -41,13 +41,14 @@ export default function Ask() {
     // No language model in sample mode. One real tool call (to the sample tools) shows the trace format.
     const place = await run<ResolvePlaceResult>("resolve_place", { text: q });
     return parseTwinAnswer({
-      text: "The assistant is not connected yet, so this is not an answer. It shows how answers will look: sources, run ids, data kinds and map buttons.",
+      text: `The assistant is not connected yet, so this is not an answer. It shows how answers will look: sources, run ids, data kinds and map buttons.\nSample place found [run:${place.run_id.slice(0, 12)}]`,
       verified: false,
       run_ids: [place.run_id],
       sources: place.sources.map((s) => s.id),
       data_kinds: place.data_kinds,
       synthetic: true,
       missing: ["orchestrator (agents workstream)"],
+      citations: [{ line: 1, kind: "run", ref: place.run_id, cite_mode: "auto" }],
       map_actions: [
         { tool: "fly_to", args: { lon: place.result.lon, lat: place.result.lat, zoom: 15, label: place.result.label ?? q } },
         { tool: "show_layer", args: { layer: "air_quality", visible: true } },
@@ -141,6 +142,31 @@ function AnswerTrace({ a }: { a: TwinAnswer }) {
           ))}
         </div>
       )}
+      {a.citations.length > 0 && (
+        <details open>
+          <summary className="cursor-pointer">Citations per line ({a.citations.length})</summary>
+          <ul className="mt-1 space-y-1">
+            {citationRows(a).map((row) => (
+              <li key={row.line} className="flex flex-wrap items-baseline gap-1">
+                <span className="text-stone-500">“{row.text || `line ${row.line + 1}`}”</span>
+                {row.citations.map((c, i) => (
+                  <span key={i} className="inline-flex items-center gap-1">
+                    <CitationRef c={c} />
+                    {c.cite_mode === "auto" && (
+                      <span
+                        className="rounded border border-stone-300 px-1 text-[10px] text-stone-400"
+                        title="Attached by code: every figure on this line matches this tool run."
+                      >
+                        auto
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {a.sources.length > 0 && (
         <details>
           <summary className="cursor-pointer">Sources ({a.sources.length})</summary>
@@ -163,5 +189,20 @@ function AnswerTrace({ a }: { a: TwinAnswer }) {
         </div>
       )}
     </div>
+  );
+}
+
+function CitationRef({ c }: { c: Citation }) {
+  if (c.kind === "src" && /^https?:\/\//.test(c.ref))
+    return (
+      <a className="text-roma underline" href={c.ref} target="_blank" rel="noreferrer">
+        source
+      </a>
+    );
+  const label = c.kind === "run" ? `run ${shortId(c.ref)}` : `${c.kind === "src" ? "source" : "data"} ${c.ref}`;
+  return (
+    <code className="rounded bg-white px-1" title={c.ref}>
+      {label}
+    </code>
   );
 }
