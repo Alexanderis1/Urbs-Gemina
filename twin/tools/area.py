@@ -96,6 +96,18 @@ def _normalise_id(raw: Any) -> str:
         return text
 
 
+def _display_name(kind: str, raw: Any) -> Any:
+    """'I' or 1 -> 'Municipio I' for municipi; other names unchanged."""
+    if kind != "municipio" or raw is None:
+        return raw
+    text = str(raw).strip()
+    if text.upper().startswith("MUNICIPIO"):
+        return text
+    number = int(_normalise_id(text)) if _normalise_id(text).isdigit() else None
+    roman = {v: k for k, v in ROMAN.items()}.get(number or 0, text)
+    return f"Municipio {roman}"
+
+
 def _find_feature(snapshot: LayerSnapshot, wanted: str, id_fields: list[str]) -> dict[str, Any] | None:
     target = _normalise_id(wanted)
     for feature in snapshot.features:
@@ -158,7 +170,7 @@ def resolve_area(area: str | Mapping[str, Any] | None, store: LayerStore | None 
         geometry = dict(feature["geometry"])
         found = geometry_bbox(geometry)
         assert found is not None
-        name = first_property(feature.get("properties") or {}, list(cfg.get(names, []))) or wanted
+        name = _display_name(kind, first_property(feature.get("properties") or {}, list(cfg.get(names, []))) or wanted)
         return Area(id=f"{kind}:{_normalise_id(wanted)}", kind=kind,  # type: ignore[arg-type]
                     name=str(name), geometry=geometry, bbox=found,
                     area_km2=polygon_area_km2(geometry), source=snapshot.source())
@@ -203,5 +215,5 @@ def locate(lon: float, lat: float, store: LayerStore, settings: Settings) -> dic
         props = hit.get("properties") or {}
         raw_id = first_property(props, list(cfg.get(ids, [])))
         out[label] = {"status": "ok", "id": _normalise_id(raw_id) if raw_id is not None else None,
-                      "name": first_property(props, list(cfg.get(names, [])))}
+                      "name": _display_name(label, first_property(props, list(cfg.get(names, []))))}
     return out
