@@ -2,7 +2,7 @@
 
 Run: ``python -m twin.beliefs.demo --out data/processed/beliefs_demo``
 
-Feeds the simulated loop stations (``sim_loops``) into the whole-city road-speed
+Feeds the active traffic provider (``sim_loops`` by default) into the whole-city road-speed
 layer from ``start`` to ``pause``, then stops the feed and lets the layer relax
 until ``end``. Writes one JSON file per snapshot with per-cell mean, sd and
 staleness, plus a short summary. Everything is SIMULATED and labelled so.
@@ -18,11 +18,11 @@ from typing import Any
 import numpy as np
 
 from twin.beliefs.api import query
-from twin.beliefs.config import grid_resolution, load_specs
+from twin.beliefs.config import CONFIG_DIR, grid_resolution, load_specs
 from twin.beliefs.grid import cell_center, cells_in_bbox
 from twin.beliefs.layer import BeliefLayer, assimilate, prior_layer
 from twin.providers.base import ROME_BBOX
-from twin.providers.simulated.loops import SimLoopsProvider
+from twin.providers.registry import build_providers, load_config
 
 
 def summary(layer: BeliefLayer, label: str) -> dict[str, Any]:
@@ -42,7 +42,9 @@ def summary(layer: BeliefLayer, label: str) -> dict[str, Any]:
 def run(start: datetime, pause: datetime, end: datetime, out: Path | None = None) -> list[dict[str, Any]]:
     spec = load_specs()["road_speed"]
     cells = cells_in_bbox(ROME_BBOX, grid_resolution())
-    provider = SimLoopsProvider()
+    # The active traffic provider from config/providers.yaml (sim_loops today: realistic
+    # station positions come from the providers stream, not from this module).
+    provider = build_providers(load_config(CONFIG_DIR / "providers.yaml"))["traffic_flow"]
     layer = prior_layer(spec, cells, start)
     snapshots: list[tuple[str, BeliefLayer]] = [("prior only", layer)]
     t = start
