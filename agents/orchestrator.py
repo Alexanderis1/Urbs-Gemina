@@ -5,6 +5,8 @@ verifier -> otherwise "insufficient data". The AI disclosure line is added by co
 """
 from __future__ import annotations
 
+import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -16,6 +18,8 @@ from agents.loop import AgentLoop, LoopResult
 from agents.prompting import system_prompt
 from agents.tools import CompositeGateway, HttpToolGateway, LocalWebTools, ToolGateway, load_tool_specs
 from agents.verifier import Problem, VerifierReport, describe_problems, verify
+
+LOG = logging.getLogger("urbs.agents")
 
 DEFAULT_TOOLS = ["resolve_place", "context_check", "estimate_field", "query_layer", "run_scenario",
                  "legal_lookup", "find_dataset", "data_status"]
@@ -37,6 +41,13 @@ INSUFFICIENT = {
     "en": "Insufficient data: I cannot back every figure with a tool run or an official source, so I am not giving one.",
     "it": "Dati insufficienti: non posso documentare ogni cifra con un'esecuzione di uno strumento o una fonte ufficiale, quindi non ne fornisco.",
 }
+
+
+def _plain(p: Problem) -> str:
+    """Plain wording of a problem, naming the figure when there is one (for logs and the officer)."""
+    base = PLAIN_PROBLEMS.get(p.code, p.code)
+    m = re.match(r"'([^']+)'", p.message)
+    return f"{base} ('{m.group(1)}')" if m and p.code in ("uncited_number", "untraced_number") else base
 
 
 @dataclass
@@ -72,7 +83,7 @@ class Answer:
     @property
     def missing(self) -> list[str]:
         """Plain-language gaps: verifier problems plus every tool result that was not available or refused."""
-        out = sorted({PLAIN_PROBLEMS.get(p.code, p.code) for p in self.problems}) if not self.verified else []
+        out = sorted({_plain(p) for p in self.problems}) if not self.verified else []
         for r in self.runs:
             if r.get("status", "ok") != "ok":
                 reason = str(r.get("reason") or r.get("status"))
@@ -88,7 +99,7 @@ def _finalise(text: str, report: VerifierReport, state: LoopResult, language: st
     if not text.strip():
         problems.append(Problem("no_answer", "the agent produced no answer"))
     if not verified:
-        missing = sorted({PLAIN_PROBLEMS.get(p.code, p.code) for p in problems})
+        missing = sorted({_plain(p) for p in problems})
         text = INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " " + (
             "Problem found: " if language == "en" else "Problema: ") + "; ".join(missing) + "."
     if first_message:
@@ -117,6 +128,9 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
     except ModelRefused:
         state = LoopResult(text="", runs=[], messages=[])
         report = VerifierReport(problems=[Problem("model_refused", "the model declined the request")])
+    if not report.ok:
+        # Codes and flagged figures only: no draft text in logs (guardrail 11, privacy).
+        LOG.warning("verifier blocked answer: %s", "; ".join(f"{p.code} {p.message}" for p in report.problems))
     return _finalise(state.text, report, state, language, first_message, cfg)
 
 

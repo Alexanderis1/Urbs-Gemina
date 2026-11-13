@@ -169,3 +169,10 @@ def test_show_area_uses_municipio_id_when_resolve_place_returns_an_object() -> N
                             result={"lon": 12.48, "lat": 41.89, "municipio": {"status": "not_available"}},
                             data_kinds={"places": "real"}, sources=[])
     assert [m["tool"] for m in map_actions([missing])] == ["fly_to"]
+
+
+def test_missing_names_the_flagged_figure() -> None:
+    gw = FakeGateway()
+    llm = ScriptedLLM([text_turn("There are 4 schools."), text_turn("There are 4 schools.")])
+    out = answer("q", llm=llm, gateway=gw, tool_names=["context_check"])
+    assert any("'4'" in m for m in out.missing)
