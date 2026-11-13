@@ -8,6 +8,8 @@ FastAPI app exposing the deterministic tools. Every response is the shared tool 
 | `GET /tools` | All tool definitions (name, description, input schema) ready for LLM tool calling |
 | `GET /tools/<name>/schema` | One tool definition |
 | `POST /reports/permit.md` | The cited permit report as Markdown (same body as `permit_report`) |
+| `POST /ask` | Question to the orchestrator (WS7), answer per shared interface 7; tier from the API key |
+| `POST /voice/ask_twin` | ElevenLabs webhook (WS9); the per-agent secret header decides the tier |
 | `GET /health`, `GET /whoami`, `GET /docs` | Health, your role tier, interactive docs |
 
 Tools: `resolve_place`, `context_check`, `estimate_field`, `query_layer`, `run_scenario` (WS6 engine), `legal_lookup` and `find_dataset` (WS7 `agents.exa_tools`), `data_status`, `permit_report`. A tool whose module is not installed answers `status: "not_available"` with the reason.

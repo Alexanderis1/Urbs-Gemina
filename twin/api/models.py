@@ -130,6 +130,16 @@ class SportCoverageIn(Strict):
     open_school_gyms: list[SchoolGym] = Field(default_factory=list, max_length=10)
 
 
+class AskIn(Strict):
+    """A question for the orchestrator (chat). The tier is set by the server from the API key."""
+
+    question: str = Field(min_length=1, max_length=2000)
+    language: Literal["it", "en"] = "it"
+    area: str | None = Field(default=None, max_length=200)
+    mode: Literal["question", "briefing"] = "question"
+    conversation_id: str | None = Field(default=None, max_length=200)
+
+
 class SourceOut(BaseModel):
     id: str
     url: str | None = None

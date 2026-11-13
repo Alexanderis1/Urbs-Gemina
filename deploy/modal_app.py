@@ -1,7 +1,8 @@
 """Host the tool API on Modal with a stable public URL.
 
     pip install modal && modal setup                      # once, opens a browser to log in
-    modal secret create urbs-gemina-api URBS_API_KEYS="<office-key>:office"   # add EXA_API_KEY=... when WS7 is merged
+    modal secret create urbs-gemina-api URBS_API_KEYS="<office-key>:office" \
+        ANTHROPIC_API_KEY=... EXA_API_KEY=... VOICE_SECRET_OFFICE=... VOICE_SECRET_CITIZEN=...
     modal run deploy/modal_app.py::fetch_layers           # download the static context layers into the volume
     modal deploy deploy/modal_app.py                      # prints https://<workspace>--urbs-gemina-tools-api.modal.run
 
@@ -22,13 +23,16 @@ PROCESSED_DIR = f"{APP_DIR}/data/processed"
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .pip_install("fastapi>=0.110", "pydantic>=2", "PyYAML>=6", "numpy>=1.26", "h3>=4", "httpx>=0.27")
+    .pip_install("fastapi>=0.110", "pydantic>=2", "PyYAML>=6", "numpy>=1.26", "h3>=4", "httpx>=0.27", "anthropic>=2.8")
     .env({"PYTHONPATH": APP_DIR, "URBS_ROOT": APP_DIR})
     .add_local_dir("twin", f"{APP_DIR}/twin", ignore=["**/__pycache__"])
     .add_local_dir("config", f"{APP_DIR}/config")
     .add_local_dir("scripts", f"{APP_DIR}/scripts", ignore=["**/__pycache__"])
     .add_local_file("data/manifest.json", f"{APP_DIR}/data/manifest.json")
 )
+for optional in ("agents", "voice"):  # WS7 orchestrator and WS9 voice webhook, once merged
+    if Path(optional).is_dir():
+        image = image.add_local_dir(optional, f"{APP_DIR}/{optional}", ignore=["**/__pycache__"])
 SEED_DIR = f"{APP_DIR}/seed"
 if Path("data/raw/sports_web").is_dir():  # WS10 agent outputs, copied into the volume by fetch_layers
     image = image.add_local_dir("data/raw/sports_web", f"{SEED_DIR}/sports_web")

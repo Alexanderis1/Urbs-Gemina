@@ -6,7 +6,9 @@ Role tiers are enforced here, not in prompts. ``URBS_API_KEYS`` holds
 ``key:role`` pairs separated by commas; a request without a known
 ``Authorization: Bearer <key>`` is served at the citizen tier.
 """
+import dataclasses
 import hmac
+import importlib
 import logging
 import os
 from typing import Any
@@ -16,7 +18,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
-from twin.api.models import EnvelopeOut
+from twin.api.models import AskIn, EnvelopeOut
+from twin.api.orchestrator import TierOrchestrator
 from twin.api.tools import TOOLS, ToolSpec, tool_schema
 from twin.tools.envelope import ToolError
 from twin.tools.runtime import ToolRuntime
@@ -113,6 +116,43 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
         envelope = TOOLS["permit_report"].handler(rt, body, role)
         markdown: str = envelope["result"]["markdown"]
         return markdown
+
+    orchestrators: dict[str, Any] = {}
+
+    def get_orchestrator() -> Any:
+        if "o" not in orchestrators:
+            try:
+                orchestrators["o"] = TierOrchestrator(get_runtime)
+            except ImportError as error:
+                raise HTTPException(status_code=501, detail=f"orchestrator (WS7 agents) not installed: {error}")
+        return orchestrators["o"]
+
+    @app.post("/ask")
+    def ask(body: AskIn, role: str = Depends(get_role)) -> dict[str, Any]:
+        """Chat entry point (shared interface 7). The tier comes from the API key, never from the body."""
+        contract = importlib.import_module("agents.contract")
+        question = contract.TwinQuestion(question=body.question, tier=role, language=body.language, area=body.area,
+                                         mode=body.mode, conversation_id=body.conversation_id, channel="chat")
+        answer = get_orchestrator().ask(question)
+        out: dict[str, Any] = dataclasses.asdict(answer)
+        return out
+
+    @app.post("/voice/ask_twin")
+    async def voice_ask_twin(request: Request) -> JSONResponse:
+        """ElevenLabs webhook (WS9). The per-agent secret header decides the tier."""
+        try:
+            webhook = importlib.import_module("voice.webhook")
+        except ImportError as error:
+            return JSONResponse(status_code=501, content={"error": f"voice webhook (WS9) not installed: {error}"})
+        try:
+            body = await request.json()
+        except ValueError:
+            return JSONResponse(status_code=400, content={"error": "body must be JSON"})
+        if not isinstance(body, dict):
+            return JSONResponse(status_code=400, content={"error": "body must be a JSON object"})
+        status, payload = webhook.handle_ask_twin(body, dict(request.headers), get_orchestrator(),
+                                                  webhook.secrets_from_env())
+        return JSONResponse(status_code=int(status), content=payload)
 
     return app
 

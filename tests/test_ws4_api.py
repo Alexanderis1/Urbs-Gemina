@@ -154,3 +154,24 @@ def test_census_sections_are_read_from_processed(tmp_path: Path) -> None:
          "properties": {"sez_id": "1", "residents": 120, "children_0_14": 15, "municipio": "1", "zone": "1A"}}]}))
     census = _census(rt)
     assert census is not None and len(census.features) == 1 and census.sha256
+
+
+def test_voice_and_ask_routes_exist_and_never_trust_the_body_for_the_tier(client: TestClient) -> None:
+    r = client.post("/voice/ask_twin", json={"question": "Com'e il traffico?"})
+    if r.status_code == 501:  # WS9 not installed in this build
+        assert "voice" in r.json()["error"]
+    else:
+        assert r.status_code == 401  # no ElevenLabs secret header
+    assert client.post("/ask", json={"question": "x", "tier": "office"}).status_code == 422
+
+
+def test_in_process_gateway_uses_the_given_tier(tmp_path: Path) -> None:
+    from twin.api.orchestrator import InProcessGateway
+
+    rt = ToolRuntime(settings=Settings.load(), store=LayerStore(raw_dir=tmp_path))
+    gw = InProcessGateway(rt, "citizen", {"resolve_place": object(), "news_search": object()})
+    assert set(gw.specs) == {"resolve_place"}
+    env = gw.call("resolve_place", {"text": "41.896, 12.4823"})
+    assert env["status"] == "ok"
+    bad = gw.call("resolve_place", {"text": "x", "tier": "office"})
+    assert bad["status"] == "refused" and "invalid arguments" in bad["reason"]
