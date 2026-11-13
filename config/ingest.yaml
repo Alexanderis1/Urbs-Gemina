@@ -36,12 +36,12 @@ sources:
     protocol: wfs
     url: "https://sitap.cultura.gov.it/geoserver/ows"
   osm:
-    protocol: overpass
-    # Tried in order. overpass-api.de reset connections from the cloud sandbox on 2026-11-13.
-    urls:
-      - "https://overpass-api.de/api/interpreter"
-      - "https://overpass.kumi.systems/api/interpreter"
-      - "https://overpass.private.coffee/api/interpreter"
+    # Every Overpass server (overpass-api.de, kumi, private.coffee) and Geofabrik reset or
+    # timed out from the cloud sandbox on 2026-11-13, so OSM layers are filtered locally
+    # from the openstreetmap.fr Lazio extract (about 130 MB, updated daily, ODbL).
+    # To use Overpass instead, set protocol: overpass and list interpreter URLs.
+    protocol: osm_extract
+    url: "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf"
   istat_census:
     protocol: istat_census
     url: "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip"
@@ -113,9 +113,22 @@ layers:
     theme: antennas
     selectors: ['nwr["man_made"="mast"]["tower:type"="communication"]', 'nwr["man_made"="tower"]["tower:type"="communication"]']
     notes: "About 191 mobile masts in Roma Capitale were counted earlier (C=80)"
+    options: {tiles: 4}
 
   # --- Sports (Challenge 04, consumed by WS10) -------------------------------
   sports_municipal:      {source: roma_geoserver, type_name: "DIPPC:243_ServiziSportivi", data_kind: real, theme: sports}
+
+  pools_municipal:       {source: roma_geoserver, type_name: "GABSIN:piscine", data_kind: real, theme: sports}
+  osm_sports:
+    source: osm
+    data_kind: real
+    theme: sports
+    # Same tags as twin.modules.sports.pipeline.overpass_query() (WS10).
+    selectors: ['nwr["leisure"="sports_centre"]', 'nwr["leisure"="pitch"]', 'nwr["leisure"="fitness_centre"]', 'nwr["leisure"="swimming_pool"]', 'nwr["leisure"="stadium"]', 'nwr["leisure"="track"]', 'nwr["leisure"="ice_rink"]', 'nwr["leisure"="sports_hall"]']
+    notes: "Private and public sports venues from OSM; also saved as Overpass-style JSON for WS10"
+    options:
+      tiles: 4          # Overpass times out on the whole city at once
+      raw_json: true    # also write data/processed/osm_sports.json (elements with tags and center, contacts dropped)
 
   # --- Regional landscape plan (Regione Lazio PTPR), clipped to Rome --------
   ptpr_a_aree_tutela_dm: {source: lazio_geoserver, type_name: "geonode:ptpr_tavola_a_aree_tutela_dm_57472580c4fa53a68da4d38bd9ee2093", data_kind: real, theme: landscape, clip_to_city: true}

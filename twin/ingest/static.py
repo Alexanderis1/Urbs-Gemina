@@ -26,6 +26,7 @@ from typing import Any, Iterable, Sequence
 
 from twin.ingest.catalog import BBox, Catalog, LayerSpec
 from twin.ingest.census import build_census_sections
+from twin.ingest.osm_extract import extract_file, read_elements
 from twin.ingest.http import Fetch, HttpRequest
 from twin.ingest.manifest import record_snapshots, sha256_file
 from twin.ingest.privacy import personal_columns
@@ -79,6 +80,32 @@ def overpass_to_geojson(payload: dict[str, Any]) -> FeatureCollection:
     return {"type": "FeatureCollection", "features": features}
 
 
+def split_bbox(bbox: BBox, n: int) -> list[BBox]:
+    """Split a bbox into n x n tiles, row by row from the south-west corner."""
+    west, south, east, north = bbox
+    dx, dy = (east - west) / n, (north - south) / n
+    return [(round(west + i * dx, 6), round(south + j * dy, 6),
+             round(west + (i + 1) * dx, 6), round(south + (j + 1) * dy, 6))
+            for j in range(n) for i in range(n)]
+
+
+def _overpass_tile(urls: Sequence[str], selectors: Sequence[str], bbox: BBox,
+                   fetch: Fetch) -> tuple[dict[str, Any], str]:
+    body = urllib.parse.urlencode({"data": overpass_query(selectors, bbox)}).encode("utf-8")
+    errors: list[str] = []
+    for url in urls:
+        try:
+            raw = fetch(HttpRequest(url, body=body, content_type="application/x-www-form-urlencoded",
+                                    timeout_s=240.0))
+            payload: dict[str, Any] = json.loads(raw)
+            if "remark" in payload and "runtime error" in str(payload["remark"]):
+                raise RuntimeError(str(payload["remark"])[:200])  # Overpass timeout inside a 200 answer
+            return payload, url
+        except Exception as error:  # noqa: BLE001 - try the next mirror
+            errors.append(f"{urllib.parse.urlparse(url).netloc}: {type(error).__name__}: {error}")
+    raise ConnectionError("all Overpass mirrors failed: " + "; ".join(errors))
+
+
 def _download(layer: LayerSpec, catalog: Catalog, fetch: Fetch) -> tuple[bytes, str]:
     """Return (raw bytes, URL actually used)."""
     source = catalog.sources[layer.source]
@@ -88,16 +115,23 @@ def _download(layer: LayerSpec, catalog: Catalog, fetch: Fetch) -> tuple[bytes, 
         url = wfs_url(source.urls[0], layer.type_name, bbox)
         return fetch(HttpRequest(url)), url
     if source.protocol == "overpass":
-        query = overpass_query(layer.selectors, catalog.city_bbox)
-        body = urllib.parse.urlencode({"data": query}).encode("utf-8")
-        errors: list[str] = []
-        for url in source.urls:
-            try:
-                return fetch(HttpRequest(url, body=body, content_type="application/x-www-form-urlencoded",
-                                         timeout_s=240.0)), url
-            except Exception as error:  # noqa: BLE001 - try the next mirror
-                errors.append(f"{urllib.parse.urlparse(url).netloc}: {type(error).__name__}: {error}")
-        raise ConnectionError("all Overpass mirrors failed: " + "; ".join(errors))
+        tiles = split_bbox(catalog.city_bbox, int(layer.options.get("tiles", 1)))
+        seen: dict[str, dict[str, Any]] = {}
+        used: list[str] = []
+        for tile in tiles:
+            payload, url = _overpass_tile(source.urls, layer.selectors, tile, fetch)
+            used.append(url)
+            for element in payload.get("elements", []):
+                seen.setdefault(f"{element.get('type')}/{element.get('id')}", element)
+        merged = {"elements": sorted(seen.values(), key=lambda e: (str(e.get("type")), int(e.get("id", 0))))}
+        return json.dumps(merged, ensure_ascii=False).encode("utf-8"), used[0]
+    if source.protocol == "osm_extract":
+        url = source.urls[0]
+        path, data = extract_file(url, fetch)
+        digest_source = data if data is not None else path.read_bytes()
+        payload = read_elements(path, layer.selectors, catalog.city_bbox)
+        payload["extract_sha256"] = hashlib.sha256(digest_source).hexdigest()
+        return json.dumps(payload, ensure_ascii=False).encode("utf-8"), url
     if source.protocol == "zip_shapefile":
         url = source.urls[0]
         return fetch(HttpRequest(url, timeout_s=600.0)), url
@@ -166,7 +200,7 @@ def _to_frame(layer: LayerSpec, catalog: Catalog, raw: bytes) -> Any:
     protocol = catalog.sources[layer.source].protocol
     if protocol == "wfs":
         return _frame_from_features(_parse_geojson(raw).get("features", []))
-    if protocol == "overpass":
+    if protocol in ("overpass", "osm_extract"):
         return _frame_from_features(overpass_to_geojson(json.loads(raw))["features"])
     return _frame_from_zip(raw, layer.filter)
 
@@ -202,6 +236,7 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
         entry["type_name"] = layer.type_name
     if layer.notes:
         entry["notes"] = layer.notes
+    raw_elements: list[dict[str, Any]] | None = None
     try:
         if catalog.sources[layer.source].protocol == "istat_census":
             frame = _census_frame(layer, catalog, fetch, entry)
@@ -210,7 +245,13 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
             entry["request_url"] = url
             entry["raw_sha256"] = hashlib.sha256(raw).hexdigest()
             frame = _to_frame(layer, catalog, raw)
-            del raw  # the raw bytes may hold personal fields; only the cleaned frame goes on
+            if catalog.sources[layer.source].protocol in ("overpass", "osm_extract"):
+                parsed_raw = json.loads(raw)
+                raw_elements = parsed_raw.get("elements", [])
+                if "extract_sha256" in parsed_raw:
+                    # Provenance is the hash of the extract file itself, not of the filtered subset.
+                    entry["raw_sha256"] = parsed_raw["extract_sha256"]
+            del raw  # the raw bytes may hold personal fields; only the cleaned data goes on
 
         columns = [c for c in frame.columns if c != frame.geometry.name]
         dropped = personal_columns(columns, catalog.privacy_patterns, layer.drop_fields)
@@ -221,6 +262,12 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
         geojson = out_dir / f"{layer.key}.geojson"
         frame.to_parquet(parquet, index=False)
         geojson.write_text(frame.to_json(drop_id=True, ensure_ascii=False), encoding="utf-8")
+        extra_files: dict[str, Path] = {}
+        if layer.options.get("raw_json") and raw_elements is not None:
+            raw_path = out_dir / f"{layer.key}.json"
+            raw_path.write_text(json.dumps(_clean_elements(raw_elements, catalog, layer), ensure_ascii=False),
+                                encoding="utf-8")
+            extra_files["overpass_json"] = raw_path
 
         base = root or out_dir
         entry.update(
@@ -231,12 +278,24 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
             files={
                 "geoparquet": {"path": _rel(parquet, base), "sha256": sha256_file(parquet)},
                 "geojson": {"path": _rel(geojson, base), "sha256": sha256_file(geojson)},
+                **{name: {"path": _rel(path, base), "sha256": sha256_file(path)}
+                   for name, path in extra_files.items()},
             },
             warnings=["0 features in the requested area"] if len(frame) == 0 else [],
         )
     except Exception as error:  # noqa: BLE001 - any failure marks the layer unavailable
         entry.update(status="not_available", error=f"{type(error).__name__}: {error}"[:500])
     return entry
+
+
+def _clean_elements(elements: list[dict[str, Any]], catalog: Catalog, layer: LayerSpec) -> dict[str, Any]:
+    """Overpass-style JSON with personal tags removed (same rules as the GeoJSON)."""
+    cleaned = []
+    for element in elements:
+        tags = element.get("tags") or {}
+        drop = set(personal_columns(tags, catalog.privacy_patterns, layer.drop_fields))
+        cleaned.append({**element, "tags": {k: v for k, v in tags.items() if k not in drop}})
+    return {"elements": cleaned}
 
 
 def _rel(path: Path, base: Path) -> str:

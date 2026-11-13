@@ -1,4 +1,5 @@
 import hashlib
+from dataclasses import replace
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -8,13 +9,17 @@ import pytest
 
 gpd = pytest.importorskip("geopandas")
 
-from twin.ingest.catalog import load_catalog  # noqa: E402
+from twin.ingest.catalog import SourceSpec, load_catalog  # noqa: E402
 from twin.ingest.http import HttpRequest  # noqa: E402
 from twin.ingest.manifest import record_snapshots  # noqa: E402
 from twin.ingest.static import ingest_layer, overpass_query, overpass_to_geojson, run  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = load_catalog(ROOT / "config" / "ingest.yaml")
+# The real config reads OSM from an extract; these tests exercise the Overpass path, which stays supported.
+OVERPASS_CATALOG = replace(CATALOG, sources={**CATALOG.sources, "osm": SourceSpec(
+    id="osm", protocol="overpass",
+    urls=("https://overpass-a.example/api/interpreter", "https://overpass-b.example/api/interpreter"))})
 NOW = datetime(2026, 11, 13, 20, 0, tzinfo=timezone.utc)
 
 HEALTH = {
@@ -112,7 +117,7 @@ def test_overpass_falls_back_to_the_next_mirror(tmp_path: Path) -> None:
         return json.dumps({"elements": [{"type": "node", "id": 9, "lat": 41.9, "lon": 12.5,
                                          "tags": {"leisure": "playground"}}]}).encode()
 
-    entry = ingest_layer(CATALOG.layers["playgrounds_osm"], CATALOG, fetch, tmp_path, NOW)
+    entry = ingest_layer(OVERPASS_CATALOG.layers["playgrounds_osm"], OVERPASS_CATALOG, fetch, tmp_path, NOW)
     assert entry["status"] == "ok" and entry["features"] == 1
     assert len(calls) == 2 and entry["request_url"] == calls[1]
 
@@ -153,3 +158,35 @@ def test_mixed_2d_and_3d_coordinates_are_flattened(tmp_path: Path) -> None:
     assert entry["status"] == "ok", entry.get("error")
     frame = gpd.read_parquet(tmp_path / "ptpr_paesaggi_roma.parquet")
     assert not frame.geometry.iloc[0].has_z
+
+
+def test_overpass_tiles_split_the_bbox_and_merge_duplicates(tmp_path: Path) -> None:
+    from twin.ingest.static import split_bbox
+
+    tiles = split_bbox((12.0, 41.0, 13.0, 42.0), 2)
+    assert tiles == [(12.0, 41.0, 12.5, 41.5), (12.5, 41.0, 13.0, 41.5),
+                     (12.0, 41.5, 12.5, 42.0), (12.5, 41.5, 13.0, 42.0)]
+
+    calls: list[bytes] = []
+
+    def fetch(request: HttpRequest) -> bytes:
+        assert request.body is not None
+        calls.append(request.body)
+        # The same way shows up in two neighbouring tiles.
+        return json.dumps({"elements": [
+            {"type": "way", "id": 7, "center": {"lat": 41.9, "lon": 12.5},
+             "tags": {"leisure": "pitch", "phone": "06", "sport": "soccer"}},
+            {"type": "node", "id": len(calls), "lat": 41.9, "lon": 12.5, "tags": {"leisure": "pitch"}},
+        ]}).encode()
+
+    entry = ingest_layer(OVERPASS_CATALOG.layers["osm_sports"], OVERPASS_CATALOG, fetch, tmp_path, NOW)
+    n_tiles = CATALOG.layers["osm_sports"].options["tiles"] ** 2
+    assert entry["status"] == "ok", entry.get("error")
+    assert len(calls) == n_tiles
+    assert entry["features"] == n_tiles + 1  # one shared way + one node per tile
+
+    raw = json.loads((tmp_path / "osm_sports.json").read_text(encoding="utf-8"))
+    assert len(raw["elements"]) == n_tiles + 1
+    way = next(e for e in raw["elements"] if e["type"] == "way")
+    assert way["tags"] == {"leisure": "pitch", "sport": "soccer"}  # contact tag dropped
+    assert way["center"] == {"lat": 41.9, "lon": 12.5}

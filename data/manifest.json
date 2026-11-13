@@ -683,10 +683,10 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "sensitive_sites",
-      "fetched_at": "2026-11-13T19:40:55Z",
+      "fetched_at": "2026-11-13T21:01:11Z",
       "notes": "No official RSA layer exists; OSM is incomplete",
-      "request_url": "https://overpass.kumi.systems/api/interpreter",
-      "raw_sha256": "ac38ebeeca25d9ec0053bd52795370ff0b4cc986e866e789bf237adfb9e82636",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
       "status": "ok",
       "features": 17,
       "dropped_fields": [
@@ -698,11 +698,11 @@
       "files": {
         "geoparquet": {
           "path": "data/processed/care_homes_osm.parquet",
-          "sha256": "8cf6cc2fd54828f5885d0bb75e183a517a45e55c6b4544d3ffb7e81e8f675a62"
+          "sha256": "2d50be720a30b6e7219ab4cd65f034f58182154f379b34b848ea3e499516174a"
         },
         "geojson": {
           "path": "data/processed/care_homes_osm.geojson",
-          "sha256": "94e20783ac7c3b6195289c76ab235df2810d9c3ccd120aeaae21cf7654e9dbd8"
+          "sha256": "73f679ec0c06eda9e42607fae537b67bbc025f286743d22fffcaf420f7dfe05c"
         }
       },
       "warnings": []
@@ -712,12 +712,12 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "sensitive_sites",
-      "fetched_at": "2026-11-13T20:00:53Z",
+      "fetched_at": "2026-11-13T21:01:58Z",
       "notes": "No official playground layer exists; OSM is incomplete",
-      "request_url": "https://overpass.private.coffee/api/interpreter",
-      "raw_sha256": "cb123e48fe5358c6f72a48dd7851ba5bf1f8ca6336abb190d1a8d6aedac3e9ea",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
       "status": "ok",
-      "features": 603,
+      "features": 592,
       "dropped_fields": [
         "contact:facebook",
         "email",
@@ -728,11 +728,11 @@
       "files": {
         "geoparquet": {
           "path": "data/processed/playgrounds_osm.parquet",
-          "sha256": "8fcef461fec91b828a8127da28587e533d4b46e48d13e3556f20ef07fcd2e0e2"
+          "sha256": "4ebe3eb4c4128bfda62cecdf8587268ed26cc8c6751d61261e352b2eacbcb3e8"
         },
         "geojson": {
           "path": "data/processed/playgrounds_osm.geojson",
-          "sha256": "aaf5a12004323fe6842041516802b47df4b4a220be7bb2bcf1031f7741c2630f"
+          "sha256": "1effc979f901aa46ab673580787c87f2da8e3773984818a6c2b5e81fafdc2dcc"
         }
       },
       "warnings": []
@@ -742,10 +742,28 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "antennas",
-      "fetched_at": "2026-11-13T20:23:53Z",
+      "fetched_at": "2026-11-13T21:02:27Z",
       "notes": "About 191 mobile masts in Roma Capitale were counted earlier (C=80)",
-      "status": "not_available",
-      "error": "ConnectionError: all Overpass mirrors failed: overpass-api.de: URLError: <urlopen error [Errno 104] Connection reset by peer>; overpass.kumi.systems: TimeoutError: The read operation timed out; overpass.private.coffee: HTTPError: HTTP Error 502: Bad Gateway"
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 333,
+      "dropped_fields": [
+        "communication:mobile_phone",
+        "communication:television"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/masts_osm.parquet",
+          "sha256": "3b43e89a800d157e6178611dfd155170a044a30a776e0968d9a88d4aee9780ea"
+        },
+        "geojson": {
+          "path": "data/processed/masts_osm.geojson",
+          "sha256": "80547ecd49f34b54bbff936857d075ec6513d19b223970c60bffaec594356ed5"
+        }
+      },
+      "warnings": []
     },
     "sports_municipal": {
       "source": "roma_geoserver",
@@ -1098,6 +1116,73 @@
       "notes": "type name guessed from the c_d layer; marked not_available if wrong",
       "status": "not_available",
       "error": "URLError: <urlopen error [Errno 104] Connection reset by peer>"
+    },
+    "pools_municipal": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sports",
+      "fetched_at": "2026-11-13T20:35:09Z",
+      "type_name": "GABSIN:piscine",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GABSIN%3Apiscine&srsName=EPSG%3A4326&outputFormat=application%2Fjson",
+      "raw_sha256": "51eb21d68eaf3a3d358e3d44d4c879689a9f339c3d3e6dba4899428e1a3113ba",
+      "status": "ok",
+      "features": 17,
+      "dropped_fields": [
+        "email",
+        "telefono"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/pools_municipal.parquet",
+          "sha256": "a886e7d18535108fee089d6134b68e9292b6778e96042e6084a648bc58445478"
+        },
+        "geojson": {
+          "path": "data/processed/pools_municipal.geojson",
+          "sha256": "e0263560c7325276acefb132c104deefb97a55ada33c348853f29b975b105ab9"
+        }
+      },
+      "warnings": []
+    },
+    "osm_sports": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sports",
+      "fetched_at": "2026-11-13T21:03:01Z",
+      "notes": "Private and public sports venues from OSM; also saved as Overpass-style JSON for WS10",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 15781,
+      "dropped_fields": [
+        "contact:facebook",
+        "contact:instagram",
+        "contact:phone",
+        "contact:tiktok",
+        "contact:whatsapp",
+        "contact:youtube",
+        "email",
+        "fax",
+        "phone"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/osm_sports.parquet",
+          "sha256": "ff983bcebe2b8e422340a8f7da395138df5ce6bda8a0fc6957d5e69c0023ce76"
+        },
+        "geojson": {
+          "path": "data/processed/osm_sports.geojson",
+          "sha256": "145d999c3c366d144494c247d39be30e32a5ca42dc227e3a396957853cc9b428"
+        },
+        "overpass_json": {
+          "path": "data/processed/osm_sports.json",
+          "sha256": "a94dab614474203a6bed613001b4f18227c71c5d6539f7283a2c5a7017a02199"
+        }
+      },
+      "warnings": []
     }
   }
 }

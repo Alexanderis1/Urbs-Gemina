@@ -9,7 +9,7 @@ import yaml
 
 DataKind = Literal["real", "estimated", "simulated"]
 DATA_KINDS: tuple[str, ...] = ("real", "estimated", "simulated")
-PROTOCOLS = ("wfs", "overpass", "zip_shapefile", "istat_census")
+PROTOCOLS = ("wfs", "overpass", "osm_extract", "zip_shapefile", "istat_census")
 FEED_METHODS = ("get", "eea_parquet_zip", "dpc_radar")
 
 #: (min_lon, min_lat, max_lon, max_lat) in WGS84
@@ -103,7 +103,7 @@ def parse_catalog(raw: dict[str, Any], city_bbox: BBox) -> Catalog:
         protocol = sources[source].protocol
         if protocol == "wfs" and not layer.type_name:
             raise CatalogError(f"layer {key}: WFS layers need type_name")
-        if protocol == "overpass" and not layer.selectors:
+        if protocol in ("overpass", "osm_extract") and not layer.selectors:
             raise CatalogError(f"layer {key}: OSM layers need selectors")
         layers[key] = layer
 
