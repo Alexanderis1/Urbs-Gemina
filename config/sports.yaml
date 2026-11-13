@@ -111,7 +111,7 @@ deserts:
 school_gym_default_disciplines: [volleyball, basketball, gymnastics]
 school_gym_basis: >-
   A standard Italian school gym is sized for volleyball and basketball courts and
-  gymnastics (CONI/MIUR school-sports building guidance). Simulated in outputs.
+  gymnastics (CONI/MIUR school-sports building guidance). Assumed (what-if): a scenario input, not a sensor.
 
 # Field names looked up (case-insensitive, exact first, then "contains") in each
 # official source. The real names of DIPPC:243_ServiziSportivi were not visible
