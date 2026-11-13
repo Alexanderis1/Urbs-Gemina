@@ -171,6 +171,24 @@
       "licence": "none",
       "redistribution": true,
       "status": "planned"
+    },
+    "mim_school_buildings": {
+      "kind": "real",
+      "what": "School building register (which school buildings have a gym), for the sports add-on",
+      "endpoint": "https://dati.istruzione.it/opendata/opendata/catalogo/elements1/?area=Edilizia%20Scolastica",
+      "access": "CSV download",
+      "licence": "IODL 2.0 (to confirm)",
+      "redistribution": true,
+      "status": "not tested; gym flag unverified (confidence 70)"
+    },
+    "sports_web_enrichment": {
+      "kind": "estimated",
+      "what": "Facility candidates and fields (disciplines, hours, accessibility, organisational contacts) found on the web by the sports scout and enrichment agents (Exa), each with source URL, retrieval date and confidence; labelled 'from the web, unverified'",
+      "endpoint": "agents/sports_scout, agents/sports_enrich",
+      "access": "Exa API (key in environment)",
+      "licence": "facts with source links; page text is not stored beyond a short quote",
+      "redistribution": true,
+      "status": "implemented, not run"
     }
   },
   "snapshots": {}
