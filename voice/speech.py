@@ -100,6 +100,7 @@ def _envelope(status: str, speak: str, answer: TwinAnswer | None) -> dict[str, A
         "data_kinds": dict(answer.data_kinds) if answer else {},
         "synthetic": answer.synthetic if answer else False,
         "missing": list(answer.missing) if answer else [],
+        "citations": list(answer.citations) if answer and answer.verified else [],
         "map_actions": safe_map_actions(answer.map_actions) if answer and answer.verified else [],
     }
 

@@ -102,6 +102,14 @@ def test_repeated_ai_disclosure_is_dropped_from_speech() -> None:
     assert resp["speak"].startswith("Nel Municipio I il PM10 è 20")
 
 
+def test_citations_only_for_verified_answers() -> None:
+    cite = {"line": 1, "kind": "run", "ref": RUN, "cite_mode": "explicit"}
+    _, resp, _ = call({"question": "x"}, orch=FakeOrchestrator(ok_answer(citations=(cite,))))
+    assert resp["citations"] == [cite]
+    _, resp, _ = call({"question": "x"}, orch=FakeOrchestrator(ok_answer(verified=False, citations=(cite,))))
+    assert resp["citations"] == []
+
+
 def test_simulated_data_is_announced() -> None:
     orch = FakeOrchestrator(ok_answer(synthetic=True, data_kinds={"emf": "simulated"}))
     _, resp, _ = call({"question": "x", "language": "it"}, orch=orch)
