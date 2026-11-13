@@ -66,3 +66,17 @@ def resolve_place(runtime: ToolRuntime, text: str) -> dict[str, Any]:
         "alternatives": [{"lon": round(c.lon, 6), "lat": round(c.lat, 6), "label": c.label} for c in candidates[1:]],
     }
     return runtime.envelope(TOOL, inputs, result, kinds, sources, warnings)
+
+
+_DEFAULT: list[ToolRuntime] = []
+
+
+def resolve(text: str) -> dict[str, Any]:
+    """``resolve_place`` with the default runtime, for other modules (e.g. the sports pipeline).
+
+    Returns the tool envelope; read ``result["lon"]``, ``result["lat"]``, ``result["municipio"]``,
+    ``result["urban_zone"]`` when ``status == "ok"``. Nominatim allows one request per second.
+    """
+    if not _DEFAULT:
+        _DEFAULT.append(ToolRuntime.default())
+    return resolve_place(_DEFAULT[0], text)

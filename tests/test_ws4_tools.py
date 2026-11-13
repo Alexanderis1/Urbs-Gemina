@@ -337,3 +337,10 @@ def test_permit_report_without_data_says_insufficient(runtime: ToolRuntime) -> N
     assert "Insufficient data" in env["result"]["markdown"]
     with pytest.raises(ToolError):
         build_permit_report(runtime)
+
+
+def test_resolve_entry_point_for_other_modules() -> None:
+    from twin.tools.resolve_place import resolve
+
+    env = resolve("41.896, 12.4823")
+    assert env["status"] == "ok" and env["result"]["lon"] == 12.4823
