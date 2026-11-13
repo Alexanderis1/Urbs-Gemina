@@ -1,0 +1,3 @@
+# Scenario results can contain Cartoradio-derived values (redistribution: false). Never commit them.
+*
+!.gitignore

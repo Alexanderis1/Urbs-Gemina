@@ -1,0 +1,70 @@
+# Scenario engine settings (WS6). Every number has a basis: "source" or "assumption".
+# Legal thresholds are NOT here: they are read from config/thresholds.yaml.
+version: 1
+
+cache:
+  dir: data/cache/scenarios   # git-ignored; precomputed demo runs live here
+  basis: "results are cached by run id so the demo never waits on a slow run"
+
+antenna:
+  heavy: false                # free-space model is cheap, allowed on the whole city
+  model: free_space_isotropic
+  radius_m:
+    value: 300
+    basis: "same radius as the permit context (config/thresholds.yaml antenna_context)"
+  grid_step_m:
+    value: 25
+    basis: "assumption: fine enough to show the near-field peak, about 450 points per site"
+  receptor_height_m:
+    value: 1.5
+    basis: "assumption: head height of a person at street level"
+  baseline_sigma_db:
+    value: 4.0
+    basis: "assumption (C=60): Cartoradio publishes no uncertainty; same size as the model error"
+  existing_site_sigma_db:
+    value: 9.0
+    basis: "WS3 estimated register (PR #10): EIRP fitted to Cartoradio, uncalibrated, median error about 9 dB; azimuth unknown so sites are isotropic"
+  exceedance_report_probability:
+    value: 0.05
+    basis: "assumption: a point is flagged when the chance of exceeding a threshold is 5% or more"
+
+population_exposure:
+  heavy: false
+  census_file:
+    value: data/processed/census_sections.geojson
+    basis: "WS1 output; fields sez_id, residents, children_0_14, municipio, zone are fixed by the hub"
+
+road_closure:
+  heavy: true                 # SUMO micro-simulation: refuses areas above heavy_tools_max_area_km2
+  engine: sumo
+  demand: synthetic
+  replicates:
+    value: 5
+    basis: "assumption: five demand seeds give a min / median / max spread of each indicator"
+  seed:
+    value: 1
+    basis: "fixed so the same run id always gives the same numbers"
+  duration_s:
+    value: 3600
+    basis: "assumption: one hour of departures, e.g. a weekday peak hour"
+  insertion_density_veh_per_h_per_lane_km:
+    value: 40
+    basis: "assumption (C=40): no open calibrated demand model of Rome exists; tune against bus speeds and loop counts"
+  min_trip_distance_m:
+    value: 300
+    basis: "assumption: shorter trips are walked"
+  fringe_factor:
+    value: 5
+    basis: "assumption: trips starting or ending at the district edge are 5x more likely (through traffic)"
+  time_to_teleport_s:
+    value: 300
+    basis: "SUMO default; vehicles stuck longer than this are counted as gridlock"
+  rerouting_period_s:
+    value: 60
+    basis: "assumption: drivers update their route each minute (navigation apps)"
+  top_changed_roads:
+    value: 10
+    basis: "how many roads with the largest traffic change are listed"
+  demand_scale_bounds:
+    value: [0.2, 5.0]
+    basis: "assumption: loop counts may rescale the synthetic demand at most 5x either way, to stop one bad station dominating"
