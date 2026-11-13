@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from twin.beliefs.api import build_layer, exceedance_probability, layer_geojson, query, snapshot_hash
+from twin.beliefs.api import build_layer, exceedance_probability, layer_geojson, not_available, query, snapshot_hash
 from twin.beliefs.calibration import CalibrationReport
 from twin.beliefs.grid import cells_in_bbox
 from twin.providers.simulated.loops import SimLoopsProvider
@@ -95,3 +95,17 @@ def test_gate_e_updates_shows_uncertainty_and_decays_when_paused() -> None:
     assert fresh_cells
     assert query(paused, fresh_cells[:1])["result"]["cells"][0]["staleness_s"] >= 3 * 1800
     assert stale["sd"] >= 0.9 * prior_sd
+
+
+def test_query_reports_status_ok() -> None:
+    out = query(road_layer())
+    assert out["status"] == "ok"
+    assert out["reason"] is None
+
+
+def test_not_available_payload() -> None:
+    out = not_available("air_no2", "provider eea_hourly is not configured yet")
+    assert out["status"] == "not_available"
+    assert out["data_kinds"] == {"air_no2": "not_available"}
+    assert out["result"] == {}
+    assert "eea_hourly" in out["reason"]

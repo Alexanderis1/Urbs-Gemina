@@ -7,9 +7,11 @@ Typical use::
     payload = query(layer, threshold=None)
 
 ``query`` returns the parts of the shared tool response envelope that only the
-belief layer knows (``inputs``, ``result``, ``data_kinds``, ``sources``,
-``synthetic``, ``warnings``) plus ``snapshot_hash`` for the ``run_id``. The tool
-API adds ``run_id`` and ``tool`` and serialises it. No number here comes from a
+belief layer knows (``status``, ``reason``, ``inputs``, ``result``,
+``data_kinds``, ``sources``, ``synthetic``, ``warnings``) plus ``snapshot_hash``
+for the ``run_id``. ``not_available`` gives the same shape when a layer cannot be
+built. The tool API adds ``run_id`` (which also hashes config/beliefs.yaml),
+``tool`` and ``cached``, and parses the ``area`` id into cells. No number here comes from a
 language model.
 """
 from __future__ import annotations
@@ -113,6 +115,8 @@ def query(layer: BeliefLayer, cells: Sequence[str] | None = None, threshold: flo
     if layer.n_observations == 0:
         warnings.append("no readings in the window: values are the prior only")
     return {
+        "status": "ok",
+        "reason": None,
         "inputs": {
             "layer": layer.spec.name,
             "as_of": _iso(layer.as_of),
@@ -135,6 +139,21 @@ def query(layer: BeliefLayer, cells: Sequence[str] | None = None, threshold: flo
         "synthetic": layer.synthetic,
         "warnings": warnings,
         "snapshot_hash": snapshot_hash(layer),
+    }
+
+
+def not_available(layer_name: str, reason: str) -> dict[str, Any]:
+    """Envelope parts for a layer that cannot be built (e.g. its provider has no access yet)."""
+    return {
+        "status": "not_available",
+        "reason": reason,
+        "inputs": {"layer": layer_name},
+        "result": {},
+        "data_kinds": {layer_name: "not_available"},
+        "sources": [],
+        "synthetic": False,
+        "warnings": [f"layer '{layer_name}' is not available: {reason}"],
+        "snapshot_hash": None,
     }
 
 
