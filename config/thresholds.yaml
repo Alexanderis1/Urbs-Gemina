@@ -18,3 +18,17 @@ antenna_context:
   radius_m: 300
   source: "Application form (Modello A, D.Lgs. 259/2003)"
   meaning: "Context information only. Not a prohibition (Consiglio di Stato, Sez. IV, 2021)."
+
+river_gauges:
+  # Official hydrometric alert thresholds of the Regione Lazio civil-protection alert system (metres on the gauge).
+  source: "Regione Lazio, Determinazione G11149 del 2 settembre 2025 (aggiornamento soglie idrometriche), table of section 4"
+  url: "https://mydewiki.cimafoundation.org/italia/determina_g11149_02_09_2025_aggiornamento_soglie_idrometriche_lazio.pdf"
+  confidence: 80
+  note: "Read from the text of the determina as indexed on 13 Nov 2026; check against the PDF before relying on it."
+  stations:
+    tevere_ripetta: {river: Tevere, attenzione_m: 7.0, preallarme_m: 11.0, allarme_m: 13.0}
+    tevere_ponte_del_grillo: {river: Tevere, attenzione_m: 4.0, preallarme_m: 5.0, allarme_m: 6.0}
+    tevere_mezzocammino: {river: Tevere, attenzione_m: 3.5, preallarme_m: 5.0, allarme_m: 7.0}
+    aniene_ponte_salario: {river: Aniene, attenzione_m: 3.0, preallarme_m: 5.0, allarme_m: 7.0}
+    aniene_lunghezza: {river: Aniene, attenzione_m: 3.0, preallarme_m: 4.5, allarme_m: 5.0}
+    aniene_ponte_lucano: {river: Aniene, attenzione_m: 3.0, preallarme_m: 4.0, allarme_m: 4.5}

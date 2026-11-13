@@ -254,6 +254,24 @@
       "licence": "CC BY 4.0, Roma Capitale",
       "redistribution": true,
       "status": "verified 2026-11-13; DOMAIN, LOGINCOUNT, traffic and language dropped at parse"
+    },
+    "open_meteo_forecast": {
+      "kind": "estimated",
+      "what": "Hourly rain, 10 m wind and 2 m temperature forecasts (ICON-2I, fallback ICON-EU)",
+      "endpoint": "https://api.open-meteo.com/v1/forecast",
+      "access": "no key; free tier is rate-limited per IP (the shared cloud egress hit the daily limit on 2026-11-13)",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "tested offline with fixtures"
+    },
+    "glofas_flood": {
+      "kind": "estimated",
+      "what": "Daily river discharge, Tiber at Ripetta and Aniene at Lunghezza (GloFAS)",
+      "endpoint": "https://flood-api.open-meteo.com/v1/flood",
+      "access": "no key",
+      "licence": "CC BY 4.0 (Copernicus CEMS)",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
     }
   },
   "snapshots": {}
