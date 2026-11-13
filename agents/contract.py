@@ -36,6 +36,8 @@ class TwinAnswer:
     synthetic: bool
     missing: tuple[str, ...] = ()
     map_actions: tuple[Mapping[str, Any], ...] = field(default=())
+    #: Tool trace of citations: {"line", "kind", "ref", "cite_mode": "explicit" | "auto"} (hub, 13 Nov).
+    citations: tuple[Mapping[str, Any], ...] = field(default=())
 
 
 class Orchestrator(Protocol):
