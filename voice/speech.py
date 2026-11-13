@@ -49,6 +49,18 @@ def clean_for_speech(text: str) -> str:
     return _SPACES.sub(" ", text).strip()
 
 
+#: The first voice message already says it is an AI (AI Act art. 50); the orchestrator
+#: may say it again at the start of each answer, which sounds odd when spoken.
+_DISCLOSURE = re.compile(
+    r"^\s*[^.!?]*\b(?:intelligenza artificiale|assistente (?:di )?IA|an AI|AI assistant)\b[^.!?]*[.!?]\s*",
+    re.IGNORECASE,
+)
+
+
+def drop_repeated_disclosure(text: str) -> str:
+    return _DISCLOSURE.sub("", text, count=1)
+
+
 def _truncate(text: str, language: Language) -> str:
     limit = int(phrases()["max_spoken_chars"])
     if len(text) <= limit:
@@ -103,7 +115,7 @@ def to_speech(answer: TwinAnswer, language: Language) -> dict[str, Any]:
         elif answer.missing:
             speak += " " + phrase(language, "missing_on_screen")
         return _envelope("insufficient_data", speak, answer)
-    speak = clean_for_speech(answer.text)
+    speak = drop_repeated_disclosure(clean_for_speech(answer.text))
     if answer.synthetic or "simulated" in answer.data_kinds.values():
         speak = f"{phrase(language, 'simulated_note')} {speak}"
     return _envelope("ok", _truncate(speak, language), answer)
