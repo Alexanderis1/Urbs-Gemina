@@ -10,8 +10,9 @@ import math
 from typing import Any
 
 from twin.tools.context_check import context_check
-from twin.tools.envelope import Source, ToolError
+from twin.tools.envelope import Source, ToolError, utc_now
 from twin.tools.layers import first_property
+from twin.tools.prg import prg_around
 from twin.tools.runtime import ToolRuntime
 
 TOOL = "context_check"
@@ -39,7 +40,20 @@ def run_context_check(runtime: ToolRuntime, lon: float, lat: float, radius_m: fl
     collections: dict[str, dict[str, Any] | None] = {}
     sources: list[Source] = []
     kinds: dict[str, str] = {}
+    live: dict[str, list[dict[str, Any]]] = {}
+    live_warnings: list[str] = []
     for key, meta in catalogue.items():
+        if meta.get("live") == "wms_point":
+            try:
+                live[key] = prg_around(lon, lat, radius, meta, runtime.prg_fetcher)
+                kinds[key] = str(meta.get("data_kind", "real"))
+                sources.append(Source(id=f"live:{key}", retrieved_at=utc_now(), url=str(meta.get("url"))))
+                live_warnings.append(f"{meta.get('label', key)}: sampled at the centre and on rings, not exhaustive.")
+            except Exception as error:  # noqa: BLE001 - city server down: report, do not fail the check
+                kinds[key] = "not_available"
+                live_warnings.append(f"{meta.get('label', key)}: live query failed ({type(error).__name__}).")
+            collections[key] = None
+            continue
         snapshot = runtime.store.get(key)
         if snapshot is None:
             collections[key] = None
@@ -49,6 +63,8 @@ def run_context_check(runtime: ToolRuntime, lon: float, lat: float, radius_m: fl
         sources.append(snapshot.source())
         kinds[key] = str(meta.get("data_kind", "real"))
     raw = context_check(lon, lat, collections, radius_m=radius)
+    for key, hits in live.items():
+        raw["layers"][key] = {"status": "ok", "count": len(hits), "hits": hits}
 
     by_group: dict[str, list[dict[str, Any]]] = {group: [] for group in groups}
     missing: list[str] = []
@@ -59,7 +75,7 @@ def run_context_check(runtime: ToolRuntime, lon: float, lat: float, radius_m: fl
             entry["count"] = layer["count"]
             entry["hits"] = [
                 {"distance_m": hit["distance_m"],
-                 "name": first_property(hit["properties"], name_fields),
+                 "name": hit.get("name") or first_property(hit["properties"], name_fields),
                  **({"properties": hit["properties"]} if include_properties else {})}
                 for hit in layer["hits"]
             ]
@@ -78,5 +94,5 @@ def run_context_check(runtime: ToolRuntime, lon: float, lat: float, radius_m: fl
         },
         "not_available": missing,
     }
-    warnings = [f"Layer not available, so not checked: {label}." for label in missing]
+    warnings = [f"Layer not available, so not checked: {label}." for label in missing] + live_warnings
     return runtime.envelope(TOOL, inputs, result, kinds, sources, warnings)

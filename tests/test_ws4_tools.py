@@ -72,7 +72,20 @@ def runtime(tmp_path: Path) -> ToolRuntime:
     rt = ToolRuntime(settings=settings, store=store,
                      geocoder=Nominatim("https://nominatim.example/search", "test", fetcher=fake_fetch))
     rt.providers = rt._build_providers()
+    rt.prg_fetcher = fake_prg
     return rt
+
+
+def fake_prg(url: str) -> dict[str, Any]:
+    """PRG WMS stand-in: 'Citta storica' everywhere, plus 'Verde pubblico' east of the centre."""
+    from urllib.parse import parse_qs, urlparse
+
+    w, s, e, n = (float(v) for v in parse_qs(urlparse(url).query)["bbox"][0].split(","))
+    features = [{"id": "sr.1", "properties": {"COMPONENTE": "Citta storica", "NORME_TECNICHE_DI_ATTUAZIONE":
+                 "<a target='_blank' href='https://example.org/Art_24.htm'>Art.24</a>"}}]
+    if (w + e) / 2 > LON + 100 / M_LON:
+        features.append({"id": "sr.2", "properties": {"COMPONENTE": "Verde pubblico", "NORME_TECNICHE_DI_ATTUAZIONE": ""}})
+    return {"type": "FeatureCollection", "features": features}
 
 
 # --- envelope -------------------------------------------------------------
@@ -200,7 +213,9 @@ def test_context_check_uses_config_radius_and_flags_missing_layers(runtime: Tool
     assert sensitive["schools_state"]["hits"][0]["distance_m"] == pytest.approx(120, abs=1)
     assert sensitive["hospitals"]["status"] == "not_available"
     assert env["data_kinds"]["hospitals"] == "not_available" and env["data_kinds"]["schools_state"] == "real"
-    assert r["summary"]["constraint"] == 1  # inside the UNESCO polygon
+    constraints = {layer["layer"]: layer for layer in r["groups"]["constraint"]["layers"]}
+    assert constraints["unesco"]["count"] == 1  # inside the UNESCO polygon
+    assert r["summary"]["constraint"] == 1 + constraints["prg_sistemi_regole"]["count"]
     assert "Hospitals" in r["not_available"]
     assert any("Hospitals" in w for w in env["warnings"])
 
@@ -389,3 +404,28 @@ def test_field_reports_nearest_real_measurement(runtime: ToolRuntime) -> None:
     assert env["data_kinds"]["emf_measurements"] == "real"
     md = build_permit_report(runtime, point={"lon": LON, "lat": LAT})["result"]["markdown"]
     assert "Nearest real measurement" in md
+
+
+def test_prg_is_sampled_live_with_nearest_distance(runtime: ToolRuntime) -> None:
+    env = run_context_check(runtime, LON, LAT)
+    prg = next(l for l in env["result"]["groups"]["constraint"]["layers"] if l["layer"] == "prg_sistemi_regole")
+    names = {h["name"]: h for h in prg["hits"]}
+    assert names["Citta storica"]["distance_m"] == 0.0
+    assert names["Citta storica"]["properties"]["nta_articles"] == [{"article": "Art.24", "url": "https://example.org/Art_24.htm"}]
+    assert names["Verde pubblico"]["distance_m"] == 150.0
+    assert any("not exhaustive" in w for w in env["warnings"])
+
+
+def test_prg_failure_is_reported_not_raised(runtime: ToolRuntime) -> None:
+    from twin.tools import prg
+
+    prg._CACHE.clear()
+
+    def down(url: str) -> Any:
+        raise OSError("server down")
+
+    runtime.prg_fetcher = down
+    env = run_context_check(runtime, LON + 0.01, LAT)
+    assert env["data_kinds"]["prg_sistemi_regole"] == "not_available"
+    assert any("live query failed" in w for w in env["warnings"])
+    prg._CACHE.clear()

@@ -31,6 +31,7 @@ def client(tmp_path: Path) -> TestClient:
          "properties": {"nome": "Scuola", "codice": "RM123"}}]})
     rt = ToolRuntime(settings=settings, store=store)
     rt.providers = rt._build_providers()
+    rt.prg_fetcher = lambda url: {"type": "FeatureCollection", "features": []}  # no live calls in tests
     return TestClient(create_app(rt, api_keys={"office-key": "office", "citizen-key": "citizen"}))
 
 

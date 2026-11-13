@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Iterable, Mapping, Protocol
+from typing import Any, Callable, Iterable, Mapping, Protocol
 
 from twin.providers.base import Provider, ProviderNotConfigured
 from twin.providers.registry import FACTORIES
@@ -64,6 +64,8 @@ class ToolRuntime:
     baseline: BaselineSource | None = None
     #: Real field measurements (ARPA points), reported next to the estimate as a reference.
     measurements: BaselineSource | None = None
+    #: HTTP fetcher for live point queries (PRG WMS); ``None`` = real network. Tests inject a fake.
+    prg_fetcher: Callable[[str], Any] | None = None
     providers: dict[str, Provider] = field(default_factory=dict)
 
     @classmethod

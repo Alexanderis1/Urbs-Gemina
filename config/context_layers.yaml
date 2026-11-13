@@ -45,4 +45,16 @@ layers:
   sitap_art136_ab:      {label: "Landscape constraint art. 136 a-b D.Lgs. 42/2004 (SITAP)", group: constraint, data_kind: real}
   sitap_art136_cd:      {label: "Landscape constraint art. 136 c-d D.Lgs. 42/2004 (SITAP)", group: constraint, data_kind: real}
   masts_osm:            {label: "Existing masts (OpenStreetMap)", group: existing_infrastructure, data_kind: real}
-  prg_sistemi_regole:   {label: "PRG component (Sistemi e Regole)", group: constraint, data_kind: real}
+  prg_sistemi_regole:
+    label: "PRG component (Sistemi e Regole), sampled"
+    group: constraint
+    data_kind: real
+    # No WFS exists: read live with WMS GetFeatureInfo at the centre and at 8 bearings on 2 rings.
+    live: wms_point
+    url: "https://geoportale.comune.roma.it/geoserver/ows"
+    layer: "DIPAU:PrgSistemiRegole10000"
+    half_deg: 0.0002          # about 20 m query window around each sample point
+    sample_rings: [0.5, 1.0]  # fractions of the radius (150 m and 300 m for the default 300 m)
+    sample_bearings: 8
+    timeout_s: 10
+    basis: "WS1 checked the point query on 2026-11-13; sampled, not exhaustive"
