@@ -66,3 +66,4 @@ Decided by Alessandro: no time-based scope cuts. The elements are built in paral
 | Hub | Area ids: `city`, `municipio:<1-15>`, `zone:<CODE>`, or a GeoJSON polygon (300 m circle as a polygon). One parser in `twin/tools/area.py` | Agreed |
 | WS10 sports | Facility type is public / school / private / unclassified; "private" only when a source states it, never inferred from appearing only in OSM or on the web | Agreed |
 | WS4 tools | Tool list adds `permit_report`, `sports_facilities`, `sport_coverage`; `estimate_field` takes a point or an area | Agreed |
+| Hub | Census sections handed over as `data/processed/census_sections.geojson` with fixed field names (`sez_id`, `residents`, `children_0_14`, `municipio`, `zone`), normalised by WS1 at ingest | Agreed |
