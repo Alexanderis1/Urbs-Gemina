@@ -42,9 +42,18 @@ def reach_radius_m(config: SportsConfig) -> float:
     return street_m / r.detour_factor
 
 
-def _offering(facilities: Iterable[Facility], discipline: str, include_unverified: bool) -> list[Facility]:
+def _likely_private_pool(f: Facility) -> bool:
+    """Unnamed OSM-only pool with no access tag (see config coverage.basis)."""
+    return (f.fields["kind"].value == "pool" and not f.fields["name"].value and f.access is None
+            and all(m.startswith("osm:") for m in f.members))
+
+
+def _offering(facilities: Iterable[Facility], discipline: str, include_unverified: bool,
+              config: SportsConfig | None = None) -> list[Facility]:
+    skip_pools = config.exclude_osm_unnamed_pools_without_access if config else True
     return [f for f in facilities
-            if f.lon is not None and f.lat is not None and f.offers(discipline, include_unverified)]
+            if f.lon is not None and f.lat is not None and f.offers(discipline, include_unverified)
+            and not (skip_pools and _likely_private_pool(f))]
 
 
 def coverage(points: Sequence[PopulationPoint], facilities: Sequence[Facility], discipline: str,
@@ -58,7 +67,7 @@ def coverage(points: Sequence[PopulationPoint], facilities: Sequence[Facility], 
     """
     min_share = config.desert_min_uncovered_share if config else 0.5
     min_res = config.desert_min_residents if config else 1000.0
-    offering = _offering(facilities, discipline, include_unverified)
+    offering = _offering(facilities, discipline, include_unverified, config)
     index: GridIndex[Facility] = GridIndex(radius_m)
     for f in offering:
         assert f.lon is not None and f.lat is not None
