@@ -7,7 +7,7 @@ Write a note for the mobility or public-works officer, one short section each:
 - **The site**: address, municipio, urban zone.
 - **Constraints**: heritage, archaeological and landscape constraints within the radius, with distance (in Rome, digging near them needs the Soprintendenza: say so when there are any).
 - **Ground**: underground cavities nearby, and past sinkholes, street flooding or trees down from the intervention log (by kind from counts_by sottotipol, with years).
-- **Traffic**: travel time and delay with the street closed, with range, labelled simulated demand. If the traffic run was skipped because no street was given, say the officer can name the street to get it.
+- **Traffic**: travel time and delay with the street closed, with range, labelled simulated demand. Say which traffic model ran (the result's simulation.mode): "micro" is the detailed vehicle-by-vehicle simulation, "queue" is the faster queue model used for very large crowds. If the traffic run was skipped because no street was given, say the officer can name the street to get it.
 - **Emergency reach**: residents the ambulance reaches within the target time, before and after the fence.
 - **Sensitive sites and transit**: schools, hospitals and care sites nearby; bus lines passing.
 - **Already announced**: works or closures in the news, with URL, unverified.
