@@ -25,7 +25,7 @@ from typing import Any, Iterable, Iterator, Mapping, Sequence
 
 import numpy as np
 
-from twin.beliefs.calibration import CalibrationReport, CalibrationRules, leave_one_station_out
+from twin.beliefs.calibration import CalibrationReport, CalibrationRules, leave_one_station_out, sensor_health
 from twin.beliefs.config import LayerSpec, SourceSpec, load_calibration_rules, load_specs
 from twin.beliefs.grid import bbox_of_cells, cell_boundary
 from twin.beliefs.layer import BeliefLayer, assimilate, prior_layer, with_wind
@@ -147,6 +147,27 @@ def calibrate(layer: BeliefLayer, observations: Sequence[Observation]) -> Belief
     """Run the leave-one-station-out check and attach its verdict to the layer."""
     rules = CalibrationRules.from_config(load_calibration_rules())
     return layer.with_calibration(leave_one_station_out(layer.spec, observations, rules))
+
+
+def check_sensors(name: str, observations: Sequence[Observation]) -> list[dict[str, Any]]:
+    """Stations of a layer that keep disagreeing with their neighbours (settings in ``sensor_health``)."""
+    raw = _load_section("sensor_health")
+    rules = CalibrationRules.from_config(load_calibration_rules())
+    return sensor_health(
+        load_specs()[name], observations, z_flag=float(raw["z_flag"]), min_moments=int(raw["min_moments"]),
+        min_stations=rules.min_stations,
+    )
+
+
+def _load_section(section: str) -> dict[str, Any]:
+    import yaml
+
+    from twin.beliefs.config import CONFIG_DIR
+
+    raw = yaml.safe_load((CONFIG_DIR / "beliefs.yaml").read_text(encoding="utf-8"))[section]
+    if not isinstance(raw, dict):
+        raise ValueError(f"{section} must be a mapping")
+    return raw
 
 
 def exceedance_probability(mean: float, sd: float, threshold: float) -> float:

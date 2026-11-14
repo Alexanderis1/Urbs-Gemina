@@ -186,6 +186,11 @@ def test_rain_starts_from_the_forecast_map() -> None:
     spec = load_specs()["rain"]
     assert spec.prior_field is not None
     assert spec.prior_field.source == "rain_forecast" and spec.prior_field.method == "idw"
+    cells = cells_in_bbox(WINDOW, 9)
+    dry = [reading("WeatherForecast", "precipitation", 0.0, 0.1, "om_rain_forecast")]
+    layer = prior_layer(spec, cells, T0, prior_field=dry)
+    # A confident dry forecast must not block a radar cloudburst: error floor of 3 mm/h.
+    assert layer.belief(cell_of(*HERE, 9)).variance >= 9.0
 
 
 def test_wind_stretches_spreading_along_its_axis() -> None:

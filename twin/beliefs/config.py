@@ -58,6 +58,8 @@ class FieldSpec:
     covariate_file: str | None = None
     covariate_coef: float = 0.0
     covariate_center: float = 0.0
+    #: Floor on the map's error, for maps that understate it (a rain forecast misses cloudbursts).
+    min_sd: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -176,6 +178,7 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 covariate_file=None if field.get("covariate") is None else str(field["covariate"]["file"]),
                 covariate_coef=0.0 if field.get("covariate") is None else _num(field["covariate"]["coef"]),
                 covariate_center=0.0 if field.get("covariate") is None else _num(field["covariate"]["center"]),
+                min_sd=float(field.get("min_sd", 0.0)),
             ),
             allow_simulated=bool(entry.get("allow_simulated", False)),
             aggregate=str(entry.get("aggregate", "none")),
