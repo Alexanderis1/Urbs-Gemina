@@ -102,14 +102,20 @@ def _snap(lon: np.ndarray, lat: np.ndarray, plon: Sequence[float],
 
 
 def facilities(service: str, data: ScenarioData) -> list[tuple[float, float, str]]:
+    """Start points of a service: the first layer found among the service's layers (config order)."""
     if data.facilities is not None:
         return list(data.facilities)
-    spec = _cfg()["facilities"].get(service)
-    if spec is None:
+    specs = _cfg()["facilities"].get(service)
+    if specs is None:
         raise ValueError(f"Unknown service {service!r}; known: {', '.join(sorted(_cfg()['facilities']))}")
-    path = layers.find(str(spec["file"]))
-    if path is None:
-        return []
+    for spec in specs if isinstance(specs, list) else [specs]:
+        path = layers.find(str(spec["file"]))
+        if path is not None:
+            return _points(path, spec)
+    return []
+
+
+def _points(path: Path, spec: Mapping[str, Any]) -> list[tuple[float, float, str]]:
     out: list[tuple[float, float, str]] = []
     for f in layers.read(path).get("features", []):
         props = f.get("properties") or {}
@@ -139,6 +145,9 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
     warnings: list[str] = []
     target_cfg = config.load("thresholds.yaml")["emergency_response"][TARGET_KEYS.get(service, "ambulance_urban_min")]
     target_min = float(change.get("target_min", target_cfg["value"]))
+    count_from = str(change.get("count_from", "call"))
+    if count_from not in ("call", "departure"):
+        raise ValueError("count_from must be 'call' (target includes call handling and dispatch) or 'departure'")
     if "close" not in change and "closed_area" not in change and "flood" not in change:
         raise ValueError("emergency_access change needs 'close' (edges | street), 'closed_area' (GeoJSON polygon) "
                          "or 'flood' ({'kind': 'river_flood' | 'rain_flood', 'change': {...}})")
@@ -205,15 +214,20 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
     residents = np.asarray([float((f.get("properties") or {}).get("residents") or 0) for f in feats])
 
     rng = np.random.default_rng(int(cfg["seed"]))
-    factors = float(cfg["speed_factor"]) * np.exp(rng.normal(0.0, float(cfg["speed_sigma_ln"]), int(cfg["members"])))
+    members = int(cfg["members"])
+    factors = float(cfg["speed_factor"]) * np.exp(rng.normal(0.0, float(cfg["speed_sigma_ln"]), members))
+    pre_cfg = cfg["pre_travel_min"][service if service in cfg["pre_travel_min"] else "ambulance"]
+    pre_s = float(pre_cfg["median"]) * 60.0 * np.exp(rng.normal(0.0, float(pre_cfg["sigma_ln"]), members))
+    if count_from == "departure":
+        pre_s = np.zeros(members)
     target_s = target_min * 60.0
     beyond: dict[str, list[float]] = {"baseline": [], "variant": []}
-    for f in factors:
-        beyond["baseline"].append(float(residents[base_s / f > target_s].sum()))
-        beyond["variant"].append(float(residents[var_s / f > target_s].sum()))
-    f50 = float(np.median(factors))
-    lost = [(i, base_s[i] / f50 / 60, var_s[i] / f50 / 60) for i in range(len(feats))
-            if var_s[i] / f50 > target_s >= base_s[i] / f50]
+    for f, p0 in zip(factors, pre_s):
+        beyond["baseline"].append(float(residents[p0 + base_s / f > target_s].sum()))
+        beyond["variant"].append(float(residents[p0 + var_s / f > target_s].sum()))
+    f50, p50 = float(np.median(factors)), float(np.median(pre_s))
+    lost = [(i, (p50 + base_s[i] / f50) / 60, (p50 + var_s[i] / f50) / 60) for i in range(len(feats))
+            if p50 + var_s[i] / f50 > target_s >= p50 + base_s[i] / f50]
     lost.sort(key=lambda r: -residents[r[0]])
     worse = [{"sez_id": str((feats[i].get("properties") or {}).get("sez_id", "")), "residents": int(residents[i]),
               "lon": round(cent[i][0], 6), "lat": round(cent[i][1], 6),
@@ -227,6 +241,7 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
         minutes, weight = base_s[reach][order] / f50 / 60, np.cumsum(residents[reach][order])
         for key, q in (("median_resident", 0.5), ("p75_resident", 0.75)):
             travel[key] = round(float(minutes[np.searchsorted(weight, q * weight[-1])]), 1)
+    response = {k: (None if v is None else round(v + p50 / 60, 1)) for k, v in travel.items()}
     result = {
         "service": service, "facilities": len(sites), "target_min": target_min,
         "target_source": target_cfg.get("source"), "closed_roads": len(closed & set(edge_ids)),
@@ -234,7 +249,8 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
         "residents_beyond_target": {k: impacts.quantiles(v) for k, v in beyond.items()},
         "residents_cut_off": int(unreachable),
         "sections_losing_coverage": len(lost), "sections": worse,
-        "travel_min_baseline": travel,
+        "travel_min_baseline": travel, "response_min_baseline": response, "count_from": count_from,
+        "pre_travel_min": impacts.quantiles((pre_s / 60).tolist()),
         "calibration": str(cfg["calibration"]),
     }
     warnings += [
@@ -243,11 +259,16 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
         "Each census section is reached at the road junction nearest its centre; stations outside the district "
         "network and the last stretch to each section add their straight-line distance times a detour factor.",
     ]
+    if count_from == "call":
+        warnings.append(f"Times run from the call: about {p50 / 60:.1f} minutes of call handling, dispatch and crew "
+                        f"departure are added to the road time ({pre_cfg['basis']}).")
     if service == "ambulance":
-        warnings.append("Ambulances start from emergency hospitals: 118 posts are not in an open layer.")
+        warnings.append("Ambulances start from the ARES 118 posts (public list) or, where that layer is missing, from "
+                        "emergency hospitals. An ambulance that is busy elsewhere or held at an emergency department "
+                        "is not modelled: the nearest post is always taken as free.")
         obs = cfg["observed_response"]
         warnings.append(f"Real 118 responses in Lazio take {obs['lazio_p75_min']} minutes at the 75th percentile "
-                        f"({obs['source']}). This model gives road travel with an ambulance ready, so read its "
+                        f"({obs['source']}). This model assumes a free ambulance at the nearest post, so read its "
                         "minutes as a best case and its changes (before and after a closure) as the useful signal.")
     kinds["road_network"] = "real"
     return {"result": result, "data_kinds": kinds, "sources": [], "synthetic": False, "warnings": warnings}

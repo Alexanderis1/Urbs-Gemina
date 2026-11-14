@@ -1,45 +1,222 @@
 {
-  "what": "Past cloudbursts in Rome with measured or officially reported rainfall and the places reported flooded, for checking the rain flood + sewer model",
-  "data_kind": "real",
-  "note": "Rain is given per municipio as reported; places are official street names (Roma Capitale toponomastica) or metro stations. A place 'near' another is the stretch of the first street closest to the second.",
-  "events": [
+ "what": "Past cloudbursts in Rome with measured or officially reported rainfall and the places reported flooded, for checking the rain flood + sewer model",
+ "data_kind": "real",
+ "note": "Rain is given per municipio as reported; places are official street names (Roma Capitale toponomastica) or metro stations. A place 'near' another is the stretch of the first street closest to the second.",
+ "events": [
+  {
+   "id": "2024-09-03",
+   "rain": {
+    "1": {
+     "mm": 60,
+     "hours": 1
+    },
+    "5": {
+     "mm": 40,
+     "hours": 1
+    },
+    "6": {
+     "mm": 40,
+     "hours": 1
+    }
+   },
+   "rain_source": "Roma Capitale Protezione Civile via la Repubblica Roma, 3 Sep 2024: about 60 mm in under an hour in Municipio I; Municipi I, V, VI, XV over 40 mm",
+   "reports_source": "Corriere della Sera Roma, la Repubblica Roma, Il Fatto Quotidiano, Sky TG24 (3 Sep 2024); 120 Polizia Locale interventions for flooding",
+   "places": [
     {
-      "id": "2024-09-03",
-      "rain": {"1": {"mm": 60, "hours": 1}, "5": {"mm": 40, "hours": 1}, "6": {"mm": 40, "hours": 1}},
-      "rain_source": "Roma Capitale Protezione Civile via la Repubblica Roma, 3 Sep 2024: about 60 mm in under an hour in Municipio I; Municipi I, V, VI, XV over 40 mm",
-      "reports_source": "Corriere della Sera Roma, la Repubblica Roma, Il Fatto Quotidiano, Sky TG24 (3 Sep 2024); 120 Polizia Locale interventions for flooding",
-      "places": [
-        {"street": "VIA VITTOR PISANI"},
-        {"street": "PIAZZA DEI PRATI DEGLI STROZZI"},
-        {"street": "VIALE GIULIO CESARE"},
-        {"street": "CORSO D'ITALIA"},
-        {"street": "VIA DEL TRITONE"},
-        {"street": "LUNGOTEVERE IN SASSIA"},
-        {"street": "VIA DELLE FORNACI"},
-        {"station": "Lepanto"},
-        {"station": "Manzoni"},
-        {"street": "VIA SICULIANA"},
-        {"street": "VIA CASILINA", "near": "VIA BORGHESIANA"},
-        {"street": "VIA DI TOR BELLA MONACA", "near": "VIA CASILINA"},
-        {"street": "VIA PRENESTINA", "near": "VIALE PALMIRO TOGLIATTI"}
-      ]
+     "street": "VIA VITTOR PISANI"
     },
     {
-      "id": "2011-09-19",
-      "rain": {"7": {"mm": 30, "hours": 1}, "5": {"mm": 30, "hours": 1}, "6": {"mm": 30, "hours": 1}},
-      "rain_source": "Dipartimento Protezione Civile Centro Funzionale via Roma Capitale: 30.8 mm/h at Roma EUR (30 mm in 15 minutes) and 30 mm/h at Casilino, between 03:00 and 04:00",
-      "reports_source": "la Repubblica Roma, 19 Sep 2011",
-      "places": [
-        {"station": "San Giovanni"},
-        {"station": "Ponte Lungo"},
-        {"station": "Colli Albani"},
-        {"station": "Porta Furba/Quadraro"},
-        {"station": "Numidio Quadrato"},
-        {"station": "Lucio Sestio"},
-        {"street": "VIALE GIULIO AGRICOLA"},
-        {"street": "VIA PRENESTINA", "near": "VIALE PALMIRO TOGLIATTI"}
-      ]
+     "street": "PIAZZA DEI PRATI DEGLI STROZZI"
+    },
+    {
+     "street": "VIALE GIULIO CESARE"
+    },
+    {
+     "street": "CORSO D'ITALIA"
+    },
+    {
+     "street": "VIA DEL TRITONE"
+    },
+    {
+     "street": "LUNGOTEVERE IN SASSIA"
+    },
+    {
+     "street": "VIA DELLE FORNACI"
+    },
+    {
+     "station": "Lepanto"
+    },
+    {
+     "station": "Manzoni"
+    },
+    {
+     "street": "VIA SICULIANA"
+    },
+    {
+     "street": "VIA CASILINA",
+     "near": "VIA BORGHESIANA"
+    },
+    {
+     "street": "VIA DI TOR BELLA MONACA",
+     "near": "VIA CASILINA"
+    },
+    {
+     "street": "VIA PRENESTINA",
+     "near": "VIALE PALMIRO TOGLIATTI"
     }
+   ]
+  },
+  {
+   "id": "2011-09-19",
+   "rain": {
+    "7": {
+     "mm": 30,
+     "hours": 1
+    },
+    "5": {
+     "mm": 30,
+     "hours": 1
+    },
+    "6": {
+     "mm": 30,
+     "hours": 1
+    }
+   },
+   "rain_source": "Dipartimento Protezione Civile Centro Funzionale via Roma Capitale: 30.8 mm/h at Roma EUR (30 mm in 15 minutes) and 30 mm/h at Casilino, between 03:00 and 04:00",
+   "reports_source": "la Repubblica Roma, 19 Sep 2011",
+   "places": [
+    {
+     "station": "San Giovanni"
+    },
+    {
+     "station": "Ponte Lungo"
+    },
+    {
+     "station": "Colli Albani"
+    },
+    {
+     "station": "Porta Furba/Quadraro"
+    },
+    {
+     "station": "Numidio Quadrato"
+    },
+    {
+     "station": "Lucio Sestio"
+    },
+    {
+     "street": "VIALE GIULIO AGRICOLA"
+    },
+    {
+     "street": "VIA PRENESTINA",
+     "near": "VIALE PALMIRO TOGLIATTI"
+    }
+   ]
+  },
+  {
+   "id": "2023-06-14",
+   "rain": {
+    "3": {
+     "mm": 70,
+     "hours": 2
+    },
+    "5": {
+     "mm": 43,
+     "hours": 2
+    },
+    "6": {
+     "mm": 52,
+     "hours": 2
+    },
+    "1": {
+     "mm": 39,
+     "hours": 2
+    }
+   },
+   "rain_source": "MeteoWeb 14 Jun 2023 from Rome station networks: 86 mm Vigne Nuove and 55 mm Bufalotta (Municipio III, mean 70 used), 52 mm Salone and 51 mm Colle Prenestino (VI), 43 mm Prenestina Cocconi (V), 39 mm Macao (I). Afternoon storm; 2 hours is an assumption",
+   "reports_source": "RomaToday (LuceVerde closures), Il Messaggero, Corriere della Sera Roma, MeteoWeb (Polizia di Roma Capitale), 14-15 Jun 2023",
+   "places": [
+    {
+     "street": "VIA DELLA BUFALOTTA",
+     "near": "PIAZZA MONTE GENNARO"
+    },
+    {
+     "street": "SALITA DELLA MARCIGLIANA",
+     "near": "VIA DELLO SCALO DI SETTEBAGNI"
+    },
+    {
+     "street": "VIA DEI PRATI FISCALI VECCHIA"
+    },
+    {
+     "street": "VIA GUGLIELMO SANSONI"
+    },
+    {
+     "street": "VIA TIBURTINA",
+     "near": "PIAZZALE VALERIO MASSIMO"
+    },
+    {
+     "street": "CORSO TRIESTE"
+    },
+    {
+     "street": "CIRCONVALLAZIONE NOMENTANA"
+    },
+    {
+     "street": "VIA FRASSINETO",
+     "near": "VIALE DELLE GALLINE BIANCHE"
+    }
+   ]
+  },
+  {
+   "id": "2024-09-09",
+   "rain": {
+    "6": {
+     "mm": 70,
+     "hours": 2
+    },
+    "9": {
+     "mm": 50,
+     "hours": 2
+    },
+    "7": {
+     "mm": 50,
+     "hours": 2
+    },
+    "14": {
+     "mm": 50,
+     "hours": 2
+    },
+    "3": {
+     "mm": 50,
+     "hours": 2
+    }
+   },
+   "rain_source": "Il Messaggero 10 Sep 2024: over 70 mm at Tor Vergata (VI), over 50 mm at EUR (IX), San Giovanni (VII), Monte Mario (XIV) and Bufalotta (III); over 20 mm in the first 10 minutes, then rain for hours (2 hours is an assumption)",
+   "reports_source": "Il Messaggero, 10 Sep 2024 (metro stations closed for water damage; Municipio III offices flooded)",
+   "places": [
+    {
+     "station": "Cinecitta'"
+    },
+    {
+     "station": "Ponte Lungo"
+    },
+    {
+     "street": "PIAZZA SEMPIONE"
+    },
+    {
+     "station": "Manzoni"
+    },
+    {
+     "street": "PIAZZA DI S. EMERENZIANA"
+    }
+   ]
+  }
+ ],
+ "dry_check": {
+  "rain_mm": 10,
+  "hours": 1,
+  "municipi": [
+   "1",
+   "7"
   ],
-  "dry_check": {"rain_mm": 10, "hours": 1, "municipi": ["1", "7"], "note": "an ordinary 10 mm/h shower: no flooding is normally reported"}
+  "note": "an ordinary 10 mm/h shower: no flooding is normally reported"
+ }
 }

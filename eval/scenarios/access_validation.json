@@ -1,14 +1,45 @@
 {
-  "method": "nearest emergency hospital, straight line x detour at the emergency speed, residents-weighted",
-  "hospitals": 22,
+  "method": "nearest start point, straight line x detour at the emergency speed, residents-weighted; response = call handling and dispatch (median) + travel",
   "sections": 23591,
   "residents": 2749031,
-  "model_travel_min": {
-    "p50": 4.6,
-    "p75": 7.7,
-    "p95": 16.1
-  },
+  "pre_travel_median_min": 4.5,
   "observed_alarm_to_target_p75_min": 20,
   "observed_source": "Ministero della Salute, NSG 2023, indicator D09Z (alarm-to-target time of the first 118 vehicle, 75th percentile, red and yellow codes), Lazio region",
-  "gap_p75_min": 12.3
+  "starts": {
+    "ares118_posts": {
+      "count": 26,
+      "model_travel_min": {
+        "p50": 4.1,
+        "p75": 6.3,
+        "p95": 11.2
+      },
+      "model_response_min": {
+        "p50": 8.6,
+        "p75": 10.8,
+        "p95": 15.7
+      },
+      "gap_p75_min": 9.2,
+      "p75_response_if_posts_busy": {
+        "30%": 12.6,
+        "50%": 14.6,
+        "70%": 18.5,
+        "80%": 22.2,
+        "90%": 32.5
+      }
+    },
+    "emergency_hospitals": {
+      "count": 22,
+      "model_travel_min": {
+        "p50": 4.6,
+        "p75": 7.7,
+        "p95": 16.1
+      },
+      "model_response_min": {
+        "p50": 9.1,
+        "p75": 12.2,
+        "p95": 20.6
+      },
+      "gap_p75_min": 7.8
+    }
+  }
 }

@@ -57,14 +57,15 @@ def run(change: dict[str, Any], data: ScenarioData | None = None) -> dict[str, A
     return engine.run("heatwave", AREA, change, data=data or ScenarioData(census=CENSUS), use_cache=False)
 
 
-def test_nights_follow_sealing_and_days_follow_the_forecast() -> None:
+def test_nights_follow_sealing_and_days_follow_the_forecast_and_the_canopy() -> None:
     out = run({"tmax_c": 35.5, "tmin_c": 19.0})
     assert out["status"] == "ok"
     r = out["result"]
     hot = r["hot_day"]
     assert hot["threshold_c"] == 35
-    assert hot["residents"]["p50"] == 700  # by day Rome's stations differ little: the forecast decides
-    assert hot["elderly_65_plus"]["p50"] == 180
+    # by day sealing barely matters (Rome stations); street-level shade does: the fully wooded side drops below 35 C
+    assert hot["residents"]["p50"] == 400
+    assert hot["elderly_65_plus"]["p50"] == 100
     assert hot["residents"]["p5"] <= hot["residents"]["p50"] <= hot["residents"]["p95"]
     night = r["tropical_night"]
     assert night["residents"]["p50"] == 400  # only the sealed side stays above 20 C at night
@@ -84,8 +85,8 @@ def test_contrast_matches_rome_stations() -> None:
     assert 0.0 < sections["E"]["tmin_c"]["p50"] - 18.0 < 2.5
     assert 0.5 < sections["W"]["tmin_c"]["p50"] - sections["E"]["tmin_c"]["p50"] < 3.0
     day = sections["W"]["tmax_c"]["p50"] - sections["E"]["tmax_c"]["p50"]
-    assert 0.0 < day < 1.5
-    assert abs(sections["E"]["tmax_c"]["p50"] - 30.0) < 1.0  # no district term by day
+    assert 1.0 < day < 2.5  # canopy, not sealing: about 1.8 C from bare to full canopy (Ziter 2019)
+    assert abs(sections["E"]["tmax_c"]["p50"] - 30.0) < 1.2  # no district term by day
     assert r["calibration"].startswith("stations")
 
 
@@ -99,17 +100,25 @@ def test_sealed_district_is_warmer_at_night_than_open_country(heat_layers: Path)
     assert 2.0 < sealed - open_country < 4.0  # Rome: about 2.9 C per 100 % district sealing
 
 
-def test_planting_trees_cools_the_night_more_than_the_day() -> None:
+def test_planting_trees_cools_the_day_more_than_the_night() -> None:
     out = run({"tmax_c": 35.5, "tmin_c": 18.0, "plant_trees": {"where": WEST, "cover_added_pct": 80}})
     r = out["result"]
-    assert r["hot_day"]["residents"]["p50"] == 700  # baseline
+    assert r["hot_day"]["residents"]["p50"] == 400  # baseline: the wooded side is below 35 C by day
     assert r["tropical_night"]["residents"]["p50"] == 400
     what_if = r["what_if"]
-    assert 0 < what_if["cooling_day_c"]["p50"] < what_if["cooling_night_c"]["p50"]
+    # street-level studies: canopy cools the day more than the night (Ziter 2019: >1.5 C for 0-100 % at block scale)
+    assert 0.5 < what_if["cooling_night_c"]["p50"] < what_if["cooling_day_c"]["p50"] < 2.0
     assert 0.5 < what_if["cooling_night_c"]["p50"] < 1.5
     assert what_if["trees_added"] > 1000
     assert what_if["tropical_night_residents"]["p50"] <= 400
     assert what_if["residents_no_longer_tropical"]["p95"] == 400
+
+
+def test_ten_points_more_canopy_cools_the_day_by_tenths_of_a_degree() -> None:
+    out = run({"tmax_c": 38.0, "tmin_c": 25.0, "plant_trees": {"where": WEST, "cover_added_pct": 10}})
+    day = out["result"]["what_if"]["cooling_day_c"]
+    assert 0.1 <= day["p50"] <= 0.3  # "a few tenths" per +10 % canopy (Ziter 2019; Locke 2024)
+    assert day["p5"] > 0
 
 
 def test_forecast_temperature_picks_the_hottest_day() -> None:
@@ -119,7 +128,7 @@ def test_forecast_temperature_picks_the_hottest_day() -> None:
     out = run({"temperature": "forecast"}, data)
     assert out["result"]["day"] == "2026-07-21"
     assert out["data_kinds"]["temperature"] == "estimated"
-    assert out["result"]["hot_day"]["residents"]["p50"] == 700
+    assert out["result"]["hot_day"]["residents"]["p50"] == 400
 
 
 def test_no_forecast_is_not_available() -> None:
@@ -134,4 +143,4 @@ def test_elderly_counts_are_joined_from_the_ages_file(heat_layers: Path) -> None
     for f in census["features"]:
         del f["properties"]["elderly_65_plus"]
     out = run({"tmax_c": 35.5, "tmin_c": 15.0}, ScenarioData(census=census))
-    assert out["result"]["hot_day"]["elderly_65_plus"]["p50"] == 130
+    assert out["result"]["hot_day"]["elderly_65_plus"]["p50"] == 123  # only the bare side is above 35 C by day

@@ -507,6 +507,16 @@
       "licence": "not stated in capabilities; credit Roma Capitale - GeoPortale (CC BY assumed, confidence 60)",
       "redistribution": true,
       "status": "verified"
+    },
+    "ares118_posts": {
+      "name": "ARES 118 ambulance posts inside Rome (public list of posts, Allegato 1a)",
+      "kind": "real",
+      "use": "start points of ambulances in the emergency access scenario; processed/ares118_posts.geojson (26 posts) via scripts/fetch_ares118_posts.py",
+      "endpoint": "https://ares118.it/media/foto-articoli/2664/varie/elenco_postazioni.pdf",
+      "access": "addresses read from the public PDF and placed with Roma Capitale's street-number WFS (DIPCUL:GeoromaCiviciLocator); posts outside the city limits left out; list date not stated in the document",
+      "licence": "public administration document (D.Lgs. 33/2013 transparency); addresses of public service buildings only",
+      "redistribution": true,
+      "status": "verified"
     }
   },
   "snapshots": {

@@ -108,7 +108,8 @@ def test_a_closed_block_forces_a_detour_beyond_the_target(chain_net: Path) -> No
     lon = (_lon(3) + _lon(4)) / 2
     block = {"type": "Polygon", "coordinates": [[[lon - d, LAT0 - d], [lon + d, LAT0 - d], [lon + d, LAT0 + d],
                                                  [lon - d, LAT0 + d], [lon - d, LAT0 - d]]]}
-    out = engine.run("emergency_access", AREA, {"service": "ambulance", "closed_area": block, "target_min": 5},
+    out = engine.run("emergency_access", AREA, {"service": "ambulance", "closed_area": block, "target_min": 5,
+                                               "count_from": "departure"},
                      data=_data(chain_net), use_cache=False)
     r = out["result"]
     assert r["closed_roads"] >= 1
@@ -125,10 +126,44 @@ def test_a_closed_block_forces_a_detour_beyond_the_target(chain_net: Path) -> No
 
 @needs_sumo
 def test_a_station_off_the_network_pays_its_approach_distance(chain_net: Path) -> None:
-    change = {"service": "fire", "close": {"street": "Via Sud Est"}, "target_min": 2}
+    change = {"service": "fire", "close": {"street": "Via Sud Est"}, "target_min": 2, "count_from": "departure"}
     near = engine.run("emergency_access", AREA, change, data=_data(chain_net), use_cache=False)["result"]
     far_station = [(LON0 - 5 * DLON, LAT0, "Stazione lontana")]  # 2 km west of the district network
     far = engine.run("emergency_access", AREA, change, use_cache=False,
                      data=ScenarioData(road_network=chain_net, census=CENSUS, facilities=far_station))["result"]
     assert near["residents_beyond_target"]["baseline"]["p50"] < 600
     assert far["residents_beyond_target"]["baseline"]["p50"] == 600
+
+
+@needs_sumo
+def test_targets_count_from_the_call_including_call_handling_and_dispatch(chain_net: Path) -> None:
+    """Legal 118 targets run from the call: the model adds call handling, dispatch and crew departure."""
+    change = {"service": "ambulance", "close": {"street": "Via Sud Est"}, "target_min": 5}
+    call = engine.run("emergency_access", AREA, change, data=_data(chain_net), use_cache=False)["result"]
+    road = engine.run("emergency_access", AREA, {**change, "count_from": "departure"}, data=_data(chain_net),
+                      use_cache=False)["result"]
+    assert call["count_from"] == "call" and road["count_from"] == "departure"
+    assert call["residents_beyond_target"]["baseline"]["p50"] > road["residents_beyond_target"]["baseline"]["p50"]
+    pre = call["pre_travel_min"]
+    assert 3 <= pre["p50"] <= 6 and pre["p5"] < pre["p50"] < pre["p95"]
+    travel, response = call["travel_min_baseline"], call["response_min_baseline"]
+    assert response["p75_resident"] == pytest.approx(travel["p75_resident"] + pre["p50"], abs=0.2)
+
+
+def test_ambulances_start_from_the_118_posts_when_the_layer_exists(monkeypatch: pytest.MonkeyPatch,
+                                                                     tmp_path: Path) -> None:
+    import json
+
+    from twin.scenarios import access, layers
+
+    posts = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [12.5, 41.9]}, "properties": {"name": "Post A"}}]}
+    (tmp_path / "ares118_posts.geojson").write_text(json.dumps(posts), encoding="utf-8")
+    real_find = layers.find
+    monkeypatch.setattr(layers, "find", lambda name, dirs=None: (tmp_path / name) if name == "ares118_posts.geojson"
+                        else real_find(name, dirs))
+    assert access.facilities("ambulance", ScenarioData()) == [(12.5, 41.9, "Post A")]
+    monkeypatch.setattr(layers, "find", lambda name, dirs=None: None if name == "ares118_posts.geojson"
+                        else real_find(name, dirs))
+    fallback = access.facilities("ambulance", ScenarioData())
+    assert all(name != "Post A" for _, _, name in fallback)  # emergency hospitals instead (or none in a bare checkout)
