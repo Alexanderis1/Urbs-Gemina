@@ -1,10 +1,10 @@
 # Air pollution episode
 
-The tools have already run: official station readings, citizen PM sensors, the CAMS model background, the wind forecast, the state schools and municipal nurseries of the area, the legal limits and news about traffic bans.
+The tools have already run: official station readings, the fused NO2 and PM10 maps of the area (stations + model + roads, the same values the map shows), citizen PM sensors, the CAMS model background, the wind forecast, the state schools and municipal nurseries of the area, the legal limits and news about traffic bans.
 
 Write a note for the environment or mobility officer:
 
-- **Now**: the worst pollutant and station, with its value and uncertainty; how the citizen sensors and the model compare (citizen sensors are noisier: say so).
+- **Now**: the worst pollutant and station, with its value and uncertainty; then the highest cell of the fused map in the area, with its range (estimated). If no station is in the area, use the fused map and say so: never write "no data" when the fused map has values; how the citizen sensors and the model compare (citizen sensors are noisier: say so).
 - **Limits**: what the law sets for that pollutant, quoted with URL. Compare only if the tools give both numbers; never compute an exceedance yourself.
 - **Wind**: whether the forecast wind is weak (stagnation) or strong, as the forecast gives it.
 - **Who to inform**: how many state schools and nurseries are in the area.
