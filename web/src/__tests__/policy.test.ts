@@ -78,4 +78,15 @@ describe("live API routes", () => {
   it("knows the permit_report tool", () => {
     expect(planForward("/tools/permit_report", "office", {}, env)).toMatchObject({ ok: true });
   });
+
+  it("lists the ready-made use cases for the caller's tier with a GET upstream", () => {
+    expect(planForward("/use_cases", "office", {}, env)).toEqual({
+      ok: true,
+      url: "https://api.example/use_cases",
+      key: "office-key",
+      body: {},
+      method: "GET",
+    });
+    expect(planForward("/use_cases", "citizen", {}, env)).toMatchObject({ ok: true, key: "", method: "GET" });
+  });
 });

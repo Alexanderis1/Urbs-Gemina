@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Circle, Layers, MapPin, MessagesSquare, PanelsTopLeft, Send, ShieldAlert, ShieldCheck, Sparkles, Square, type LucideIcon } from "lucide-react";
 import { isSampleMode, proxyFetch } from "@/api/client";
+import { StepList, UseCasePanel, useUseCases, type UseCaseRun } from "@/components/UseCases";
+import { buildUseCaseQuestion, useCaseTurnLabel } from "@/lib/useCases";
 import { buildTwinQuestion, citationRows, parseTwinAnswer, type Citation, type Language, type TwinAnswer } from "@/api/twin";
 import { KindBadge } from "@/components/Badge";
 import { Callout, Segmented, Skeleton } from "@/components/ui";
@@ -55,6 +57,9 @@ export default function Ask() {
   const [text, setText] = useState("");
   const [language, setLanguage] = useState<Language>("en");
   const [busy, setBusy] = useState(false);
+  // Steps of the ready-made task that is running, shown while waiting.
+  const [runningSteps, setRunningSteps] = useState<string[] | null>(null);
+  const useCases = useUseCases();
   const conversationId = useRef(crypto.randomUUID());
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -87,34 +92,51 @@ export default function Ask() {
     });
   }
 
-  async function send(question?: string) {
-    const q = (question ?? text).trim();
+  /** One round trip to the assistant: shows the request, waits, then shows the answer or the failure. */
+  async function ask(shown: string, body: unknown, steps: string[] | null = null) {
     if (busy) return;
-    if (!q) return;
-    setText("");
-    setTurns((t) => [...t, { role: "user", text: q }]);
+    setTurns((t) => [...t, { role: "user", text: shown }]);
     setBusy(true);
+    setRunningSteps(steps);
     try {
       let answer: TwinAnswer;
       if (!isSampleMode) {
-        const res = await proxyFetch("/ask", buildTwinQuestion(q, { language, conversationId: conversationId.current }));
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await proxyFetch("/ask", body);
+        if (!res.ok) {
+          const b = (await res.json().catch(() => ({}))) as { detail?: unknown };
+          throw new Error(typeof b.detail === "string" ? b.detail : `HTTP ${res.status}`);
+        }
         answer = parseTwinAnswer(await res.json());
       } else {
-        answer = await sampleAnswer(q);
+        answer = await sampleAnswer(shown);
       }
       setTurns((t) => [...t, { role: "assistant", text: answer.text, answer }]);
     } catch (e) {
-      setTurns((t) => [...t, { role: "error", text: `The assistant could not answer: ${String(e)}` }]);
+      setTurns((t) => [...t, { role: "error", text: `The assistant could not answer: ${e instanceof Error ? e.message : String(e)}` }]);
     } finally {
       setBusy(false);
+      setRunningSteps(null);
     }
+  }
+
+  async function send(question?: string) {
+    const q = (question ?? text).trim();
+    if (!q) return;
+    setText("");
+    await ask(q, buildTwinQuestion(q, { language, conversationId: conversationId.current }));
+  }
+
+  function runUseCase(r: UseCaseRun) {
+    const input = { place: r.place, area: r.area, values: r.values, language, conversationId: conversationId.current };
+    void ask(useCaseTurnLabel(r.useCase, input), buildUseCaseQuestion(r.useCase, input), r.useCase.steps);
   }
 
   const onlyOpening = turns.length === 1;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full">
+      {useCases.length > 0 && <UseCasePanel useCases={useCases} language={language} busy={busy} onRun={runUseCase} />}
+      <div className="flex h-full min-w-0 flex-1 flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
           <header className="space-y-1">
@@ -153,6 +175,12 @@ export default function Ask() {
                 </div>
                 <Skeleton lines={3} />
                 <p className="hint">Running tools and checking figures…</p>
+                {runningSteps && (
+                  <div className="rounded border border-line bg-sunken p-3">
+                    <div className="label mb-1.5">This task runs these steps, in order</div>
+                    <StepList steps={runningSteps} />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -207,6 +235,7 @@ export default function Ask() {
             Ask
           </button>
         </form>
+      </div>
       </div>
     </div>
   );

@@ -18,6 +18,20 @@ export interface FactItem {
   path: string;
   label: string;
   value: string;
+  /** For a single number: the figure without its unit, and the unit, so a tile can set them apart. */
+  bare?: string;
+  unit?: string;
+  /** Caveat to show under the figure, e.g. when only the middle estimate was returned. */
+  note?: string;
+}
+
+/** A headline figure for the result panel: a range (with its note) or a single returned number. */
+export interface KeyFigure {
+  path: string;
+  label: string;
+  value: string;
+  unit: string;
+  note?: string;
 }
 
 export interface TableItem {
@@ -356,6 +370,12 @@ function isKeyedRows(v: Obj): boolean {
   );
 }
 
+/** Top-level head counts are people inside the modelled footprint: say so. */
+const AFFECTED: Record<string, string> = {
+  "residents.residents": "Residents in the affected area",
+  "residents.children_0_14": "Children (0-14) in the affected area",
+};
+
 export function summariseScenario(input: unknown): ScenarioSummary {
   const out: ScenarioSummary = { compare: null, quantiles: [], facts: [], tables: [], footprints: [], points: [], notAvailable: null };
   if (!isObj(input)) return out;
@@ -408,6 +428,13 @@ export function summariseScenario(input: unknown): ScenarioSummary {
       }
       const entries = Object.entries(v).filter(([, x]) => x !== null && x !== undefined);
       if (entries.length === 0) return;
+      // {p50: {...}} alone: counts for the middle footprint only. Each is a figure, flagged as having no range.
+      if (entries.length === 1 && isObj(v.p50) && Object.values(v.p50).every(isPrimitive)) {
+        for (const [k, x] of ordered(Object.entries(v.p50)))
+          if (typeof x === "number")
+            out.facts.push({ path: `${path}.p50.${k}`, label: AFFECTED[`${path}.${k}`] ?? labelFor(`${path}.${k}`), value: fmtValue(k, x), bare: fmtNumber(x), unit: unitFor(k), note: "middle estimate (P50)" });
+        return;
+      }
       if (entries.length <= 8 && entries.every(([, x]) => isPrimitive(x))) {
         out.facts.push({ path, label: labelFor(path), value: fmtValue(key, v) });
         return;
@@ -419,9 +446,36 @@ export function summariseScenario(input: unknown): ScenarioSummary {
       for (const [k, x] of ordered(entries)) walk(`${path}.${k}`, k, x);
       return;
     }
-    out.facts.push({ path, label: labelFor(path), value: fmtValue(key, v) });
+    if (typeof v === "number" && !isProbabilityKey(key)) out.facts.push({ path, label: labelFor(path), value: fmtValue(key, v), bare: fmtNumber(v), unit: unitFor(key) });
+    else out.facts.push({ path, label: labelFor(path), value: fmtValue(key, v) });
   };
 
   for (const [k, v] of Object.entries(result)) if (!skip.has(k)) walk(k, k, v);
   return out;
+}
+
+/** What an officer asks first, in this order: people, the vulnerable, extent, counts of places. */
+const KEY_RANK: RegExp[] = [
+  /(^|\.)residents(_beyond_target|_cut_off|_newly_covered|_no_longer_hot)?$/,
+  /children|elderly|aged_65|over_65/,
+  /flooded_km2|hot_area_km2|area_km2\.(likely|possible)/,
+  /hotspots_count|sensitive_sites\.count|closed_roads|sections_losing_coverage/,
+];
+
+/**
+ * The few figures to show first. Ranked by KEY_RANK; model internals (sewer efficiency, depth index) stay below.
+ * When nothing is ranked, the first ranges are used so the panel is never empty.
+ */
+export function keyFigures(s: ScenarioSummary, max = 4): KeyFigure[] {
+  const all: KeyFigure[] = [
+    ...s.quantiles.map((q) => ({ path: q.path, label: q.label, value: fmtNumber(q.value.p50), unit: q.unit, note: rangeText(q.value) })),
+    ...s.facts.filter((f) => f.bare !== undefined && !f.path.startsWith("area.")).map((f) => ({ path: f.path, label: f.label, value: f.bare!, unit: f.unit ?? "", note: f.note })),
+  ];
+  const rank = (f: KeyFigure) => KEY_RANK.findIndex((r) => r.test(f.path.replace(/\.p50\./, ".")));
+  const ranked = all
+    .map((f, i) => ({ f, i, r: rank(f) }))
+    .filter((x) => x.r >= 0)
+    .sort((a, b) => a.r - b.r || a.i - b.i)
+    .map((x) => x.f);
+  return (ranked.length ? ranked : all.filter((f) => s.quantiles.some((q) => q.path === f.path))).slice(0, max);
 }

@@ -43,7 +43,7 @@ import {
   SCENARIOS,
   type ScenarioTile,
 } from "@/lib/scenario";
-import { fmtNumber, MAX_ROWS, rangeText, summariseScenario, unitFor, type Quantile } from "@/lib/scenarioResult";
+import { fmtNumber, keyFigures, MAX_ROWS, rangeText, summariseScenario, unitFor, type Quantile } from "@/lib/scenarioResult";
 
 const ICONS: Record<ScenarioTile, LucideIcon> = {
   river_flood: Waves,
@@ -309,8 +309,11 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
   const s = useMemo(() => summariseScenario(env.result), [env]);
   // A nested pair (e.g. residents beyond the target time) carries its own meaning; the top-level one uses `unit`.
   const unit = s.compare?.path ? unitFor(s.compare.path) : (env.result.unit ?? "");
-  const headline = s.compare ? [] : s.quantiles.slice(0, 4);
-  const rest = s.compare ? s.quantiles : s.quantiles.slice(4);
+  // People and extent first; what is shown as a key figure is not repeated further down.
+  const headline = useMemo(() => keyFigures(s), [s]);
+  const shown = new Set(headline.map((f) => f.path));
+  const rest = s.quantiles.filter((q) => !shown.has(q.path));
+  const facts = s.facts.filter((f) => !shown.has(f.path));
   const max = s.compare ? Math.max(s.compare.baseline.p95, s.compare.variant.p95, 1e-9) * 1.1 : 1;
   const nothing = !s.compare && !s.quantiles.length && !s.facts.length && !s.tables.length && !s.footprints.length;
 
@@ -353,7 +356,7 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
       {headline.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
           {headline.map((q) => (
-            <Stat key={q.path} label={q.label} value={fmtNumber(q.value.p50)} unit={q.unit} note={rangeNote(q.value)} tone="estimated" />
+            <Stat key={q.path} label={q.label} value={q.value} unit={q.unit} note={q.note} />
           ))}
         </div>
       )}
@@ -367,10 +370,22 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
       )}
 
       {rest.length > 0 && (
-        <Section title="Ranges">
-          {rest.map((q) => (
-            <RangeBar key={q.path} label={q.label} e={q.value} unit={q.unit} max={Math.max(q.value.p95, 1e-9) * 1.15} note={false} />
-          ))}
+        <Section title="Other figures">
+          {/* A bar only says something when there is a spread; single values go in tiles. */}
+          {rest.some((q) => q.value.p5 === q.value.p95) && (
+            <div className="grid grid-cols-2 gap-2">
+              {rest
+                .filter((q) => q.value.p5 === q.value.p95)
+                .map((q) => (
+                  <Stat key={q.path} label={q.label} value={fmtNumber(q.value.p50)} unit={q.unit} note={rangeNote(q.value)} />
+                ))}
+            </div>
+          )}
+          {rest
+            .filter((q) => q.value.p5 !== q.value.p95)
+            .map((q) => (
+              <RangeBar key={q.path} label={q.label} e={q.value} unit={q.unit} max={Math.max(q.value.p95, 1e-9) * 1.15} note={false} />
+            ))}
         </Section>
       )}
       {!s.compare && s.quantiles.length > 0 && <p className="hint">Estimates, not measurements: read every figure with its range.</p>}
@@ -392,7 +407,11 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
                 {t.rows.map((r, i) => (
                   <tr key={i}>
                     {r.map((c, j) => (
-                      <td key={j} className={/^[\d\-—]/.test(c) ? "num whitespace-nowrap" : "break-words"}>
+                      <td
+                        key={j}
+                        // Long notes get a readable column width instead of one word per line.
+                        className={/^[\d\-—]/.test(c) ? "num whitespace-nowrap" : c.length > 28 ? "min-w-[14rem] break-words" : "break-words"}
+                      >
                         {c}
                       </td>
                     ))}
@@ -405,10 +424,10 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
         </Section>
       ))}
 
-      {s.facts.length > 0 && (
+      {facts.length > 0 && (
         <Section title="Details">
           <dl className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-3 gap-y-1.5 text-xs">
-            {s.facts.map((f) => (
+            {facts.map((f) => (
               <Fragment key={f.path}>
                 <dt className="text-muted">{f.label}</dt>
                 <dd className={`break-words text-ink ${/^[\d\-]/.test(f.value) ? "num" : ""}`}>{f.value}</dd>

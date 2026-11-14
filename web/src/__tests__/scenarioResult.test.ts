@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fmtNumber, rangeText, humanise, isQuantile, labelFor, summariseScenario } from "@/lib/scenarioResult";
+import { fmtNumber, keyFigures, rangeText, humanise, isQuantile, labelFor, summariseScenario } from "@/lib/scenarioResult";
 
 const square = { type: "MultiPolygon", coordinates: [[[[12.47, 41.89], [12.48, 41.89], [12.48, 41.9], [12.47, 41.89]]]] };
 
@@ -172,5 +172,32 @@ describe("sample results", () => {
   it("says so plainly when a range has no spread, instead of repeating the same number", () => {
     expect(rangeText({ p5: 7.7, p50: 16.5, p95: 34.6 })).toBe("range 7.7 to 34.6");
     expect(rangeText({ p5: 16784, p50: 16784, p95: 16784 })).toBe("same in every model run");
+  });
+
+  // Shape of a real rain_flood run on the live service (14 Nov 2026), cut down.
+  const rain = {
+    area: { area_km2: 19.984, id: "municipio:1" },
+    flooded_km2_p50: 0.604,
+    hotspots_count: 334,
+    residents: { p50: { children_0_14: 414, residents: 4176, sections_touched: 383 } },
+    sensitive_sites: { count: 30, by_category: { education: 4, health: 3 } },
+    sewer: { efficiency: { p5: 0.143, p50: 0.259, p95: 0.429 }, outfalls_considered: 28 },
+    total_depth_index: { p5: 240.6, p50: 686.1, p95: 1383.4 },
+  };
+
+  it("puts people and extent first in the key figures, not model internals", () => {
+    const figures = keyFigures(summariseScenario(rain));
+    expect(figures.map((f) => f.path)).toEqual(["residents.p50.residents", "residents.p50.children_0_14", "flooded_km2_p50", "hotspots_count"]);
+    expect(figures[0]).toMatchObject({ value: "4,176", note: "middle estimate (P50)" });
+    expect(figures[2]).toMatchObject({ value: "0.604", unit: "km²" });
+    // The operating area's own size is not a result.
+    expect(figures.some((f) => f.path.startsWith("area"))).toBe(false);
+  });
+
+  it("keeps the range on key figures that have one, and falls back to the first ranges when nothing is ranked", () => {
+    const heat = summariseScenario({ hot_day: { residents: { p5: 100, p50: 150, p95: 220 } }, sewer: { efficiency: { p5: 0.1, p50: 0.2, p95: 0.3 } } });
+    expect(keyFigures(heat)[0]).toMatchObject({ path: "hot_day.residents", value: "150", note: "range 100 to 220" });
+    const other = summariseScenario({ sewer: { efficiency: { p5: 0.1, p50: 0.2, p95: 0.3 } } });
+    expect(keyFigures(other).map((f) => f.path)).toEqual(["sewer.efficiency"]);
   });
 });

@@ -16,7 +16,7 @@ export interface Env {
 }
 
 export type Plan =
-  | { ok: true; url: string; key: string; body: Record<string, unknown> }
+  | { ok: true; url: string; key: string; body: Record<string, unknown>; method?: "GET" }
   | { ok: true; table: "sports_manager_updates"; body: Record<string, unknown> }
   | { ok: true; voice: "office" }
   | { ok: false; status: number; reason: string };
@@ -67,6 +67,9 @@ export function planForward(path: string, tier: Tier, body: Record<string, unkno
     // The tier travels as the API key (office key or none); the live /ask rejects extra body fields.
     return { ok: true, url, key, body: withoutTier(body) };
   }
+
+  // Ready-made use cases the caller's tier may run (the API filters by the key). The browser POSTs here; upstream is a GET.
+  if (path === "/use_cases") return { ok: true, url: `${base}/use_cases`, key, body: {}, method: "GET" };
 
   if (path === "/reports/permit.md") return { ok: true, url: `${base}/reports/permit.md`, key, body: withoutTier(body) };
 

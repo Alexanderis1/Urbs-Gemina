@@ -196,6 +196,16 @@ export function CityMap({
       },
     });
     map.addControl(overlay);
+    // Start with the credits folded behind the (i) button so they do not cover the map legend; one click opens them.
+    // MapLibre opens them as soon as the first source brings a credit line, so fold once right after that.
+    const foldCredits = () => {
+      const credits = el.current?.querySelector(".maplibregl-ctrl-attrib");
+      if (!credits?.classList.contains("maplibregl-compact-show")) return;
+      credits.classList.remove("maplibregl-compact-show");
+      credits.removeAttribute("open");
+      map.off("sourcedata", foldCredits);
+    };
+    map.on("sourcedata", foldCredits);
     map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
     map.on("zoomend", () => zoomRef.current?.(map.getZoom()));
     mapRef.current = map;

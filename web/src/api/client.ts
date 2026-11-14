@@ -59,3 +59,9 @@ export async function callTool<R = Record<string, unknown>>(
   }
   return parseEnvelope(await res.json()) as Envelope<R>;
 }
+
+/** Reads a list from the API (GET when talking to it directly; the edge function takes a POST and forwards a GET). */
+export async function proxyRead(path: string): Promise<Response> {
+  if (DIRECT) return fetch(`${DIRECT}${path}`);
+  return proxyFetch(path, {});
+}

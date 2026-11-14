@@ -71,11 +71,11 @@ Deno.serve(async (req) => {
   }
 
   if (!plan.url) return json(503, { detail: "back end not configured" });
-  const upstream = await fetch(plan.url, {
-    method: "POST",
-    headers: { "content-type": "application/json", ...(plan.key ? { authorization: `Bearer ${plan.key}` } : {}) },
-    body: JSON.stringify(plan.body),
-  });
+  const auth = plan.key ? { authorization: `Bearer ${plan.key}` } : {};
+  const upstream =
+    plan.method === "GET"
+      ? await fetch(plan.url, { headers: auth })
+      : await fetch(plan.url, { method: "POST", headers: { "content-type": "application/json", ...auth }, body: JSON.stringify(plan.body) });
   return new Response(await upstream.text(), {
     status: upstream.status,
     headers: { ...CORS, "content-type": upstream.headers.get("content-type") ?? "application/json" },

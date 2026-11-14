@@ -1,0 +1,212 @@
+[
+  {
+    "id": "municipio_briefing",
+    "title": {
+      "it": "Briefing mattutino del municipio",
+      "en": "Morning municipio briefing"
+    },
+    "summary": {
+      "it": "Trasporti, traffico, aria, pioggia, fiume, notizie e stato dei dati per un municipio.",
+      "en": "Transit, traffic, air, rain, river, news and data status for one municipio."
+    },
+    "needs": [
+      "area"
+    ],
+    "params": {},
+    "steps": [
+      "public transport delays",
+      "road traffic (simulated loops)",
+      "air quality stations",
+      "rain forecast, next hours (coarse grid over all of Rome)",
+      "temperature and wind forecast (coarse grid over all of Rome)",
+      "Tiber and Aniene discharge forecast",
+      "disruption news (unverified)",
+      "which layers are real, estimated or simulated"
+    ]
+  },
+  {
+    "id": "civil_protection_alert",
+    "title": {
+      "it": "Assistente allerta protezione civile",
+      "en": "Civil-protection alert assistant"
+    },
+    "summary": {
+      "it": "Pioggia e piena previste, dove si accumula l'acqua, sottopassi, siti sensibili e accesso dei soccorsi.",
+      "en": "Forecast rain and river levels, where water collects, underpasses, sensitive sites and emergency access."
+    },
+    "needs": [
+      "area"
+    ],
+    "params": {
+      "duration_h": 3
+    },
+    "steps": [
+      "rain forecast (coarse grid over all of Rome)",
+      "river discharge forecast",
+      "where rain water collects (forecast rain, sewers, outfalls)",
+      "Tiber at its forecast peak",
+      "road underpasses",
+      "official flood hazard areas (PGRA)",
+      "ambulance reach with flooded roads closed",
+      "official alerts and news (unverified)"
+    ]
+  },
+  {
+    "id": "heat_plan_elderly",
+    "title": {
+      "it": "Piano caldo per gli anziani",
+      "en": "Heat plan for the elderly"
+    },
+    "summary": {
+      "it": "Dove fa più caldo di giorno e di notte, quanti over 65 vivono lì, RSA e ospedali vicini, effetto di nuovi alberi.",
+      "en": "Hottest streets by day and night, residents over 65 there, care homes and hospitals nearby, effect of new trees."
+    },
+    "needs": [
+      "area"
+    ],
+    "params": {
+      "tmax_c": null,
+      "tmin_c": null,
+      "cover_added_pct": 10
+    },
+    "steps": [
+      "temperature forecast (coarse grid over all of Rome)",
+      "heat by street, residents over 65 above thresholds (forecast, or the officer's what-if temperatures)",
+      "what-if: more tree cover across the area",
+      "care homes (RSA)",
+      "emergency hospitals",
+      "pharmacies",
+      "municipal parks (shade)",
+      "official heat plan"
+    ]
+  },
+  {
+    "id": "site_risk_check",
+    "title": {
+      "it": "Verifica rischi di una scuola o di un ospedale",
+      "en": "School or hospital risk check"
+    },
+    "summary": {
+      "it": "Per un indirizzo: siti sensibili vicini, aree a rischio alluvione, zone Seveso, vincoli e tempi dei soccorsi.",
+      "en": "For one address: nearby sensitive sites, flood hazard, Seveso zones, constraints and emergency reach."
+    },
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "radius_m": 500,
+      "district_radius_m": 2500,
+      "duration_h": 3
+    },
+    "steps": [
+      "where the site is",
+      "sensitive sites and constraints around it",
+      "official flood hazard areas (PGRA) within the ring",
+      "Seveso plant damage zones within the ring",
+      "road underpasses within the ring",
+      "air quality in its municipio",
+      "ambulance reach in the district around it, with roads flooded by the forecast rain closed"
+    ]
+  },
+  {
+    "id": "event_planning",
+    "title": {
+      "it": "Pianificazione di un grande evento",
+      "en": "Big event planning"
+    },
+    "summary": {
+      "it": "Folla attesa, traffico, trasporti, ospedali vicini e accesso dei soccorsi con l'area chiusa.",
+      "en": "Expected crowd, traffic, transit, hospitals nearby and emergency access with the area closed."
+    },
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "attendees": 20000,
+      "radius_m": 400,
+      "district_radius_m": 2500
+    },
+    "steps": [
+      "where the event is",
+      "sensitive sites inside the perimeter",
+      "usual crowd now (public Wi-Fi sessions)",
+      "public transport delays",
+      "traffic with the event (SUMO, synthetic demand)",
+      "ambulance reach with the perimeter closed",
+      "emergency hospitals"
+    ]
+  },
+  {
+    "id": "antenna_permit",
+    "title": {
+      "it": "Contesto per una nuova antenna (Sfida 02)",
+      "en": "New antenna permit context (Challenge 02)"
+    },
+    "summary": {
+      "it": "Siti sensibili entro il raggio, stima del campo con incertezza, quadro normativo. Non decide.",
+      "en": "Sensitive sites within the radius, field estimate with uncertainty, legal frame. It does not decide."
+    },
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "radius_m": 300,
+      "band": "3500",
+      "height_m": 25
+    },
+    "steps": [
+      "where the antenna would be",
+      "sensitive sites and constraints",
+      "field estimate today (P5-P95)",
+      "residents above thresholds, before and after",
+      "attention value"
+    ]
+  },
+  {
+    "id": "sport_deserts",
+    "title": {
+      "it": "Deserti sportivi (Sfida 04)",
+      "en": "Sport deserts (Challenge 04)"
+    },
+    "summary": {
+      "it": "Residenti senza un impianto per una disciplina a distanza di cammino, e impianti esistenti.",
+      "en": "Residents without a facility for a discipline within walking time, and existing facilities."
+    },
+    "needs": [
+      "area"
+    ],
+    "params": {
+      "discipline": "calcio"
+    },
+    "steps": [
+      "facilities for the discipline",
+      "residents within walking time"
+    ]
+  },
+  {
+    "id": "citizen_area_info",
+    "title": {
+      "it": "Informazioni per i cittadini sulla propria zona",
+      "en": "Citizen information about their area"
+    },
+    "summary": {
+      "it": "Aria, pioggia, trasporti e servizi sanitari vicini a un indirizzo, in parole semplici.",
+      "en": "Air, rain, transit and health services near an address, in plain words."
+    },
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "radius_m": 800
+    },
+    "steps": [
+      "the address",
+      "air quality",
+      "rain forecast (coarse grid over all of Rome)",
+      "temperature forecast (coarse grid over all of Rome)",
+      "public transport nearby",
+      "pharmacies nearby",
+      "emergency hospitals"
+    ]
+  }
+]
