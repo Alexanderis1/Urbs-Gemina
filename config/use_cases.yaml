@@ -13,7 +13,8 @@
 #   {<step id>.point}       [lon, lat] from a resolve_place step
 #   {<step id>.municipio}   "municipio:<n>" of that place
 #   {<step id>.circle}      polygon of radius params.radius_m around that place
-#   {<step id>.district}    polygon of radius params.district_radius_m (for heavy runs on a road network)
+#   {<step id>.<name>}      polygon of radius params.<name>_radius_m, e.g. {place.district}, {place.traffic}
+#                           (heavy runs on a road network; a test keeps each under its kind's area cap)
 # Static feature layers carry limit: 30 (the count stays the full total; config/agents.yaml model_view trims the rest).
 # A step whose refs cannot be filled (e.g. the place was not found) is skipped, and the reason is
 # handed to the model and to the officer. A step that fails or is not available is reported, not hidden.
@@ -124,13 +125,14 @@ use_cases:
     params:
       attendees: {default: 20000, basis: "Placeholder crowd size when the officer gives none; the officer should state the real figure."}
       radius_m: {default: 400, basis: "Typical closed perimeter around a large square event in Rome."}
-      district_radius_m: {default: 2500, basis: "Road-network district for traffic and emergency reach: about 20 km2, under the 40 km2 heavy-run limit."}
+      district_radius_m: {default: 2500, basis: "Road-network district for emergency reach: about 20 km2, under the 40 km2 heavy-run limit."}
+      traffic_radius_m: {default: 900, basis: "SUMO district around the event: about 2.5 km2, under the 3 km2 traffic cap in config/scenarios.yaml (road_closure.max_area_km2, measured on the Modal worker)."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the event is"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "sensitive sites inside the perimeter"}
       - {id: crowd, tool: query_layer, args: {layer: activity_wifi, area: "{place.circle}"}, label: "usual crowd now (public Wi-Fi sessions)"}
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{place.municipio}"}, label: "public transport delays"}
-      - {id: traffic, tool: run_scenario, args: {kind: traffic_event, area: "{place.district}", change: {event: {lon: "{place.lon}", lat: "{place.lat}", attendees: "{params.attendees}", radius_m: "{params.radius_m}"}}},
+      - {id: traffic, tool: run_scenario, args: {kind: traffic_event, area: "{place.traffic}", change: {event: {lon: "{place.lon}", lat: "{place.lat}", attendees: "{params.attendees}", radius_m: "{params.radius_m}"}}},
          label: "traffic with the event (SUMO, synthetic demand)"}
       - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{place.district}", change: {service: ambulance, closed_area: "{place.circle}"}},
          label: "ambulance reach with the perimeter closed"}
@@ -165,7 +167,7 @@ use_cases:
     needs: [area]
     prompt: sport_deserts
     params:
-      discipline: {default: calcio, basis: "Most common discipline in the municipal register; the officer can name another."}
+      discipline: {default: football, basis: "Most common discipline in the municipal register; ids are the English keys of config/sports.yaml disciplines, and the API also accepts the Italian names (calcio, nuoto)."}
     steps:
       - {id: facilities, tool: sports_facilities, args: {area: "{area}", discipline: "{params.discipline}"}, label: "facilities for the discipline"}
       - {id: coverage, tool: sport_coverage, args: {area: "{area}", discipline: "{params.discipline}"}, label: "residents within walking time"}

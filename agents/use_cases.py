@@ -129,15 +129,15 @@ def _municipio_area(raw: Any) -> str | None:
     return None
 
 
-def _place_context(env: Mapping[str, Any], radius_m: float, district_m: float | None) -> dict[str, Any] | None:
+def _place_context(env: Mapping[str, Any], radius_m: float, rings: Mapping[str, float]) -> dict[str, Any] | None:
     res = env.get("result") or {}
     lon, lat = res.get("lon"), res.get("lat")
     if not is_ok(env) or not isinstance(lon, (int, float)) or not isinstance(lat, (int, float)):
         return None
     ctx: dict[str, Any] = {"lon": float(lon), "lat": float(lat), "point": [float(lon), float(lat)],
                            "circle": circle_polygon(float(lon), float(lat), radius_m)}
-    if district_m:
-        ctx["district"] = circle_polygon(float(lon), float(lat), district_m)
+    for name, ring_m in rings.items():
+        ctx[name] = circle_polygon(float(lon), float(lat), ring_m)
     mun = _municipio_area(res.get("municipio"))
     if mun is not None:
         ctx["municipio"] = mun
@@ -212,7 +212,9 @@ def run_steps(uc: UseCase, *, gateway: ToolGateway, area: Any = None, place: str
         area = default_area()
     merged = {**uc.defaults(), **{k: v for k, v in (params or {}).items() if k in uc.params}}
     radius = float(merged.get("radius_m") or 500)
-    district = float(merged["district_radius_m"]) if merged.get("district_radius_m") else None
+    # Every '<name>_radius_m' param gives a polygon '{<place step>.<name>}' (e.g. district, traffic).
+    rings = {k[: -len("_radius_m")]: float(v) for k, v in merged.items()
+             if k.endswith("_radius_m") and k != "radius_m" and v}
     ctx: dict[str, Any] = {"params": merged, "area": area, "area_label": area_label(area, language),
                            "place": place.strip() if place else None}
     runs: list[dict[str, Any]] = []
@@ -236,7 +238,7 @@ def run_steps(uc: UseCase, *, gateway: ToolGateway, area: Any = None, place: str
         env = dict(env)
         env["step"] = step.id
         runs.append(env)
-        ctx[step.id] = _place_context(env, radius, district) if step.tool == "resolve_place" else env.get("result")
+        ctx[step.id] = _place_context(env, radius, rings) if step.tool == "resolve_place" else env.get("result")
     return runs, skipped
 
 

@@ -208,6 +208,15 @@ def _population(rt: ToolRuntime) -> list[Any]:
     return points
 
 
+def discipline_for_api(value: str | None, config: Any) -> str | None:
+    """Accept Italian or English discipline names ('calcio' -> 'football'); unknown words pass through
+    unchanged so the sports tool reports them with the list of known ids."""
+    if value is None:
+        return None
+    found = importlib.import_module("twin.modules.sports.disciplines").discipline_id(value, config)
+    return str(found) if found else value
+
+
 def _sports_facilities(rt: ToolRuntime, req: m.SportsFacilitiesIn, role: str) -> dict[str, Any]:
     inputs = req.model_dump(exclude_none=True)
     try:
@@ -219,7 +228,8 @@ def _sports_facilities(rt: ToolRuntime, req: m.SportsFacilitiesIn, role: str) ->
         return make_envelope("sports_facilities", inputs, None, {"sports_facilities": "not_available"},
                              status="not_available", reason=f"Facility layer not built yet ({error}). "
                              "Run: python -m twin.modules.sports.pipeline build")
-    out: dict[str, Any] = tools_mod.sports_facilities(_sports_area(rt, _dump(req.area)), req.discipline,
+    out: dict[str, Any] = tools_mod.sports_facilities(_sports_area(rt, _dump(req.area)),
+                                                      discipline_for_api(req.discipline, config),
                                                       facilities, config, type=req.type,
                                                       accessible=req.accessible)
     return out
@@ -238,7 +248,8 @@ def _sport_coverage(rt: ToolRuntime, req: m.SportCoverageIn, role: str) -> dict[
                              status="not_available", reason=f"Facility layer not built yet ({error}). "
                              "Run: python -m twin.modules.sports.pipeline build")
     gyms = [deserts.school_gym_facility(g.name, g.lon, g.lat, config, g.disciplines) for g in req.open_school_gyms]
-    out: dict[str, Any] = tools_mod.sport_coverage(_sports_area(rt, _dump(req.area)), req.discipline, facilities,
+    out: dict[str, Any] = tools_mod.sport_coverage(_sports_area(rt, _dump(req.area)),
+                                                   str(discipline_for_api(req.discipline, config)), facilities,
                                                    _population(rt), config, max_minutes=req.max_minutes,
                                                    open_facilities=gyms)
     return out

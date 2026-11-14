@@ -181,6 +181,11 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
     return out
 
 
+def _first_message(question: TwinQuestion) -> bool:
+    """The AI disclosure goes on the first chat answer. Voice agents say it in their own first message."""
+    return question.conversation_id is None and question.channel != "voice"
+
+
 class TwinOrchestrator:
     """Implements shared interface 7 (``ask``) for chat and voice."""
 
@@ -217,7 +222,7 @@ class TwinOrchestrator:
             prompt = f"Morning briefing requested. {prompt}"
         result = answer(prompt, llm=llm, gateway=self._gateway_for(question.tier, question.language),
                         language=question.language, tier=question.tier,
-                        first_message=question.conversation_id is None, config=self.cfg)
+                        first_message=_first_message(question), config=self.cfg)
         return to_twin_answer(result)
 
     def _run_use_case(self, use_case: str, question: TwinQuestion, llm: LLM) -> TwinAnswer:
@@ -231,7 +236,7 @@ class TwinOrchestrator:
         if place is None and uc is not None and "place" in uc.needs:
             place = question.question  # the question text names the place ("Via del Corso 1")
         disclosure = (self.cfg.disclosure.get(question.language, self.cfg.disclosure["en"])
-                      if question.conversation_id is None else None)
+                      if _first_message(question) else None)
         try:
             rep = run_use_case(use_case, llm=llm, gateway=self._base_gateway(question.tier), area=question.area,
                                place=str(place) if place is not None else None, params=params,

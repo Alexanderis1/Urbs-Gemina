@@ -234,3 +234,51 @@ def test_self_disclosure_is_dropped_from_the_narrative() -> None:
     rep = run_use_case("citizen_area_info", llm=CitingLLM(text="Sono un assistente AI. L'aria è buona."),
                        gateway=FakeGateway(), place="Colosseo", tier="citizen")
     assert rep.verified and "assistente" not in rep.text and "aria" in rep.text
+
+
+def test_heavy_runs_fit_the_engine_size_limits() -> None:
+    """Each heavy scenario a playbook starts on a place must fit its kind's area cap (WS6 refuses bigger ones)."""
+    import math
+
+    scen = yaml.safe_load(Path("config/scenarios.yaml").read_text(encoding="utf-8"))
+    areas = yaml.safe_load(Path("config/areas.yaml").read_text(encoding="utf-8"))
+    caps = {"traffic_event": float(scen["road_closure"]["max_area_km2"]["value"]),
+            "road_closure": float(scen["road_closure"]["max_area_km2"]["value"]),
+            "emergency_access": float(areas["heavy_tools_max_area_km2"])}
+    for uc in load_use_cases().values():
+        defaults = uc.defaults()
+        for step in uc.steps:
+            kind = step.args.get("kind")
+            area = step.args.get("area")
+            if step.tool != "run_scenario" or kind not in caps or not (isinstance(area, str) and area.startswith("{place.")):
+                continue
+            shape = area.strip("{}").split(".")[1]
+            radius = defaults["radius_m"] if shape == "circle" else defaults[f"{shape}_radius_m"]
+            assert math.pi * (radius / 1000) ** 2 <= caps[kind], (uc.id, step.id, radius)
+
+
+def test_sport_playbook_default_is_a_known_discipline() -> None:
+    sports = yaml.safe_load(Path("config/sports.yaml").read_text(encoding="utf-8"))
+    known = set(sports["disciplines"]) if "disciplines" in sports else set()
+    assert load_use_cases()["sport_deserts"].params["discipline"]["default"] in known
+
+
+def test_api_accepts_italian_discipline_names() -> None:
+    from twin.api.tools import discipline_for_api
+    from twin.modules.sports.config import load_config as load_sports_config
+
+    cfg = load_sports_config()
+    assert discipline_for_api("calcio", cfg) == "football"
+    assert discipline_for_api("Nuoto", cfg) == "swimming"
+    assert discipline_for_api("football", cfg) == "football"
+    assert discipline_for_api(None, cfg) is None
+    assert discipline_for_api("quidditch", cfg) == "quidditch"  # unknown: left for the tool's own error
+
+
+def test_voice_answers_do_not_repeat_the_ai_disclosure() -> None:
+    orch = TwinOrchestrator(llm=CitingLLM(text="Info."), gateway=FakeGateway())
+    voice = orch.ask(TwinQuestion(question="Colosseo", tier="citizen", language="it", use_case="citizen_area_info",
+                                  channel="voice"))
+    chat = orch.ask(TwinQuestion(question="Colosseo", tier="citizen", language="it", use_case="citizen_area_info"))
+    assert "intelligenza artificiale" not in voice.text
+    assert "intelligenza artificiale" in chat.text
