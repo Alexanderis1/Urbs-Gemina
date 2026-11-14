@@ -295,9 +295,12 @@ impacts:
 chemical_plume:
   heavy: false
   calibration:
-    value: "formulas checked against Briggs urban dispersion (Hanna 1982) and mass conservation; Gaussian plume models typically get within a factor of 2 of measured concentrations about half the time (FAC2 about 0.5, Hanna and Chang 2012); heavy gases flagged for ALOHA"
+    value: "formulas checked against Briggs urban dispersion (Hanna 1982) and mass conservation; Gaussian plume models typically get within a factor of 2 of measured concentrations about half the time (FAC2 about 0.5, Hanna and Chang 2012); heavy gases (chlorine) add a Britter-McQuaid dense plume checked against the workbook curves; slopes and underpasses not modelled"
     basis: "tests/test_scenarios_plume.py and the validation report"
   model: gaussian_plume_briggs_urban
+  dense_gas:
+    value: "Britter & McQuaid 1988 HSE workbook, CCPS curve fits; fitted on flat rural trials (Thorney Island, Burro), so conservative in a built-up city"
+    basis: "Britter and McQuaid 1988 (HSE CRR 88/017); CCPS 1996 / Crowl and Louvar curve fits; Hanna et al. 2020 used it for the Jack Rabbit II chlorine trials. C=60 near the plant, falls to the Gaussian far away"
   relative_density:
     value: {ammonia: 0.59, chlorine: 2.49, hydrogen_sulfide: 1.19}
     basis: "gas density relative to air (standard physical data). Above about 1.1 the gas slumps and spreads along low ground: a Gaussian plume (passive gas) is then only a first look; ALOHA / DEGADIS heavy-gas models are the reference"
