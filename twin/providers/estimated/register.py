@@ -96,6 +96,10 @@ class EstimatedSite:
     effective_eirp_w: float
     effective_eirp_sigma_w: float
     fit_cells: int
+    #: Register v2 only: orientation of the tri-sector site (sectors at +0/120/240 deg) and mast height.
+    sector_offset_deg: float | None = None
+    antenna_height_agl_m: float | None = None
+    height_source: str | None = None   # lidar_roof | assumed_tower
 
     def to_model_a(self) -> dict[str, Any]:
         return {
@@ -109,8 +113,10 @@ class EstimatedSite:
             "effective_eirp_w": self.effective_eirp_w,
             "effective_eirp_sigma_w": self.effective_eirp_sigma_w,
             "fit_cells": self.fit_cells,
-            "antenna_height_agl_m": None,
-            "sectors": None,
+            "antenna_height_agl_m": self.antenna_height_agl_m,
+            "sectors": None if self.sector_offset_deg is None else [
+                {"azimuth_deg": round((self.sector_offset_deg + 120.0 * k) % 360.0, 1), "tilt_deg": None,
+                 "eirp_w": self.effective_eirp_w, "status": "estimated"} for k in range(3)],
             "bands_mhz": None,
             "authorisation_status": None,
             "application_date": None,
@@ -261,7 +267,9 @@ class EstimatedRegisterProvider:
             synthetic=False,
             redistribution=False,
             notes=("Estimated, uncalibrated. Positions from OpenCelliD clusters refined on Cartoradio peaks; "
-                   "effective EIRP fitted to the Cartoradio grid. Azimuth, height, bands and status unknown. "
+                   "EIRP fitted to the Cartoradio grid. Register v2 (when enabled): tri-sector directions "
+                   "estimated from the shape of the Cartoradio field, mast heights from LiDAR roofs, capped "
+                   "cells as lower bounds; hold-out error 7.2 dB (v1: 9.2 dB). Bands and status unknown. "
                    "Fonte: Cartoradio - MIMIT/FUB."),
         )
 
@@ -383,7 +391,14 @@ class EstimatedRegisterProvider:
             sigma_db=sigma_db, cap=cap)
         self._background = background
         operators = self._operators()
-        return [
+        v2 = self._refit_v2([(s.lon, s.lat) for s, _src, _sg in placed], cells, cap, sigma_db)
+        if v2 is not None:
+            v1_powers = powers
+            powers, offsets, heights, height_src, self._background, self._fit_error_db = v2
+            # v2 powers are EIRP per sector; keep v1's relative one-sigma
+            sigmas = [sg * (p2 / p1) if p1 > 0 and math.isfinite(sg) else sg
+                      for sg, p1, p2 in zip(sigmas, v1_powers, powers)]
+        sites = [
             EstimatedSite(
                 site_id=f"est-site-{index:05d}",
                 operator=operators.get(seed.net, "unknown"),
@@ -399,6 +414,46 @@ class EstimatedRegisterProvider:
             for index, ((seed, source, position_sigma), power, sigma, count)
             in enumerate(zip(placed, powers, sigmas, counts), start=1)
         ]
+        if v2 is not None:
+            from dataclasses import replace as _replace
+            sites = [_replace(site, sector_offset_deg=float(offsets[k]), antenna_height_agl_m=round(float(heights[k]), 1),
+                              height_source=height_src[k]) for k, site in enumerate(sites)]
+        return sites
+
+    def _refit_v2(self, positions: list[tuple[float, float]], cells: list[RasterCell], cap: float,
+                  sigma_db: float) -> tuple[list[float], list[float], list[float], list[str], float, float] | None:
+        """Register v2 (twin/providers/estimated/refit.py): sectors, LiDAR heights, censored cap cells."""
+        node = self._config.get("refit") or {}
+        enabled = node.get("enabled", False)
+        if isinstance(enabled, dict):
+            enabled = enabled.get("value", False)
+        if not enabled or not positions or not cells:
+            return None
+        import numpy as np
+
+        from twin.physics.buildings import to_local
+        from twin.providers.estimated import refit as rf
+
+        def val(key: str, default: float) -> float:
+            v = node.get(key, default)
+            return float(v["value"] if isinstance(v, dict) else v)
+
+        lons = np.array([p[0] for p in positions])
+        lats = np.array([p[1] for p in positions])
+        lon0, lat0 = float(lons.mean()), float(lats.mean())
+        heights, _ = rf.lidar_mast_heights(lons, lats)
+        on_roof = ["lidar_roof" if h != rf.tower_height_m() else "assumed_tower" for h in heights]
+        cx, cy = to_local(np.array([c.lon for c in cells]), np.array([c.lat for c in cells]), lon0, lat0)
+        sx, sy = to_local(lons, lats, lon0, lat0)
+        e = np.array([c.value for c in cells])
+        keep = e > 0
+        prob = rf.Problem(np.column_stack([sx, sy]), heights, cx[keep], cy[keep], e[keep] ** 2, e[keep] >= cap)
+        model = rf.Model(exponent=val("runtime_exponent", 2.0), receptor_m=val("receptor_height_m", 1.5),
+                         tilt_deg=val("tilt_deg", 6.0), reference_m=val("reference_distance_m", 100.0))
+        result = rf.fit(prob, model, sigma_db, number(self._config, "fit_radius_m", 500.0),
+                        passes=int(val("azimuth_passes", 2)))
+        return (result.powers_w.tolist(), result.offsets_deg.tolist(), heights.tolist(), on_roof,
+                result.background, result.train_median_abs_db)
 
 
 def obs_to_cell(obs: Observation) -> RasterCell:

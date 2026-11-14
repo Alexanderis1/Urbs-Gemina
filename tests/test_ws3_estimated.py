@@ -139,7 +139,8 @@ def test_register_fuses_seed_positions_peaks_and_fitted_power(tmp_path: Path) ->
         "properties": {"net": 1, "n_cells": 3, "technologies": ["LTE"]}}]}
     (tmp_path / "sites.geojson").write_text(json.dumps(seed), encoding="utf-8")
     providers = dict(SETTINGS.providers)
-    providers["estimated"] = {"register": {**SETTINGS.section("estimated", "register"),
+    register = SETTINGS.section("estimated", "register")
+    providers["estimated"] = {"register": {**register, "refit": {**register["refit"], "enabled": False},
                                            "opencellid_csv": "", "osm_masts_json": "",
                                            "sites_geojson": str(tmp_path / "sites.geojson")}}
     settings = Settings(providers=providers, emf=SETTINGS.emf, root=tmp_path)
@@ -161,6 +162,30 @@ def test_register_fuses_seed_positions_peaks_and_fitted_power(tmp_path: Path) ->
     observations = list(provider.fetch(ROME_BBOX, T0, T0))
     assert all(not obs.synthetic and obs.entity_type == "AntennaSite" for obs in observations)
     assert all(set(obs.sigma) == set(obs.values) for obs in observations)
+
+
+def test_register_v2_estimates_sector_directions_and_heights(tmp_path: Path) -> None:
+    site = offset(*CENTRE, east_m=0.0, north_m=0.0)
+    cells = _grid_from_sources([(site[0], site[1], 400.0)])
+    seed = {"type": "FeatureCollection", "features": [{
+        "type": "Feature", "geometry": {"type": "Point", "coordinates": list(site)},
+        "properties": {"net": 1, "n_cells": 3, "technologies": ["LTE"]}}]}
+    (tmp_path / "sites.geojson").write_text(json.dumps(seed), encoding="utf-8")
+    providers = dict(SETTINGS.providers)
+    register = SETTINGS.section("estimated", "register")
+    providers["estimated"] = {"register": {**register, "refit": {**register["refit"], "enabled": True},
+                                           "opencellid_csv": "", "osm_masts_json": "",
+                                           "sites_geojson": str(tmp_path / "sites.geojson")}}
+    settings = Settings(providers=providers, emf=SETTINGS.emf, root=tmp_path)
+    provider = EstimatedRegisterProvider(settings, cartoradio=_FakeCartoradio(cells))  # type: ignore[arg-type]
+    record = provider.sites()[0].to_model_a()
+    assert set(record) == set(MODEL_A_FIELDS)
+    assert record["antenna_height_agl_m"] is not None and record["antenna_height_agl_m"] > 0
+    assert len(record["sectors"]) == 3
+    azimuths = sorted(s["azimuth_deg"] for s in record["sectors"])
+    assert azimuths[1] - azimuths[0] == pytest.approx(120.0)
+    assert all(s["status"] == "estimated" for s in record["sectors"])
+    assert record["data_kind"] == "estimated" and record["calibration"] == "uncalibrated"
 
 
 # --- real point feeds ------------------------------------------------------------

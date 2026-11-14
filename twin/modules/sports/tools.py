@@ -9,7 +9,8 @@ from dataclasses import replace
 from typing import Any, Mapping, Sequence
 
 from twin.modules.sports.config import SportsConfig
-from twin.modules.sports.deserts import PopulationPoint, coverage, reach_radius_m, what_if_open
+from twin.modules.sports.deserts import PopulationPoint, coverage, reach_radius_m, street_budget_m, what_if_open
+from twin.modules.sports.network import WalkGraph, load_default
 from twin.modules.sports.envelope import make_envelope
 from twin.modules.sports.model import Facility
 from twin.modules.sports.sources import municipio_id
@@ -123,7 +124,8 @@ def sport_coverage(area: Area, discipline: str, facilities: Sequence[Facility],
                    population: Sequence[PopulationPoint], config: SportsConfig, max_minutes: float | None = None,
                    open_facilities: Sequence[Facility] = (), include_unverified: bool = True,
                    snapshot_hashes: Mapping[str, str] | None = None,
-                   retrieved: Mapping[str, str] | None = None, tool: str = "sport_coverage") -> dict[str, Any]:
+                   retrieved: Mapping[str, str] | None = None, tool: str = "sport_coverage",
+                   walk_graph: WalkGraph | None = None) -> dict[str, Any]:
     """The "sport deserts" map: coverage of ``discipline`` in ``area`` within ``max_minutes`` of walking
     (default from config). With ``open_facilities`` it is the what-if.
 
@@ -137,13 +139,19 @@ def sport_coverage(area: Area, discipline: str, facilities: Sequence[Facility],
     parsed = parse_area(area)
     points = [p for p in population if _in_area(p.lon, p.lat, p.municipio, p.zone, parsed)]
     radius = reach_radius_m(config)
+    graph = walk_graph if walk_graph is not None else (load_default() if config.reach.method == "network" else None)
+    street = street_budget_m(config) if graph is not None else None
     if open_facilities:
         result: dict[str, Any] = what_if_open(points, facilities, discipline, open_facilities, radius,
-                                              include_unverified, config)
+                                              include_unverified, config, graph, street)
     else:
-        result = coverage(points, facilities, discipline, radius, include_unverified, config)
-    warnings = ["reach is a straight-line estimate of a "
-                f"{config.reach.walk_minutes:g}-minute walk (detour factor {config.reach.detour_factor:g})"]
+        result = coverage(points, facilities, discipline, radius, include_unverified, config, graph, street)
+    if graph is not None:
+        warnings = [f"reach is the shortest {config.reach.walk_minutes:g}-minute walk ({street:.0f} m) along real "
+                    "streets and footways (Overture Maps, ODbL); points over 300 m from any street are not covered"]
+    else:
+        warnings = ["walking network not found: reach is a straight-line estimate of a "
+                    f"{config.reach.walk_minutes:g}-minute walk (detour factor {config.reach.detour_factor:g})"]
     if not population:
         return make_envelope(tool, {"area": _area_input(area), "discipline": discipline, "max_minutes": max_minutes},
                              None, {"population": "not_available"}, [], synthetic=False, warnings=warnings,

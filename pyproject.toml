@@ -16,6 +16,9 @@ providers = ["gtfs-realtime-bindings>=1.0", "protobuf>=4", "pyarrow>=14", "raste
 seeds = ["pmtiles>=3", "mapbox-vector-tile>=2"]
 beliefs = ["numpy>=1.26", "h3>=4"]
 agents = ["anthropic>=2.8"]
+# Building-aware EMF physics (twin/physics); ray tracing also needs "sionna-rt==2.2.0" (Modal GPU image)
+physics = ["numpy>=1.26", "scipy>=1.10", "pyarrow>=14", "mapbox-earcut>=1.0"]
+raytrace = ["sionna-rt==2.2.0", "mapbox-earcut>=1.0"]
 
 [tool.setuptools.packages.find]
 include = ["twin*"]
