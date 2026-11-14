@@ -379,6 +379,9 @@
       "it": "Per un cantiere: vincoli e siti sensibili vicini, cavità e interventi passati, traffico con la strada chiusa, soccorsi, trasporti, norme.",
       "en": "For a worksite: constraints and sensitive sites nearby, cavities and past interventions, traffic with the street closed, emergency reach, transit, rules."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "place"
     ],
@@ -418,6 +421,9 @@
       "it": "Minime previste, punti di accoglienza del Piano Freddo, luoghi pubblici al chiuso, ospedali e avvisi.",
       "en": "Forecast minimum temperatures, Piano Freddo reception points, indoor public places, hospitals and notices."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "area"
     ],
@@ -443,6 +449,9 @@
       "it": "Aree di interfaccia a rischio R3-R4, vento e caldo previsti, aree protette e parchi, aree di attesa, avvisi.",
       "en": "Urban-edge areas at fire risk R3-R4, forecast wind and heat, protected areas and parks, waiting areas, notices."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "area"
     ],
@@ -468,6 +477,9 @@
       "it": "Zone movida ufficiali, classe acustica e limiti, folla dal Wi-Fi pubblico, siti sensibili, trasporti e ordinanze.",
       "en": "Official nightlife zones, noise class and limits, crowd from public Wi-Fi, sensitive sites, transit and ordinances."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "place"
     ],
@@ -500,6 +512,10 @@
       "it": "Per un indirizzo: aree di attesa del piano di protezione civile, rischio alluvione e frana, zone industriali, ospedali.",
       "en": "For an address: civil-protection waiting areas, flood and landslide hazard, industrial zones, hospitals."
     },
+    "tiers": [
+      "office",
+      "citizen"
+    ],
     "needs": [
       "place"
     ],

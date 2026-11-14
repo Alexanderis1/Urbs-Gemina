@@ -44,7 +44,7 @@ describe("ready-made use cases", () => {
     expect(paramFields(uc).map((f) => [f.key, f.numeric])).toEqual([["street", false], ["radius_m", true]]);
     const body = buildUseCaseQuestion(uc, { place: "Via Nazionale", area: { type: "city" },
       values: { street: " Via Nazionale " }, language: "it", conversationId: null });
-    expect(body.params).toEqual({ street: "Via Nazionale", radius_m: 200 });
+    expect(body.params).toEqual({ place: "Via Nazionale", street: "Via Nazionale", radius_m: 200 });
   });
 
   it("builds the /ask body for a place: numbers as numbers, empty options left out", () => {
