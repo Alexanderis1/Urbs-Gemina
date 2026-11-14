@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { KindBadge } from "@/components/Badge";
 import { LiveBadge } from "@/components/LiveBadge";
+import { rampColor, trafficColor } from "@/lib/colors";
 import { Chips, CitizenMap, HeatLegend, LevelPill, MapScreen, PositionBar } from "@/components/CitizenMap";
 import { GlyphIcon, ResourceDetail } from "@/components/MarkerCard";
 import { Callout, Skeleton } from "@/components/ui";
@@ -44,6 +45,7 @@ const T = texts({
     whatForecast: "A forecast from the twin's traffic model, not a measurement.",
     whatBus: "How late buses and trams are running, from the live feed of the transport company.",
     hereSpeed: "Around your point",
+    onRoads: "Drawn along the main roads. The colour is the average of the area the road crosses, not a reading on that road.",
     cityNow: "The whole city",
     events: "Roadworks, closures, strikes and events",
     noEvents: "No events reported right now.",
@@ -79,6 +81,7 @@ const T = texts({
     whatForecast: "Una previsione del modello di traffico, non una misura.",
     whatBus: "Quanto sono in ritardo autobus e tram, dai dati in tempo reale dell'azienda di trasporto.",
     hereSpeed: "Intorno al tuo punto",
+    onRoads: "Disegnato lungo le strade principali. Il colore è la media della zona attraversata, non una misura su quella strada.",
     cityNow: "Tutta la città",
     events: "Lavori, chiusure, scioperi ed eventi",
     noEvents: "Nessun evento segnalato in questo momento.",
@@ -160,19 +163,22 @@ export default function Transport() {
   const events = now.status === "ok" ? now.data.events : [];
   useEffect(() => setSelected(null), [now.status]);
 
+  // Notices stand on the map in their own section; the traffic section leaves the roads clear to read.
   const markers = useMemo<Marker<number>[]>(
     () =>
-      events.flatMap((e, i) =>
+      (tab === "events" ? events : []).flatMap((e, i) =>
         e.position
           ? [{ id: `ev${i}`, position: e.position, color: e.category === "sciopero" || e.category === "chiusura" ? palette.bad : palette.accent, level: null, glyph: CATEGORY_GLYPH[e.category] ?? "info", data: i }]
           : [],
       ),
-    [events, palette],
+    [events, palette, tab],
   );
 
   // Road speed is in km/h (config/beliefs.yaml road_speed); the tool's traffic bands carry no unit for the value itself.
   const unit = (heat.status === "ok" && heat.data.unit) || (layer === "road_speed" ? "km/h" : "");
   const bands = heat.status === "ok" ? heat.data.legend : [];
+  // Traffic in the colours people know from navigation maps; bus delays keep the scale of every other map.
+  const ramp = lensId === "bus" ? rampColor : trafficColor;
   const label = lensId === "bus" ? metricInfo("transit_delay").label : metricInfo("road_speed").label;
   // The patch of the city heatmap the chosen point falls in (no extra request).
   const near = useMemo(() => {
@@ -234,7 +240,7 @@ export default function Transport() {
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <span className="num text-4xl font-bold leading-none text-ink">{formatValue(near.value)}</span>
                   <span className="text-sm text-muted">{unit}</span>
-                  {nearBand && <LevelPill index={nearBand.index} label={nearBand.label} bands={bands} />}
+                  {nearBand && <LevelPill index={nearBand.index} label={nearBand.label} bands={bands} ramp={ramp} />}
                 </div>
               </div>
             )}
@@ -247,7 +253,8 @@ export default function Transport() {
                   </h2>
                   {heat.kind && <KindBadge kind={heat.kind} />}
                 </div>
-                <HeatLegend heat={heat.data} unit={unit} invert={lensId !== "bus"} />
+                <HeatLegend heat={heat.data} unit={unit} invert={lensId !== "bus"} ramp={ramp} />
+                <p className="hint">{t.onRoads}</p>
                 {heat.live && <LiveBadge live={heat.live} />}
               </section>
             )}
@@ -310,6 +317,8 @@ export default function Transport() {
         heatLabel={label}
         unit={unit}
         invert={lensId !== "bus"}
+        onRoads
+        ramp={ramp}
         markers={markers}
         selectedId={selected !== null ? `ev${selected}` : null}
         onPickMarker={(m) => (m ? openEvent(m.data) : setSelected(null))}

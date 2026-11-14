@@ -123,6 +123,18 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     may not be passed on); the key holds the access tier and leaving the staff workspace wipes the copies.
     Used by the City view and by the city heatmap of Ambiente and Trasporti.
 
+33. **Traffic is drawn on the roads, not as patches** (Alessandro, 14 Nov: "applied on the streets, even,
+    with gradients, no dots"). On Trasporti the layer is painted along the main roads of Rome (28,470 roads
+    from Overture Maps, ODbL, `public/roads-rome.json`, built by `scripts/build_web_roads.py`). Each street is
+    cut in pieces of about 120 m; each piece takes the value of the twin's cells blended between the cell it
+    is in and the six around it (`src/lib/roads.ts`), so the colour flows along the road. Width follows the
+    road class and grows with the zoom. Traffic uses the colours people know from navigation maps (green,
+    yellow, orange, red, dark red: `trafficColor`); bus delays keep the scale of every other map. The legend
+    says in words that the colour is the average of the area the road crosses, not a reading on that road.
+    Notices (roadworks, closures, strikes) stand on the map only in their own section, so the roads stay
+    readable. If the road file cannot be read the cells are drawn as before. The "zoom in to see the 3D
+    buildings" offer is off on whole-city maps.
+
 ## Two experiences
 
 One twin, two front doors (decided 14 Nov 2026, on Alessandro's request for a clear division between public
