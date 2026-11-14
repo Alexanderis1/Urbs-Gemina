@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import type { PickingInfo } from "@deck.gl/core";
+import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import type { Layer, PickingInfo } from "@deck.gl/core";
 import { Check, ListChecks, Megaphone, RefreshCw, Route, Sparkles, Truck, Wrench, X } from "lucide-react";
 import { CityMap, type MapFocus } from "@/map/CityMap";
+import { markerLayers, pickedMarker, type Marker } from "@/map/markers";
+import type { Glyph } from "@/map/markerGlyphs";
+import { ResourceHover } from "@/components/MarkerCard";
+import type { Resource } from "@/lib/resource";
+import { TWIN_START_ZOOM } from "@/lib/twinOverlay";
+import { useTheme } from "@/lib/useTheme";
 import { Callout, EmptyState, MapFloat, Panel, Segmented, Skeleton, Spinner, Workspace } from "@/components/ui";
 import { KindBadge, SampleBadge } from "@/components/Badge";
 import { errorText } from "@/lib/errors";
@@ -129,6 +135,8 @@ export default function Signals() {
   const [planSample, setPlanSample] = useState(false);
   const [planBusy, setPlanBusy] = useState(false);
   const [hover, setHover] = useState<{ x: number; y: number; e: SignalEvent } | null>(null);
+  const [zoom, setZoom] = useState<number>(TWIN_START_ZOOM);
+  const { palette } = useTheme();
 
   const refresh = useCallback(async (nextChecks: Checks) => {
     setBusy(true);
@@ -155,36 +163,21 @@ export default function Signals() {
   const layers = useMemo(() => {
     if (!events) return [];
     const showPlan = tab === "plan" && plan !== null;
-    const out = [
-      // Columns rising from the 3D city: height = how many reports, colour = how sure we are.
-      new ColumnLayer<SignalEvent>({
-        id: "signals",
-        data: events,
-        diskResolution: 24,
-        radius: 22,
-        extruded: true,
-        getPosition: (e) => [e.lon, e.lat],
-        getElevation: (e) => 60 + 45 * Math.min(e.n_reports, 8),
-        getFillColor: (e) => [...levelColour(e.level), showPlan ? 90 : e.stale ? 120 : 235] as [number, number, number, number],
-        getLineColor: [255, 255, 255, 255],
-        pickable: true,
-        autoHighlight: true,
-        highlightColor: [0, 102, 204, 255],
-        onHover: (info: PickingInfo<SignalEvent>) => setHover(info.object ? { x: info.x, y: info.y, e: info.object } : null),
-        onClick: (info: PickingInfo<SignalEvent>) => info.object && select(info.object),
-        updateTriggers: { getFillColor: showPlan },
-      }),
-      new ScatterplotLayer<SignalEvent>({
-        id: "signals-ring",
-        data: events.filter((e) => e.id === selected),
-        getPosition: (e) => [e.lon, e.lat],
-        getRadius: (e) => Math.max(e.radius_m, 60),
-        radiusUnits: "meters",
-        stroked: true,
-        filled: false,
-        getLineColor: [0, 102, 204, 255],
-        lineWidthMinPixels: 3,
-      }),
+    const out: Layer[] = [
+      // Shared 3D markers: the column follows the probability that the event is true (public events: one height).
+      ...markerLayers(
+        events.map(
+          (e): Marker<SignalEvent> => ({
+            id: e.id,
+            position: [e.lon, e.lat],
+            color: levelColour(e.level),
+            level: e.confidence,
+            glyph: glyphOf(e),
+            data: e,
+          }),
+        ),
+        { id: "sig", zoom, palette, selectedId: selected, hoveredId: hover?.e.id ?? null },
+      ),
     ];
     if (showPlan && plan) {
       out.push(
@@ -227,7 +220,7 @@ export default function Signals() {
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, selected, plan, tab]);
+  }, [events, selected, plan, tab, zoom, palette, hover?.e.id]);
 
   const select = (e: SignalEvent) => {
     setSelected(e.id);
@@ -316,21 +309,24 @@ export default function Signals() {
         </Panel>
       }
     >
-      <CityMap layers={layers} pitch={45} focus={focus} />
-      {hover && (
-        <div
-          className="map-float pointer-events-none absolute z-20 max-w-xs px-3 py-2 text-xs"
-          style={{ left: hover.x + 14, top: hover.y + 14 }}
-          role="tooltip"
-        >
-          <div className="text-sm font-semibold">{hover.e.category_label}</div>
-          <div className="text-muted">
-            {t.level[hover.e.level]}
-            {hover.e.confidence !== null ? ` · ${pct(hover.e.confidence)}` : ""} · {t.hoverReports(hover.e.n_reports)}
-          </div>
-          {hover.e.texts[0] && <div className="mt-1 line-clamp-2">«{hover.e.texts[0]}»</div>}
-        </div>
-      )}
+      <CityMap
+        layers={layers}
+        pitch={45}
+        focus={focus}
+        onZoomStep={setZoom}
+        onHover={(info: PickingInfo) => {
+          const m = pickedMarker<SignalEvent>(info, "sig");
+          setHover(m ? { x: info.x, y: info.y, e: m.data } : null);
+        }}
+        onPick={(info: PickingInfo) => {
+          const m = pickedMarker<SignalEvent>(info, "sig");
+          if (m) {
+            setTab("events");
+            select(m.data);
+          }
+        }}
+      />
+      {hover && <ResourceHover x={hover.x} y={hover.y} resource={eventResource(hover.e)} kind="real" />}
       <MapFloat position="bottom-left">
         <div className="space-y-1 text-xs">
           <div className="font-semibold">{t.legend}</div>
@@ -582,4 +578,33 @@ function PlanPanel({
       )}
     </div>
   );
+}
+
+function glyphOf(e: SignalEvent): Glyph {
+  if (e.category === "traffic") {
+    const top = Object.entries(e.subtypes).sort((a, b) => b[1] - a[1])[0]?.[0];
+    return top === "bus" || top === "metro" ? "bus" : top === "congestion" ? "traffic" : "incident";
+  }
+  return ({ flood: "flood", pothole: "pothole", roadworks: "roadworks", public_event: "event" } as Record<string, Glyph>)[e.category] ?? "report";
+}
+
+/** What the shared hover card says about one event. Only counts and the first resident's words; never who reported. */
+function eventResource(e: SignalEvent): Resource {
+  const t = tr(T);
+  return {
+    glyph: glyphOf(e),
+    title: e.category_label,
+    category: t.level[e.level],
+    ...(e.confidence !== null ? { main: { label: t.legend, value: pct(e.confidence), unit: "" } } : {}),
+    readings: [],
+    facts: [
+      { label: t.tabs.events, value: t.reports(e.n_reports, e.n_reporters) },
+      ...(e.texts[0] ? [{ label: t.texts, value: `«${e.texts[0]}»` }] : []),
+    ],
+    extra: [],
+    observedAt: e.last_seen,
+    synthetic: false,
+    position: [e.lon, e.lat],
+    id: e.id,
+  };
 }
