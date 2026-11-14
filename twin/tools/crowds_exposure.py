@@ -9,7 +9,7 @@ the threshold from ``config/thresholds.yaml`` and wrap the answer.
 from __future__ import annotations
 
 import importlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -285,20 +285,20 @@ def flood_watch_tool(runtime: ToolRuntime, area: Any = "city", time: str | None 
     return _wrap(runtime, "flood_watch", inputs, part, resolved, {}, feed_warnings)
 
 
-def schools_check(runtime: ToolRuntime, area: Any = "city", top: int = 10, time: str | None = None
-                  ) -> dict[str, Any]:
-    """Schools ranked by how close the air (NO2, PM10, PM2.5) comes to its legal limits (WS5 schools_to_check)."""
+def _sites_ranked(runtime: ToolRuntime, tool: str, function: str, area: Any, top: int, time: str | None,
+                  with_ages: bool) -> dict[str, Any]:
+    """Shared body of schools_to_check and care_sites_to_check: air layers vs legal limits at sensitive sites."""
     inputs = {"area": area, "top": top, "time": time}
     chosen: dict[str, str] = dict(runtime.settings.tools.get("schools_to_check", {}).get("limits", {}))
     limits = {layer: threshold_for(runtime, layer, name) for layer, name in chosen.items()}
     mods = _ws5("api", "grid", "config", "crowds", "schools")
-    if mods is None:
-        return _not_wired(runtime, "schools_to_check", inputs)
+    if mods is None or not hasattr(mods[4], function):
+        return _not_wired(runtime, tool, inputs)
     crowds, schools = mods[3], mods[4]
     sites = _processed(runtime, "sensitive_sites.geojson")
     census_path = _census_path(runtime)
     if not sites.exists() or not census_path.exists():
-        return runtime.envelope("schools_to_check", inputs, None, {"sensitive_sites": "not_available"}, [], [],
+        return runtime.envelope(tool, inputs, None, {"sensitive_sites": "not_available"}, [], [],
                                 status="not_available", reason="Sensitive sites or census (WS1) not built yet.")
     resolved = resolve_area(area, runtime.store, runtime.settings)
     feed_warnings: list[str] = []
@@ -313,9 +313,50 @@ def schools_check(runtime: ToolRuntime, area: Any = "city", top: int = 10, time:
         belief, at, cells = built
         layers[layer] = (belief, limit["value"])
     if not layers or at is None:
-        return runtime.envelope("schools_to_check", inputs, None, {name: "not_available" for name in limits}, [],
+        return runtime.envelope(tool, inputs, None, {name: "not_available" for name in limits}, [],
                                 feed_warnings, status="not_available", reason="No air-quality layer could be built.")
-    part = schools.schools_to_check(layers, sites, crowds.census_per_cell(census_path, cells), top=top)
+    ages = _processed(runtime, "census_ages.csv")
+    if with_ages and not ages.exists():
+        feed_warnings.append("Census age table not built: elderly counts are missing.")
+    census = (crowds.census_per_cell(census_path, cells, ages_path=ages) if with_ages and ages.exists()
+              else crowds.census_per_cell(census_path, cells))
+    part = getattr(schools, function)(layers, sites, census, top=top)
     averaging = [_averaging_warning(limits[name], at) for name in layers]
-    return _wrap(runtime, "schools_to_check", inputs, part, resolved, {"limits": limits},
-                 feed_warnings + averaging[:1])
+    return _wrap(runtime, tool, inputs, part, resolved, {"limits": limits}, feed_warnings + averaging[:1])
+
+
+def schools_check(runtime: ToolRuntime, area: Any = "city", top: int = 10, time: str | None = None
+                  ) -> dict[str, Any]:
+    """Schools ranked by how close the air (NO2, PM10, PM2.5) comes to its legal limits (WS5 schools_to_check)."""
+    return _sites_ranked(runtime, "schools_to_check", "schools_to_check", area, top, time, with_ages=False)
+
+
+def care_sites_check(runtime: ToolRuntime, area: Any = "city", top: int = 10, time: str | None = None
+                     ) -> dict[str, Any]:
+    """Hospitals, clinics and care homes ranked the same way, with elderly residents per cell."""
+    return _sites_ranked(runtime, "care_sites_to_check", "care_sites_to_check", area, top, time, with_ages=True)
+
+
+#: (runtime id, time bucket) -> envelope. A whole-city freshness run calls every feed.
+_FRESHNESS_CACHE: dict[tuple[int, int], dict[str, Any]] = {}
+
+
+def feed_status(runtime: ToolRuntime, refresh: bool = False) -> dict[str, Any]:
+    """Is each live feed live, late or down right now (WS5 feed_freshness), cached for a few minutes."""
+    inputs: dict[str, Any] = {}
+    mods = _ws5("freshness")
+    if mods is None:
+        return _not_wired(runtime, "feed_status", inputs)
+    ttl = float(runtime.settings.tool("feed_status", "cache_minutes")) * 60.0
+    now = datetime.now(timezone.utc)
+    key = (id(runtime), int(now.timestamp() // ttl))
+    if not refresh and key in _FRESHNESS_CACHE:
+        return {**_FRESHNESS_CACHE[key], "cached": True}
+    part = mods[0].feed_freshness(runtime.providers, now)
+    sources = [Source(id=str(x["id"]), retrieved_at=str(x.get("retrieved_at") or "")) for x in part.get("sources", [])]
+    env = runtime.envelope("feed_status", {"checked_at": now.isoformat()}, part.get("result"),
+                           dict(part.get("data_kinds", {})), sources, list(part.get("warnings", [])),
+                           synthetic=bool(part.get("synthetic")))
+    _FRESHNESS_CACHE.clear()
+    _FRESHNESS_CACHE[key] = env
+    return env

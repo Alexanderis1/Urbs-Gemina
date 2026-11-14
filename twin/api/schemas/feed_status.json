@@ -1,0 +1,26 @@
+{
+  "name": "feed_status",
+  "description": "Is each live data feed live, late or down right now (checked at most every few minutes).",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Is each live data feed live, late or down right now (checked at most every few minutes).",
+    "properties": {
+      "refresh": {
+        "default": false,
+        "description": "re-check now instead of using the last few minutes' answer",
+        "title": "Refresh",
+        "type": "boolean"
+      }
+    },
+    "title": "FeedStatusIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/feed_status"
+  },
+  "owner": "WS5"
+}

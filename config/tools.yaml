@@ -119,3 +119,6 @@ citizen:
       chiusura: [chiusura, chiusa, chiuso, interdizione, transito vietato]
       deviazione: [deviazione, devia, modifica, percorso, viabilita, fermata spostata, fermate]
     labels_it: {sciopero: "Sciopero", evento: "Evento", lavori: "Lavori", chiusura: "Strada chiusa", deviazione: "Deviazione linea", avviso: "Avviso"}
+
+feed_status:
+  cache_minutes: {value: 5, basis: "a whole-city freshness run calls every feed (about 60 s); feeds update every 5-15 min"}

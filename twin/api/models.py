@@ -136,6 +136,20 @@ class SchoolsToCheckIn(Strict):
     time: str | None = Field(default=None, description="ISO 8601; default now")
 
 
+class CareSitesToCheckIn(Strict):
+    """Hospitals, clinics and care homes ranked by how close the air comes to its legal limits, worst first."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    top: int = Field(default=10, ge=1, le=100)
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class FeedStatusIn(Strict):
+    """Is each live data feed live, late or down right now (checked at most every few minutes)."""
+
+    refresh: bool = Field(default=False, description="re-check now instead of using the last few minutes' answer")
+
+
 class RunScenarioIn(Strict):
     """Run a what-if scenario on an operating area: baseline vs variant with ranges."""
 
