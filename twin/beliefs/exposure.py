@@ -94,14 +94,22 @@ def _order(group: str) -> tuple[int, str]:
 
 
 def heat_watch(temperature: BeliefLayer, census: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
-    """Elderly residents and care homes where it is likely above the heat threshold (``heat`` in config)."""
+    """Elderly residents and health/care sites where it is likely above the heat threshold (``heat`` in config).
+
+    ``census`` rows may carry ``health_sites``: hospitals, clinics, care homes and
+    Lazio-accredited facilities per cell, from ``points_per_cell(sensitive_sites,
+    cells, categories=["health"])``.
+    """
     import yaml
 
     from twin.beliefs.config import CONFIG_DIR
 
     raw = yaml.safe_load((CONFIG_DIR / "beliefs.yaml").read_text(encoding="utf-8"))["heat"]
     out = exposure(temperature, census, float(raw["threshold_c"]),
-                   columns=("residents", "elderly_65_plus", "elderly_75_plus", "care_homes"))
-    out["warnings"].append("care homes come from OpenStreetMap and are incomplete (17 mapped in Rome on 13 Nov 2026)")
+                   columns=("residents", "elderly_65_plus", "elderly_75_plus", "health_sites"))
+    out["warnings"].append(
+        "health sites = hospitals, clinics, care homes and Lazio-accredited facilities (official lists plus OSM); "
+        "the accredited list does not say which ones house residents"
+    )
     out["warnings"].append(f"heat threshold {raw['threshold_c']} degC is an operational assumption: {raw['basis']}")
     return out

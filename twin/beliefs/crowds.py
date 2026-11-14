@@ -84,16 +84,17 @@ def census_per_cell(path: Path, cells: Sequence[str], ages_path: Path | None = N
     return out
 
 
-def points_per_cell(path: Path, cells: Sequence[str]) -> dict[str, int]:
-    """Count point features (e.g. care homes) per cell."""
+def points_per_cell(path: Path, cells: Sequence[str], categories: Sequence[str] | None = None) -> dict[str, int]:
+    """Count features per cell (polygons by their centre), optionally only some ``category`` values."""
+    from twin.beliefs.sites import _point
+
     wanted = set(cells)
     resolution = _resolution(cells)
     out: dict[str, int] = {}
     for feature in json.loads(path.read_text(encoding="utf-8"))["features"]:
-        if feature["geometry"]["type"] != "Point":
+        if categories is not None and feature["properties"].get("category") not in categories:
             continue
-        lon, lat = feature["geometry"]["coordinates"][:2]
-        cell = cell_of(lon, lat, resolution)
+        cell = cell_of(*_point(feature["geometry"]), resolution)
         if cell in wanted:
             out[cell] = out.get(cell, 0) + 1
     return out

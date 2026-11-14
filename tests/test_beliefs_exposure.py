@@ -94,18 +94,19 @@ def test_heat_exposure_counts_elderly_and_care_homes(tmp_path: Path) -> None:
     ages.write_text("sez_id,elderly_65_plus,elderly_75_plus\n")  # header only: joined by sez_id below
     homes = tmp_path / "homes.geojson"
     homes.write_text(json.dumps({"type": "FeatureCollection", "features": [
-        {"type": "Feature", "properties": {"name": "x"}, "geometry": {"type": "Point", "coordinates": list(A)}}]}))
+        {"type": "Feature", "properties": {"name": "x", "category": "health"}, "geometry": {"type": "Point", "coordinates": list(A)}},
+        {"type": "Feature", "properties": {"name": "y", "category": "education"}, "geometry": {"type": "Point", "coordinates": list(A)}}]}))
     cells = cells_in_bbox(WINDOW, 9)
     c = census_per_cell(census, cells, ages_path=ages)
-    for cell, n in points_per_cell(homes, cells).items():
-        c.setdefault(cell, {"residents": 0})["care_homes"] = n
+    for cell, n in points_per_cell(homes, cells, categories=["health"]).items():
+        c.setdefault(cell, {"residents": 0})["health_sites"] = n
     spec = load_specs()["temperature"]
     assert spec.prior_field is not None and spec.prior_field.value_key == "temperature_c"
     hot = Observation("f", "WeatherForecast", *A, T0, {"temperature_c": 38.0}, {"temperature_c": 1.0}, "om_weather_forecast", False)
     layer = prior_layer(spec, cells, T0, prior_field=[hot])
-    out = exposure(layer, c, threshold=32.0, columns=("residents", "elderly_65_plus", "care_homes"))
+    out = exposure(layer, c, threshold=32.0, columns=("residents", "elderly_65_plus", "health_sites"))
     city = out["result"]["city"]
-    assert city["care_homes_above"]["expected"] == 1
+    assert city["health_sites_above"]["expected"] == 1  # the school is not counted
     assert city["elderly_65_plus_above"]["expected"] == 0  # the ages file had no rows
     assert city["residents_above"]["expected"] >= 1000
 
