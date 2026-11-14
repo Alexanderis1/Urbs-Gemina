@@ -24,6 +24,9 @@
       "Tiber and Aniene discharge forecast",
       "disruption news (unverified)",
       "which layers are real, estimated or simulated"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -56,6 +59,9 @@
       "emergency plan areas (A waiting, B reception, C shelters, D staging)",
       "ambulance reach with flooded roads closed",
       "official alerts and news (unverified)"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -92,6 +98,9 @@
       "indoor cool places of the Roma climate-refuge map (aria_cond = air conditioning)",
       "public drinking fountains (nasoni)",
       "official heat plan"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -129,6 +138,9 @@
       "emergency plan areas within the ring (waiting, reception, staging)",
       "air quality in its municipio",
       "ambulance reach in the district around it, with roads flooded by the forecast rain closed"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -164,6 +176,9 @@
       "traffic with the event (SUMO, synthetic demand)",
       "ambulance reach with the perimeter closed",
       "emergency hospitals"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -195,6 +210,9 @@
       "field estimate today (P5-P95)",
       "residents above thresholds, before and after",
       "attention value"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -219,6 +237,10 @@
     "steps": [
       "facilities for the discipline",
       "residents within walking time"
+    ],
+    "tiers": [
+      "office",
+      "citizen"
     ]
   },
   {
@@ -249,6 +271,10 @@
       "lines running nearby by the timetable (estimated; used when the live feed is stale)",
       "pharmacies nearby",
       "emergency hospitals"
+    ],
+    "tiers": [
+      "office",
+      "citizen"
     ]
   },
   {
@@ -280,6 +306,9 @@
       "emergency plan areas (waiting, reception, shelters)",
       "news about the plant (unverified)",
       "external emergency plan rules"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -306,6 +335,9 @@
       "municipal nurseries",
       "legal limits",
       "traffic bans and notices (unverified)"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -332,6 +364,9 @@
       "public Wi-Fi activity (crowd proxy)",
       "park-and-ride car parks (places, metro line)",
       "strike notices (unverified)"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {

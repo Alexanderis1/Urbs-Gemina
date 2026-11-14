@@ -2,6 +2,7 @@
 // what is present. Numbers are passed through (rounded for display only); nothing is computed here.
 
 import { inRome } from "@/lib/mapActions";
+import { locale, texts, tr } from "@/lib/i18n";
 
 export interface Quantile {
   p5: number;
@@ -94,108 +95,236 @@ const LABEL_SKIP = new Set(["zones", "sites", "rows", "items"]);
 /** Row order for runs with several measures: what a driver feels first, bookkeeping last. */
 const COMPARISON_ORDER = ["mean_travel_time_s", "mean_time_loss_s", "vehicle_hours_lost"];
 
-const DICT: Record<string, string> = {
-  mean_travel_time_s: "Average trip time",
-  mean_time_loss_s: "Average delay per trip",
-  vehicle_hours_lost: "Hours lost by all vehicles",
-  completed: "Trips completed",
-  area: "Operating area",
-  km2: "Area",
-  baseline: "Today",
-  p50: "Middle estimate (P50)",
-  id: "Id",
-  children_0_14: "Children (0-14)",
-  median_resident: "Median resident",
-  p75_resident: "75th percentile resident",
-  travel_min_baseline: "Travel time today (minutes)",
-  rise_m: "River rise",
-  sigma_m: "Uncertainty of the rise",
-  gauge: "Gauge",
-  gauge_level_m: "Gauge level",
-  discharge_m3s: "River discharge",
-  flooded_km2: "Flooded area",
-  flooded_km2_p50: "Flooded area (P50)",
-  baseline_flooded_km2: "River channel today",
-  alert_probability: "Chance of each alert level",
-  official_hazard: "Official hazard areas",
-  hot_area_km2: "Hot area",
-  forecast_tmax_c: "Forecast day maximum",
-  forecast_tmin_c: "Forecast night minimum",
-  hot_day: "Hot day",
-  tropical_night: "Tropical night",
-  what_if: "What-if",
-  "what_if.cooling_day_c": "Cooling by day with the change",
-  cooling_day_c: "Cooling by day",
-  hot_day_residents: "Residents on a hot day",
-  residents_no_longer_hot: "Residents no longer hot",
-  residents: "Residents",
-  children: "Children",
-  elderly_65_plus: "Aged 65 and over",
-  residents_total: "Residents in the area",
-  residents_cut_off: "Residents cut off",
-  residents_beyond_target: "Residents beyond the target time",
-  sections_touched: "Census sections touched",
-  sections_losing_coverage: "Sections losing coverage",
-  closed_roads: "Roads closed",
-  facilities: "Stations",
-  target_min: "Target time",
-  target_source: "Target source",
-  service: "Service",
-  minutes_before: "Minutes before",
-  minutes_after: "Minutes after",
-  before: "Before",
-  after: "After",
-  hotspots: "Flooding hotspots",
-  hotspots_count: "Hotspots found",
-  hollows_modelled: "Hollows modelled",
-  sections: "Census sections",
-  sez_id: "Section",
-  sensitive_sites: "Sensitive sites",
-  official_damage_zones: "Official damage zones",
-  sewer: "Sewer",
-  surcharge_points: "Overflow points",
-  surcharge_m3: "Overflow volume",
-  surcharge_map_p50: "Sewer overflow area (P50)",
-  outfalls_blocked: "Outfalls blocked by the river",
-  outfalls_considered: "Outfalls considered",
-  efficiency: "Drain efficiency",
-  street_drain_rate_mm_h: "Street drain rate",
-  mean_m3: "Mean overflow",
-  max_depth_m: "Max depth",
-  flooded_m2: "Flooded area",
-  rain_mm_mean: "Mean rain",
-  probability_over_30cm: "Chance of over 30 cm",
-  duration_h: "Duration",
-  total_depth_index: "Total depth index",
-  members: "Ensemble members",
-  model: "Model",
-  calibration: "Calibration",
-  probability: "Chance",
-  site: "Release site",
-  substance: "Substance",
-  release_kg_s: "Release rate",
-  wind: "Wind",
-  speed_ms: "Speed",
-  from_deg: "From",
-  threshold_mg_m3: "Threshold",
-  meaning: "Meaning",
-  area_km2: "Area",
-  max_distance_m: "Furthest distance over the threshold",
-  footprint_p50: "Likely extent (P50)",
-  footprint_p95: "Possible extent (P95)",
-  hot_map_p50: "Hot area (P50)",
-  footprint_possible: "Possible zone",
-  impervious_pct: "Sealed ground",
-  tree_cover_pct: "Tree cover",
-  tmax_c: "Day maximum",
-  tmin_c: "Night minimum",
-  by_category: "By category",
-  count: "Count",
-  name: "Name",
-  category: "Category",
-  subtype: "Type",
-  day: "Day",
-};
+const T = texts({
+  en: {
+    dict: {
+      mean_travel_time_s: "Average trip time",
+      mean_time_loss_s: "Average delay per trip",
+      vehicle_hours_lost: "Hours lost by all vehicles",
+      completed: "Trips completed",
+      area: "Operating area",
+      km2: "Area",
+      baseline: "Today",
+      p50: "Middle estimate (P50)",
+      id: "Id",
+      children_0_14: "Children (0-14)",
+      median_resident: "Median resident",
+      p75_resident: "75th percentile resident",
+      travel_min_baseline: "Travel time today (minutes)",
+      rise_m: "River rise",
+      sigma_m: "Uncertainty of the rise",
+      gauge: "Gauge",
+      gauge_level_m: "Gauge level",
+      discharge_m3s: "River discharge",
+      flooded_km2: "Flooded area",
+      flooded_km2_p50: "Flooded area (P50)",
+      baseline_flooded_km2: "River channel today",
+      alert_probability: "Chance of each alert level",
+      official_hazard: "Official hazard areas",
+      hot_area_km2: "Hot area",
+      forecast_tmax_c: "Forecast day maximum",
+      forecast_tmin_c: "Forecast night minimum",
+      hot_day: "Hot day",
+      tropical_night: "Tropical night",
+      what_if: "What-if",
+      "what_if.cooling_day_c": "Cooling by day with the change",
+      cooling_day_c: "Cooling by day",
+      hot_day_residents: "Residents on a hot day",
+      residents_no_longer_hot: "Residents no longer hot",
+      residents: "Residents",
+      children: "Children",
+      elderly_65_plus: "Aged 65 and over",
+      residents_total: "Residents in the area",
+      residents_cut_off: "Residents cut off",
+      residents_beyond_target: "Residents beyond the target time",
+      sections_touched: "Census sections touched",
+      sections_losing_coverage: "Sections losing coverage",
+      closed_roads: "Roads closed",
+      facilities: "Stations",
+      target_min: "Target time",
+      target_source: "Target source",
+      service: "Service",
+      minutes_before: "Minutes before",
+      minutes_after: "Minutes after",
+      before: "Before",
+      after: "After",
+      hotspots: "Flooding hotspots",
+      hotspots_count: "Hotspots found",
+      hollows_modelled: "Hollows modelled",
+      sections: "Census sections",
+      sez_id: "Section",
+      sensitive_sites: "Sensitive sites",
+      official_damage_zones: "Official damage zones",
+      sewer: "Sewer",
+      surcharge_points: "Overflow points",
+      surcharge_m3: "Overflow volume",
+      surcharge_map_p50: "Sewer overflow area (P50)",
+      outfalls_blocked: "Outfalls blocked by the river",
+      outfalls_considered: "Outfalls considered",
+      efficiency: "Drain efficiency",
+      street_drain_rate_mm_h: "Street drain rate",
+      mean_m3: "Mean overflow",
+      max_depth_m: "Max depth",
+      flooded_m2: "Flooded area",
+      rain_mm_mean: "Mean rain",
+      probability_over_30cm: "Chance of over 30 cm",
+      duration_h: "Duration",
+      total_depth_index: "Total depth index",
+      members: "Ensemble members",
+      model: "Model",
+      calibration: "Calibration",
+      probability: "Chance",
+      site: "Release site",
+      substance: "Substance",
+      release_kg_s: "Release rate",
+      wind: "Wind",
+      speed_ms: "Speed",
+      from_deg: "From",
+      threshold_mg_m3: "Threshold",
+      meaning: "Meaning",
+      area_km2: "Area",
+      max_distance_m: "Furthest distance over the threshold",
+      footprint_p50: "Likely extent (P50)",
+      footprint_p95: "Possible extent (P95)",
+      hot_map_p50: "Hot area (P50)",
+      footprint_possible: "Possible zone",
+      impervious_pct: "Sealed ground",
+      tree_cover_pct: "Tree cover",
+      tmax_c: "Day maximum",
+      tmin_c: "Night minimum",
+      by_category: "By category",
+      count: "Count",
+      name: "Name",
+      category: "Category",
+      subtype: "Type",
+      day: "Day",
+    } as Record<string, string>,
+    affected: {
+      "residents.residents": "Residents in the affected area",
+      "residents.children_0_14": "Children (0-14) in the affected area",
+    } as Record<string, string>,
+    notAvailable: "Not available.",
+    sameEveryRun: "same in every model run",
+    range: (lo: string, hi: string) => `range ${lo} to ${hi}`,
+    yes: "Yes",
+    no: "No",
+    middleEstimate: "middle estimate (P50)",
+  },
+  it: {
+    dict: {
+      mean_travel_time_s: "Tempo medio di viaggio",
+      mean_time_loss_s: "Ritardo medio per viaggio",
+      vehicle_hours_lost: "Ore perse da tutti i veicoli",
+      completed: "Viaggi completati",
+      area: "Area operativa",
+      km2: "Area",
+      baseline: "Oggi",
+      p50: "Stima centrale (P50)",
+      id: "Id",
+      children_0_14: "Bambini (0-14)",
+      median_resident: "Residente mediano",
+      p75_resident: "Residente al 75º percentile",
+      travel_min_baseline: "Tempo di viaggio oggi (minuti)",
+      rise_m: "Aumento del fiume",
+      sigma_m: "Incertezza dell'aumento",
+      gauge: "Idrometro",
+      gauge_level_m: "Livello all'idrometro",
+      discharge_m3s: "Portata del fiume",
+      flooded_km2: "Area allagata",
+      flooded_km2_p50: "Area allagata (P50)",
+      baseline_flooded_km2: "Alveo del fiume oggi",
+      alert_probability: "Probabilità di ogni livello di allerta",
+      official_hazard: "Aree di pericolo ufficiali",
+      hot_area_km2: "Area calda",
+      forecast_tmax_c: "Massima di giorno prevista",
+      forecast_tmin_c: "Minima di notte prevista",
+      hot_day: "Giorno caldo",
+      tropical_night: "Notte tropicale",
+      what_if: "Ipotesi",
+      "what_if.cooling_day_c": "Raffrescamento di giorno con la modifica",
+      cooling_day_c: "Raffrescamento di giorno",
+      hot_day_residents: "Residenti in un giorno caldo",
+      residents_no_longer_hot: "Residenti non più al caldo",
+      residents: "Residenti",
+      children: "Bambini",
+      elderly_65_plus: "Over 65",
+      residents_total: "Residenti nell'area",
+      residents_cut_off: "Residenti isolati",
+      residents_beyond_target: "Residenti oltre il tempo obiettivo",
+      sections_touched: "Sezioni di censimento coinvolte",
+      sections_losing_coverage: "Sezioni che perdono la copertura",
+      closed_roads: "Strade chiuse",
+      facilities: "Stazioni",
+      target_min: "Tempo obiettivo",
+      target_source: "Fonte dell'obiettivo",
+      service: "Servizio",
+      minutes_before: "Minuti prima",
+      minutes_after: "Minuti dopo",
+      before: "Prima",
+      after: "Dopo",
+      hotspots: "Punti critici di allagamento",
+      hotspots_count: "Punti critici trovati",
+      hollows_modelled: "Conche modellate",
+      sections: "Sezioni di censimento",
+      sez_id: "Sezione",
+      sensitive_sites: "Siti sensibili",
+      official_damage_zones: "Zone di danno ufficiali",
+      sewer: "Fognatura",
+      surcharge_points: "Punti di tracimazione",
+      surcharge_m3: "Volume tracimato",
+      surcharge_map_p50: "Area di tracimazione delle fognature (P50)",
+      outfalls_blocked: "Scarichi bloccati dal fiume",
+      outfalls_considered: "Scarichi considerati",
+      efficiency: "Efficienza degli scarichi",
+      street_drain_rate_mm_h: "Portata dei tombini",
+      mean_m3: "Tracimazione media",
+      max_depth_m: "Profondità massima",
+      flooded_m2: "Area allagata",
+      rain_mm_mean: "Pioggia media",
+      probability_over_30cm: "Probabilità di oltre 30 cm",
+      duration_h: "Durata",
+      total_depth_index: "Indice di profondità totale",
+      members: "Membri dell'insieme",
+      model: "Modello",
+      calibration: "Calibrazione",
+      probability: "Probabilità",
+      site: "Sito del rilascio",
+      substance: "Sostanza",
+      release_kg_s: "Portata del rilascio",
+      wind: "Vento",
+      speed_ms: "Velocità",
+      from_deg: "Da",
+      threshold_mg_m3: "Soglia",
+      meaning: "Significato",
+      area_km2: "Area",
+      max_distance_m: "Distanza massima oltre la soglia",
+      footprint_p50: "Estensione probabile (P50)",
+      footprint_p95: "Estensione possibile (P95)",
+      hot_map_p50: "Area calda (P50)",
+      footprint_possible: "Zona possibile",
+      impervious_pct: "Suolo impermeabile",
+      tree_cover_pct: "Verde",
+      tmax_c: "Massima di giorno",
+      tmin_c: "Minima di notte",
+      by_category: "Per categoria",
+      count: "Conteggio",
+      name: "Nome",
+      category: "Categoria",
+      subtype: "Tipo",
+      day: "Giorno",
+    } as Record<string, string>,
+    affected: {
+      "residents.residents": "Residenti nell'area interessata",
+      "residents.children_0_14": "Bambini (0-14) nell'area interessata",
+    } as Record<string, string>,
+    notAvailable: "Non disponibile.",
+    sameEveryRun: "uguale in ogni esecuzione del modello",
+    range: (lo: string, hi: string) => `intervallo da ${lo} a ${hi}`,
+    yes: "Sì",
+    no: "No",
+    middleEstimate: "stima centrale (P50)",
+  },
+});
 
 const ACRONYMS: Record<string, string> = { aegl: "AEGL", idlh: "IDLH", osm: "OSM", sumo: "SUMO", acea: "ACEA", pgra: "PGRA" };
 
@@ -259,7 +388,8 @@ export function unitFor(key: string): string {
 }
 
 function segmentLabel(seg: string): string {
-  if (DICT[seg]) return DICT[seg];
+  const dict = tr(T).dict;
+  if (dict[seg]) return dict[seg];
   const k = unitKey(seg);
   for (const [suffix] of UNITS) if (k.endsWith(suffix) && k.length > suffix.length) return humanise(k.slice(0, -suffix.length));
   return humanise(seg);
@@ -267,7 +397,8 @@ function segmentLabel(seg: string): string {
 
 /** Plain-English label for a dotted result path. */
 export function labelFor(path: string): string {
-  if (DICT[path]) return DICT[path];
+  const dict = tr(T).dict;
+  if (dict[path]) return dict[path];
   const segs = path.split(".");
   const kept = segs.length > 1 ? segs.filter((s) => !LABEL_SKIP.has(s)) : segs;
   const out: string[] = [];
@@ -278,13 +409,15 @@ export function labelFor(path: string): string {
 /** Display rounding only: integers stay whole, others keep four significant figures. */
 export function fmtNumber(v: number): string {
   if (!Number.isFinite(v)) return String(v);
-  if (Math.abs(v) >= 1000 || Number.isInteger(v)) return Math.round(v).toLocaleString("en-GB");
-  return String(Number(v.toPrecision(4)));
+  if (Math.abs(v) >= 1000 || Number.isInteger(v)) return Math.round(v).toLocaleString(locale());
+  const plain = String(Number(v.toPrecision(4)));
+  return locale() === "it-IT" ? plain.replace(".", ",") : plain;
 }
 
 /** The range line under a figure. A range with no spread is said in words rather than as "x to x". */
 export function rangeText(q: Pick<Quantile, "p5" | "p50" | "p95">): string {
-  return q.p5 === q.p95 ? "same in every model run" : `range ${fmtNumber(q.p5)} to ${fmtNumber(q.p95)}`;
+  const t = tr(T);
+  return q.p5 === q.p95 ? t.sameEveryRun : t.range(fmtNumber(q.p5), fmtNumber(q.p95));
 }
 
 const isProbabilityKey = (key: string) => /probab|chance/i.test(key);
@@ -297,11 +430,11 @@ function fmtValue(key: string, v: unknown, prob = isProbabilityKey(key)): string
     const unit = unitFor(key);
     return unit ? `${fmtNumber(v)}${unit === "°" || unit === "%" ? "" : " "}${unit}` : fmtNumber(v);
   }
-  if (typeof v === "boolean") return v ? "Yes" : "No";
+  if (typeof v === "boolean") return v ? tr(T).yes : tr(T).no;
   if (typeof v === "string") return v.replace(/_/g, " ");
   if (isQuantile(v)) {
     const unit = unitFor(key);
-    return `${fmtNumber(v.p50)}${unit ? ` ${unit}` : ""} (range ${fmtNumber(v.p5)} to ${fmtNumber(v.p95)})`;
+    return `${fmtNumber(v.p50)}${unit ? ` ${unit}` : ""} (${tr(T).range(fmtNumber(v.p5), fmtNumber(v.p95))})`;
   }
   if (Array.isArray(v)) return v.every(isPrimitive) ? v.map((x) => fmtValue(key, x, prob)).join(", ") : `${v.length}`;
   if (isObj(v)) {
@@ -397,16 +530,12 @@ function isKeyedRows(v: Obj): boolean {
 }
 
 /** Top-level head counts are people inside the modelled footprint: say so. */
-const AFFECTED: Record<string, string> = {
-  "residents.residents": "Residents in the affected area",
-  "residents.children_0_14": "Children (0-14) in the affected area",
-};
 
 export function summariseScenario(input: unknown): ScenarioSummary {
   const out: ScenarioSummary = { compare: null, comparisons: [], quantiles: [], facts: [], tables: [], footprints: [], points: [], notAvailable: null };
   if (!isObj(input)) return out;
   const result: Obj = { ...input };
-  if (result.status === "not_available" || result.status === "refused") out.notAvailable = typeof result.reason === "string" ? result.reason : "Not available.";
+  if (result.status === "not_available" || result.status === "refused") out.notAvailable = typeof result.reason === "string" ? result.reason : tr(T).notAvailable;
   const skip = new Set(TOP_SKIP);
   const pick = (x: Quantile): Quantile => ({ p5: x.p5, p50: x.p50, p95: x.p95 });
   if (isQuantile(result.baseline) && isQuantile(result.variant)) {
@@ -480,7 +609,7 @@ export function summariseScenario(input: unknown): ScenarioSummary {
       if (entries.length === 1 && isObj(v.p50) && Object.values(v.p50).every(isPrimitive)) {
         for (const [k, x] of ordered(Object.entries(v.p50)))
           if (typeof x === "number")
-            out.facts.push({ path: `${path}.p50.${k}`, label: AFFECTED[`${path}.${k}`] ?? labelFor(`${path}.${k}`), value: fmtValue(k, x), bare: fmtNumber(x), unit: unitFor(k), note: "middle estimate (P50)" });
+            out.facts.push({ path: `${path}.p50.${k}`, label: tr(T).affected[`${path}.${k}`] ?? labelFor(`${path}.${k}`), value: fmtValue(k, x), bare: fmtNumber(x), unit: unitFor(k), note: tr(T).middleEstimate });
         return;
       }
       if (entries.length <= 8 && entries.every(([, x]) => isPrimitive(x))) {

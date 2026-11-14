@@ -1,65 +1,144 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import { PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
-import {
-  AlertTriangle,
-  Bike,
-  Building2,
-  Bus,
-  Car,
-  CloudRain,
-  Hospital,
-  Layers as LayersIcon,
-  Map as MapIcon,
-  RadioTower,
-  School,
-  Wind,
-  Zap,
-  type LucideIcon,
-} from "lucide-react";
-import { CityMap } from "@/map/CityMap";
+import { AlertTriangle, Building2, Map as MapIcon, type LucideIcon } from "lucide-react";
+import { CityMap, type MapFocus } from "@/map/CityMap";
 import { AreaPicker } from "@/components/AreaPicker";
 import { RunMeta } from "@/components/RunMeta";
 import { KindBadge } from "@/components/Badge";
-import { Callout, LegendRamp, MapFloat, Panel, Section, Skeleton, Spinner, Workspace } from "@/components/ui";
+import { Callout, Field, LegendRamp, MapFloat, Panel, Section, Skeleton, Spinner, Workspace } from "@/components/ui";
 import { areaLabel, areaToArg, type Area } from "@/lib/area";
 import { ALPHA_FLOOR, areaAlpha, confidenceAlpha, rampColor, rampGradient } from "@/lib/colors";
 import { onMapAction, registerCityView } from "@/lib/mapbus";
 import { areaFromId } from "@/lib/mapActions";
 import { isOk } from "@/api/envelope";
-import { describeItem, formatValue, normalizeLayer, valueExtent, type MapData, type MapItem } from "@/lib/layers";
+import {
+  areaBounds,
+  areaForLayer,
+  availableMetrics,
+  describeItem,
+  dotRadiusPx,
+  firstSentence,
+  formatValue,
+  metricInfo,
+  normalizeLayer,
+  pointStyle,
+  showValueLabels,
+  valueExtent,
+  type MapData,
+  type MapItem,
+} from "@/lib/layers";
 import { calibrationLabel } from "@/lib/format";
-import { BUILDING_VIEWS, LEGENDS, ROOF_COLORS, type BuildingView } from "@/lib/buildingStyles";
+import { BUILDING_VIEWS, LEGENDS, ROOF_COLORS, roofLabel, type BuildingView } from "@/lib/buildingStyles";
 import { useSession } from "@/lib/runlog";
 import { useTheme } from "@/lib/useTheme";
+import { GROUPS, isFused, layerLabel, layersFor } from "@/lib/layerCatalogue";
+import type { Experience } from "@/lib/tiers";
 import type { Envelope, QueryLayerResult } from "@/api/types";
 import { errorText } from "@/lib/errors";
+import { locale, texts, tr } from "@/lib/i18n";
 
-type LayerGroup = "fields" | "mobility" | "health" | "environment";
-
-// Layer ids as the live query_layer knows them (twin/api). Labels are for people; caveats go in `hint`.
-export const MAP_LAYERS: { id: string; label: string; hint?: string; group: LayerGroup; icon: LucideIcon }[] = [
-  { id: "antenna_register", label: "Antenna sites", hint: "Count per 500 m cell", group: "fields", icon: RadioTower },
-  { id: "emf_baseline", label: "EMF field", hint: "Cartoradio grid", group: "fields", icon: Zap },
-  { id: "traffic_flow", label: "Traffic loops", group: "mobility", icon: Car },
-  { id: "micromobility", label: "Shared scooters and bikes", group: "mobility", icon: Bike },
-  { id: "hospitals", label: "Hospitals", group: "health", icon: Hospital },
-  { id: "schools_state", label: "State schools", group: "health", icon: School },
-  { id: "rain", label: "Rain", hint: "Fused, with range. Slow: pick a municipio", group: "environment", icon: CloudRain },
-  { id: "air_quality", label: "Air quality stations", group: "environment", icon: Wind },
-  { id: "air_quality_model", label: "Air quality model", group: "environment", icon: LayersIcon },
-  { id: "transit", label: "Transit", hint: "Live buses", group: "mobility", icon: Bus },
-];
-
-const GROUPS: { id: LayerGroup; label: string }[] = [
-  { id: "fields", label: "Antennas and fields" },
-  { id: "mobility", label: "Mobility" },
-  { id: "health", label: "Health and schools" },
-  { id: "environment", label: "Environment" },
-];
-
-const layerLabel = (id: string | null) => MAP_LAYERS.find((l) => l.id === id)?.label ?? "Buildings only";
+const T = texts({
+  en: {
+    cellsWord: "cells",
+    pointsWord: "points",
+    perCell: (n: string) => ` per ${n} m cell`,
+    noData: "The twin has no data for this layer yet.",
+    cityView: "City view",
+    cityMap: "City map",
+    subStaff: "Pick one layer and an area to see what the twin knows about it.",
+    subPublic: "Pick what you want to see, and where. Each map says how sure it is.",
+    layerStaff: "Layer",
+    layerPublic: "Show on the map",
+    mapLayer: "Map layer",
+    none: "None (buildings only)",
+    where: "Where",
+    partOfCity: "Part of the city",
+    when: "When",
+    timeAria: "Time, hours before now",
+    now: "Now",
+    hoursAgo: (h: number) => `${h} hours ago`,
+    ago24: "24 h ago",
+    showing: "Showing:",
+    nowLatest: "now (latest data)",
+    hoursAgoShown: (h: number) => `${h} ${h === 1 ? "hour" : "hours"} ago`,
+    display: "Display",
+    showUncertainty: "Show uncertainty",
+    lessCertain: "Less certain values are drawn fainter.",
+    buildings: "Buildings",
+    centreOnly: "Centre district only.",
+    trees: "Trees (zoom in to see them)",
+    evidenceStaff: "Evidence",
+    evidencePublic: "How we know this",
+    loadError: "The layer could not be loaded",
+    runRecord: "The record of the tool run appears here once a layer is loaded.",
+    noLayer: "No data layer selected",
+    loading: "Loading layer…",
+    errStaff: "Could not load this layer. See Evidence.",
+    errPublic: (e: string) => `This could not be loaded right now. ${e}`,
+    emptyArea: "No data in this area right now",
+    incomplete: (shown: string, total: string, things: string) =>
+      `Thinned view: ${shown} of ${total} ${things}, picked evenly across the area. Pick a municipio, an urban zone or draw an area to see them all.`,
+    onePer: "One dot per",
+    site: "site",
+    record: "record",
+    valueShown: "Value shown",
+    sameEverywhere: "Same value everywhere:",
+    biggerDot: "Bigger dot = more sites.",
+    faded: "Faded = less certain",
+    outlined: "Outlined = simulated",
+  },
+  it: {
+    cellsWord: "celle",
+    pointsWord: "punti",
+    perCell: (n: string) => ` per cella di ${n} m`,
+    noData: "Il gemello non ha ancora dati per questo livello.",
+    cityView: "Vista città",
+    cityMap: "Mappa della città",
+    subStaff: "Scegli un livello e un'area per vedere cosa sa il gemello.",
+    subPublic: "Scegli cosa vuoi vedere e dove. Ogni mappa dice quanto è affidabile.",
+    layerStaff: "Livello",
+    layerPublic: "Mostra sulla mappa",
+    mapLayer: "Livello della mappa",
+    none: "Nessuno (solo edifici)",
+    where: "Dove",
+    partOfCity: "Parte della città",
+    when: "Quando",
+    timeAria: "Orario, ore prima di adesso",
+    now: "Adesso",
+    hoursAgo: (h: number) => `${h} ore fa`,
+    ago24: "24 h fa",
+    showing: "Stai vedendo:",
+    nowLatest: "adesso (dati più recenti)",
+    hoursAgoShown: (h: number) => `${h} ${h === 1 ? "ora" : "ore"} fa`,
+    display: "Visualizzazione",
+    showUncertainty: "Mostra l'incertezza",
+    lessCertain: "I valori meno certi sono disegnati più sbiaditi.",
+    buildings: "Edifici",
+    centreOnly: "Solo il centro.",
+    trees: "Alberi (ingrandisci per vederli)",
+    evidenceStaff: "Evidenze",
+    evidencePublic: "Come lo sappiamo",
+    loadError: "Non è stato possibile caricare il livello",
+    runRecord: "Il registro dell'esecuzione dello strumento compare qui dopo il caricamento di un livello.",
+    noLayer: "Nessun livello di dati selezionato",
+    loading: "Caricamento del livello…",
+    errStaff: "Non è stato possibile caricare questo livello. Vedi Evidenze.",
+    errPublic: (e: string) => `Al momento non è stato possibile caricarlo. ${e}`,
+    emptyArea: "Nessun dato in quest'area adesso",
+    incomplete: (shown: string, total: string, things: string) =>
+      `Vista ridotta: ${shown} di ${total} ${things}, scelti in modo uniforme nell'area. Scegli un municipio, una zona urbanistica o disegna un'area per vederli tutti.`,
+    onePer: "Un punto per",
+    site: "sito",
+    record: "record",
+    valueShown: "Valore mostrato",
+    sameEverywhere: "Stesso valore ovunque:",
+    biggerDot: "Punto più grande = più siti.",
+    faded: "Sbiadito = meno certo",
+    outlined: "Con contorno = simulato",
+  },
+});
 
 /** One selectable row. A real radio input (visually hidden) keeps arrow keys and screen readers working. */
 function LayerRow({
@@ -97,19 +176,27 @@ function LayerRow({
 /** "#rrggbb" to [r, g, b], for a deck.gl outline in the panel surface colour. */
 const hexRgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
 
-/** Legend title from the data itself: metric, cell size and unit as the tool returned them. */
+/** Legend title from the data itself: the value's plain name, cell size and unit. */
 function legendTitle(d: MapData): string {
-  const metric = d.metric.replace(/_/g, " ");
-  const cell = d.metric === "count" && d.cellM ? ` per ${formatValue(d.cellM)} m cell` : "";
-  const text = `${metric}${cell}${d.unit ? ` (${d.unit})` : ""}`;
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  const t = tr(T);
+  if (d.kind === "hex") return `${metricInfo(d.metric).label}${d.unit ? ` (${d.unit})` : ""}`;
+  const cell = d.metric === "count" && d.cellM ? t.perCell(formatValue(d.cellM)) : "";
+  return `${metricInfo(d.metric).label}${cell}${d.unit ? ` (${d.unit})` : ""}`;
 }
 
-export default function CityView() {
+/**
+ * The map of Rome with one data layer on it. Staff get the full console (every layer, drawing, time, display
+ * options, evidence open); residents get a short list in plain words and the evidence folded away.
+ */
+export default function CityView({ audience = "staff" }: { audience?: Experience }) {
+  const t = tr(T);
+  const staff = audience === "staff";
+  const catalogue = layersFor(audience);
   const { run } = useSession();
   const { theme, palette } = useTheme();
-  const [layer, setLayer] = useState<string | null>("antenna_register");
-  const [area, setArea] = useState<Area>({ type: "city" });
+  // Opens on a fused layer over the centre: it answers fast and shows the twin doing its job.
+  const [layer, setLayer] = useState<string | null>("air_no2");
+  const [area, setArea] = useState<Area>(() => areaForLayer(true, { type: "city" }));
   const [hoursAgo, setHoursAgo] = useState(0);
   const [showUncertainty, setShowUncertainty] = useState(true);
   const [buildingView, setBuildingView] = useState<BuildingView>("plain");
@@ -121,10 +208,23 @@ export default function CityView() {
   const [draft, setDraft] = useState<[number, number][]>([]);
   const [radius, setRadius] = useState<{ lon: number; lat: number; radius_m: number } | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number; item: MapItem } | null>(null);
+  /** The value shown, for layers whose sensors report several. Null = the usual one. */
+  const [metric, setMetric] = useState<string | null>(null);
+  useEffect(() => setMetric(null), [layer]);
+
+  /** A fused layer picked on the whole city opens on the centre: see areaForLayer. */
+  const pickLayer = (id: string | null) => {
+    setLayer(id);
+    setArea((a) => areaForLayer(isFused(id), a));
+  };
 
   useEffect(() => {
     const off = onMapAction((a) => {
-      if (a.tool === "show_layer") setLayer(a.args.visible ? a.args.layer : null);
+      if (a.tool === "show_layer") {
+        const id = a.args.visible ? a.args.layer : null;
+        setLayer(id);
+        setArea((prev) => areaForLayer(isFused(id), prev));
+      }
       else if (a.tool === "show_area") {
         const next = areaFromId(a.args.area);
         if (next) setArea(next);
@@ -158,7 +258,15 @@ export default function CityView() {
     };
   }, [layer, area, hoursAgo, run]);
 
-  const data = useMemo(() => (env && isOk(env) ? normalizeLayer(env.result) : null), [env]);
+  // Sensors that report several values (NO₂, PM10, PM2.5): the operator picks which one is shown.
+  const metrics = useMemo(() => (env && isOk(env) ? availableMetrics(env.result) : []), [env]);
+  const data = useMemo(() => (env && isOk(env) ? normalizeLayer(env.result, metric ?? undefined) : null), [env, metric]);
+  // The camera frames the municipio, zone or drawn area the answer is for. Keyed on the box, so a reload does not move it again.
+  const boundsKey = env && isOk(env) ? JSON.stringify(areaBounds(env.result)) : "null";
+  const focus = useMemo<MapFocus | null>(() => {
+    const bounds = JSON.parse(boundsKey) as ReturnType<typeof areaBounds>;
+    return bounds ? { bounds, pitch: 45 } : null;
+  }, [boundsKey]);
   const extent = useMemo(() => (data ? valueExtent(data.items) : null), [data]);
   // Fading only means something when the tool returned an uncertainty for at least one item.
   const hasUncertainty = useMemo(() => !!data?.items.some((i) => i.uncertainty > 0), [data]);
@@ -193,29 +301,55 @@ export default function CityView() {
           }),
         );
       } else {
-        const sized = data.metric === "count";
-        const site = data.metric === "site";
+        const style = pointStyle(data);
+        const sized = style === "sized";
+        const site = style === "sites";
+        // Dark edge on the light map, light edge on the dark one: a dot stands out from the buildings under it.
+        const edge = hexRgb(palette.text.ink);
         out.push(
           new ScatterplotLayer<MapItem>({
             id: "points",
             data: data.items,
             getPosition: (i) => i.position!,
-            getFillColor: (i) => (site ? [...palette.point, 220] : [...rampColor(norm(i.value)), alpha(i)]),
+            // Dots stay solid enough to read over the buildings, even when the reading is uncertain.
+            getFillColor: (i) => (site ? [...palette.point, 230] : [...rampColor(norm(i.value)), Math.max(alpha(i), 190)]),
             getRadius: (i) => (sized ? Math.sqrt(i.value) * 70 : 40),
             radiusUnits: "meters",
-            radiusMinPixels: site ? 4 : 3,
+            radiusMinPixels: dotRadiusPx(data.items.length),
             stroked: true,
-            getLineColor: (i) => (i.synthetic ? [...palette.simulated, 255] : site ? [...hexRgb(palette.surface), 230] : [...palette.inactive, dark ? 220 : 120]),
+            getLineColor: (i) => (i.synthetic ? [...palette.simulated, 255] : [...edge, dark ? 230 : 190]),
             lineWidthMinPixels: 1,
-            getLineWidth: (i) => (i.synthetic ? 2 : 1),
+            getLineWidth: (i) => (i.synthetic ? 2.5 : 1.5),
             lineWidthUnits: "pixels",
             pickable: true,
             updateTriggers: {
-              getFillColor: [showUncertainty, lo, hi, maxU, theme],
+              getFillColor: [showUncertainty, lo, hi, maxU, theme, data.metric],
               getLineColor: [theme],
             },
           }),
         );
+        // A handful of sensors: write each value next to its dot, so nobody has to hover to read the city.
+        if (showValueLabels(data)) {
+          out.push(
+            new TextLayer<MapItem>({
+              id: "point-values",
+              data: data.items,
+              getPosition: (i) => i.position!,
+              getText: (i) => formatValue(i.value),
+              getSize: 12,
+              getColor: [...edge, 255],
+              getPixelOffset: [0, -20],
+              fontFamily: '"Titillium Web", sans-serif',
+              fontWeight: 600,
+              background: true,
+              getBackgroundColor: [...hexRgb(palette.surface), 235],
+              getBorderColor: [...edge, 90],
+              getBorderWidth: 1,
+              backgroundPadding: [5, 2],
+              updateTriggers: { getText: [data.metric], getColor: [theme], getBackgroundColor: [theme], getBorderColor: [theme] },
+            }),
+          );
+        }
       }
     }
     if (radius) {
@@ -275,38 +409,50 @@ export default function CityView() {
 
   const kind = layer && env ? env.data_kinds[layer] : undefined;
   const empty = data && !busy && data.items.length === 0;
+  // The tool answered, but not with data (a layer the live service does not carry yet): say so in its own words.
+  const refusal = env && !isOk(env) ? firstSentence(env.reason ?? t.noData) : null;
+  const things = data?.kind === "hex" ? t.cellsWord : t.pointsWord;
   const unit = data?.unit ? ` ${data.unit}` : "";
   const hovered = hover && data ? describeItem(hover.item, data) : null;
 
   const panel = (
-    <Panel title="City view" icon={MapIcon} subtitle="Pick one layer and an area to see what the twin knows about it.">
-      <Section title="Layer">
-        <div role="radiogroup" aria-label="Map layer" className="space-y-3">
-          {GROUPS.map((g) => (
-            <div key={g.id} className="space-y-0.5">
-              <div className="px-1 text-2xs font-semibold text-muted">{g.label}</div>
-              {MAP_LAYERS.filter((l) => l.group === g.id).map((l) => (
+    <Panel
+      title={staff ? t.cityView : t.cityMap}
+      icon={MapIcon}
+      subtitle={staff ? t.subStaff : t.subPublic}
+    >
+      <Section title={staff ? t.layerStaff : t.layerPublic}>
+        <div role="radiogroup" aria-label={t.mapLayer} className="space-y-3">
+          {(staff ? GROUPS : [{ id: null, label: "", hint: undefined }]).map((g) => (
+            <div key={g.id ?? "all"} className="space-y-0.5">
+              {g.label && <div className="px-1 text-2xs font-semibold text-muted">{g.label}</div>}
+              {g.hint && <p className="hint px-1 pb-0.5">{g.hint}</p>}
+              {catalogue.filter((l) => g.id === null || l.group === g.id).map((l) => (
                 <LayerRow
                   key={l.id}
                   label={l.label}
                   hint={l.hint}
                   icon={l.icon}
                   checked={layer === l.id}
-                  onSelect={() => setLayer(l.id)}
+                  onSelect={() => pickLayer(l.id)}
                   badge={layer === l.id && kind ? <KindBadge kind={kind} /> : undefined}
                 />
               ))}
             </div>
           ))}
-          <LayerRow label="None (buildings only)" icon={Building2} checked={layer === null} onSelect={() => setLayer(null)} />
+          <LayerRow label={t.none} icon={Building2} checked={layer === null} onSelect={() => pickLayer(null)} />
         </div>
       </Section>
 
-      <Section title="Where">
-        <AreaPicker area={area} onChange={setArea} drawing={drawing} onDraw={toggleDraw} />
+      <Section title={t.where}>
+        {staff ? (
+          <AreaPicker area={area} onChange={setArea} drawing={drawing} onDraw={toggleDraw} />
+        ) : (
+          <AreaPicker area={area} onChange={setArea} label={t.partOfCity} simple />
+        )}
       </Section>
 
-      <Section title="When">
+      {staff && <Section title={t.when}>
         <input
           type="range"
           min={0}
@@ -314,28 +460,28 @@ export default function CityView() {
           value={24 - hoursAgo}
           onChange={(e) => setHoursAgo(24 - Number(e.target.value))}
           className="w-full"
-          aria-label="Time, hours before now"
-          aria-valuetext={hoursAgo === 0 ? "Now" : `${hoursAgo} hours ago`}
+          aria-label={t.timeAria}
+          aria-valuetext={hoursAgo === 0 ? t.now : t.hoursAgo(hoursAgo)}
         />
         <div className="flex justify-between text-2xs text-muted">
-          <span>24 h ago</span>
-          <span>Now</span>
+          <span>{t.ago24}</span>
+          <span>{t.now}</span>
         </div>
         <p className="text-sm">
-          Showing: <span className="font-semibold">{hoursAgo === 0 ? "now (latest data)" : `${hoursAgo} ${hoursAgo === 1 ? "hour" : "hours"} ago`}</span>
+          {t.showing} <span className="font-semibold">{hoursAgo === 0 ? t.nowLatest : t.hoursAgoShown(hoursAgo)}</span>
         </p>
-      </Section>
+      </Section>}
 
-      <Section title="Display" collapsible>
+      {staff && <Section title={t.display} collapsible>
         <div>
           <label className="check">
             <input type="checkbox" checked={showUncertainty} onChange={(e) => setShowUncertainty(e.target.checked)} />
-            Show uncertainty
+            {t.showUncertainty}
           </label>
-          <p className="hint ml-6">Less certain values are drawn fainter.</p>
+          <p className="hint ml-6">{t.lessCertain}</p>
         </div>
         <label className="block space-y-1">
-          <span className="block text-xs font-semibold text-ink">Buildings</span>
+          <span className="block text-xs font-semibold text-ink">{t.buildings}</span>
           <select className="input" value={buildingView} onChange={(e) => setBuildingView(e.target.value as BuildingView)}>
             {BUILDING_VIEWS.map((v) => (
               <option key={v.id} value={v.id}>
@@ -353,21 +499,21 @@ export default function CityView() {
             {Object.entries(ROOF_COLORS).map(([k, c]) => (
               <span key={k} className="flex items-center gap-1.5">
                 <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm border border-line-strong" style={{ background: c }} aria-hidden="true" />
-                {k.replace(/_/g, " ")}
+                {roofLabel(k)}
               </span>
             ))}
-            <span className="hint col-span-2">Centre district only.</span>
+            <span className="hint col-span-2">{t.centreOnly}</span>
           </div>
         )}
         <label className="check">
           <input type="checkbox" checked={showTrees} onChange={(e) => setShowTrees(e.target.checked)} />
-          Trees (zoom in to see them)
+          {t.trees}
         </label>
-      </Section>
+      </Section>}
 
-      <Section title="Evidence" collapsible>
+      <Section title={staff ? t.evidenceStaff : t.evidencePublic} collapsible defaultOpen={staff}>
         {error && (
-          <Callout tone="error" title="The layer could not be loaded">
+          <Callout tone="error" title={t.loadError}>
             {error}
           </Callout>
         )}
@@ -376,7 +522,7 @@ export default function CityView() {
         ) : busy ? (
           <Skeleton lines={2} />
         ) : (
-          !error && <p className="hint">The record of the tool run appears here once a layer is loaded.</p>
+          !error && <p className="hint">{t.runRecord}</p>
         )}
       </Section>
     </Panel>
@@ -388,6 +534,7 @@ export default function CityView() {
         layers={layers}
         buildingView={buildingView}
         showTrees={showTrees}
+        focus={focus}
         onHover={onHover}
         onClick={drawing ? (p) => setDraft((d) => [...d, [p.lon, p.lat]]) : undefined}
       />
@@ -395,63 +542,97 @@ export default function CityView() {
       <MapFloat position="top-left" className="max-w-[min(22rem,calc(100%-6rem))]">
         <div role="status" aria-live="polite" className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">{layerLabel(layer)}</span>
+            <span className="text-sm font-semibold">{layerLabel(layer, audience)}</span>
             {layer && kind && !busy && <KindBadge kind={kind} />}
           </div>
           <div className="text-xs text-muted">
             {!layer ? (
-              "No data layer selected"
+              t.noLayer
             ) : busy ? (
               <span className="inline-flex items-center gap-1.5">
                 <Spinner className="h-3.5 w-3.5" />
-                Loading layer…
+                {t.loading}
               </span>
             ) : error ? (
-              <span className="text-danger">Could not load this layer. See Evidence.</span>
+              <span className="text-danger">{staff ? t.errStaff : t.errPublic(error)}</span>
+            ) : refusal ? (
+              <span className="inline-flex items-start gap-1.5">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-estimated" aria-hidden="true" />
+                {refusal}
+              </span>
             ) : empty ? (
               <span className="inline-flex items-center gap-1.5 text-estimated">
                 <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-                No data in this area right now
+                {t.emptyArea}
               </span>
             ) : data ? (
               <span>
-                <span className="num text-ink">{data.items.length.toLocaleString("en-GB")}</span> {data.kind === "hex" ? "cells" : "points"} ·{" "}
+                <span className="num text-ink">{data.items.length.toLocaleString(locale())}</span> {things} ·{" "}
                 {areaLabel(area)}
-                {data.truncated && data.count ? ` (first ${data.items.length.toLocaleString("en-GB")} of ${data.count.toLocaleString("en-GB")})` : ""}
               </span>
             ) : null}
           </div>
+          {!busy && !error && data?.truncated && data.count ? (
+            <p className="flex gap-1.5 text-xs text-estimated">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                {t.incomplete(data.items.length.toLocaleString(locale()), data.count.toLocaleString(locale()), things)}
+              </span>
+            </p>
+          ) : null}
         </div>
       </MapFloat>
 
       {layer && data && extent && data.items.length > 0 && (
-        <MapFloat position="bottom-left" className={data.metric === "site" ? "" : "w-64"}>
-          {data.metric === "site" ? (
+        <MapFloat position="bottom-left" className={pointStyle(data) === "sites" && data.kind === "points" ? "" : "w-64"}>
+          {data.kind === "points" && pointStyle(data) === "sites" ? (
             <div className="flex items-center gap-2 text-xs">
               <span
                 className="inline-block h-3 w-3 rounded-full border border-surface"
                 style={{ background: `rgb(${palette.point.join(" ")})` }}
                 aria-hidden="true"
               />
-              One dot per site
+              {t.onePer} {data.metric === "site" ? t.site : (metricInfo(data.metric).each ?? t.record)}
             </div>
           ) : (
             <div className="space-y-1.5">
+              {metrics.length > 1 && (
+                <Field label={t.valueShown}>
+                  <select className="input btn-sm w-full" value={data.metric} onChange={(e) => setMetric(e.target.value)}>
+                    {metrics.map((m) => (
+                      <option key={m} value={m}>
+                        {metricInfo(m).label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <div className="text-xs font-semibold text-ink">{legendTitle(data)}</div>
-              <LegendRamp
-                gradient={rampGradient()}
-                low={`${formatValue(extent.min)}${unit}`}
-                high={`${formatValue(extent.max)}${unit}`}
-              />
-              {data.metric === "count" && <p className="hint">Bigger dot = more sites.</p>}
-              {showUncertainty && hasUncertainty && <p className="hint">Faded = less certain</p>}
+              {formatValue(extent.min) === formatValue(extent.max) ? (
+                // One value everywhere (a calm night, a dry hour): a colour scale from x to x would say nothing.
+                <p className="text-xs">
+                  {t.sameEverywhere}{" "}
+                  <span className="num font-semibold text-ink">
+                    {formatValue(extent.min)}
+                    {unit}
+                  </span>
+                </p>
+              ) : (
+                <LegendRamp
+                  gradient={rampGradient()}
+                  low={`${formatValue(extent.min)}${unit}`}
+                  high={`${formatValue(extent.max)}${unit}`}
+                />
+              )}
+              {data.metric === "count" && <p className="hint">{t.biggerDot}</p>}
+              {showUncertainty && hasUncertainty && <p className="hint">{t.faded}</p>}
               {data.calibration && (data.calibration === "calibrated" || data.calibration === "uncalibrated") && (
                 <p className="hint">{calibrationLabel(data.calibration)}</p>
               )}
               {data.items.some((i) => i.synthetic) && (
                 <p className="flex items-center gap-1.5 text-2xs text-muted">
                   <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-dashed border-simulated" aria-hidden="true" />
-                  Outlined = simulated
+                  {t.outlined}
                 </p>
               )}
             </div>

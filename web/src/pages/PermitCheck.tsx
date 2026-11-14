@@ -13,6 +13,80 @@ import { isOk } from "@/api/envelope";
 import { isSampleMode, proxyFetch } from "@/api/client";
 import type { ContextCheckResult, Envelope, EstimateFieldResult, ResolvePlaceResult } from "@/api/types";
 import { errorText } from "@/lib/errors";
+import { texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: {
+    operatorNote: "<!-- Application details entered by the officer -->",
+    headerLine: (op: string, tech: string, file: string) => `Operator: ${op} · Technology: ${tech} · File: ${file}`,
+    notGiven: "not given",
+    reportUnavailable: (status: number) => `Report not available (HTTP ${status}); downloaded the local summary instead.`,
+    title: "Permit check",
+    subtitle: "Context for a new antenna application",
+    downloadReport: "Download cited report",
+    application: "Application",
+    siteAddress: "Site address",
+    operator: "Operator",
+    height: "Height above ground (m)",
+    band: "Band",
+    notSpecified: "Not specified",
+    fileRef: "File reference",
+    checking: "Checking…",
+    check: "Check context",
+    orClick: "Or click a point on the map.",
+    noSite: "No site checked yet",
+    noSiteBody: "Enter an address or click the map to see the sensitive sites within the legal radius and an estimate of the electric field.",
+    site: "Site",
+    municipio: (name: string) => `Municipio ${name}`,
+    notFound: "Address not found",
+    notFoundBody: "Check the spelling or click the point on the map.",
+    within: (m: number) => `Within ${m} m`,
+    sensitiveSites: "Sensitive sites",
+    nothing: "Nothing found within the radius.",
+    notChecked: (list: string) => `Not checked: ${list}`,
+    fieldAtSite: "Electric field at the site",
+    withNew: "With the new antenna",
+    today: "Today (choose a band to add the new antenna)",
+    probExceed: "Probability of exceeding",
+    model: (m: string) => `Model: ${m}`,
+    contextRadius: (m: number) => `Context radius ${m} m`,
+  },
+  it: {
+    operatorNote: "<!-- Dati dell'istanza inseriti dall'operatore -->",
+    headerLine: (op: string, tech: string, file: string) => `Operatore: ${op} · Tecnologia: ${tech} · Pratica: ${file}`,
+    notGiven: "non indicato",
+    reportUnavailable: (status: number) => `Relazione non disponibile (HTTP ${status}): ho scaricato il riepilogo locale.`,
+    title: "Verifica istanza",
+    subtitle: "Contesto per una nuova istanza per un'antenna",
+    downloadReport: "Scarica la relazione con le citazioni",
+    application: "Istanza",
+    siteAddress: "Indirizzo del sito",
+    operator: "Operatore",
+    height: "Altezza da terra (m)",
+    band: "Banda",
+    notSpecified: "Non indicata",
+    fileRef: "Riferimento della pratica",
+    checking: "Verifica in corso…",
+    check: "Verifica il contesto",
+    orClick: "Oppure clicca un punto sulla mappa.",
+    noSite: "Nessun sito verificato",
+    noSiteBody: "Inserisci un indirizzo o clicca sulla mappa per vedere i siti sensibili entro il raggio di legge e una stima del campo elettrico.",
+    site: "Sito",
+    municipio: (name: string) => `Municipio ${name}`,
+    notFound: "Indirizzo non trovato",
+    notFoundBody: "Controlla come hai scritto l'indirizzo o clicca il punto sulla mappa.",
+    within: (m: number) => `Entro ${m} m`,
+    sensitiveSites: "Siti sensibili",
+    nothing: "Non c'è nulla entro il raggio.",
+    notChecked: (list: string) => `Non verificati: ${list}`,
+    fieldAtSite: "Campo elettrico nel sito",
+    withNew: "Con la nuova antenna",
+    today: "Oggi (scegli una banda per aggiungere la nuova antenna)",
+    probExceed: "Probabilità di superamento",
+    model: (m: string) => `Modello: ${m}`,
+    contextRadius: (m: number) => `Raggio del contesto ${m} m`,
+  },
+});
 
 const BANDS = [800, 900, 1800, 2100, 3500] as const;
 
@@ -26,6 +100,7 @@ function download(name: string, text: string) {
 }
 
 export default function PermitCheck() {
+  const t = tr(T);
   const { run } = useSession();
   const { palette } = useTheme();
   const [query, setQuery] = useState("Via Nazionale 194, Roma");
@@ -89,13 +164,13 @@ export default function PermitCheck() {
       });
       if (res.ok) {
         const header = [
-          "<!-- Application details entered by the officer -->",
-          `Operator: ${app.operator || "not given"} · Technology: ${app.technology || "not given"} · File: ${app.reference || "not given"}`,
+          t.operatorNote,
+          t.headerLine(app.operator || t.notGiven, app.technology || t.notGiven, app.reference || t.notGiven),
           "",
         ].join("\n");
         return download("permit-context-report.md", header + (await res.text()));
       }
-      setError(`Report not available (HTTP ${res.status}); downloaded the local summary instead.`);
+      setError(t.reportUnavailable(res.status));
     }
     download("permit-context-report.md", buildCitedReport(site.label, place ? [place, ctx, field] : [ctx, field], app));
   }
@@ -143,18 +218,18 @@ export default function PermitCheck() {
     <Workspace
       panel={
         <Panel
-          title="Permit check"
+          title={t.title}
           icon={RadioTower}
-          subtitle="Context for a new antenna application"
+          subtitle={t.subtitle}
           width="w-[26rem]"
           footer={
             <button type="button" className="btn-ghost w-full" disabled={!ready} onClick={() => void downloadReport()}>
               <Download className="h-4 w-4" aria-hidden="true" />
-              Download cited report
+              {t.downloadReport}
             </button>
           }
         >
-          <Section title="Application">
+          <Section title={t.application}>
             <form
               className="space-y-3"
               onSubmit={(e) => {
@@ -162,17 +237,17 @@ export default function PermitCheck() {
                 void check({ text: query });
               }}
             >
-              <Field label="Site address">
+              <Field label={t.siteAddress}>
                 <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Operator">
+                <Field label={t.operator}>
                   <input className="input" value={app.operator} onChange={(e) => setApp({ ...app, operator: e.target.value })} />
                 </Field>
-                <Field label="Height above ground (m)">
+                <Field label={t.height}>
                   <input className="input" inputMode="decimal" value={app.height_m} onChange={(e) => setApp({ ...app, height_m: e.target.value })} />
                 </Field>
-                <Field label="Band">
+                <Field label={t.band}>
                   <select
                     className="input"
                     value={band}
@@ -181,7 +256,7 @@ export default function PermitCheck() {
                       setApp({ ...app, technology: e.target.value ? `${e.target.value} MHz` : "" });
                     }}
                   >
-                    <option value="">Not specified</option>
+                    <option value="">{t.notSpecified}</option>
                     {BANDS.map((b) => (
                       <option key={b} value={b}>
                         {b} MHz
@@ -189,15 +264,15 @@ export default function PermitCheck() {
                     ))}
                   </select>
                 </Field>
-                <Field label="File reference">
+                <Field label={t.fileRef}>
                   <input className="input" value={app.reference} onChange={(e) => setApp({ ...app, reference: e.target.value })} />
                 </Field>
               </div>
               <button type="submit" className="btn w-full" disabled={busy}>
                 {busy && <Spinner />}
-                {busy ? "Checking…" : "Check context"}
+                {busy ? t.checking : t.check}
               </button>
-              <p className="hint">Or click a point on the map.</p>
+              <p className="hint">{t.orClick}</p>
             </form>
           </Section>
 
@@ -218,27 +293,27 @@ export default function PermitCheck() {
           )}
 
           {fieldEmpty && !error && (
-            <EmptyState icon={MapPin} title="No site checked yet">
-              Enter an address or click the map to see the sensitive sites within the legal radius and an estimate of the electric field.
+            <EmptyState icon={MapPin} title={t.noSite}>
+              {t.noSiteBody}
             </EmptyState>
           )}
 
           {!busy && place && (
             <div className="card animate-rise-in space-y-2">
-              <h2 className="label">Site</h2>
+              <h2 className="label">{t.site}</h2>
               {place.result.found ? (
                 <>
                   <div className="text-sm font-semibold">{site?.label ?? place.result.label}</div>
                   {place.result.municipio?.name && (
                     <div className="hint">
-                      {/^municipio/i.test(place.result.municipio.name) ? place.result.municipio.name : `Municipio ${place.result.municipio.name}`}
+                      {/^municipio/i.test(place.result.municipio.name) ? place.result.municipio.name : t.municipio(place.result.municipio.name)}
                       {place.result.urban_zone?.name ? ` · ${place.result.urban_zone.name} (${place.result.urban_zone.id})` : ""}
                     </div>
                   )}
                 </>
               ) : (
-                <Callout tone="warn" title="Address not found">
-                  Check the spelling or click the point on the map.
+                <Callout tone="warn" title={t.notFound}>
+                  {t.notFoundBody}
                 </Callout>
               )}
               <RunMeta env={place} compact />
@@ -252,11 +327,11 @@ export default function PermitCheck() {
           )}
           {!busy && ctx && isOk(ctx) && summary && (
             <div className="card animate-rise-in space-y-3">
-              <h2 className="label">Within {ctx.result.radius_m} m</h2>
+              <h2 className="label">{t.within(ctx.result.radius_m)}</h2>
               <Callout tone="info">{ctx.result.meaning}</Callout>
-              <Stat label="Sensitive sites" value={summary.sensitiveHits} />
+              <Stat label={t.sensitiveSites} value={summary.sensitiveHits} />
               {rows.length === 0 ? (
-                <p className="text-sm text-muted">Nothing found within the radius.</p>
+                <p className="text-sm text-muted">{t.nothing}</p>
               ) : (
                 <ul className="divide-y divide-line text-sm">
                   {rows.map((r, i) => (
@@ -269,7 +344,7 @@ export default function PermitCheck() {
                   ))}
                 </ul>
               )}
-              {summary.unavailable.length > 0 && <Callout tone="warn">Not checked: {summary.unavailable.join(", ")}</Callout>}
+              {summary.unavailable.length > 0 && <Callout tone="warn">{t.notChecked(summary.unavailable.join(", "))}</Callout>}
               <RunMeta env={ctx} />
             </div>
           )}
@@ -281,8 +356,8 @@ export default function PermitCheck() {
           )}
           {!busy && field && isOk(field) && (
             <div className="card animate-rise-in space-y-3">
-              <h2 className="label">Electric field at the site</h2>
-              <p className="text-sm font-semibold">{band ? "With the new antenna" : "Today (choose a band to add the new antenna)"}</p>
+              <h2 className="label">{t.fieldAtSite}</h2>
+              <p className="text-sm font-semibold">{band ? t.withNew : t.today}</p>
               <RangeBar
                 e={field.result}
                 unit={field.result.unit}
@@ -291,23 +366,23 @@ export default function PermitCheck() {
               />
               {thresholds.length > 0 && (
                 <ul className="divide-y divide-line text-sm">
-                  {thresholds.map(([k, t]) => (
+                  {thresholds.map(([k, th]) => (
                     <li key={k} className="py-1.5">
                       <div className="flex items-baseline justify-between gap-3">
                         <span className="min-w-0 break-words">
                           <span className="font-semibold">{k.replace(/_/g, " ")}</span>
-                          {t.threshold_v_per_m != null && <span className="num"> · {t.threshold_v_per_m} V/m</span>}
+                          {th.threshold_v_per_m != null && <span className="num"> · {th.threshold_v_per_m} V/m</span>}
                         </span>
-                        <span className="num whitespace-nowrap" title="Probability of exceeding">
-                          {Math.round((t.probability ?? 0) * 100)}%
+                        <span className="num whitespace-nowrap" title={t.probExceed}>
+                          {Math.round((th.probability ?? 0) * 100)}%
                         </span>
                       </div>
-                      <div className="hint">Probability of exceeding{t.source ? ` · ${t.source}` : ""}</div>
+                      <div className="hint">{t.probExceed}{th.source ? ` · ${th.source}` : ""}</div>
                     </li>
                   ))}
                 </ul>
               )}
-              {field.result.model && <p className="hint">Model: {field.result.model}</p>}
+              {field.result.model && <p className="hint">{t.model(field.result.model)}</p>}
               {field.result.averaging_note && <p className="hint">{field.result.averaging_note}</p>}
               {field.result.baseline?.credit && <p className="hint">{field.result.baseline.credit}</p>}
               <RunMeta env={field} />
@@ -320,7 +395,7 @@ export default function PermitCheck() {
       {site && (
         <MapFloat position="top-left" className="max-w-sm">
           <div className="text-sm font-semibold">{site.label}</div>
-          {ctx && isOk(ctx) && <div className="hint">Context radius {ctx.result.radius_m} m</div>}
+          {ctx && isOk(ctx) && <div className="hint">{t.contextRadius(ctx.result.radius_m)}</div>}
         </MapFloat>
       )}
     </Workspace>

@@ -71,6 +71,11 @@ export function planForward(path: string, tier: Tier, body: Record<string, unkno
   // Ready-made use cases the caller's tier may run (the API filters by the key). The browser POSTs here; upstream is a GET.
   if (path === "/use_cases") return { ok: true, url: `${base}/use_cases`, key, body: {}, method: "GET" };
 
+  // A request that runs long answers 202 with a job id; the browser then reads the job here until it is done.
+  // Upstream is a GET with the same key as the request that started the job.
+  const job = /^\/jobs\/([A-Za-z0-9_-]{1,128})$/.exec(path);
+  if (job) return { ok: true, url: `${base}/jobs/${job[1]}`, key, body: {}, method: "GET" };
+
   if (path === "/reports/permit.md") return { ok: true, url: `${base}/reports/permit.md`, key, body: withoutTier(body) };
 
   if (path === "/sports/manager_update") {

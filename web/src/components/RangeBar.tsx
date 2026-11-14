@@ -1,5 +1,11 @@
 import type { Estimate } from "@/api/types";
 import { calibrationLabel, formatRange } from "@/lib/format";
+import { texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: { note: "Estimate, not a measurement.", dashed: (label: string) => `Red dashed line: ${label}.` },
+  it: { note: "Stima, non una misura.", dashed: (label: string) => `Linea rossa tratteggiata: ${label}.` },
+});
 
 /**
  * P5–P95 band with the P50 marker. `max` sets the scale so two bars can be compared.
@@ -22,6 +28,7 @@ export function RangeBar({
   marker?: { value: number; label: string };
   note?: boolean;
 }) {
+  const t = tr(T);
   const pct = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
   const band = tone === "whatif" ? "bg-whatif/30" : "bg-primary/30";
   const mid = tone === "whatif" ? "bg-whatif" : "bg-link";
@@ -38,8 +45,9 @@ export function RangeBar({
       <div className="num text-sm font-medium">{formatRange(e, unit)}</div>
       {note && (
         <div className="hint">
-          Estimate, not a measurement.{e.calibration ? ` ${calibrationLabel(e.calibration)}.` : ""}
-          {marker && marker.value <= max ? ` Red dashed line: ${marker.label}.` : ""}
+          {t.note}
+          {e.calibration ? ` ${calibrationLabel(e.calibration)}.` : ""}
+          {marker && marker.value <= max ? ` ${t.dashed(marker.label)}` : ""}
         </div>
       )}
     </div>

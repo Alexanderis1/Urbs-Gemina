@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HEAVY_TOOLS, RETRY_WAITS_MS, callWithWakeUp, isHeavyTool, withRetry } from "@/lib/retry";
+import { RETRY_WAITS_MS, callWithWakeUp, withRetry } from "@/lib/retry";
 
 const net = () => new TypeError("Failed to fetch");
 const noSleep = async () => {};
@@ -52,39 +52,12 @@ describe("withRetry", () => {
   });
 });
 
-describe("heavy tools", () => {
-  it("are the ones that start a simulation or a long estimate", () => {
-    expect(isHeavyTool("run_scenario")).toBe(true);
-    expect(isHeavyTool("estimate_field")).toBe(true);
-    expect(isHeavyTool("permit_report")).toBe(true);
-    expect(isHeavyTool("query_layer")).toBe(false);
-    expect(isHeavyTool("data_status")).toBe(false);
-    expect(HEAVY_TOOLS).not.toContain("sport_coverage");
-  });
-
-  it("a light call is simply retried", async () => {
-    let calls = 0;
-    let pings = 0;
-    const out = await callWithWakeUp(
-      "query_layer",
-      async () => {
-        calls += 1;
-        if (calls === 1) throw net();
-        return "layer";
-      },
-      async () => void (pings += 1),
-      { sleep: noSleep },
-    );
-    expect(out).toBe("layer");
-    expect(pings).toBe(0);
-  });
-
-  it("a heavy call is started at most twice: once, then once more after the service answers a light ping", async () => {
+describe("a call to a sleeping service", () => {
+  it("is started at most twice: once, then once more after the service answers a light ping", async () => {
     let calls = 0;
     let pings = 0;
     const order: string[] = [];
     const out = await callWithWakeUp(
-      "run_scenario",
       async () => {
         calls += 1;
         order.push("run");
@@ -100,11 +73,12 @@ describe("heavy tools", () => {
     );
     expect(out).toBe("result");
     expect(order).toEqual(["run", "ping", "ping", "run"]);
+  });
 
-    calls = 0;
+  it("is not repeated again and again when the call itself is what fails (a layer that crashes the service)", async () => {
+    let calls = 0;
     await expect(
       callWithWakeUp(
-        "run_scenario",
         async () => {
           calls += 1;
           throw net();
@@ -114,5 +88,19 @@ describe("heavy tools", () => {
       ),
     ).rejects.toThrow("Failed to fetch");
     expect(calls).toBe(2);
+  });
+
+  it("an answer from the server is final, and the service is not pinged", async () => {
+    let pings = 0;
+    await expect(
+      callWithWakeUp(
+        async () => {
+          throw new Error("query_layer failed: HTTP 500");
+        },
+        async () => void (pings += 1),
+        { sleep: noSleep },
+      ),
+    ).rejects.toThrow("HTTP 500");
+    expect(pings).toBe(0);
   });
 });

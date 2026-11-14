@@ -249,3 +249,19 @@ describe("sample results", () => {
     expect(unnamed.tables[0]!.columns[0]).toBe("Edge");
   });
 });
+
+describe("scenario result text in Italian", () => {
+  it("speaks Italian", async () => {
+    const { setLang } = await import("@/lib/i18n");
+    setLang("it");
+    try {
+      expect(labelFor("residents_cut_off")).toBe("Residenti isolati");
+      expect(rangeText({ p5: 7.7, p50: 16.5, p95: 34.6 })).toBe("intervallo da 7,7 a 34,6");
+      expect(rangeText({ p5: 5, p50: 5, p95: 5 })).toBe("uguale in ogni esecuzione del modello");
+      expect(fmtNumber(162584)).toBe("162.584");
+      expect(humanise("residents_cut_off")).toBe("Residents cut off");
+    } finally {
+      setLang("en");
+    }
+  });
+});

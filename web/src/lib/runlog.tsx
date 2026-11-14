@@ -4,7 +4,7 @@ import { callTool } from "@/api/client";
 import type { Envelope, ToolName } from "@/api/types";
 import type { SportTool } from "@/api/mockSport";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tier } from "./tiers";
+import { resolveTier, TIER_STORAGE_KEY, type Tier } from "./tiers";
 
 export interface LoggedRun {
   at: string;
@@ -24,8 +24,26 @@ interface Session {
 
 const Ctx = createContext<Session | null>(null);
 
+function readStored(): string | null {
+  try {
+    return window.localStorage.getItem(TIER_STORAGE_KEY);
+  } catch {
+    return null; // Storage can be blocked (private window): start on the public service.
+  }
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [tier, setTier] = useState<Tier>(supabase ? "citizen" : "office");
+  // Everyone starts on the public service. Without Lovable Cloud (demo) the staff workspace is one click away
+  // and the choice is remembered in this browser; with Cloud the tier comes from the signed-in user's role.
+  const [tier, setTierState] = useState<Tier>(() => (supabase ? "citizen" : resolveTier(readStored())));
+  const setTier = useCallback((t: Tier) => {
+    setTierState(t);
+    try {
+      window.localStorage.setItem(TIER_STORAGE_KEY, t);
+    } catch {
+      // Not remembered; the choice still holds for this visit.
+    }
+  }, []);
   const [auth, setAuth] = useState<AuthSession | null>(null);
   const [runs, setRuns] = useState<LoggedRun[]>([]);
 
@@ -34,10 +52,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const sb = supabase;
     const load = async (s: AuthSession | null) => {
       setAuth(s);
-      if (!s) return setTier("citizen");
+      if (!s) return setTierState("citizen");
       // Read-only, for showing the right screens. The edge function decides the real tier.
       const { data } = await sb.from("user_roles").select("tier").eq("user_id", s.user.id).maybeSingle();
-      setTier(data?.tier === "office" ? "office" : "citizen");
+      setTierState(data?.tier === "office" ? "office" : "citizen");
     };
     void sb.auth.getSession().then(({ data }) => load(data.session));
     const { data } = sb.auth.onAuthStateChange((_e, s) => void load(s));
@@ -53,7 +71,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     [tier],
   );
-  const value = useMemo(() => ({ tier, setTier: supabase ? null : setTier, auth, runs, run }), [tier, auth, runs, run]);
+  const value = useMemo(() => ({ tier, setTier: supabase ? null : setTier, auth, runs, run }), [tier, setTier, auth, runs, run]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { KIND_META, MAP_PALETTE, contrastRatio, resolveTheme, THEMES } from "@/lib/theme";
 import { buildingColor } from "@/lib/buildingStyles";
+import { setLang } from "@/lib/i18n";
+import { THEME_LABEL } from "@/lib/theme";
 
 describe("theme", () => {
   it("uses the stored theme when it is valid, else the system preference", () => {
@@ -38,5 +40,20 @@ describe("theme", () => {
   it("draws plain buildings in the theme's colours", () => {
     expect(JSON.stringify(buildingColor("plain", "light"))).toContain(MAP_PALETTE.light.building);
     expect(JSON.stringify(buildingColor("plain", "dark"))).toContain(MAP_PALETTE.dark.building);
+  });
+});
+
+describe("theme in Italian", () => {
+  it("speaks Italian", () => {
+    setLang("it");
+    try {
+      expect(KIND_META.real.label).toBe("Reale");
+      expect(KIND_META.what_if.label).toBe("Ipotesi");
+      expect(KIND_META.not_available.label).toBe("Non disponibile");
+      expect(THEME_LABEL.dark).toBe("Sala operativa (scuro)");
+    } finally {
+      setLang("en");
+    }
+    expect(KIND_META.real.label).toBe("Real");
   });
 });

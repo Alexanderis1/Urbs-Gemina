@@ -5,6 +5,34 @@ import { isSampleMode, proxyFetch } from "@/api/client";
 import { buildClientTools, CITIZEN_AGENT_ID } from "@/lib/voice";
 import { useSession } from "@/lib/runlog";
 import { errorText } from "@/lib/errors";
+import { texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: {
+    connecting: "Connecting…",
+    speaking: "Speaking",
+    listening: "Listening",
+    office: "Office",
+    citizen: "Citizen",
+    officeTag: "office",
+    title: (who: string) => `${who} voice assistant (AI). It speaks Italian and can move the map.`,
+    stop: "Stop",
+    button: "Voice assistant",
+    unavailable: "Voice assistant not available:",
+  },
+  it: {
+    connecting: "Connessione…",
+    speaking: "Sta parlando",
+    listening: "Ti ascolta",
+    office: "del personale",
+    citizen: "per i cittadini",
+    officeTag: "personale",
+    title: (who: string) => `Assistente vocale ${who} (AI). Parla italiano e può spostare la mappa.`,
+    stop: "Ferma",
+    button: "Assistente vocale",
+    unavailable: "Assistente vocale non disponibile:",
+  },
+});
 
 /** Five bars that move while the assistant speaks and rest while it listens. */
 function Level({ active }: { active: boolean }) {
@@ -23,6 +51,7 @@ function Level({ active }: { active: boolean }) {
 
 /** Talk to the twin. Office sessions get the private office agent via a signed URL; everyone else the citizen agent. */
 export function VoiceButton() {
+  const t = tr(T);
   const { tier, auth } = useSession();
   const clientTools = useMemo(() => buildClientTools(), []);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +78,7 @@ export function VoiceButton() {
     }
   }
 
-  const state = connecting ? "Connecting…" : conversation.isSpeaking ? "Speaking" : "Listening";
+  const state = connecting ? t.connecting : conversation.isSpeaking ? t.speaking : t.listening;
   return (
     <div className="relative flex items-center">
       <button
@@ -58,7 +87,7 @@ export function VoiceButton() {
         }`}
         onClick={() => void (live ? conversation.endSession() : start())}
         aria-pressed={live}
-        title={`${office ? "Office" : "Citizen"} voice assistant (AI). It speaks Italian and can move the map.`}
+        title={t.title(office ? t.office : t.citizen)}
       >
         {live ? (
           <>
@@ -69,19 +98,19 @@ export function VoiceButton() {
             <span aria-live="polite">{state}</span>
             <Level active={conversation.isSpeaking} />
             <Square className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
-            <span className="sr-only">Stop</span>
+            <span className="sr-only">{t.stop}</span>
           </>
         ) : (
           <>
             <Mic className="h-4 w-4" aria-hidden="true" />
-            Voice assistant
-            {office && <span className="rounded-sm bg-chrome-line px-1 text-2xs uppercase tracking-wider">office</span>}
+            {t.button}
+            {office && <span className="rounded-sm bg-chrome-line px-1 text-2xs uppercase tracking-wider">{t.officeTag}</span>}
           </>
         )}
       </button>
       {error && (
         <div role="alert" className="absolute right-0 top-full z-30 mt-2 w-64 animate-rise-in rounded border border-danger/50 bg-surface p-2 text-xs text-danger shadow-float">
-          Voice assistant not available: {error}
+          {t.unavailable} {error}
         </div>
       )}
     </div>

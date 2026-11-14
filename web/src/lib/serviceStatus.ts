@@ -2,7 +2,8 @@
 
 import { useSyncExternalStore } from "react";
 
-export type ServiceStatus = "unknown" | "waking" | "ready";
+/** "waking": no answer yet, the service is starting. "working": it answered that a long run is in progress. */
+export type ServiceStatus = "unknown" | "waking" | "working" | "ready";
 
 let status: ServiceStatus = "unknown";
 const listeners = new Set<() => void>();
