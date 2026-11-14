@@ -96,5 +96,6 @@ def test_a_high_river_blocks_the_outfall_and_floods_more(tmp_path: Path) -> None
     assert r["sewer"]["outfalls_blocked"]["p50"] == 1
     assert r["sewer"]["blocked"][0]["name"] == "Scarico prova"
     assert r["sewer"]["surcharge_m3"]["p50"] > dry["sewer"]["surcharge_m3"]["p50"]
+    assert r["sewer"]["surcharge_map_p50"]["type"] == "MultiPolygon"
     assert r["hotspots"][0]["max_depth_m"]["p50"] > dry["hotspots"][0]["max_depth_m"]["p50"]
     assert wet["data_kinds"]["river_level"] == "hypothetical"

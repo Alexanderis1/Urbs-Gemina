@@ -96,6 +96,8 @@ def test_closing_a_street_cuts_off_the_sections_on_it(chain_net: Path, tmp_path:
     assert r["residents_beyond_target"]["variant"]["p50"] == 200
     assert {s["sez_id"] for s in r["sections"]} == {"S3", "S4"}
     assert all(s["minutes_after"] is None for s in r["sections"])
+    travel = r["travel_min_baseline"]  # resident-weighted, median speed: what the model says before any closure
+    assert 0 < travel["median_resident"] <= travel["p75_resident"] < 20
     assert out["data_kinds"]["speeds"] == "estimated"
     assert out["synthetic"] is False
 
@@ -118,6 +120,7 @@ def test_a_closed_block_forces_a_detour_beyond_the_target(chain_net: Path) -> No
     assert "S4" in lost and "S5" in lost
     assert lost["S4"]["minutes_after"] > 5 >= lost["S4"]["minutes_before"]
     assert any("hospitals" in w for w in out["warnings"])
+    assert any("75th percentile" in w for w in out["warnings"])  # the real 118 benchmark is always shown
 
 
 @needs_sumo

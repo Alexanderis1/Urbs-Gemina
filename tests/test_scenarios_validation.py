@@ -27,3 +27,13 @@ def test_the_walls_hold_a_200_year_flood_at_ripetta() -> None:
     t200 = float(_rating(gauge, np.array([float(peaks["quantiles_m3s"]["T200"])]), noise=False)[0])
     t1000 = float(_rating(gauge, np.array([float(peaks["quantiles_m3s"]["T1000"])]), noise=False)[0])
     assert 17.0 < t200 < 18.45 < t1000
+
+
+def test_every_checked_model_says_how_it_was_checked() -> None:
+    """Results carry the validation status from config, so users see how far each model was checked."""
+    from twin.scenarios import config
+
+    cfg = config.load("scenarios.yaml")
+    for kind, word in (("river_flood", "PGRA"), ("rain_flood", "cloudbursts"), ("chemical_plume", "FAC2"),
+                       ("heatwave", "literature"), ("emergency_access", "118")):
+        assert word in str(config.value(cfg[kind], "calibration")), kind

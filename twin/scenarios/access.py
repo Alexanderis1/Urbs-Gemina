@@ -220,6 +220,13 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
               "minutes_before": round(b, 1), "minutes_after": (round(a, 1) if math.isfinite(a) else None)}
              for i, b, a in lost[:50]]
     unreachable = float(residents[~np.isfinite(var_s)].sum())
+    reach = np.isfinite(base_s) & (residents > 0)
+    travel: dict[str, float | None] = {"median_resident": None, "p75_resident": None}
+    if reach.any():
+        order = np.argsort(base_s[reach])
+        minutes, weight = base_s[reach][order] / f50 / 60, np.cumsum(residents[reach][order])
+        for key, q in (("median_resident", 0.5), ("p75_resident", 0.75)):
+            travel[key] = round(float(minutes[np.searchsorted(weight, q * weight[-1])]), 1)
     result = {
         "service": service, "facilities": len(sites), "target_min": target_min,
         "target_source": target_cfg.get("source"), "closed_roads": len(closed & set(edge_ids)),
@@ -227,7 +234,8 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
         "residents_beyond_target": {k: impacts.quantiles(v) for k, v in beyond.items()},
         "residents_cut_off": int(unreachable),
         "sections_losing_coverage": len(lost), "sections": worse,
-        "calibration": "uncalibrated",
+        "travel_min_baseline": travel,
+        "calibration": str(cfg["calibration"]),
     }
     warnings += [
         f"Travel times use road speed limits (capped at {cfg['urban_speed_cap_kmh']} km/h) times an emergency factor (assumption, config/scenarios.yaml); "
@@ -237,6 +245,10 @@ def run_emergency_access(area: Area, change: Mapping[str, Any], data: ScenarioDa
     ]
     if service == "ambulance":
         warnings.append("Ambulances start from emergency hospitals: 118 posts are not in an open layer.")
+        obs = cfg["observed_response"]
+        warnings.append(f"Real 118 responses in Lazio take {obs['lazio_p75_min']} minutes at the 75th percentile "
+                        f"({obs['source']}). This model gives road travel with an ambulance ready, so read its "
+                        "minutes as a best case and its changes (before and after a closure) as the useful signal.")
     kinds["road_network"] = "real"
     return {"result": result, "data_kinds": kinds, "sources": [], "synthetic": False, "warnings": warnings}
 

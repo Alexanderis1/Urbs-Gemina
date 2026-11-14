@@ -395,7 +395,7 @@ def run_river_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) -
 
     result: dict[str, Any] = {
         "model": "height_above_nearest_river",
-        "calibration": "uncalibrated",
+        "calibration": str(_cfg("river_flood")["calibration"]),
         "river": river, "rise_m": round(rise, 2), "sigma_m": round(sigma, 2),
         "gauge": stage.gauge, "gauge_level_m": stage.level_m, "discharge_m3s": stage.discharge_m3s,
         "alert_probability": stage.alerts,
@@ -639,7 +639,7 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
     probability = np.where(in_area, probability, 0.0)
     totals = depth.sum(axis=1)
     result: dict[str, Any] = {
-        "model": "fill_and_spill_no_cascade", "calibration": "uncalibrated",
+        "model": "fill_and_spill_no_cascade", "calibration": str(cfg["calibration"]),
         "rain_mm_mean": round(float(np.nanmean(np.where(in_area, rain, np.nan))), 1), "duration_h": duration,
         "members": members, "hollows_modelled": len(hollows),
         "hotspots_count": len(hotspots), "hotspots": hotspots[: int(cfg["hotspots_listed"])],
@@ -694,6 +694,8 @@ def _sewer_summary(grid: Grid, in_area: npt.NDArray[np.bool_], eff: FloatArray, 
         "blocked": sewer.summary(outfalls or [], blocked, served),
         "surcharge_m3": impacts.quantiles(surcharge_total.tolist()),
         "surcharge_points": points,
+        "surcharge_map_p50": mask_to_geojson(grid, (surcharge_seen >= 0.5).reshape(grid.shape)
+                                             & in_area.reshape(grid.shape)),
     }
 
 

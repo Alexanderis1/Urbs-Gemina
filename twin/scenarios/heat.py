@@ -226,6 +226,9 @@ def run_heatwave(area: Area, change: Mapping[str, Any], data: ScenarioData) -> d
     hot2: list[float] = []
     relieved: list[float] = []
     cooling: list[float] = []
+    night2: list[float] = []
+    relieved_night: list[float] = []
+    cooling_night: list[float] = []
     sec_tmax = np.empty((n, members))
     sec_tmin = np.empty((n, members))
     p_hot = np.zeros(grid.shape)
@@ -250,6 +253,14 @@ def run_heatwave(area: Area, change: Mapping[str, Any], data: ScenarioData) -> d
             relieved.append(float(residents[hot & ~hot_2].sum()))
             delta = (a_d[m] * (d_imp - d_imp2) - b_d[m] * (d_trees - d_trees2))
             cooling.append(float(delta[planted].mean()) if planted is not None and planted.any() else 0.0)
+            if has_night:
+                tn2 = s_tmin + eps[m] * s_sig + a_n[m] * s_dimp2 - b_n[m] * s_dtree2
+                trop_2 = tn2 >= night_c
+                night2.append(float(residents[trop_2].sum()))
+                relieved_night.append(float(residents[(sec_tmin[:, m] >= night_c) & ~trop_2].sum()))
+                delta_n = (a_n[m] * (d_imp - d_imp2) - b_n[m] * (d_trees - d_trees2))
+                cooling_night.append(float(delta_n[planted].mean())
+                                     if planted is not None and planted.any() else 0.0)
     p_hot /= members
 
     area_mask = (np.ones(grid.shape, dtype=bool) if area.kind == "city"
@@ -288,13 +299,16 @@ def run_heatwave(area: Area, change: Mapping[str, Any], data: ScenarioData) -> d
         "hot_area_km2": round(float(hot_map.sum()) * grid.cell_area / 1e6, 2),
         "sensitive_sites": impacts.sensitive_sites(grid, np.where(area_mask, p_hot, 0.0),
                                                    float(cfg["hot_probability"])),
-        "calibration": "uncalibrated",
+        "calibration": str(cfg["calibration"]),
     }
     if has_what_if:
         result["what_if"] = {
             "hot_day_residents": impacts.quantiles(hot2),
             "residents_no_longer_hot": impacts.quantiles(relieved),
             "cooling_day_c": impacts.quantiles(cooling),
+            **({"tropical_night_residents": impacts.quantiles(night2),
+                "residents_no_longer_tropical": impacts.quantiles(relieved_night),
+                "cooling_night_c": impacts.quantiles(cooling_night)} if has_night else {}),
             **{k: v for k, v in what_if.items() if k != "planted_mask"},
         }
     kinds = {"temperature": t_kind, "impervious": imp_kind, "tree_cover": tree_kind, "census": "real",

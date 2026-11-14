@@ -1,0 +1,566 @@
+[
+ {
+  "efficiency": 0.15,
+  "radius_m": 150.0,
+  "events": [
+   {
+    "id": "2024-09-03",
+    "flooded_km2_p50": {
+     "1": 0.418,
+     "5": 0.445,
+     "6": 0.577
+    },
+    "reported_hit_rate": 0.909,
+    "random_street_hit_rate": 0.761,
+    "places": [
+     {
+      "street": "VIA VITTOR PISANI",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "PIAZZA DEI PRATI DEGLI STROZZI",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO CESARE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "CORSO D'ITALIA",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "VIA DEL TRITONE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "LUNGOTEVERE IN SASSIA",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA DELLE FORNACI",
+      "status": "outside the rain area"
+     },
+     {
+      "station": "Lepanto",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "station": "Manzoni",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA SICULIANA",
+      "municipio": "6",
+      "hit": true
+     },
+     {
+      "street": "VIA CASILINA",
+      "near": "VIA BORGHESIANA",
+      "municipio": "6",
+      "hit": true
+     },
+     {
+      "street": "VIA DI TOR BELLA MONACA",
+      "near": "VIA CASILINA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": true
+     }
+    ]
+   },
+   {
+    "id": "2011-09-19",
+    "flooded_km2_p50": {
+     "7": 0.339,
+     "5": 0.347,
+     "6": 0.506
+    },
+    "reported_hit_rate": 1.0,
+    "random_street_hit_rate": 0.689,
+    "places": [
+     {
+      "station": "San Giovanni",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Ponte Lungo",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Colli Albani",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Porta Furba/Quadraro",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Numidio Quadrato",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Lucio Sestio",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO AGRICOLA",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": true
+     }
+    ]
+   }
+  ],
+  "dry_check": {
+   "1": 0.077,
+   "7": 0.091
+  }
+ },
+ {
+  "efficiency": 0.3,
+  "radius_m": 150.0,
+  "events": [
+   {
+    "id": "2024-09-03",
+    "flooded_km2_p50": {
+     "1": 0.326,
+     "5": 0.353,
+     "6": 0.543
+    },
+    "reported_hit_rate": 0.727,
+    "random_street_hit_rate": 0.522,
+    "places": [
+     {
+      "street": "VIA VITTOR PISANI",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "PIAZZA DEI PRATI DEGLI STROZZI",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO CESARE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "CORSO D'ITALIA",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "VIA DEL TRITONE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "LUNGOTEVERE IN SASSIA",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA DELLE FORNACI",
+      "status": "outside the rain area"
+     },
+     {
+      "station": "Lepanto",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "station": "Manzoni",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA SICULIANA",
+      "municipio": "6",
+      "hit": true
+     },
+     {
+      "street": "VIA CASILINA",
+      "near": "VIA BORGHESIANA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA DI TOR BELLA MONACA",
+      "near": "VIA CASILINA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   },
+   {
+    "id": "2011-09-19",
+    "flooded_km2_p50": {
+     "7": 0.263,
+     "5": 0.282,
+     "6": 0.475
+    },
+    "reported_hit_rate": 0.75,
+    "random_street_hit_rate": 0.333,
+    "places": [
+     {
+      "station": "San Giovanni",
+      "municipio": "7",
+      "hit": false
+     },
+     {
+      "station": "Ponte Lungo",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Colli Albani",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Porta Furba/Quadraro",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Numidio Quadrato",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Lucio Sestio",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO AGRICOLA",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   }
+  ],
+  "dry_check": {
+   "1": 0.077,
+   "7": 0.089
+  }
+ },
+ {
+  "efficiency": 0.5,
+  "radius_m": 150.0,
+  "events": [
+   {
+    "id": "2024-09-03",
+    "flooded_km2_p50": {
+     "1": 0.244,
+     "5": 0.334,
+     "6": 0.536
+    },
+    "reported_hit_rate": 0.455,
+    "random_street_hit_rate": 0.378,
+    "places": [
+     {
+      "street": "VIA VITTOR PISANI",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "PIAZZA DEI PRATI DEGLI STROZZI",
+      "municipio": "1",
+      "hit": false
+     },
+     {
+      "street": "VIALE GIULIO CESARE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "CORSO D'ITALIA",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "VIA DEL TRITONE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "LUNGOTEVERE IN SASSIA",
+      "municipio": "1",
+      "hit": false
+     },
+     {
+      "street": "VIA DELLE FORNACI",
+      "status": "outside the rain area"
+     },
+     {
+      "station": "Lepanto",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "station": "Manzoni",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA SICULIANA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA CASILINA",
+      "near": "VIA BORGHESIANA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA DI TOR BELLA MONACA",
+      "near": "VIA CASILINA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   },
+   {
+    "id": "2011-09-19",
+    "flooded_km2_p50": {
+     "7": 0.258,
+     "5": 0.275,
+     "6": 0.471
+    },
+    "reported_hit_rate": 0.75,
+    "random_street_hit_rate": 0.333,
+    "places": [
+     {
+      "station": "San Giovanni",
+      "municipio": "7",
+      "hit": false
+     },
+     {
+      "station": "Ponte Lungo",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Colli Albani",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Porta Furba/Quadraro",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Numidio Quadrato",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Lucio Sestio",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO AGRICOLA",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   }
+  ],
+  "dry_check": {
+   "1": 0.077,
+   "7": 0.089
+  }
+ },
+ {
+  "efficiency": 0.8,
+  "radius_m": 150.0,
+  "events": [
+   {
+    "id": "2024-09-03",
+    "flooded_km2_p50": {
+     "1": 0.232,
+     "5": 0.334,
+     "6": 0.536
+    },
+    "reported_hit_rate": 0.364,
+    "random_street_hit_rate": 0.35,
+    "places": [
+     {
+      "street": "VIA VITTOR PISANI",
+      "municipio": "1",
+      "hit": false
+     },
+     {
+      "street": "PIAZZA DEI PRATI DEGLI STROZZI",
+      "municipio": "1",
+      "hit": false
+     },
+     {
+      "street": "VIALE GIULIO CESARE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "CORSO D'ITALIA",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "VIA DEL TRITONE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "LUNGOTEVERE IN SASSIA",
+      "municipio": "1",
+      "hit": false
+     },
+     {
+      "street": "VIA DELLE FORNACI",
+      "status": "outside the rain area"
+     },
+     {
+      "station": "Lepanto",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "station": "Manzoni",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA SICULIANA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA CASILINA",
+      "near": "VIA BORGHESIANA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA DI TOR BELLA MONACA",
+      "near": "VIA CASILINA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   },
+   {
+    "id": "2011-09-19",
+    "flooded_km2_p50": {
+     "7": 0.258,
+     "5": 0.275,
+     "6": 0.471
+    },
+    "reported_hit_rate": 0.75,
+    "random_street_hit_rate": 0.333,
+    "places": [
+     {
+      "station": "San Giovanni",
+      "municipio": "7",
+      "hit": false
+     },
+     {
+      "station": "Ponte Lungo",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Colli Albani",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Porta Furba/Quadraro",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Numidio Quadrato",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Lucio Sestio",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO AGRICOLA",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   }
+  ],
+  "dry_check": {
+   "1": 0.077,
+   "7": 0.089
+  }
+ }
+]
