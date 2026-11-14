@@ -324,7 +324,7 @@ export function CityMap({
       {G0_PMTILES && zoomHint && !twinShown && (
         <button
           type="button"
-          className="map-float absolute bottom-20 right-3 z-10 flex animate-fade-in items-center gap-2 px-3 py-2 text-xs font-semibold text-link hover:underline"
+          className="map-float absolute bottom-20 right-3 z-10 hidden animate-fade-in items-center gap-2 px-3 py-2 text-xs font-semibold text-link hover:underline md:flex"
           onClick={() => mapRef.current?.easeTo({ zoom: TWIN_START_ZOOM, duration: 600 })}
         >
           <Building2 className="h-4 w-4" aria-hidden="true" />

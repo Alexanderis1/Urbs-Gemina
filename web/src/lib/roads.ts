@@ -17,6 +17,8 @@ export interface RoadPiece {
   cls: string;
   /** 0..1 on the colour scale of the layer. */
   t: number;
+  /** 0..1: how much the value rests on readings rather than on the model alone (0 = drawn neutral). */
+  a: number;
   /** The nearest cell of the layer: what the card under the pointer shows. */
   cell: HeatCell;
 }
@@ -26,21 +28,33 @@ const M_PER_DEG = 111_320;
 const M_PER_DEG_LON = M_PER_DEG * Math.cos((41.9 * Math.PI) / 180);
 const metres = (lon1: number, lat1: number, lon2: number, lat2: number) => Math.hypot((lon2 - lon1) * M_PER_DEG_LON, (lat2 - lat1) * M_PER_DEG);
 
-export type Field = (lon: number, lat: number) => { t: number; cell: HeatCell } | null;
+export type Field = (lon: number, lat: number) => { t: number; a: number; cell: HeatCell } | null;
+
+/**
+ * How much a cell rests on readings: 1 when its range is narrow, 0 when it is as wide as the value itself
+ * (the model's starting map with no sensor nearby). Basis: on the live road speed layer (14 Nov 2026, 3,613
+ * cells) cells near the simulated loops and buses have a range of 0.3-0.8 x the value; cells with only the
+ * starting map 1.3-1.9 x. Between 0.8 and 1.2 the colour fades.
+ */
+export function certainty(c: HeatCell): number {
+  if (c.low === undefined || c.high === undefined || !c.value) return 1;
+  const width = (c.high - c.low) / Math.abs(c.value);
+  return Math.max(0, Math.min(1, (1.2 - width) / 0.4));
+}
 
 /**
  * The layer as a smooth surface: at any point, the scores of the cell it falls in and of the six cells around it,
  * weighted by closeness. `score` puts a cell on the 0..1 colour scale. Cells need their grid id (`h3`).
  */
-export function fieldOnCells(cells: HeatCell[], score: (c: HeatCell) => number): Field {
-  const known = new Map<string, { cell: HeatCell; t: number }>();
-  for (const c of cells) if (c.h3) known.set(c.h3, { cell: c, t: score(c) });
+export function fieldOnCells(cells: HeatCell[], score: (c: HeatCell) => number, sure?: (c: HeatCell) => number): Field {
+  const known = new Map<string, { cell: HeatCell; t: number; a: number }>();
+  for (const c of cells) if (c.h3) known.set(c.h3, { cell: c, t: score(c), a: sure ? sure(c) : 1 });
   const first = cells.find((c) => c.h3)?.h3;
   if (!first) return () => null;
   const resolution = getResolution(first);
   // Distance between the centres of neighbouring cells (edge x √3): a cell's weight fades to nothing at the next centre.
   const reach = getHexagonEdgeLengthAvg(resolution, UNITS.m) * Math.sqrt(3) * 1.05;
-  const around = new Map<string, { cell: HeatCell; t: number }[]>();
+  const around = new Map<string, { cell: HeatCell; t: number; a: number }[]>();
   return (lon, lat) => {
     const id = latLngToCell(lat, lon, resolution);
     let near = around.get(id);
@@ -50,6 +64,7 @@ export function fieldOnCells(cells: HeatCell[], score: (c: HeatCell) => number):
     }
     if (!near.length) return null;
     let sum = 0;
+    let sumA = 0;
     let weights = 0;
     let best = near[0]!;
     let bestD = Infinity;
@@ -58,13 +73,14 @@ export function fieldOnCells(cells: HeatCell[], score: (c: HeatCell) => number):
       // Full weight at a cell's centre, none at the next centre: an even gradient from one cell to the next.
       const w = Math.max(1e-6, 1 - d / reach);
       sum += n.t * w;
+      sumA += n.a * w;
       weights += w;
       if (d < bestD) {
         bestD = d;
         best = n;
       }
     }
-    return { t: sum / weights, cell: best.cell };
+    return { t: sum / weights, a: sumA / weights, cell: best.cell };
   };
 }
 
@@ -85,7 +101,7 @@ export function roadPieces(net: RoadNet, at: Field, pieceM = PIECE_M): RoadPiece
       const mid = path[Math.floor(path.length / 2)]!;
       const [lon, lat] = path.length > 2 ? mid : [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
       const v = at(lon, lat);
-      if (v) out.push({ path, cls, t: v.t, cell: v.cell });
+      if (v) out.push({ path, cls, t: v.t, a: v.a, cell: v.cell });
       path = [b];
       length = 0;
     };

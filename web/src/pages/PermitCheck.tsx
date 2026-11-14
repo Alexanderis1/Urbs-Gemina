@@ -7,12 +7,12 @@ import { ResourceHover } from "@/components/MarkerCard";
 import type { Resource } from "@/lib/resource";
 import { TWIN_START_ZOOM } from "@/lib/twinOverlay";
 import { RangeBar } from "@/components/RangeBar";
-import { RunMeta } from "@/components/RunMeta";
+import { NoteText, RunMeta } from "@/components/RunMeta";
 import { Callout, EmptyState, Field, MapFloat, Panel, Section, Skeleton, Spinner, Stat, Workspace } from "@/components/ui";
 import { Download, MapPin, RadioTower } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 import { buildCitedReport, type Application } from "@/lib/report";
-import { contextRows, contextSummary } from "@/lib/context";
+import { contextMeaning, contextRows, contextSummary } from "@/lib/context";
 import { useSession } from "@/lib/runlog";
 import { isOk } from "@/api/envelope";
 import { isSampleMode, proxyFetch } from "@/api/client";
@@ -358,7 +358,7 @@ export default function PermitCheck() {
           {!busy && ctx && isOk(ctx) && summary && (
             <div className="card animate-rise-in space-y-3">
               <h2 className="label">{t.within(ctx.result.radius_m)}</h2>
-              <Callout tone="info">{ctx.result.meaning}</Callout>
+              <Callout tone="info">{contextMeaning(ctx.result.meaning)}</Callout>
               <Stat label={t.sensitiveSites} value={summary.sensitiveHits} />
               {rows.length === 0 ? (
                 <p className="text-sm text-muted">{t.nothing}</p>
@@ -413,7 +413,11 @@ export default function PermitCheck() {
                 </ul>
               )}
               {field.result.model && <p className="hint">{t.model(field.result.model)}</p>}
-              {field.result.averaging_note && <p className="hint">{field.result.averaging_note}</p>}
+              {field.result.averaging_note && (
+                <p className="hint">
+                  <NoteText text={field.result.averaging_note} />
+                </p>
+              )}
               {field.result.baseline?.credit && <p className="hint">{field.result.baseline.credit}</p>}
               <RunMeta env={field} />
             </div>

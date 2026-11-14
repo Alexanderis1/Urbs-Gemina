@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cellToLatLng, gridDisk, latLngToCell } from "h3-js";
 import { trafficColor } from "@/lib/colors";
 import type { HeatCell } from "@/lib/here";
-import { fieldOnCells, roadPieces, roadWidthPx, type RoadNet } from "@/lib/roads";
+import { certainty, fieldOnCells, roadPieces, roadWidthPx, type RoadNet } from "@/lib/roads";
 
 /** A patch of the city grid around a point: the centre cell scores `mid`, its ring `ring`. */
 function patch(lat: number, lon: number, mid: number, ring: number): HeatCell[] {
@@ -28,6 +28,24 @@ describe("the value of a layer along the streets", () => {
     expect(between.t).toBeLessThan(0.9);
   });
 
+  it("carries how sure each place is, blended like the value", () => {
+    const sure = fieldOnCells(cells, (c) => c.value, (c) => (c.value === 1 ? 1 : 0));
+    expect(sure(centre.lon, centre.lat)!.a).toBeGreaterThan(0.9);
+    const other = cells.find((c) => c.value === 0)!;
+    expect(sure(other.lon, other.lat)!.a).toBeLessThan(0.1);
+    // Without a rule every place counts as sure.
+    expect(at(other.lon, other.lat)!.a).toBe(1);
+  });
+
+  it("knows a model-only estimate from a measured one by the width of its range", () => {
+    expect(certainty({ lon: 0, lat: 0, value: 30, low: 20, high: 42 })).toBe(1);
+    expect(certainty({ lon: 0, lat: 0, value: 28, low: 5, high: 45 })).toBe(0);
+    const mid = certainty({ lon: 0, lat: 0, value: 30, low: 15, high: 45 });
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(1);
+    expect(certainty({ lon: 0, lat: 0, value: 30 })).toBe(1);
+  });
+
   it("says nothing where the layer has no cells", () => {
     expect(at(12.9, 42.3)).toBeNull();
     expect(fieldOnCells([{ lon: 12.48, lat: 41.9, value: 1 }], (c) => c.value)(12.48, 41.9)).toBeNull();
@@ -39,7 +57,7 @@ describe("the value of a layer along the streets", () => {
     const pieces = roadPieces(net, at, 120);
     expect(pieces.length).toBeGreaterThan(10);
     for (let i = 1; i < pieces.length; i++) expect(pieces[i]!.path[0]).toEqual(pieces[i - 1]!.path.at(-1));
-    expect(pieces.every((p) => p.cls === "primary")).toBe(true);
+    expect(pieces.every((p) => p.cls === "primary" && p.a === 1)).toBe(true);
     // A gradient: the value rises towards the centre cell and falls again, in small steps.
     const ts = pieces.map((p) => p.t);
     expect(Math.max(...ts)).toBeGreaterThan(0.8);
