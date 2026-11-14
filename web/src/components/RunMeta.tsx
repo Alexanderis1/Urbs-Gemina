@@ -4,6 +4,7 @@ import { isSampleMode } from "@/api/client";
 import type { Envelope } from "@/api/types";
 import { shortId } from "@/lib/format";
 import { texts, tr } from "@/lib/i18n";
+import { serviceNote } from "@/lib/serviceNotes";
 import { KindBadge, SampleBadge } from "./Badge";
 import { Callout } from "./ui";
 
@@ -17,6 +18,7 @@ const T = texts({
     layerKinds: "Kind of each layer used",
     sources: "Sources",
     retrieved: "retrieved",
+    technical: "Technical notes from the service",
   },
   it: {
     runId: "Id esecuzione",
@@ -27,13 +29,24 @@ const T = texts({
     layerKinds: "Tipo di dato di ogni livello usato",
     sources: "Fonti",
     retrieved: "recuperato il",
+    technical: "Note tecniche del servizio (in inglese)",
   },
 });
 
 /** Tool trace for one run: overall label, run id, the kind of every layer used, sources and warnings. */
+/** One note of the service: in the reader's language when known, otherwise as written (marked English). */
+export function NoteText({ text }: { text: string }) {
+  const n = serviceNote(text);
+  return n.translated ? <>{n.text}</> : <span lang="en">{n.text}</span>;
+}
+
 export function RunMeta({ env, compact = false }: { env: Envelope; compact?: boolean }) {
   const t = tr(T);
   const layers = layerBadges(env);
+  // The service writes in English: the usual notes are said in the reader's language, the rest folded away.
+  const notes = extraWarnings(env).map(serviceNote);
+  const said = [...new Set(notes.filter((n) => n.translated).map((n) => n.text))];
+  const technical = notes.filter((n) => !n.translated).map((n) => n.text);
   return (
     <div className="space-y-2 text-xs text-muted">
       <div className="flex flex-wrap items-center gap-1.5">
@@ -46,7 +59,7 @@ export function RunMeta({ env, compact = false }: { env: Envelope; compact?: boo
       </div>
       {env.status && env.status !== "ok" && (
         <Callout tone={env.status === "refused" ? "warn" : "error"} title={env.status === "refused" ? t.refused : t.notAvailable}>
-          {env.reason}
+          {env.reason && <NoteText text={env.reason} />}
         </Callout>
       )}
       {!compact && layers.length > 0 && (
@@ -76,12 +89,26 @@ export function RunMeta({ env, compact = false }: { env: Envelope; compact?: boo
           </ul>
         </details>
       )}
-      {extraWarnings(env).map((w) => (
+      {said.map((w) => (
         <p key={w} className="flex gap-1.5 text-estimated">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="break-words">{w}</span>
         </p>
       ))}
+      {technical.length > 0 && (
+        <details>
+          <summary className="cursor-pointer select-none hover:text-ink">
+            {t.technical} ({technical.length})
+          </summary>
+          <ul className="mt-1 space-y-0.5 border-l-2 border-line pl-2" lang="en">
+            {technical.map((w) => (
+              <li key={w} className="break-words">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }

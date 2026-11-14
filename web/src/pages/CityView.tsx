@@ -39,6 +39,7 @@ import type { Experience } from "@/lib/tiers";
 import type { Envelope, QueryLayerResult } from "@/api/types";
 import { cacheKey, maxAgeMs, savable } from "@/lib/liveLayer";
 import { useLive } from "@/lib/useLive";
+import { serviceNote } from "@/lib/serviceNotes";
 import { heatRaster } from "@/lib/heatRaster";
 import { cellToLatLng } from "h3-js";
 import { cellSpacingM } from "@/lib/here";
@@ -192,6 +193,12 @@ function legendTitle(d: MapData): string {
  * The map of Rome with one data layer on it. Staff get the full console (every layer, drawing, time, display
  * options, evidence open); residents get a short list in plain words and the evidence folded away.
  */
+/** A refusal reason in the reader's language; one the app does not know becomes the plain "no data" line. */
+function notePlain(reason: string): string {
+  const n = serviceNote(reason);
+  return n.translated ? n.text : tr(T).noData;
+}
+
 export default function CityView({ audience = "staff" }: { audience?: Experience }) {
   const t = tr(T);
   const staff = audience === "staff";
@@ -431,7 +438,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const kind = layer && env ? env.data_kinds[layer] : undefined;
   const empty = data && !busy && data.items.length === 0;
   // The tool answered, but not with data (a layer the live service does not carry yet): say so in its own words.
-  const refusal = env && !isOk(env) ? firstSentence(env.reason ?? t.noData) : null;
+  const refusal = env && !isOk(env) ? (env.reason ? notePlain(firstSentence(env.reason)) : t.noData) : null;
   const things = data?.kind === "hex" ? t.cellsWord : t.pointsWord;
   const unit = data?.unit ? ` ${data.unit}` : "";
   const hovered = hover && data ? describeResource(hover.item, data, layer) : null;
@@ -609,7 +616,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
       </MapFloat>
 
       {layer && data && extent && data.items.length > 0 && (
-        <MapFloat position="bottom-left" className={pointStyle(data) === "sites" && data.kind === "points" ? "" : "w-64"}>
+        <MapFloat position="bottom-left" className={pointStyle(data) === "sites" && data.kind === "points" ? "" : "w-56 md:w-64"}>
           {data.kind === "points" && pointStyle(data) === "sites" ? (
             <div className="flex items-center gap-2 text-xs">
               <span
@@ -650,9 +657,9 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
                 />
               )}
               {data.metric === "count" && <p className="hint">{t.biggerDot}</p>}
-              {showUncertainty && hasUncertainty && <p className="hint">{t.faded}</p>}
+              {showUncertainty && hasUncertainty && <p className="hint hidden md:block">{t.faded}</p>}
               {data.calibration && (data.calibration === "calibrated" || data.calibration === "uncalibrated") && (
-                <p className="hint">{calibrationLabel(data.calibration)}</p>
+                <p className="hint hidden md:block">{calibrationLabel(data.calibration)}</p>
               )}
               {data.items.some((i) => i.synthetic) && (
                 <p className="flex items-center gap-1.5 text-2xs text-muted">

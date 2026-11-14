@@ -45,6 +45,7 @@ const T = texts({
     whatForecast: "A forecast from the twin's traffic model, not a measurement.",
     whatBus: "How late buses and trams are running, from the live feed of the transport company.",
     hereSpeed: "Around your point",
+    greyRoads: "Grey: no traffic reading nearby",
     onRoads: "Drawn along the main roads. The colour is the average of the area the road crosses, not a reading on that road.",
     cityNow: "The whole city",
     events: "Roadworks, closures, strikes and events",
@@ -81,6 +82,7 @@ const T = texts({
     whatForecast: "Una previsione del modello di traffico, non una misura.",
     whatBus: "Quanto sono in ritardo autobus e tram, dai dati in tempo reale dell'azienda di trasporto.",
     hereSpeed: "Intorno al tuo punto",
+    greyRoads: "Grigio: nessuna rilevazione del traffico vicino",
     onRoads: "Disegnato lungo le strade principali. Il colore è la media della zona attraversata, non una misura su quella strada.",
     cityNow: "Tutta la città",
     events: "Lavori, chiusure, scioperi ed eventi",
@@ -255,6 +257,12 @@ export default function Transport() {
                 </div>
                 <HeatLegend heat={heat.data} unit={unit} invert={lensId !== "bus"} ramp={ramp} />
                 <p className="hint">{t.onRoads}</p>
+                {lensId !== "bus" && (
+                  <p className="flex items-center gap-2 text-xs text-muted">
+                    <span className="inline-block h-1.5 w-6 shrink-0 rounded-full" style={{ background: "rgb(176 184 194)" }} aria-hidden="true" />
+                    {t.greyRoads}
+                  </p>
+                )}
                 {heat.live && <LiveBadge live={heat.live} />}
               </section>
             )}
@@ -318,6 +326,7 @@ export default function Transport() {
         unit={unit}
         invert={lensId !== "bus"}
         onRoads
+        greyUnsure={lensId !== "bus"}
         ramp={ramp}
         markers={markers}
         selectedId={selected !== null ? `ev${selected}` : null}

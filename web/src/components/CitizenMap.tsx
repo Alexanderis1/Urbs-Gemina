@@ -14,7 +14,7 @@ import { cellSpacingM, inRome, shareBelow, type CityHeatmap, type HeatCell, type
 import { texts, tr } from "@/lib/i18n";
 import { heatRaster } from "@/lib/heatRaster";
 import { heatLayer, rasterCanvas } from "@/map/heatLayer";
-import { fieldOnCells, loadRoads, roadPieces, roadWidthPx, type RoadNet, type RoadPiece } from "@/lib/roads";
+import { certainty, fieldOnCells, loadRoads, roadPieces, roadWidthPx, type RoadNet, type RoadPiece } from "@/lib/roads";
 import { formatValue } from "@/lib/layers";
 import type { Loaded } from "@/lib/useCitizenData";
 import { locate, setPosition, usePosition, type LocateStatus } from "@/lib/usePosition";
@@ -47,6 +47,8 @@ const T = texts({
     loadingMap: "Loading the city map…",
     noMap: "The city map for this value is not available right now.",
     zoneAverage: "Average of this part of the city",
+    noReading: "No traffic reading nearby",
+    noReadingLine: "Shown in grey: the model alone does not say how busy this road is.",
     howWeKnow: "How we know this",
     relative: "Colours go from the lowest to the highest value in the city right now.",
   },
@@ -73,6 +75,8 @@ const T = texts({
     loadingMap: "Carico la mappa della città…",
     noMap: "La mappa della città per questo valore non è disponibile adesso.",
     zoneAverage: "Media di questa parte della città",
+    noReading: "Nessuna rilevazione del traffico qui vicino",
+    noReadingLine: "In grigio: il solo modello non dice quanto è trafficata questa strada.",
     howWeKnow: "Come lo sappiamo",
     relative: "I colori vanno dal valore più basso al più alto in città in questo momento.",
   },
@@ -327,6 +331,10 @@ export function HeatLegend({ heat, unit, invert = false, ramp = rampColor }: { h
   );
 }
 
+/** Colour of roads without a reading nearby. */
+const NO_DATA: Rgb = [176, 184, 194];
+const blend = (a: Rgb, b: Rgb, k: number): Rgb => [0, 1, 2].map((i) => Math.round(a[i]! + (b[i]! - a[i]!) * k)) as Rgb;
+
 /** Whole-city view: wide enough to see all of Rome on a phone. */
 const CITY_ZOOM = 10.2;
 /** Close enough to see the 3D buildings around the point, wide enough to see the neighbouring patches of the heatmap. */
@@ -342,6 +350,7 @@ export function CitizenMap<T>({
   unit,
   invert = false,
   onRoads = false,
+  greyUnsure = false,
   ramp = rampColor,
   markers = [],
   selectedId,
@@ -357,6 +366,8 @@ export function CitizenMap<T>({
   invert?: boolean;
   /** Paint the layer along the main roads, with smooth colour changes, instead of as patches (traffic, bus delays). */
   onRoads?: boolean;
+  /** On the roads: draw grey where the value is the model's starting map only (no reading nearby). */
+  greyUnsure?: boolean;
   /** Colour scale of the layer (default: the pale-to-dark-red scale of every map). */
   ramp?: Ramp;
   markers?: Marker<T>[];
@@ -409,8 +420,8 @@ export function CitizenMap<T>({
   // Streets cut in short pieces, each with the blended value of the cells around it: the colour flows along the road.
   const pieces = useMemo<RoadPiece[] | null>(() => {
     if (!onRoads || !roads || !cells?.length || !cells.every((c) => c.h3)) return null;
-    return roadPieces(roads, fieldOnCells(cells, score));
-  }, [onRoads, roads, cells, score]);
+    return roadPieces(roads, fieldOnCells(cells, score, greyUnsure ? certainty : undefined));
+  }, [onRoads, roads, cells, score, greyUnsure]);
   // While the road file is on its way nothing is drawn (no flash of colour); without it, the smooth heatmap is.
   const waitingForRoads = onRoads && roads === undefined;
   const smooth = useMemo(() => {
@@ -445,7 +456,8 @@ export function CitizenMap<T>({
           getPath: (p) => p.path,
           getWidth: (p) => roadWidthPx(p.cls, zoom),
           widthUnits: "pixels",
-          getColor: (p) => [...ramp(p.t), 255],
+          // No reading nearby: neutral grey, so a model-only road never looks congested.
+          getColor: (p) => [...blend(NO_DATA, ramp(p.t), p.a), 255],
           jointRounded: true,
           capRounded: true,
           pickable: true,
@@ -473,7 +485,13 @@ export function CitizenMap<T>({
       setHover({ x: info.x, y: info.y, ...(describeMarker?.(m) ?? { title: m.text ?? "" }) });
     } else if (id === "heat" && (info.object || (smooth && info.coordinate))) {
       // A stretch of street carries the cell it runs through; on the smooth heatmap, the nearest cell under the pointer.
-      const c = info.object ? (info.object as RoadPiece).cell : smooth!.raster.nearest(info.coordinate![0]!, info.coordinate![1]!)?.data;
+      const piece = info.object ? (info.object as RoadPiece) : null;
+      const c = piece ? piece.cell : smooth!.raster.nearest(info.coordinate![0]!, info.coordinate![1]!)?.data;
+      if (piece && greyUnsure && piece.a < 0.5) {
+        setHoverId(null);
+        setHover({ x: info.x, y: info.y, title: t.noReading, line: t.noReadingLine });
+        return;
+      }
       if (!c) {
         setHover(null);
         return;

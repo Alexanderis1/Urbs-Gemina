@@ -9,15 +9,19 @@ const T = texts({ en: { loading: "Loading" }, it: { loading: "Caricamento" } });
 /** Screen with a docked control panel on the left and the map (or main content) filling the rest. */
 export function Workspace({ panel, children, right }: { panel: ReactNode; children: ReactNode; right?: ReactNode }) {
   return (
-    <div className="flex h-full min-h-0">
+    // Phones: the map on top, the panels under it, each scrolling on its own. From a tablet up: panels beside the map.
+    <div className="flex h-full min-h-0 flex-col md:flex-row">
       {panel}
-      <div className="relative min-w-0 flex-1">{children}</div>
+      <div className="relative order-first min-h-[48%] min-w-0 flex-1 md:order-none md:min-h-0">{children}</div>
       {right}
     </div>
   );
 }
 
-/** Docked side panel: fixed header, scrolling body, optional fixed footer. */
+/** "w-[22rem]" -> "md:w-[22rem]": the panel's width applies from a tablet up; on a phone it takes the full width. */
+const widthFrom = (width: string) => width.split(/\s+/).map((c) => (c.startsWith("w-") ? `md:${c}` : c)).join(" ");
+
+/** Docked side panel: fixed header, scrolling body, optional fixed footer. On a phone it sits under the map. */
 export function Panel({
   title,
   subtitle,
@@ -38,7 +42,10 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <aside className={`panel ${width} ${side === "left" ? "border-r" : "animate-slide-in-right border-l"}`} aria-label={title}>
+    <aside
+      className={`panel max-h-[52%] w-full border-t md:max-h-none md:border-t-0 ${widthFrom(width)} ${side === "left" ? "md:border-r" : "animate-slide-in-right md:border-l"}`}
+      aria-label={title}
+    >
       <header className="flex items-start gap-2.5 border-b border-line px-4 py-3">
         {Icon && <Icon className="mt-0.5 h-5 w-5 shrink-0 text-link" aria-hidden="true" />}
         <div className="min-w-0 flex-1">
