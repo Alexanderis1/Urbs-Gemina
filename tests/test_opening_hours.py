@@ -65,3 +65,21 @@ def test_utc_moment_is_read_in_rome_time() -> None:
 def test_italian_hours(text: str, expected: str | None) -> None:
     from twin.tools.opening_hours import from_italian
     assert from_italian(text) == expected
+
+
+@pytest.mark.parametrize("spec, moment, expected", [
+    ("We-Mo 08:30-19:30; Tu off; May 1 off; Dec 25 off", "2026-12-25T10:00", False),   # Friday, but Christmas
+    ("We-Mo 08:30-19:30; Tu off; May 1 off; Dec 25 off", "2026-12-24T10:00", True),
+    ("Tu-Su 10:00-19:00; Dec 24,31 10:00-14:00; Mo off", "2026-12-31T15:00", False),
+    ("Tu-Su 10:00-19:00; Dec 24,31 10:00-14:00; Mo off", "2026-12-30T15:00", True),
+    ("Oct-May: Tu-Su 10:00-16:00; Jun-Sep: Tu-Su 13:00-19:00", "2026-11-14T11:00", True),
+    ("Mo-Fr 10:00-19:00, Su 10:00-19:00; Sa 10:00-20:00", "2026-11-15T11:00", True),    # ", Su" adds a rule
+    ("Tu-Su 08:30-19:00; Mo off; Jan 1 off", "2027-01-01T10:00", False),
+])
+def test_dates_and_seasons(spec: str, moment: str, expected: bool) -> None:
+    assert is_open(spec, at(moment)) is expected
+
+
+def test_italian_semicolons_and_closed_days() -> None:
+    from twin.tools.opening_hours import from_italian
+    assert from_italian("Lun-Ven 07:30-21:30; Sab 08:00-14:00; Dom chiuso") == "Mo-Fr 07:30-21:30; Sa 08:00-14:00; Su off"

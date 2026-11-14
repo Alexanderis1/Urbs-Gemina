@@ -18,6 +18,7 @@ from twin.tools.crowds_exposure import (check_sensors_tool, crowds_view, exposur
 from twin.tools.citizen import air_here, city_heatmap, emf_here
 from twin.tools.data_status import data_status
 from twin.tools.heat_here import heat_here
+from twin.tools.places_open import places_open
 from twin.tools.envelope import Source, ToolError, make_envelope, utc_now
 from twin.tools.estimate_field import estimate_field
 from twin.tools.permit_context import run_context_check
@@ -351,6 +352,9 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("city_heatmap", m.CityHeatmapIn,
              lambda rt, req, role: city_heatmap(rt, req.layer, req.time, req.resolution), owner="citizen-services"),
     ToolSpec("heat_here", m.HeatHereIn, lambda rt, req, role: heat_here(rt, req.point, req.time), owner="citizen-services"),
+    ToolSpec("places_open", m.PlacesOpenIn,
+             lambda rt, req, role: places_open(rt, req.kind, req.at, req.point, req.radius_m, req.sport),
+             owner="citizen-services"),
     ToolSpec("verify_signal", m.VerifySignalIn, _verify_signal, owner="citizen-reports"),
 ]}
 

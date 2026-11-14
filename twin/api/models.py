@@ -307,3 +307,13 @@ class HeatHereIn(Strict):
 
     point: Point
     time: str | None = Field(default=None, description="ISO 8601 hour to plan for; default the day's hottest hour (or now if it has passed)")
+
+
+class PlacesOpenIn(Strict):
+    """Citizen: sports venues (optionally for one sport) or museums and galleries open at a chosen day and time, nearest first, with their opening hours."""
+
+    kind: Literal["sport", "museum"]
+    at: str | None = Field(default=None, description="ISO 8601 date and time; default now")
+    point: Point | None = None
+    radius_m: float | None = Field(default=None, gt=0, le=30_000, description="only with point; default from config")
+    sport: str | None = Field(default=None, max_length=60, description="Italian or English name, e.g. 'nuoto', 'calcio', 'tennis'")

@@ -4175,6 +4175,52 @@
         }
       },
       "warnings": []
+    },
+    "museums_osm": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "culture",
+      "fetched_at": "2026-11-14T08:26:10Z",
+      "notes": "Museums and art galleries with OSM opening_hours where mapped (no open official list with hours for Rome was reachable on 14 Nov 2026)",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 225,
+      "dropped_fields": [
+        "contact:email",
+        "contact:facebook",
+        "contact:fax",
+        "contact:housenumber",
+        "contact:instagram",
+        "contact:phone",
+        "contact:street",
+        "contact:tripadvisor",
+        "contact:twitter",
+        "contact:website",
+        "contact:youtube",
+        "email",
+        "fax",
+        "phone"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "/home/user/Urbs-Gemina/data/processed/museums_osm.parquet",
+          "sha256": "3cb99765b9dfd94f79b90331cfbee042811c92a19099094e7a125aa49fd1dabc"
+        },
+        "geojson": {
+          "path": "/home/user/Urbs-Gemina/data/processed/museums_osm.geojson",
+          "sha256": "cd3ad665450347f45f0268171d96f179e51676e7e53a992fb63c45ed17b084a1"
+        }
+      },
+      "warnings": []
     }
   }
 }

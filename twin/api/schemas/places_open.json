@@ -1,0 +1,91 @@
+{
+  "name": "places_open",
+  "description": "Citizen: sports venues (optionally for one sport) or museums and galleries open at a chosen day and time, nearest first, with their opening hours.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Citizen: sports venues (optionally for one sport) or museums and galleries open at a chosen day and time, nearest first, with their opening hours.",
+    "properties": {
+      "kind": {
+        "enum": [
+          "sport",
+          "museum"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "at": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601 date and time; default now",
+        "title": "At"
+      },
+      "point": {
+        "anyOf": [
+          {
+            "description": "[lon, lat] WGS84",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Point"
+      },
+      "radius_m": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "maximum": 30000,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "only with point; default from config",
+        "title": "Radius M"
+      },
+      "sport": {
+        "anyOf": [
+          {
+            "maxLength": 60,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Italian or English name, e.g. 'nuoto', 'calcio', 'tennis'",
+        "title": "Sport"
+      }
+    },
+    "required": [
+      "kind"
+    ],
+    "title": "PlacesOpenIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/places_open"
+  },
+  "owner": "citizen-services"
+}

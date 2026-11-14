@@ -16,6 +16,8 @@ from zoneinfo import ZoneInfo
 ROME = ZoneInfo("Europe/Rome")
 DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+#: ", Su 10:00-19:00" after a time range starts another rule (OSM additional rule)
+_ADDITIONAL = re.compile(r"(?<=\d),\s+(?=(?:Mo|Tu|We|Th|Fr|Sa|Su)\b)")
 _TIME = re.compile(r"^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$")
 _DAY_TOKEN = re.compile(r"^(Mo|Tu|We|Th|Fr|Sa|Su)(-(Mo|Tu|We|Th|Fr|Sa|Su))?$")
 _MONTH_TOKEN = re.compile(r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec))?$")
@@ -48,11 +50,39 @@ def _parse_selector(tokens: list[str], pattern: re.Pattern[str], names: list[str
     return found
 
 
-def _parse_rule(rule: str) -> tuple[set[int] | None, set[int] | None, list[Span]] | None:
-    """(months or None = all, weekdays or None = all, spans) or None for a holiday rule to skip."""
+_DATE_DAYS = re.compile(r"^\d{1,2}(-\d{1,2})?(,\d{1,2}(-\d{1,2})?)*$")
+
+#: (months, weekdays, spans, dates): dates = {(month, day)} for a rule on given calendar days, else None
+Rule = tuple[set[int] | None, set[int] | None, list[Span], set[tuple[int, int]] | None]
+
+
+def _date_selector(words: list[str]) -> tuple[set[tuple[int, int]], list[str]] | None:
+    """'Dec 24,31 ...' / 'Apr 18-20 ...' / 'Jan 01 ...' -> ({(12, 24), (12, 31)}, rest)."""
+    if len(words) < 2 or words[0] not in MONTHS or not _DATE_DAYS.match(words[1]):
+        return None
+    month = MONTHS.index(words[0])
+    dates: set[tuple[int, int]] = set()
+    for part in words[1].split(","):
+        first, _, last = part.partition("-")
+        for day in range(int(first), int(last or first) + 1):
+            dates.add((month, day))
+    return dates, words[2:]
+
+
+def _parse_rule(rule: str) -> Rule | None:
+    """One rule, or None for a holiday rule to skip."""
     words = rule.split()
     months: set[int] | None = None
     days: set[int] | None = None
+    dated = _date_selector(words)
+    if dated is not None:
+        dates, words = dated
+        rest = " ".join(words).strip()
+        if rest in ("off", "closed"):
+            return None, None, [], dates
+        return None, None, _spans(rest, rule), dates
+    if words and words[0].endswith(":"):
+        words = [words[0][:-1], *words[1:]]
     if words:
         parsed = _parse_selector(words[0].split(","), _MONTH_TOKEN, MONTHS)
         if parsed is not None:
@@ -69,7 +99,11 @@ def _parse_rule(rule: str) -> tuple[set[int] | None, set[int] | None, list[Span]
             days, words = parsed, words[1:]
     rest = " ".join(words).strip()
     if rest in ("off", "closed"):
-        return months, days, []
+        return months, days, [], None
+    return months, days, _spans(rest, rule), None
+
+
+def _spans(rest: str, rule: str) -> list[Span]:
     if not rest:
         raise _Unknown(rule)
     spans: list[Span] = []
@@ -82,12 +116,16 @@ def _parse_rule(rule: str) -> tuple[set[int] | None, set[int] | None, list[Span]
         if end <= start:
             end += 1440
         spans.append((start, end))
-    return months, days, spans
+    return spans
 
 
-def _spans_for(rules: list[tuple[set[int] | None, set[int] | None, list[Span]]], day: datetime) -> list[Span]:
+def _spans_for(rules: list[Rule], day: datetime) -> list[Span]:
     spans: list[Span] = []
-    for months, days, rule_spans in rules:
+    for months, days, rule_spans, dates in rules:
+        if dates is not None:
+            if (day.month - 1, day.day) in dates:
+                spans = rule_spans
+            continue
         if months is not None and day.month - 1 not in months:
             continue
         if days is not None and day.weekday() not in days:
@@ -106,7 +144,8 @@ def is_open(spec: str | None, at: datetime) -> bool | None:
     text = text.split("||")[0].strip()
     local = (at if at.tzinfo else at.replace(tzinfo=ROME)).astimezone(ROME)
     try:
-        rules = [r for r in (_parse_rule(part.strip()) for part in text.split(";") if part.strip()) if r is not None]
+        parts = [p.strip() for chunk in text.split(";") for p in _ADDITIONAL.split(chunk) if p.strip()]
+        rules = [r for r in (_parse_rule(part) for part in parts) if r is not None]
     except _Unknown:
         return None
     if not rules:
@@ -132,10 +171,10 @@ def from_italian(text: str | None) -> str | None:
     raw = (text or "").strip()
     if not raw or raw.lower() in ("n.d.", "nd", "-"):
         return None
-    if any(ch in raw for ch in "();") or "estate" in raw.lower() or "inverno" in raw.lower():
+    if any(ch in raw for ch in "()") or "estate" in raw.lower() or "inverno" in raw.lower():
         return None
     rules: list[str] = []
-    for part in (p.strip() for p in raw.split(",")):
+    for part in (p.strip() for p in re.split(r"[,;]", raw)):
         if not part:
             continue
         if _IT_DATE.search(part):
@@ -144,6 +183,12 @@ def from_italian(text: str | None) -> str | None:
         if len(words) != 2:
             return None
         day_part, time_part = words
+        if time_part.lower() in ("chiuso", "chiusa"):
+            codes_off = from_italian(f"{day_part} 0-1")
+            if codes_off is None:
+                return None
+            rules.append(codes_off.split()[0] + " off")
+            continue
         groups: list[str] = []
         for chunk in day_part.split(","):
             names = [n.strip().lower() for n in chunk.split("-")]
