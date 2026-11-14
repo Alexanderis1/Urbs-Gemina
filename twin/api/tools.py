@@ -133,6 +133,15 @@ def _run_scenario(rt: ToolRuntime, req: m.RunScenarioIn, role: str) -> dict[str,
     read_at = utc_now()
     out["sources"] = [{**s, "retrieved_at": str(s.get("retrieved_at") or read_at)} for s in out.get("sources", [])
                       if isinstance(s, Mapping)]
+    # WS6 marks what-if inputs typed by the officer as 'hypothetical'. The envelope contract has four kinds
+    # (real / estimated / simulated / not_available), so the layer is shown as 'estimated' and a warning
+    # names it as the officer's hypothetical value (never as a forecast or a measurement).
+    kinds = out.get("data_kinds") or {}
+    hypothetical = [k for k, v in kinds.items() if v == "hypothetical"]
+    if hypothetical:
+        out["data_kinds"] = {k: ("estimated" if v == "hypothetical" else v) for k, v in kinds.items()}
+        out["warnings"] = list(out.get("warnings", [])) + [
+            f"'{k}' is a hypothetical what-if value given in the request, not a forecast or a measurement." for k in hypothetical]
     result = out.get("result") or {}
     if "status" not in out:
         out["status"] = result.get("status", "ok") if isinstance(result, dict) else "ok"

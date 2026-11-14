@@ -38,6 +38,8 @@ M_PER_DEG_LAT = 111_195.0
 CIRCLE_VERTICES = 32
 _ROMAN = ("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV")
 _REF = re.compile(r"\{([a-z_][a-z0-9_]*(?:\.[a-z0-9_]+)?)\}")
+#: "{?ref}" as a whole value: optional; the key is left out when the ref is empty (e.g. a param with no default).
+_OPTIONAL = re.compile(r"\{\?([a-z_][a-z0-9_]*(?:\.[a-z0-9_]+)?)\}")
 
 
 class UseCaseError(ValueError):
@@ -166,7 +168,17 @@ def fill(template: Any, ctx: Mapping[str, Any]) -> Any:
             return _lookup(whole.group(1), ctx)
         return _REF.sub(lambda m: str(_lookup(m.group(1), ctx)), template)
     if isinstance(template, Mapping):
-        return {k: fill(v, ctx) for k, v in template.items()}
+        out: dict[str, Any] = {}
+        for k, v in template.items():
+            optional = _OPTIONAL.fullmatch(v) if isinstance(v, str) else None
+            if optional:
+                try:
+                    out[k] = _lookup(optional.group(1), ctx)
+                except _Missing:
+                    pass
+                continue
+            out[k] = fill(v, ctx)
+        return out
     if isinstance(template, list):
         return [fill(v, ctx) for v in template]
     return template
@@ -323,6 +335,9 @@ def run_use_case(use_case: str, *, llm: LLM, gateway: ToolGateway, area: Any = N
         text, report = "", VerifierReport(problems=[Problem("model_refused", "the model declined the request")])
 
     if report.ok and text.strip():
+        from agents.orchestrator import _drop_self_disclosure
+
+        text = _drop_self_disclosure(text)  # code adds the AI disclosure line once, at the start of a conversation
         return UseCaseReport(use_case, text, True, [], runs, skipped, warnings,
                              citations=citation_trace(text, by_id, auto_lines), cited_run_ids=list(report.cited_runs))
     from agents.orchestrator import INSUFFICIENT, PLAIN_PROBLEMS

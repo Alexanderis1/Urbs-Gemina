@@ -10,3 +10,6 @@ Write a short note:
 4. **Caveats**: facilities with unknown access, and any source not available.
 
 For a citizen, use plain words and aggregated figures only. At most 180 words.
+
+Do not introduce yourself or say you are an AI: the system adds that line. Start with the content.
+- Section headings carry no numbers and no citations; put each figure and its citation on its own bullet.

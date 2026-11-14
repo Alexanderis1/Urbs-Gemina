@@ -12,3 +12,6 @@ Write a risk sheet for the officer, one short section each:
 6. **Around it**: other sensitive sites and constraints within the ring, with distance.
 
 A hazard layer that returns nothing inside the ring means "none found in the official layer", not "no risk". This is context for the officer, not a safety certificate. At most 220 words.
+
+Do not introduce yourself or say you are an AI: the system adds that line. Start with the content.
+- Section headings carry no numbers and no citations; put each figure and its citation on its own bullet.

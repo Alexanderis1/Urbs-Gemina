@@ -9,7 +9,7 @@
 #   params use-case options, with defaults below (e.g. event attendees)
 #
 # Templates in step args (a value that is exactly "{ref}" keeps its type; refs inside text are written as text):
-#   {area} {area_label} {params.<name>}
+#   {area} {area_label} {params.<name>}    "{?ref}" = optional: the key is left out when the ref is empty
 #   {<step id>.point}       [lon, lat] from a resolve_place step
 #   {<step id>.municipio}   "municipio:<n>" of that place
 #   {<step id>.circle}      polygon of radius params.radius_m around that place
@@ -18,6 +18,8 @@
 # A step whose refs cannot be filled (e.g. the place was not found) is skipped, and the reason is
 # handed to the model and to the officer. A step that fails or is not available is reported, not hidden.
 
+# Forecast layers (rain_forecast, weather_forecast) are queried on the whole city: their grid is coarse, so a
+# municipio often holds no grid point (dry run 14 Nov 2026: 0 points in municipi I and V, 30 for the city).
 defaults:
   # Area used when a playbook needs one and the caller gave none (whole-city default, CLAUDE.md).
   area: city
@@ -36,8 +38,8 @@ use_cases:
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{area}"}, label: "public transport delays"}
       - {id: traffic, tool: query_layer, args: {layer: traffic_flow, area: "{area}"}, label: "road traffic (simulated loops)"}
       - {id: air, tool: query_layer, args: {layer: air_quality, area: "{area}"}, label: "air quality stations"}
-      - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: "{area}"}, label: "rain forecast, next hours"}
-      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: "{area}"}, label: "temperature and wind forecast"}
+      - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: city}, label: "rain forecast, next hours (coarse grid over all of Rome)"}
+      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature and wind forecast (coarse grid over all of Rome)"}
       - {id: river, tool: query_layer, args: {layer: river_discharge, area: city}, label: "Tiber and Aniene discharge forecast"}
       - {id: news, tool: news_search, args: {query: "disservizi chiusure scioperi {area_label} Roma oggi"}, label: "disruption news (unverified)"}
       - {id: data, tool: data_status, args: {}, label: "which layers are real, estimated or simulated"}
@@ -53,7 +55,7 @@ use_cases:
     params:
       duration_h: {default: 3, basis: "Typical duration of a convective storm cell over Rome; the rain_flood forecast window."}
     steps:
-      - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: "{area}"}, label: "rain forecast"}
+      - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: city}, label: "rain forecast (coarse grid over all of Rome)"}
       - {id: river, tool: query_layer, args: {layer: river_discharge, area: city}, label: "river discharge forecast"}
       - {id: rain_flood, tool: run_scenario, args: {kind: rain_flood, area: "{area}", change: {source: forecast, duration_h: "{params.duration_h}"}},
          label: "where rain water collects (forecast rain, sewers, outfalls)"}
@@ -74,11 +76,14 @@ use_cases:
     needs: [area]
     prompt: heat_plan
     params:
+      tmax_c: {default: null, basis: "Optional what-if: a day maximum the officer names (e.g. 38). Without it the forecast is used."}
+      tmin_c: {default: null, basis: "Optional what-if night minimum, used with tmax_c."}
       cover_added_pct: {default: 10, basis: "Same default as the heatwave engine (percentage points of tree cover added); what-if only."}
     steps:
-      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: "{area}"}, label: "temperature forecast"}
-      - {id: heat, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast}}, label: "heat by street, residents over 65 above thresholds"}
-      - {id: trees, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast, plant_trees: {cover_added_pct: "{params.cover_added_pct}"}}},
+      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature forecast (coarse grid over all of Rome)"}
+      - {id: heat, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast, tmax_c: "{?params.tmax_c}", tmin_c: "{?params.tmin_c}"}},
+         label: "heat by street, residents over 65 above thresholds (forecast, or the officer's what-if temperatures)"}
+      - {id: trees, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast, tmax_c: "{?params.tmax_c}", tmin_c: "{?params.tmin_c}", plant_trees: {cover_added_pct: "{params.cover_added_pct}"}}},
          label: "what-if: more tree cover across the area"}
       - {id: care_homes, tool: query_layer, args: {layer: care_homes_osm, area: "{area}", limit: 30}, label: "care homes (RSA)"}
       - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{area}", limit: 30}, label: "emergency hospitals"}
@@ -178,8 +183,8 @@ use_cases:
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "the address"}
       - {id: air, tool: query_layer, args: {layer: air_quality, area: "{place.municipio}"}, label: "air quality"}
-      - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: "{place.municipio}"}, label: "rain forecast"}
-      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: "{place.municipio}"}, label: "temperature forecast"}
+      - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: city}, label: "rain forecast (coarse grid over all of Rome)"}
+      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature forecast (coarse grid over all of Rome)"}
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{place.circle}"}, label: "public transport nearby"}
       - {id: pharmacies, tool: query_layer, args: {layer: pharmacies_roma, area: "{place.circle}", limit: 30}, label: "pharmacies nearby"}
       - {id: health, tool: query_layer, args: {layer: emergency_hospitals, area: "{place.municipio}", limit: 30}, label: "emergency hospitals"}

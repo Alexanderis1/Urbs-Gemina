@@ -355,3 +355,32 @@ def test_ask_passes_use_case_and_params(monkeypatch: pytest.MonkeyPatch, client:
                                              "params": {"attendees": 60000}})
     assert r.status_code == 200, r.text
     assert seen[0].use_case == "event_planning" and seen[0].params == {"attendees": 60000}
+
+
+def test_hypothetical_scenario_inputs_are_labelled_not_rejected(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A what-if input from the officer (WS6 kind 'hypothetical') must not crash the response model."""
+    import sys
+    import types
+
+    engine = types.ModuleType("twin.scenarios.engine")
+    engine.kinds = lambda: {"heatwave": "x"}  # type: ignore[attr-defined]
+
+    def run(kind: str, area: Any, change: Any, data: Any = None) -> Any:
+        return {"run_id": "b" * 64, "tool": "run_scenario", "inputs": {}, "result": {"status": "ok"},
+                "data_kinds": {"temperature": "hypothetical", "census": "real"}, "sources": [],
+                "synthetic": False, "warnings": [], "status": "ok", "cached": False}
+
+    engine.run = run  # type: ignore[attr-defined]
+    area_mod = types.ModuleType("twin.scenarios.area")
+    area_mod.AreaTooLarge = type("AreaTooLarge", (Exception,), {})  # type: ignore[attr-defined]
+    area_mod.AreaNotAvailable = type("AreaNotAvailable", (Exception,), {})  # type: ignore[attr-defined]
+    data_mod = types.ModuleType("twin.scenarios.data")
+    data_mod.ScenarioData = lambda **kw: kw  # type: ignore[attr-defined]
+    data_mod.FieldSample = lambda v, s: (v, s)  # type: ignore[attr-defined]
+    for mod in (engine, area_mod, data_mod):
+        monkeypatch.setitem(sys.modules, mod.__name__, mod)
+    r = client.post("/tools/run_scenario", json={"kind": "heatwave", "area": "municipio:1", "change": {"tmax_c": 38}})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["data_kinds"] == {"temperature": "estimated", "census": "real"}
+    assert any("temperature" in w and "hypothetical" in w for w in body["warnings"])

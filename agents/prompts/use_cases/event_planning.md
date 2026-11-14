@@ -12,3 +12,6 @@ Write a planning note for the officer:
 6. **Open points**: what the run could not cover (for example SUMO not installed on this server) and what the officer should provide (the real attendance figure if the default was used).
 
 At most 250 words.
+
+Do not introduce yourself or say you are an AI: the system adds that line. Start with the content.
+- Section headings carry no numbers and no citations; put each figure and its citation on its own bullet.

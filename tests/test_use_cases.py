@@ -216,3 +216,21 @@ def test_model_view_drops_geometry_and_caps_long_lists() -> None:
     assert out["result"]["sections"][0]["sez_id"] == "0"  # order kept: tools list the most important first
     assert out["result"]["point"]["coordinates"] == [12.48, 41.89]  # points are small and useful
     assert env["result"]["features"]["features"][0]["geometry"] is poly  # the stored run is untouched
+
+
+def test_optional_params_are_left_out_or_passed() -> None:
+    uc = load_use_cases()["heat_plan_elderly"]
+    gw = FakeGateway()
+    run_steps(uc, gateway=gw, area="municipio:5")
+    heat = next(a for n, a in gw.calls if n == "run_scenario")
+    assert heat["change"] == {"temperature": "forecast"}
+    gw2 = FakeGateway()
+    run_steps(uc, gateway=gw2, area="municipio:5", params={"tmax_c": 38, "tmin_c": 25})
+    heat2 = next(a for n, a in gw2.calls if n == "run_scenario")
+    assert heat2["change"]["tmax_c"] == 38 and heat2["change"]["tmin_c"] == 25
+
+
+def test_self_disclosure_is_dropped_from_the_narrative() -> None:
+    rep = run_use_case("citizen_area_info", llm=CitingLLM(text="Sono un assistente AI. L'aria è buona."),
+                       gateway=FakeGateway(), place="Colosseo", tier="citizen")
+    assert rep.verified and "assistente" not in rep.text and "aria" in rep.text

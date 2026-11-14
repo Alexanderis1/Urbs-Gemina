@@ -11,3 +11,8 @@ Write a heat note for the social-services or health officer:
 5. **Official frame**: what the official heat plan or bulletin says, with URL.
 
 Do not name individual people; the data are census counts. At most 250 words.
+
+Do not introduce yourself or say you are an AI: the system adds that line. Start with the content.
+- If the officer gave what-if temperatures (tmax_c, tmin_c), say clearly that the run uses hypothetical temperatures, not the forecast.
+- If nobody is above the thresholds (for example outside summer), say so plainly and keep the note short.
+- Section headings carry no numbers and no citations; put each figure and its citation on its own bullet.

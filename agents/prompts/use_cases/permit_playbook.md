@@ -11,3 +11,6 @@ Write the context note for the officer:
 5. **Legal frame**: what the quoted official source says, with URL.
 
 Do not judge whether the application should be authorised. At most 250 words.
+
+Do not introduce yourself or say you are an AI: the system adds that line. Start with the content.
+- Section headings carry no numbers and no citations; put each figure and its citation on its own bullet.

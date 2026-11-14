@@ -12,3 +12,6 @@ Write a situation note for the civil-protection officer:
 6. **What to check first**: up to three places to look at, taken from the hotspot list, in the order the run ranks them.
 
 Say "estimate, not a measurement" for model outputs and name the calibration status (the sewer model is uncalibrated). At most 250 words.
+
+Do not introduce yourself or say you are an AI: the system adds that line. Start with the content.
+- Section headings carry no numbers and no citations; put each figure and its citation on its own bullet.
