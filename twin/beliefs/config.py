@@ -52,6 +52,17 @@ class FieldSpec:
 
 
 @dataclass(frozen=True)
+class WindSpec:
+    """Stretch spreading along the wind axis (plumes travel with the wind)."""
+
+    #: Layer name in config/providers.yaml giving WeatherForecast wind_speed_ms / wind_direction_deg.
+    source: str
+    #: Along-wind correlation length = across-wind length x this factor, reached at ``full_at_ms``.
+    max_stretch: float = 2.0
+    full_at_ms: float = 5.0
+
+
+@dataclass(frozen=True)
 class SourceSpec:
     """One real (or allowed simulated) feed of a layer, with how to read it.
 
@@ -93,6 +104,7 @@ class LayerSpec:
     #: "none": readings are values. "count": readings are items (e.g. parked scooters) counted per cell.
     aggregate: str = "none"
     aggregate_window_minutes: float = 5.0
+    wind: WindSpec | None = None
     #: Plain-language limits of the layer, repeated in every answer's warnings.
     caveats: tuple[str, ...] = ()
 
@@ -150,6 +162,13 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
             aggregate=str(entry.get("aggregate", "none")),
             aggregate_window_minutes=float(entry.get("aggregate_window_minutes", 5.0)),
             caveats=tuple(str(c) for c in entry.get("caveats", [])),
+            wind=None
+            if entry.get("wind") is None
+            else WindSpec(
+                source=str(entry["wind"]["source"]),
+                max_stretch=float(entry["wind"].get("max_stretch", 2.0)),
+                full_at_ms=float(entry["wind"].get("full_at_ms", 5.0)),
+            ),
         )
     return specs
 

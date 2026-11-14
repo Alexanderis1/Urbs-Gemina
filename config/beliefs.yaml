@@ -43,7 +43,8 @@ layers:
 
   air_no2:
     sources: [air_quality]   # EEA/ARPA Lazio stations (real). Sensor.Community has no NO2.
-    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: no2, method: idw}   # CAMS forecast via Open-Meteo, 0.1 deg lattice
+    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: no2, method: idw}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it   # CAMS forecast via Open-Meteo, 0.1 deg lattice
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: no2
@@ -60,6 +61,7 @@ layers:
   air_pm10:
     sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
     prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: pm10, method: idw}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm10
@@ -76,6 +78,7 @@ layers:
   air_pm25:
     sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
     prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: pm25, method: idw}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm25
@@ -106,6 +109,7 @@ layers:
 
   rain:
     sources: [rain]          # Civil Protection radar (real); rain gauges can be added as a second source
+    prior_field: {source: rain_forecast, entity_types: [WeatherForecast], value_key: precipitation, method: idw}   # Open-Meteo ICON-2I hourly forecast; radar corrects it, then fades back to it
     unit: mm/h
     entity_types: [WeatherObserved]
     value_key: precipitation
@@ -174,6 +178,34 @@ layers:
       - "Wi-Fi data runs about one day behind: 'now' shows yesterday's same hour"
       - "only cells with a City hotspot carry data (about 580 sites; 94 had sessions on 12 Nov 2026)"
     basis: "real counts at fixed sites; no spreading to cells without a hotspot"
+
+  transit_supply:
+    # Expected public-transport supply: buses and trams the timetable says are in each cell right now.
+    sources: [transit_schedule]   # roma_gtfs_schedule: ScheduledVehicle, one item per running trip, interpolated between stops
+    aggregate: count
+    aggregate_window_minutes: 5
+    unit: vehicles/cell
+    entity_types: [ScheduledVehicle]
+    value_key: scheduledVehicles
+    prior:
+      mean: 0
+      sd: 2
+      basis: "assumption: about 1,100 vehicles at 08:30 over thousands of cells, most cells have none"
+    correlation_length_km: 0
+    relax_tau_hours: 0.5
+    min_value: 0
+    calibration: {method: none, note: "timetable, not observed: shows planned supply, not what actually runs"}
+    caveats:
+      - "transit supply is the timetable (planned), not live positions; the live bus feed is used where it works"
+    basis: "planned positions from the official GTFS timetable"
+
+crowds:
+  # Signals shown side by side in the crowds view; a cell is 'busy' when at least min_agree
+  # of them are above their own city-wide percentile (among cells where that signal has data).
+  signals: [wifi_sessions, activity, transit_supply]
+  busy_percentile: 75
+  min_agree: 2
+  basis: "assumption (C=60): agreement of independent signals is more trustworthy than any single proxy"
 
 calibration_rules:
   interval: 0.90            # we check the 90% range
