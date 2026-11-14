@@ -71,6 +71,24 @@ class QueryLayerIn(Strict):
     limit: int | None = Field(default=None, ge=1, le=5000)
 
 
+class CrowdsIn(Strict):
+    """How busy each cell is (Wi-Fi sessions, activity, timetable supply) next to census residents, with a 'busy' flag."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class ExposureIn(Strict):
+    """Residents and children living where a layer is above a legal threshold, per municipio, expected value and range."""
+
+    layer: Literal["emf", "air_no2", "air_pm10", "air_pm25"]
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    threshold: str = Field(min_length=1, max_length=60, description=(
+        "emf: attention_value | exposure_limit; air_no2: no2_hourly_limit | no2_annual_limit; "
+        "air_pm10: pm10_daily_limit | pm10_annual_limit; air_pm25: pm25_annual_limit"))
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
 class RunScenarioIn(Strict):
     """Run a what-if scenario on an operating area: baseline vs variant with ranges."""
 

@@ -404,3 +404,10 @@ def test_hypothetical_scenario_inputs_are_labelled_not_rejected(client: TestClie
     body = r.json()
     assert body["data_kinds"] == {"temperature": "estimated", "census": "real"}
     assert any("temperature" in w and "hypothetical" in w for w in body["warnings"])
+
+
+def test_population_tools_are_registered(client: TestClient) -> None:
+    names = {t["name"] for t in client.get("/tools").json()}
+    assert {"crowds", "exposure"} <= names
+    r = client.post("/tools/exposure", json={"layer": "emf", "area": "city", "threshold": "no2_hourly_limit"})
+    assert r.status_code == 400  # threshold of another layer
