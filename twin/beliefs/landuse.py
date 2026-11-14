@@ -25,7 +25,9 @@ import numpy.typing as npt
 MOTOR_CLASSES = ("motorway", "trunk", "primary", "secondary", "tertiary", "residential", "unclassified",
                  "living_street")
 #: The deployed API mounts the processed-data volume at data/processed (Modal volume urbs-gemina-processed).
-SEARCH_DIRS = (Path("data/model"), Path("data/processed"), Path("/mnt/project-files/model"))
+#: Paths are anchored at the repository root: the Modal container does not start in it.
+ROOT = Path(__file__).resolve().parents[2]
+SEARCH_DIRS = (ROOT / "data/model", ROOT / "data/processed", Path("/mnt/project-files/model"))
 LAT0, LON0 = 41.9, 12.5
 
 
