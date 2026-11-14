@@ -171,6 +171,7 @@ open:
     timeout_s: 90
 
   om_rain_forecast:
+    cache_ttl_s: {value: 1800, basis: "Open-Meteo refreshes hourly values from model runs every 1-6 h and rate-limits the free tier (429 under load on 14 Nov): one call per URL per 30 min per container is enough"}
     api_url: https://api.open-meteo.com/v1/forecast
     # Tried in order; the first with data is used. ICON-2I (ARPAE/ItaliaMeteo, 2.2 km) covers Italy;
     # ICON-D2 does not reach Rome (Open-Meteo answered "No data is available for this location", 13 Nov 2026).
@@ -181,6 +182,7 @@ open:
     timeout_s: 60
 
   om_weather_forecast:
+    cache_ttl_s: {value: 1800, basis: "Open-Meteo refreshes hourly values from model runs every 1-6 h and rate-limits the free tier (429 under load on 14 Nov): one call per URL per 30 min per container is enough"}
     api_url: https://api.open-meteo.com/v1/forecast
     models: [italia_meteo_arpae_icon_2i, icon_eu, best_match]
     step_deg: {value: 0.1, basis: "as om_rain_forecast"}
@@ -191,6 +193,7 @@ open:
     timeout_s: 60
 
   glofas_flood:
+    cache_ttl_s: {value: 1800, basis: "Open-Meteo refreshes hourly values from model runs every 1-6 h and rate-limits the free tier (429 under load on 14 Nov): one call per URL per 30 min per container is enough"}
     api_url: https://flood-api.open-meteo.com/v1/flood
     relative_sigma: {value: 0.3, basis: "assumption, used only when the ensemble spread is missing"}
     # GloFAS cells are about 5 km: a point snaps to the nearest modelled river cell, so the Aniene
@@ -211,6 +214,7 @@ open:
     timeout_s: 30
 
   cams_open_meteo:
+    cache_ttl_s: {value: 1800, basis: "Open-Meteo refreshes hourly values from model runs every 1-6 h and rate-limits the free tier (429 under load on 14 Nov): one call per URL per 30 min per container is enough"}
     api_url: https://air-quality-api.open-meteo.com/v1/air-quality
     lookback_hours: {value: 1, basis: "hourly model values: a 'now' window still gets the hour it falls in"}
     step_deg: {value: 0.1, basis: "CAMS European ensemble grid is 0.1 degree"}
