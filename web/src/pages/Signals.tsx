@@ -270,7 +270,10 @@ export default function Signals() {
                   const out = await planMaintenance(toPlanEvents(events, confirmed), crews);
                   setPlan(out.plan);
                   setPlanSample(out.sample);
-                  setFocus({ lon: 12.4964, lat: 41.8902, zoom: 11.3, pitch: 40 });
+                  // Stay at the zoom that shows the 3D city, centred on the planned stops.
+                  const pts = out.plan.routes.flatMap((r) => r.stops);
+                  const mid = (v: number[], d: number) => (v.length ? (Math.min(...v) + Math.max(...v)) / 2 : d);
+                  setFocus({ lon: mid(pts.map((p) => p.lon), 12.4964), lat: mid(pts.map((p) => p.lat), 41.8902), zoom: TWIN_START_ZOOM, pitch: 50 });
                 } catch (e) {
                   setError(errorText(e));
                 } finally {
