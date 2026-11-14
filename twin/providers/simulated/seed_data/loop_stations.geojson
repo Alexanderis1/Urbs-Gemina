@@ -1,21 +1,21 @@
 {
 "type": "FeatureCollection",
-"basis": "Centrally controlled vehicle signals (Roma Capitale DIPMOB:Semafori) on major roads (DIPPC:grande_viabilita, OSM-derived). Loop positions are plausible, not the real ones.",
+"basis": "The real positions of Roma Capitale's traffic sensors (DIPMOB:SensoriTraffico). Their counts are not published, so the readings are simulated.",
 "features": [
 {
 "type": "Feature",
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.410651,
-41.88958
+12.410426,
+41.889522
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Via Aurelia",
-"signal_code": "18013",
-"control_system": "Omnia"
+"sensor_code": "AB 04/BW 011",
+"pedestrian_call": false
 }
 },
 {
@@ -23,63 +23,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.417761,
-41.895313
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Aurelia",
-"signal_code": "18010",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.419658,
-41.848001
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Portuense",
-"signal_code": "15042",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.425345,
-41.904972
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Domenico Tardini",
-"signal_code": "18039",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.427584,
-41.898646
+12.424947,
+41.90367
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Circonvallazione Cornelia",
-"signal_code": "18015",
-"control_system": "Omnia"
+"sensor_code": "IS 18066/BW 009",
+"pedestrian_call": false
 }
 },
 {
@@ -87,15 +39,47 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.432812,
-41.851749
+12.425988,
+41.925447
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Via della Pineta Sacchetti",
+"sensor_code": "IS 19056/BW 008",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.427601,
+41.898466
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Piazza San Giovanni Battista De La Salle",
+"sensor_code": "IS 18015/BW 010",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.435251,
+41.852015
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Via Portuense",
-"signal_code": "15045",
-"control_system": "Tmacs"
+"sensor_code": "IS 15026",
+"pedestrian_call": false
 }
 },
 {
@@ -103,15 +87,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.438099,
-41.89537
+12.437222,
+41.893984
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Via Anastasio II",
-"signal_code": "18002",
-"control_system": "Sigma Plus"
+"road_name": "Piazza Pio XI",
+"sensor_code": "IS 18005/BW 012",
+"pedestrian_call": false
 }
 },
 {
@@ -119,15 +103,31 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.442593,
-41.877117
+12.440234,
+41.855637
+]
+},
+"properties": {
+"road_class": "trunk",
+"road_name": "Viale Isacco Newton",
+"sensor_code": "IS 16090",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.441253,
+41.878919
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Circonvallazione Gianicolense",
-"signal_code": "16009",
-"control_system": "Omnia"
+"road_name": "Via Ottavio Gasparri",
+"sensor_code": "AB 05/BW 015",
+"pedestrian_call": false
 }
 },
 {
@@ -135,31 +135,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.443632,
-41.862814
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale dei Colli Portuensi",
-"signal_code": "16046",
-"control_system": "Sigma Plus"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.445899,
-41.85614
+12.445923,
+41.856079
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Via Portuense",
-"signal_code": "15018",
-"control_system": "Tmacs"
+"sensor_code": "IS 15018",
+"pedestrian_call": false
 }
 },
 {
@@ -167,15 +151,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.445914,
-41.906322
+12.448837,
+41.909175
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Via Cipro",
-"signal_code": "17089",
-"control_system": "Sigma Plus"
+"road_name": "Piazzale degli Eroi",
+"sensor_code": "IS 17007/BW 013",
+"pedestrian_call": false
 }
 },
 {
@@ -183,15 +167,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.450051,
-41.871219
+12.456551,
+41.90025
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Circonvallazione Gianicolense",
-"signal_code": "16006",
-"control_system": "Omnia"
+"road_name": "Galleria Principe Amedeo Savoia - Aosta",
+"sensor_code": "IS 18004/BW 014",
+"pedestrian_call": true
 }
 },
 {
@@ -199,15 +183,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.451304,
-41.913788
+12.457362,
+41.924193
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Circonvallazione Clodia",
-"signal_code": "17049",
-"control_system": "Sigma Plus"
+"road_name": "Piazzale Maresciallo Giardino",
+"sensor_code": "TE 09/SI 008 / SI 009",
+"pedestrian_call": false
 }
 },
 {
@@ -215,47 +199,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.454893,
-41.936371
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via del Foro Italico",
-"signal_code": "20002",
-"control_system": "Sigma"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.455874,
-41.918076
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Piazzale Clodio",
-"signal_code": "17035",
-"control_system": "Sigma Plus"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.457148,
-41.864467
+12.457855,
+41.905811
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Via Portuense",
-"signal_code": "15015",
-"control_system": "Omnia"
+"road_name": "Piazza del Risorgimento",
+"sensor_code": "IS 17094",
+"pedestrian_call": true
 }
 },
 {
@@ -263,15 +215,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.45897,
-41.923927
+12.458666,
+41.923958
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Lungotevere della Vittoria",
-"signal_code": "17010",
-"control_system": "Sigma Plus"
+"road_name": "Piazzale Maresciallo Giardino",
+"sensor_code": "IS 17010",
+"pedestrian_call": false
 }
 },
 {
@@ -279,15 +231,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.459607,
-41.871507
+12.459589,
+41.871552
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Circonvallazione Gianicolense",
-"signal_code": "16004",
-"control_system": "Omnia"
+"road_name": "Via Quirino Majorana",
+"sensor_code": "IS 16004/BW 016",
+"pedestrian_call": false
 }
 },
 {
@@ -295,15 +247,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.45962,
-41.931651
+12.459868,
+41.812396
 ]
 },
 "properties": {
-"road_class": "primary",
-"road_name": "Piazza Lauro de Bosis",
-"signal_code": "20009",
-"control_system": "Sigma"
+"road_class": "secondary",
+"road_name": "Via Cristoforo Colombo",
+"sensor_code": "AB 07 / AB 12/BW 019",
+"pedestrian_call": false
 }
 },
 {
@@ -311,31 +263,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.46349,
-41.901744
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Lungotevere in Sassia",
-"signal_code": "17042",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.465015,
-41.936028
+12.462086,
+41.934086
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Lungotevere Maresciallo Diaz",
-"signal_code": "20036",
-"control_system": "Sigma"
+"sensor_code": "TE 27/SI 010",
+"pedestrian_call": false
 }
 },
 {
@@ -343,15 +279,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.465366,
-41.822423
+12.462611,
+41.899665
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Via Cristoforo Colombo",
-"signal_code": "12061",
-"control_system": "Sigma Plus"
+"road_name": "Sottovia Lungotevere in Sassia",
+"sensor_code": "IS 01031",
+"pedestrian_call": false
 }
 },
 {
@@ -359,47 +295,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.466582,
-41.879928
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Viale di Trastevere",
-"signal_code": "16020",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.467712,
-41.871045
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Antonio Pacinotti",
-"signal_code": "15009",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.46863,
-41.922963
+12.463104,
+41.934681
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Lungotevere Flaminio",
-"signal_code": "02069",
-"control_system": "Sigma"
+"road_name": "Lungotevere Maresciallo Diaz",
+"sensor_code": "IS 20031",
+"pedestrian_call": false
 }
 },
 {
@@ -407,95 +311,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.469177,
-41.829362
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Cristoforo Colombo",
-"signal_code": "12035",
-"control_system": "Sigma Plus"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.469685,
-41.914235
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Lungotevere delle Armi",
-"signal_code": "17009",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.469939,
-41.947664
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Cassia Nuova",
-"signal_code": "20008",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.470019,
-41.862293
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Guglielmo Marconi",
-"signal_code": "15005",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.470309,
-41.892
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Piazza Trilussa",
-"signal_code": "01065",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.470858,
-41.940621
+12.463207,
+41.940336
 ]
 },
 "properties": {
 "road_class": "trunk",
 "road_name": "Via del Foro Italico",
-"signal_code": "20005",
-"control_system": "Omnia"
+"sensor_code": "Portale Antirumore/BW 007",
+"pedestrian_call": false
 }
 },
 {
@@ -503,15 +327,31 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.471077,
-41.903148
+12.463416,
+41.905703
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 17004",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.46432,
+41.90241
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Piazza dei Tribunali",
-"signal_code": "17016",
-"control_system": "Tmacs"
+"road_name": "Piazza Pia",
+"sensor_code": "IS 17008",
+"pedestrian_call": true
 }
 },
 {
@@ -519,15 +359,191 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.47248,
-41.83656
+12.464898,
+41.900708
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere dei Fiorentini",
+"sensor_code": "IS 01077",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.467477,
+41.870888
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Via Antonio Pacinotti",
+"sensor_code": "IS 15009/BW 017",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469015,
+41.922864
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere Flaminio",
+"sensor_code": "IS 02069",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469287,
+41.944504
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Corso di Francia",
+"sensor_code": "TE 25",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469786,
+41.91858
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere delle Armi",
+"sensor_code": "IS 17011",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.469856,
+41.913587
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere Michelangelo",
+"sensor_code": "MT 06/SI 006 / SI 007",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470184,
+41.891902
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Piazza Trilussa",
+"sensor_code": "IS 01065/PW",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470662,
+41.909263
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 17002",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.470838,
+41.858702
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Viale Guglielmo Marconi",
+"sensor_code": "IS 11012/BW 018",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.47098,
+41.885338
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Viale di Trastevere",
+"sensor_code": "IS 01001/PW",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.471653,
+41.914463
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere Arnaldo da Brescia",
+"sensor_code": "IS 02019",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.472045,
+41.835816
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Via Cristoforo Colombo",
-"signal_code": "12036",
-"control_system": "Sigma Plus"
+"sensor_code": "IS 12036/BW 020",
+"pedestrian_call": false
 }
 },
 {
@@ -535,15 +551,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.473143,
-41.852321
+12.472214,
+41.937286
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Viale Guglielmo Marconi",
-"signal_code": "11013",
-"control_system": "Omnia"
+"road_name": "Viale di Tor di Quinto",
+"sensor_code": "IS 20037",
+"pedestrian_call": false
 }
 },
 {
@@ -551,47 +567,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.475594,
-41.846992
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Guglielmo Marconi",
-"signal_code": "11022",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.477143,
-41.889557
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Lungotevere degli Alberteschi",
-"signal_code": "01128",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.478918,
-41.872507
+12.472677,
+41.887324
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Via del Porto Fluviale",
-"signal_code": "11011",
-"control_system": "Omnia"
+"road_name": "Viale di Trastevere",
+"sensor_code": "IS 01068",
+"pedestrian_call": true
 }
 },
 {
@@ -599,15 +583,239 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.479208,
-41.865177
+12.473104,
+41.909852
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere in Augusta",
+"sensor_code": "IS 02035",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.473311,
+41.925606
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Viale Maresciallo Pilsudski",
+"sensor_code": "IS 02079",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.473989,
+41.841342
+]
+},
+"properties": {
+"road_class": "trunk",
+"road_name": "Viale dell'Atletica",
+"sensor_code": "Lamp Viadotto",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474143,
+41.889429
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Piazza Sidney Sonnino",
+"sensor_code": "IS 01066",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474816,
+41.919032
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 02004",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.474969,
+41.907211
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere in Augusta",
+"sensor_code": "MT 08/Si 004 / SI 005",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475159,
+41.904881
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere Marzio",
+"sensor_code": "IS 01028",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475765,
+41.893761
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01011",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.475776,
+41.882845
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Piazza dell'Emporio",
+"sensor_code": "IS 01096/SI 001",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.47589,
+41.911629
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Piazzale Flaminio",
+"sensor_code": "IS 02245/BW 028",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476315,
+41.891765
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Lungotevere De' Cenci",
+"sensor_code": "AB 13/SI 002 / SI 003",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.476381,
+41.896107
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01018",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.477614,
+41.928636
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Viale Maresciallo Pilsudski",
+"sensor_code": "IS 02020",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.479819,
+41.902452
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01029",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.48082,
+41.875699
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Via Ostiense",
-"signal_code": "11039",
-"control_system": "Omnia"
+"sensor_code": "IS 01050",
+"pedestrian_call": true
 }
 },
 {
@@ -615,15 +823,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.482001,
-41.803495
+12.481184,
+41.887812
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Via Laurentina",
-"signal_code": "12072",
-"control_system": "Tmacs"
+"road_name": "Via della Greca",
+"sensor_code": "IS 01020",
+"pedestrian_call": true
 }
 },
 {
@@ -631,15 +839,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.484383,
-41.808864
+12.482125,
+41.895379
 ]
 },
 "properties": {
-"road_class": "secondary",
-"road_name": "Via Laurentina",
-"signal_code": "12019",
-"control_system": "Tmacs"
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01129",
+"pedestrian_call": true
 }
 },
 {
@@ -647,15 +855,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.484447,
-41.850128
+12.484407,
+41.875468
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Via Cristoforo Colombo",
-"signal_code": "11050",
-"control_system": "Sigma Plus"
+"road_name": "Viale Marco Polo",
+"sensor_code": "IS 01140",
+"pedestrian_call": false
 }
 },
 {
@@ -663,15 +871,79 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.484859,
-41.929825
+12.487254,
+41.893064
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01033",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488026,
+41.883546
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Via del Circo Massimo",
+"sensor_code": "IS 01017",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488059,
+41.903428
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01146",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.488237,
+41.909607
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Corso d'Italia",
+"sensor_code": "IS 02008",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.48925,
+41.925249
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Viale Parioli",
-"signal_code": "02242",
-"control_system": "Sigma"
+"sensor_code": "IS 02026",
+"pedestrian_call": false
 }
 },
 {
@@ -679,15 +951,31 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.489247,
-41.925187
+12.489271,
+41.963581
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "TE 24",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.489982,
+41.887298
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Viale Parioli",
-"signal_code": "02026",
-"control_system": "Sigma"
+"road_name": "Via di San Gregorio",
+"sensor_code": "IS 01132",
+"pedestrian_call": true
 }
 },
 {
@@ -695,15 +983,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.490686,
-41.854416
+12.490341,
+41.898799
 ]
 },
 "properties": {
-"road_class": "primary",
-"road_name": "Via Cristoforo Colombo",
-"signal_code": "11008",
-"control_system": "Sigma Plus"
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01007",
+"pedestrian_call": true
 }
 },
 {
@@ -711,15 +999,47 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.496492,
-41.871507
+12.49102,
+41.894052
 ]
 },
 "properties": {
-"road_class": "primary",
-"road_name": "Via Cristoforo Colombo",
-"signal_code": "01137",
-"control_system": "Sigma Plus"
+"road_class": "secondary",
+"road_name": "Via Cavour",
+"sensor_code": "IS 01027",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.492616,
+41.891004
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01216",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.497189,
+41.898356
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Piazza dell'Esquilino",
+"sensor_code": "IS 01032",
+"pedestrian_call": true
 }
 },
 {
@@ -734,8 +1054,8 @@
 "properties": {
 "road_class": "primary",
 "road_name": "Via Cristoforo Colombo",
-"signal_code": "11005",
-"control_system": "Sigma Plus"
+"sensor_code": "IS 11005/BW 021",
+"pedestrian_call": false
 }
 },
 {
@@ -743,31 +1063,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.499806,
-41.910516
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Sottovia Ignazio Guidi",
-"signal_code": "02067",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.499965,
-41.920643
+12.498483,
+41.919464
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Via Salaria",
-"signal_code": "02053",
-"control_system": "Omnia"
+"sensor_code": "IS 02052",
+"pedestrian_call": false
 }
 },
 {
@@ -775,15 +1079,63 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.50463,
-41.887115
+12.498531,
+41.902025
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Via Giovanni Giolitti",
+"sensor_code": "IS 01111",
+"pedestrian_call": true
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.501259,
+41.940093
+]
+},
+"properties": {
+"road_class": "trunk",
+"road_name": "Via del Foro Italico",
+"sensor_code": "TE 08/BW 006",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.503399,
+41.910613
+]
+},
+"properties": {
+"road_class": "secondary",
+"road_name": "Via Nomentana",
+"sensor_code": "MT 01/BW 027",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.504628,
+41.886982
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Piazza di San Giovanni in Laterano",
-"signal_code": "01062",
-"control_system": "Omnia"
+"sensor_code": "IS 01062/BW 003",
+"pedestrian_call": false
 }
 },
 {
@@ -791,15 +1143,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.506374,
-41.874511
+12.508892,
+41.886309
 ]
 },
 "properties": {
 "road_class": "primary",
-"road_name": "Piazza Galeria",
-"signal_code": "09047",
-"control_system": "Omnia"
+"road_name": "Piazza di Porta San Giovanni",
+"sensor_code": "IS 01054",
+"pedestrian_call": true
 }
 },
 {
@@ -807,47 +1159,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.506569,
-41.912865
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Nomentana",
-"signal_code": "03008",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.508531,
-41.881897
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Magnagrecia",
-"signal_code": "09044",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.509203,
-41.93301
+12.508922,
+41.93589
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Via Salaria",
-"signal_code": "02062",
-"control_system": "Omnia"
+"sensor_code": "IS 02045",
+"pedestrian_call": false
 }
 },
 {
@@ -855,15 +1175,31 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.511892,
-41.90872
+12.509775,
+41.88538
+]
+},
+"properties": {
+"road_class": "primary",
+"road_name": "Piazzale Appio",
+"sensor_code": "IS 09042/BW 001",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.510556,
+41.909769
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Piazza Sassari",
-"signal_code": "03047",
-"control_system": "Tmacs"
+"road_name": "Viale Regina Margherita",
+"sensor_code": "IS 03017/BW 026",
+"pedestrian_call": false
 }
 },
 {
@@ -871,15 +1207,47 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.513028,
-41.917215
+12.511824,
+41.890369
+]
+},
+"properties": {
+"road_class": null,
+"road_name": "",
+"sensor_code": "IS 01060",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.515748,
+41.93925
+]
+},
+"properties": {
+"road_class": "trunk",
+"road_name": "Circonvallazione Salaria",
+"sensor_code": "TE 07",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.517757,
+41.921077
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Via Nomentana",
-"signal_code": "03004",
-"control_system": "Omnia"
+"sensor_code": "IS 03007",
+"pedestrian_call": false
 }
 },
 {
@@ -887,31 +1255,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.515923,
-41.880341
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Appia Nuova",
-"signal_code": "09058",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.51818,
-41.887662
+12.518725,
+41.888557
 ]
 },
 "properties": {
 "road_class": "trunk",
 "road_name": "Viale Castrense",
-"signal_code": "09033",
-"control_system": "Omnia"
+"sensor_code": "ZTE 78/79/BW 002",
+"pedestrian_call": false
 }
 },
 {
@@ -919,47 +1271,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.5213,
-41.946085
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via dei Prati Fiscali",
-"signal_code": "04018",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.525757,
-41.872463
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Appia Nuova",
-"signal_code": "09060",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.527153,
-41.930756
+12.51951,
+41.902699
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Via Nomentana",
-"signal_code": "04021",
-"control_system": "Omnia"
+"road_name": "Piazzale del Verano",
+"sensor_code": "IS 03019",
+"pedestrian_call": false
 }
 },
 {
@@ -967,63 +1287,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.527259,
-41.891247
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Piazzale Prenestino",
-"signal_code": "06005",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.530041,
-41.945562
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Jonio",
-"signal_code": "04034",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.530846,
-41.866453
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Appia Nuova",
-"signal_code": "09052",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.533892,
-41.883042
+12.522817,
+41.888939
 ]
 },
 "properties": {
 "road_class": "secondary",
 "road_name": "Via Casilina",
-"signal_code": "06026",
-"control_system": "Tmacs"
+"sensor_code": "IS 06020",
+"pedestrian_call": false
 }
 },
 {
@@ -1031,31 +1303,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.534399,
-41.908079
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Tiburtina",
-"signal_code": "05002",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.536973,
-41.857195
+12.527128,
+41.871336
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Via Appia Nuova",
-"signal_code": "09031",
-"control_system": "Omnia"
+"sensor_code": "IS 09007/BW 024",
+"pedestrian_call": false
 }
 },
 {
@@ -1063,15 +1319,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.538113,
-41.869194
+12.527718,
+41.899081
 ]
 },
 "properties": {
-"road_class": "primary",
-"road_name": "Via Tuscolana",
-"signal_code": "09005",
-"control_system": "Omnia"
+"road_class": "trunk",
+"road_name": "Circonvallazione Tiburtina",
+"sensor_code": "TE 02/BW 004",
+"pedestrian_call": false
 }
 },
 {
@@ -1079,15 +1335,31 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.540756,
-41.892514
+12.527917,
+41.928078
+]
+},
+"properties": {
+"road_class": "trunk",
+"road_name": "Circonvallazione Nomentana",
+"sensor_code": "TE 05/BW 005",
+"pedestrian_call": false
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+12.53362,
+41.935087
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Largo Preneste",
-"signal_code": "06007",
-"control_system": "Omnia"
+"road_name": "Piazza Sempione",
+"sensor_code": "IS 04003",
+"pedestrian_call": false
 }
 },
 {
@@ -1095,31 +1367,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.542432,
-41.943737
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Jonio",
-"signal_code": "04009",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.542668,
-41.908456
+12.534412,
+41.908151
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Via Tiburtina",
-"signal_code": "05003",
-"control_system": "Tmacs"
+"sensor_code": "IS 05002/BW 025",
+"pedestrian_call": false
 }
 },
 {
@@ -1127,15 +1383,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.545564,
-41.916229
+12.541852,
+41.892664
 ]
 },
 "properties": {
 "road_class": "secondary",
-"road_name": "Via dei Monti Tiburtini",
-"signal_code": "05030",
-"control_system": "Omnia"
+"road_name": "Via Prenestina",
+"sensor_code": "IS 06008",
+"pedestrian_call": false
 }
 },
 {
@@ -1150,8 +1406,8 @@
 "properties": {
 "road_class": "primary",
 "road_name": "Via Appia Nuova",
-"signal_code": "10017",
-"control_system": "Omnia"
+"sensor_code": "IS 10017/BW 023",
+"pedestrian_call": false
 }
 },
 {
@@ -1159,47 +1415,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.549382,
-41.910647
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Tiburtina",
-"signal_code": "05091",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.549708,
-41.893622
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Prenestina",
-"signal_code": "06010",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.549791,
-41.863712
+12.54974,
+41.863375
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Via Tuscolana",
-"signal_code": "10010",
-"control_system": "Omnia"
+"sensor_code": "IS 10010",
+"pedestrian_call": false
 }
 },
 {
@@ -1207,111 +1431,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.551499,
-41.841857
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Appia Nuova",
-"signal_code": "10021",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.551884,
-41.835512
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Appia Nuova",
-"signal_code": "10022",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.553161,
-41.945142
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Ugo Ojetti",
-"signal_code": "04031",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.553265,
-41.876788
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Casilina",
-"signal_code": "07017",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.555886,
-41.913058
+12.561784,
+41.915792
 ]
 },
 "properties": {
 "road_class": "primary",
 "road_name": "Via Tiburtina",
-"signal_code": "05017",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.55788,
-41.90181
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Viale della Serenissima",
-"signal_code": "06035",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.561689,
-41.874695
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Casilina",
-"signal_code": "07015",
-"control_system": "Tmacs"
+"sensor_code": "IS 05010",
+"pedestrian_call": false
 }
 },
 {
@@ -1326,136 +1454,8 @@
 "properties": {
 "road_class": "primary",
 "road_name": "Via Appia Nuova",
-"signal_code": "10019",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.562691,
-41.856698
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Tuscolana",
-"signal_code": "10006",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.563042,
-41.894994
-]
-},
-"properties": {
-"road_class": "secondary",
-"road_name": "Via Prenestina",
-"signal_code": "07002",
-"control_system": "Omnia"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.56915,
-41.916079
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Palmiro Togliatti",
-"signal_code": "05081",
-"control_system": "Road Manager"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.569513,
-41.873917
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Palmiro Togliatti",
-"signal_code": "07012",
-"control_system": "Tmacs"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.569788,
-41.852448
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Via Tuscolana",
-"signal_code": "10005",
-"control_system": "Road Manager"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.57032,
-41.859124
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Palmiro Togliatti",
-"signal_code": "10011",
-"control_system": "Road Manager"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.572127,
-41.910645
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Palmiro Togliatti",
-"signal_code": "05025",
-"control_system": "Road Manager"
-}
-},
-{
-"type": "Feature",
-"geometry": {
-"type": "Point",
-"coordinates": [
-12.573109,
-41.88077
-]
-},
-"properties": {
-"road_class": "primary",
-"road_name": "Viale Palmiro Togliatti",
-"signal_code": "07023",
-"control_system": "Road Manager"
+"sensor_code": "IS 10019/BW 022",
+"pedestrian_call": false
 }
 },
 {
@@ -1470,8 +1470,8 @@
 "properties": {
 "road_class": "primary",
 "road_name": "Viale Palmiro Togliatti",
-"signal_code": "07005",
-"control_system": "Omnia"
+"sensor_code": "IS 07005",
+"pedestrian_call": false
 }
 },
 {
@@ -1479,15 +1479,15 @@
 "geometry": {
 "type": "Point",
 "coordinates": [
-12.587429,
-41.868491
+12.575584,
+41.848531
 ]
 },
 "properties": {
-"road_class": "secondary",
-"road_name": "Via Casilina",
-"signal_code": "08009",
-"control_system": "Tmacs"
+"road_class": "primary",
+"road_name": "Via Tuscolana",
+"sensor_code": "IS 10002",
+"pedestrian_call": false
 }
 }
 ]

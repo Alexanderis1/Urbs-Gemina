@@ -15,6 +15,7 @@ uses real sensors, or estimates fused from real sources with a physical model.
 | emf_measurements | `arpa_points` | real (ARPA Lazio); "not available" until the table is loaded | `ElectromagneticFieldObserved`: electricField (V/m) |
 | emf_baseline | `cartoradio_grid` | estimated, restricted | `EMFEstimate`: electricField (V/m), at_cap (1 = "15 or more") |
 | transit | `roma_gtfs_rt` | real | `Vehicle`: speed_kmh, bearing_deg. `PublicTransportDelayObserved`: delay (s) |
+| transit_schedule | `roma_gtfs_schedule` | estimated (timetable positions; the fallback when the live feed is stale) | `ScheduledVehicle`: scheduledVehicles, routeType |
 | air_quality | `eea_hourly` | real (official stations) | `AirQualityObserved`: no2 / pm10 / pm25 (µg/m³) |
 | air_quality_citizen | `sensor_community` | real (low-cost, larger sigma) | `AirQualityObserved`: pm10 / pm25 |
 | air_quality_model | `cams_open_meteo` | estimated (CAMS model) | `AirQualityForecast`: no2 / pm10 / pm25 |
@@ -22,6 +23,7 @@ uses real sensors, or estimates fused from real sources with a physical model.
 | rain_forecast | `om_rain_forecast` | estimated (ICON-2I via Open-Meteo, next 48 h) | `WeatherForecast`: precipitation (mm/h) |
 | weather_forecast | `om_weather_forecast` | estimated (as above) | `WeatherForecast`: wind_speed_ms, wind_direction_deg (10 m), temperature_c (2 m) |
 | river_discharge | `glofas_flood` | estimated (GloFAS via Open-Meteo, daily, 7 days) | `RiverDischargeForecast`: discharge_m3s |
+| earthquakes | `ingv_earthquakes` | real (INGV) | `EarthquakeObserved`: magnitude, depth_km |
 | micromobility | `bird_gbfs` | real | `MicromobilityVehicle`: availableVehicles, rangeKm (weak activity proxy, C=40) |
 | activity_wifi | `roma_wifi` | real (Roma Capitale public Wi-Fi sessions, about one day behind) | `CrowdFlowObserved`: peopleCount (sessions active in the hour, a lower bound on people) |
 | context_layers | `roma_wfs` | real | static GeoJSON, read at ingest |
@@ -32,7 +34,7 @@ rows; `registry.DATA_KIND` gives the real / estimated / simulated label.
 
 ## How sensors are placed and fused
 
-- **Loop stations (simulated)**: 93 vehicle signals run by a central traffic-control
+- **Loop stations (simulated)**: the 93 real Roma Capitale traffic sensor positions (`DIPMOB:SensoriTraffico`); only the counts are simulated. Earlier: 93 vehicle signals run by a central traffic-control
   system (Omnia, Tmacs, Sigma...) on motorway-to-secondary roads, from Roma Capitale's
   `DIPMOB:Semafori` and `DIPPC:grande_viabilita`, spread at least 600 m apart.
   Free speed and peak flow follow the road class (C=65 that loops sit at such junctions).

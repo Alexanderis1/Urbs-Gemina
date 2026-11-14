@@ -10,12 +10,14 @@ antenna_register: est_register     # estimated: OpenCelliD + OSM + Cartoradio fi
 emf_measurements: arpa_points      # real ARPA Lazio measurements (not available until the table is loaded)
 emf_baseline: cartoradio_grid      # estimated, restricted: runtime read only, never stored in the repo
 transit: roma_gtfs_rt              # real, open (CC BY-SA)
+transit_schedule: roma_gtfs_schedule  # estimated: timetable positions, the fallback when the live feed is stale
 air_quality: eea_hourly            # real, open: official stations
 air_quality_citizen: sensor_community  # real, open: citizen PM sensors (noisier, larger sigma)
 air_quality_model: cams_open_meteo # estimated: CAMS model background for the belief layer
 rain: dpc_radar                    # real, open
 rain_forecast: om_rain_forecast    # estimated: hourly rain forecast, next 48 h (Open-Meteo, ICON-2I)
 weather_forecast: om_weather_forecast  # estimated: hourly wind at 10 m and temperature at 2 m
+earthquakes: ingv_earthquakes     # real, open: INGV located events around Rome
 river_discharge: glofas_flood      # estimated: daily Tiber and Aniene discharge (GloFAS)
 micromobility: bird_gbfs           # real, open: available shared e-scooters
 activity_wifi: roma_wifi           # real, open: public Wi-Fi sessions per hotspot and hour (crowd proxy)

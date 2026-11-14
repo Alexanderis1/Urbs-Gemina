@@ -5,8 +5,10 @@
     python -m twin.providers.build_seeds sites      # estimated antenna site positions
     python -m twin.providers.build_seeds wifi       # public Wi-Fi hotspot gazetteer
 
-Loop stations: Roma Capitale's own traffic-signal register (``DIPMOB:Semafori``)
-gives the signalised junctions. Junctions run by a central traffic-control
+Loop stations: the real positions of Roma Capitale's traffic sensors
+(``DIPMOB:SensoriTraffico``, 93 points). Only their counts are simulated.
+(Before 14 Nov 2026 the stations were picked from the traffic-signal register
+``DIPMOB:Semafori`` with ``select_loop_stations``, kept for reference.) Junctions run by a central traffic-control
 system (Omnia, Tmacs, Sigma...) are where detector loops are normally fitted
 (C=65). We keep vehicle signals of that kind that sit on the city's major road
 network (``DIPPC:grande_viabilita``, motorway to secondary), then spread the
@@ -45,6 +47,7 @@ LOOPS_FILE = PROVIDERS_DIR / "simulated" / "seed_data" / "loop_stations.geojson"
 SITES_FILE = PROVIDERS_DIR / "estimated" / "seed_data" / "antenna_sites.geojson"
 
 SIGNALS_LAYER = "DIPMOB:Semafori"
+SENSORS_LAYER = "DIPMOB:SensoriTraffico"
 ROADS_LAYER = "DIPPC:grande_viabilita"
 MUNICIPI_LAYER = "DIPPC:210_RomaCapitale_Municipi"
 OPENCELLID_PMTILES = "https://data.source.coop/smartmaps/opencellid/cellid.pmtiles"
@@ -109,6 +112,60 @@ def _lines(geometry: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
 
 
 # --- loop stations --------------------------------------------------------------
+
+def _road_segments(roads: Mapping[str, Any]) -> list[tuple[str, str, tuple[float, float], tuple[float, float]]]:
+    segments: list[tuple[str, str, tuple[float, float], tuple[float, float]]] = []
+    for feature in roads.get("features", []):
+        props = feature.get("properties") or {}
+        road_class = ROAD_CLASS_BY_CODE.get(int(props.get("code") or 0))
+        if road_class is None:
+            continue
+        name = str(props.get("name") or props.get("topon_osm") or "")
+        for line in _lines(feature.get("geometry") or {}):
+            segments.extend((road_class, name, a, b) for a, b in zip(line, line[1:]))
+    return segments
+
+
+def real_sensor_stations(sensors: Mapping[str, Any], roads: Mapping[str, Any], snap_m: float,
+                         class_priority: Sequence[str] = ("motorway", "trunk", "primary", "secondary"),
+                         ) -> dict[str, Any]:
+    """Every traffic sensor of Roma Capitale (``DIPMOB:SensoriTraffico``) at its real position.
+
+    The city publishes where its sensors are, not their counts, so the counts stay simulated.
+    Road class and name come from the nearest major road within ``snap_m`` (None if none).
+    """
+    segments = _road_segments(roads)
+    stations: list[dict[str, Any]] = []
+    for feature in sensors.get("features", []):
+        props = feature.get("properties") or {}
+        geometry = feature.get("geometry") or {}
+        if geometry.get("type") != "Point":
+            continue
+        lon, lat = (float(v) for v in geometry["coordinates"][:2])
+        near = [(seg, _segment_distance_m(lon, lat, seg[2], seg[3])) for seg in segments
+                if abs(seg[2][0] - lon) < 0.01 and abs(seg[2][1] - lat) < 0.01]
+        near = [(seg, d) for seg, d in near if d <= snap_m]
+        road_class: str | None = None
+        road_name = ""
+        if near:
+            road_class = min((seg[0] for seg, _ in near), key=class_priority.index)
+            road_name = min((item for item in near if item[0][0] == road_class), key=lambda item: item[1])[0][1]
+        code = "/".join(str(props[k]).strip() for k in ("APPARATO", "SENSORE") if props.get(k))
+        stations.append({"lon": lon, "lat": lat, "road_class": road_class, "road_name": road_name,
+                         "sensor_code": code, "pedestrian_call": bool(props.get("PEDONALE"))})
+    stations.sort(key=lambda c: (c["lon"], c["lat"]))
+    return {
+        "type": "FeatureCollection",
+        "basis": ("The real positions of Roma Capitale's traffic sensors (DIPMOB:SensoriTraffico). "
+                  "Their counts are not published, so the readings are simulated."),
+        "features": [
+            {"type": "Feature",
+             "geometry": {"type": "Point", "coordinates": [round(c["lon"], 6), round(c["lat"], 6)]},
+             "properties": {k: v for k, v in c.items() if k not in ("lon", "lat")}}
+            for c in stations
+        ],
+    }
+
 
 def select_loop_stations(signals: Mapping[str, Any], roads: Mapping[str, Any], n_stations: int,
                          snap_m: float, spacing_m: float, seed: int,
@@ -262,10 +319,9 @@ def main(argv: Sequence[str]) -> int:
     settings = Settings.load()
     if "loops" in what:
         config = settings.section("simulators", "loops")
-        _write(LOOPS_FILE, select_loop_stations(
-            fetch_layer(SIGNALS_LAYER, timeout_s=180), fetch_layer(ROADS_LAYER, timeout_s=180),
-            n_stations=integer(config, "n_stations", 93), snap_m=number(config, "snap_to_road_m", 40.0),
-            spacing_m=number(config, "min_spacing_m", 600.0), seed=integer(config, "seed", 42)))
+        _write(LOOPS_FILE, real_sensor_stations(
+            fetch_layer(SENSORS_LAYER, timeout_s=180), fetch_layer(ROADS_LAYER, timeout_s=180),
+            snap_m=number(config, "snap_to_road_m", 60.0)))
     if "sites" in what:
         config = settings.section("estimated", "register")
         polygons = polygons_of(fetch_layer(MUNICIPI_LAYER, timeout_s=180))
