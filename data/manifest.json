@@ -2813,7 +2813,7 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "sensitive_sites",
-      "fetched_at": "2026-11-14T04:16:05Z",
+      "fetched_at": "2026-11-14T04:30:20Z",
       "notes": "Official layers first, OSM fills gaps; each row says its source layer and provenance",
       "counts_by_category": {
         "critical_infrastructure": 987,
@@ -2828,6 +2828,7 @@
         "osm": 3817
       },
       "dropped_duplicates": 1870,
+      "dropped_identical": 62,
       "dropped_no_geometry": 0,
       "missing_inputs": [],
       "status": "ok",
@@ -2836,16 +2837,15 @@
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
-          "path": "data/processed/sensitive_sites.parquet",
+          "path": "/home/user/Urbs-Gemina/data/processed/sensitive_sites.parquet",
           "sha256": "e316982e2eca2da0a13a1815eaf509f2ac773427636c5c1da544984a33fca19f"
         },
         "geojson": {
-          "path": "data/processed/sensitive_sites.geojson",
+          "path": "/home/user/Urbs-Gemina/data/processed/sensitive_sites.geojson",
           "sha256": "8c5a068c59c444c63215bd010bb62f84f8dd374429fb04a1f3100f2233003fdd"
         }
       },
-      "warnings": [],
-      "dropped_identical": 62
+      "warnings": []
     },
     "health_accredited_lazio": {
       "source": "lazio_open_data",
@@ -3163,7 +3163,7 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "health_system",
-      "fetched_at": "2026-11-14T04:14:40Z",
+      "fetched_at": "2026-11-14T04:28:51Z",
       "notes": "Family health centres (consultori familiari) in Rome, 2022 register",
       "request_url": "https://www.dati.salute.gov.it/sites/default/files/2024-05/Consultori_familiari.csv",
       "raw_sha256": "3d65734341c0fb89e2e1e1993cf03df166a53d807b57351cb2c2c5a43919553e",
@@ -3176,34 +3176,34 @@
         "street": 34,
         "not_found": 9
       },
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
       "status": "ok",
       "features": 55,
       "dropped_fields": [],
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
-          "path": "data/processed/consultori_roma.parquet",
+          "path": "/home/user/Urbs-Gemina/data/processed/consultori_roma.parquet",
           "sha256": "e1134f4674d066d75fea8c52200e7a3acf0eb78b6e1fe4723c39e1d0dd31cf47"
         },
         "geojson": {
-          "path": "data/processed/consultori_roma.geojson",
+          "path": "/home/user/Urbs-Gemina/data/processed/consultori_roma.geojson",
           "sha256": "44a8efe2064628a6a149889b9a58990b49a05dbf8ee7eba98c44b626c1af01b3"
         }
       },
-      "warnings": [],
-      "cleaning": {
-        "dropped_no_geometry": 0,
-        "repaired_geometries": 0,
-        "dropped_outside_city": 0,
-        "dropped_empty_columns": []
-      }
+      "warnings": []
     },
     "pharmacies_roma": {
       "source": "salute_open_data",
       "data_kind": "real",
       "synthetic": false,
       "theme": "health_system",
-      "fetched_at": "2026-11-14T04:15:19Z",
+      "fetched_at": "2026-11-14T04:29:36Z",
       "notes": "Open pharmacies in Rome from the national register (updated daily). The register's own coordinates are often wrong (e.g. Testaccio placed in Tiburtino), so the address is geocoded on OSM instead.",
       "request_url": "https://www.dati.salute.gov.it/sites/default/files/opendata/FRM_FARMA_5_20261113.csv",
       "raw_sha256": "32a38b043e25e9c228022ebfc764126dcdc21e2947c22a73c5cec36a32c51673",
@@ -3216,34 +3216,34 @@
         "street": 491,
         "not_found": 74
       },
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
       "status": "ok",
       "features": 756,
       "dropped_fields": [],
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
-          "path": "data/processed/pharmacies_roma.parquet",
+          "path": "/home/user/Urbs-Gemina/data/processed/pharmacies_roma.parquet",
           "sha256": "6c2c10a8ee9848207d5730315856756fcf3d31f2b26d20dffcd781c784f6bf21"
         },
         "geojson": {
-          "path": "data/processed/pharmacies_roma.geojson",
+          "path": "/home/user/Urbs-Gemina/data/processed/pharmacies_roma.geojson",
           "sha256": "9ef04e8af9542010627272b3f270a1c9dca2aaf24337ef9c5e466a582fb43235"
         }
       },
-      "warnings": [],
-      "cleaning": {
-        "dropped_no_geometry": 0,
-        "repaired_geometries": 0,
-        "dropped_outside_city": 0,
-        "dropped_empty_columns": []
-      }
+      "warnings": []
     },
     "asl_roma": {
       "source": "salute_asl",
       "data_kind": "real",
       "synthetic": false,
       "theme": "health_system",
-      "fetched_at": "2026-11-14T04:16:01Z",
+      "fetched_at": "2026-11-14T04:30:16Z",
       "notes": "ASL Roma 1, 2, 3 as unions of their municipi, with 2024 residents, 2022 ASL activity figures and facility counts. The Ministry's 2022 table gives ROMA 1 and ROMA 2 identical GP and paediatrician figures (918 / 171): likely a copy error in the source (C=40 for those two values).",
       "request_url": [
         "https://www.dati.salute.gov.it/sites/default/files/2026-05/ASL_comuni_popolazione_2024.csv",
@@ -3254,27 +3254,27 @@
         "indicators": "da832410b394b466e259bb0051a7a9b7cf5ec98343b0f51adc74aa1079b1e26a"
       },
       "missing_inputs": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
       "status": "ok",
       "features": 3,
       "dropped_fields": [],
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
-          "path": "data/processed/asl_roma.parquet",
+          "path": "/home/user/Urbs-Gemina/data/processed/asl_roma.parquet",
           "sha256": "3f3306e15f0562e1c2226bfa1a049c82ac1ae71789ff029fd224298f9648253b"
         },
         "geojson": {
-          "path": "data/processed/asl_roma.geojson",
+          "path": "/home/user/Urbs-Gemina/data/processed/asl_roma.geojson",
           "sha256": "e7e7b2453cba8b04b61a14354fdea8684d9635f3427ee0d7f8ae5124392dd2fb"
         }
       },
-      "warnings": [],
-      "cleaning": {
-        "dropped_no_geometry": 0,
-        "repaired_geometries": 0,
-        "dropped_outside_city": 0,
-        "dropped_empty_columns": []
-      }
+      "warnings": []
     },
     "landslide_hazard_pai": {
       "source": "ispra_landslide",
@@ -3923,11 +3923,11 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "civil_protection",
-      "fetched_at": "2026-11-14T04:23:01Z",
+      "fetched_at": "2026-11-14T04:28:05Z",
       "type_name": "DIPPC:303_Aree_inFrana",
       "notes": "Landslide areas with risk class R (PAI)",
       "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A303_Aree_inFrana&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
-      "raw_sha256": "0b3876e3574637c8b2c6d8b656fa74903cc6736e3c0f5ee7d8dde8acb6577689",
+      "raw_sha256": "9d3db91c04206b73ae176d35ce7ed0b1fba2f0cd47a6fd9bb519d08667b59c90",
       "cleaning": {
         "dropped_no_geometry": 0,
         "repaired_geometries": 4,
@@ -3940,11 +3940,11 @@
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
-          "path": "data/processed/landslide_areas.parquet",
+          "path": "/home/user/Urbs-Gemina/data/processed/landslide_areas.parquet",
           "sha256": "48df6f4add6078080a020c55f5a32dfceb7c3606ec32553edc50ae7f9c5bf608"
         },
         "geojson": {
-          "path": "data/processed/landslide_areas.geojson",
+          "path": "/home/user/Urbs-Gemina/data/processed/landslide_areas.geojson",
           "sha256": "d48c91d57e40f232941973312a11aa88c47d709f9f834082e86fdee5c0cf6029"
         }
       },
@@ -3955,11 +3955,11 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "civil_protection",
-      "fetched_at": "2026-11-14T04:23:02Z",
+      "fetched_at": "2026-11-14T04:28:07Z",
       "type_name": "DIPPC:305_AreeInterfaccia_R3-R4_xMunicipio",
       "notes": "Urban-vegetation interface areas at fire risk R3-R4, per municipio",
       "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=DIPPC%3A305_AreeInterfaccia_R3-R4_xMunicipio&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
-      "raw_sha256": "e8793d2b89f6829f24cb471f84b394aaf7541ae5205f679694852e3c011939f7",
+      "raw_sha256": "ef3f2f90cbd086935d4466b6a6fc4a0092875fbef80633eace16bfd0aab83794",
       "cleaning": {
         "dropped_no_geometry": 0,
         "repaired_geometries": 24,
@@ -3972,12 +3972,12 @@
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
-          "path": "data/processed/wildfire_interface.parquet",
-          "sha256": "70c0a16cdaeae1f6db9bb4dd066bebf28e2d53ffa80a0164cd26fdd0abfb3ad1"
+          "path": "/home/user/Urbs-Gemina/data/processed/wildfire_interface.parquet",
+          "sha256": "748009ee698982ae32d95804264657200aea838e9e482d385b594aa180a70d55"
         },
         "geojson": {
-          "path": "data/processed/wildfire_interface.geojson",
-          "sha256": "a69b2c75867f1711a60c21a9fc7d36f8a5c8fb1aee01028e263e97ef010df157"
+          "path": "/home/user/Urbs-Gemina/data/processed/wildfire_interface.geojson",
+          "sha256": "40c5a0618ffd1087a62fbc3418d321518f26068cc16a8cd88ecd1e690dd1035f"
         }
       },
       "warnings": []
