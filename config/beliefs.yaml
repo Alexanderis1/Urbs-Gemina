@@ -255,6 +255,12 @@ layers:
       - "temperature is the weather forecast (Open-Meteo), not measured in the street; urban heat islands are not resolved"
     basis: "forecast lattice; min_sd 1 degC because a 2 m forecast is rarely better than that"
 
+microclimate:
+  tree_c_per_pct: -0.04     # 10 points more tree cover than the area mean: about 0.4 degC cooler
+  imperv_c_per_pct: 0.03    # 10 points more sealed ground: about 0.3 degC warmer
+  extra_sd_c: 0.7           # added uncertainty because the coefficients are assumptions
+  basis: "assumption (C=45): urban studies report roughly 1-2 degC between low- and high-canopy blocks and a 1-3 degC surface-to-air heat-island effect; coefficients chosen inside those ranges"
+
 heat:
   threshold_c: 32
   basis: "assumption (C=55): around 32 degC the Italian heat-health bulletins start flagging risk for the elderly; real bulletins use perceived temperature"
