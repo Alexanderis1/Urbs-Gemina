@@ -108,3 +108,14 @@ citizen:
     max_places: {value: 5, basis: "a short list a person can choose from on a phone"}
     park_near_m: {value: 150, basis: "a park within about one block of the spot's centre counts as shade nearby"}
     fountain_near_m: {value: 150, basis: "a drinking fountain within about one block"}
+  transport:
+    stale_minutes: {value: 30, basis: "the alerts feed is republished every few minutes; older than half an hour means the source has stopped"}
+    # First matching category wins (lowercase words in the notice title or text). Assumption (C=70), checked
+    # by hand on the 154 notices of 13 Nov 2026.
+    categories:
+      sciopero: [sciopero, agitazione sindacale]
+      evento: [manifestazione, corteo, maratona, evento, concerto, partita, cerimonia, giubileo]
+      lavori: [lavori, cantiere, cantieri, realizzazione, tranvia, perdita idrica, manutenzione]
+      chiusura: [chiusura, chiusa, chiuso, interdizione, transito vietato]
+      deviazione: [deviazione, devia, modifica, percorso, viabilita, fermata spostata, fermate]
+    labels_it: {sciopero: "Sciopero", evento: "Evento", lavori: "Lavori", chiusura: "Strada chiusa", deviazione: "Deviazione linea", avviso: "Avviso"}

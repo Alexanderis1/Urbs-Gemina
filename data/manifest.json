@@ -73,6 +73,24 @@
       "redistribution": true,
       "status": "verified"
     },
+    "roma_gtfs_alerts": {
+      "kind": "real",
+      "what": "Passenger notices: line deviations, street closures, works, strikes (GTFS-RT service alerts)",
+      "endpoint": "https://romamobilita.it/sites/default/files/rome_rtgtfs_service_alerts_feed.pb",
+      "access": "no key; follow redirects",
+      "licence": "CC BY-SA",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "street_names_osm": {
+      "kind": "real",
+      "what": "One point per named street of Rome (scripts/build_street_index.py), to place notices offline",
+      "endpoint": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "access": "no key",
+      "licence": "ODbL",
+      "redistribution": true,
+      "status": "verified"
+    },
     "eea_hourly": {
       "kind": "real",
       "what": "Hourly air quality, 13 Rome NO2 points",

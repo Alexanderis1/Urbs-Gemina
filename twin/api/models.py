@@ -317,3 +317,9 @@ class PlacesOpenIn(Strict):
     point: Point | None = None
     radius_m: float | None = Field(default=None, gt=0, le=30_000, description="only with point; default from config")
     sport: str | None = Field(default=None, max_length=60, description="Italian or English name, e.g. 'nuoto', 'calcio', 'tennis'")
+
+
+class TransportNowIn(Strict):
+    """Citizen: live notices on Rome's streets and lines (works, closures, line deviations, strikes, events) placed on the street they name, with the feed's freshness. Congestion: city_heatmap on road_speed."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
