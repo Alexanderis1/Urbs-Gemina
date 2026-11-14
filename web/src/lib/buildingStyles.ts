@@ -2,6 +2,7 @@
 // height_sd_m: height uncertainty (m). vertical_mm_yr: InSAR ground motion (negative = sinking), estimated.
 // roof_material: centre district only, estimated.
 import type { ExpressionSpecification } from "maplibre-gl";
+import { MAP_PALETTE, type Theme } from "./theme";
 
 export type BuildingView = "plain" | "height_sd" | "insar" | "roof";
 
@@ -21,10 +22,12 @@ export const ROOF_COLORS: Record<string, string> = {
   unknown: "#d6d3d1",
 };
 
-export function buildingColor(view: BuildingView): ExpressionSpecification | string {
+export function buildingColor(view: BuildingView, theme: Theme = "light"): ExpressionSpecification | string {
+  const p = MAP_PALETTE[theme];
   switch (view) {
     case "plain":
-      return ["match", ["get", "data_kind"], "real", "#cfc6b8", "#e3ddd3"];
+      // Measured heights a touch stronger than estimated ones.
+      return ["match", ["get", "data_kind"], "real", p.building, p.buildingEstimated];
     case "height_sd":
       // 0 m (sure) -> pale, 6 m or more -> deep purple. No value = grey.
       return [

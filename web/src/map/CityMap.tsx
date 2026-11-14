@@ -6,9 +6,14 @@ import type { Layer } from "@deck.gl/core";
 import { Protocol } from "pmtiles";
 import { onMapAction } from "@/lib/mapbus";
 import { buildingColor, type BuildingView } from "@/lib/buildingStyles";
+import { MAP_PALETTE, type Theme } from "@/lib/theme";
+import { useTheme } from "@/lib/useTheme";
 
-const STYLE_URL =
-  (import.meta.env.VITE_BASEMAP_STYLE as string | undefined) || "https://tiles.openfreemap.org/styles/positron";
+// Base maps: Positron for the light theme, Dark for the operations-room theme (both OpenFreeMap, no key).
+const STYLE_URLS: Record<Theme, string> = {
+  light: (import.meta.env.VITE_BASEMAP_STYLE as string | undefined) || "https://tiles.openfreemap.org/styles/positron",
+  dark: (import.meta.env.VITE_BASEMAP_STYLE_DARK as string | undefined) || "https://tiles.openfreemap.org/styles/dark",
+};
 // Credit line for the tiles; change it together with the URL if the tile variant changes (e.g. OSM-only heights).
 const G0_ATTRIBUTION =
   (import.meta.env.VITE_BUILDINGS_ATTRIBUTION as string | undefined) ||
@@ -30,28 +35,29 @@ export const ROME = { lat: 41.8986, lon: 12.4769 };
 let protocolAdded = false;
 
 /** Plain background used when the base-map server cannot be reached (offline demo, blocked network). */
-const FALLBACK_STYLE: StyleSpecification = {
+const fallbackStyle = (theme: Theme): StyleSpecification => ({
   version: 8,
   sources: {},
-  layers: [{ id: "background", type: "background", paint: { "background-color": "#efe9df" } }],
-};
+  layers: [{ id: "background", type: "background", paint: { "background-color": MAP_PALETTE[theme].background } }],
+});
 
-async function loadStyle(): Promise<string | StyleSpecification> {
+async function loadStyle(theme: Theme): Promise<StyleSpecification> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 4000);
-    const res = await fetch(STYLE_URL, { signal: ctrl.signal });
+    const res = await fetch(STYLE_URLS[theme], { signal: ctrl.signal });
     clearTimeout(t);
     if (!res.ok) throw new Error(String(res.status));
     return (await res.json()) as StyleSpecification;
   } catch {
     console.warn("[urbs] base map unreachable, using plain background");
-    return FALLBACK_STYLE;
+    return fallbackStyle(theme);
   }
 }
 
 /** G0 block model. Uses the WS2 PMTiles when configured, otherwise the base map's OSM buildings. */
-function addBuildings(map: MlMap) {
+function addBuildings(map: MlMap, theme: Theme) {
+  const palette = MAP_PALETTE[theme];
   if (map.getLayer("g0-extrusion") || map.getLayer("osm-buildings-3d")) return;
   const style = map.getStyle() as StyleSpecification;
   const firstSymbol = style.layers.find((l) => l.type === "symbol")?.id;
@@ -70,7 +76,7 @@ function addBuildings(map: MlMap) {
         "source-layer": "buildings",
         paint: {
           // Estimated heights (no measured source) are drawn a little lighter; other views via buildingView.
-          "fill-extrusion-color": buildingColor("plain"),
+          "fill-extrusion-color": buildingColor("plain", theme),
           "fill-extrusion-height": ["coalesce", ["get", "height_m"], 9.6],
           "fill-extrusion-opacity": 0.9,
         },
@@ -88,7 +94,7 @@ function addBuildings(map: MlMap) {
           minzoom: 14,
           layout: { visibility: "none" },
           paint: {
-            "fill-extrusion-color": "#65a30d",
+            "fill-extrusion-color": palette.tree,
             "fill-extrusion-base": ["coalesce", ["get", "base_m"], 0],
             "fill-extrusion-height": ["coalesce", ["get", "height_m"], 8],
             "fill-extrusion-opacity": 0.75,
@@ -109,7 +115,7 @@ function addBuildings(map: MlMap) {
       "source-layer": "building",
       minzoom: 13,
       paint: {
-        "fill-extrusion-color": "#d6cfc4",
+        "fill-extrusion-color": palette.building,
         "fill-extrusion-height": ["coalesce", ["get", "render_height"], 9.6],
         "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
         "fill-extrusion-opacity": 0.85,
@@ -147,6 +153,9 @@ export function CityMap({
   clickRef.current = onClick;
   const zoomRef = useRef(onZoom);
   zoomRef.current = onZoom;
+  const { theme } = useTheme();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
 
   useEffect(() => {
     if (!el.current) return;
@@ -156,7 +165,7 @@ export function CityMap({
     }
     const map = new maplibregl.Map({
       container: el.current,
-      style: FALLBACK_STYLE,
+      style: fallbackStyle(themeRef.current),
       center: [ROME.lon, ROME.lat],
       zoom: initialZoom,
       pitch,
@@ -168,17 +177,6 @@ export function CityMap({
     map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
     const overlay = new MapboxOverlay({ interleaved: true, layers: [] });
     map.addControl(overlay);
-    let cancelled = false;
-    void loadStyle().then((style) => {
-      if (cancelled) return;
-      if (style === FALLBACK_STYLE) {
-        if (map.isStyleLoaded()) addBuildings(map);
-        else map.once("load", () => addBuildings(map));
-        return;
-      }
-      map.once("style.load", () => addBuildings(map));
-      map.setStyle(style);
-    });
     map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
     map.on("zoomend", () => zoomRef.current?.(map.getZoom()));
     mapRef.current = map;
@@ -189,13 +187,27 @@ export function CityMap({
       if (a.tool === "show_radius") map.flyTo({ center: [a.args.lon, a.args.lat], zoom: 15.5, pitch: 50 });
     });
     return () => {
-      cancelled = true;
       off();
       map.remove();
       mapRef.current = null;
       overlayRef.current = null;
     };
   }, [initialZoom, pitch]);
+
+  // Base map for the current theme. Runs on mount and again when the theme is switched (the camera stays put).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    let cancelled = false;
+    void loadStyle(theme).then((style) => {
+      if (cancelled || mapRef.current !== map) return;
+      map.once("style.load", () => addBuildings(map, theme));
+      map.setStyle(style);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [theme, initialZoom, pitch]);
 
   useEffect(() => {
     overlayRef.current?.setProps({ layers });
@@ -205,7 +217,7 @@ export function CityMap({
     const map = mapRef.current;
     if (!map) return;
     const apply = () => {
-      if (map.getLayer("g0-extrusion")) map.setPaintProperty("g0-extrusion", "fill-extrusion-color", buildingColor(buildingView));
+      if (map.getLayer("g0-extrusion")) map.setPaintProperty("g0-extrusion", "fill-extrusion-color", buildingColor(buildingView, theme));
       if (map.getLayer("trees-3d")) map.setLayoutProperty("trees-3d", "visibility", showTrees ? "visible" : "none");
     };
     apply();
@@ -213,7 +225,7 @@ export function CityMap({
     return () => {
       map.off("styledata", apply);
     };
-  }, [buildingView, showTrees]);
+  }, [buildingView, showTrees, theme]);
 
   useEffect(() => {
     if (focus) mapRef.current?.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, pitch: 55 });

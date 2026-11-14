@@ -1,26 +1,73 @@
+import { Sparkles } from "lucide-react";
 import { isDirectMode, isSampleMode } from "@/api/client";
+import { shortId } from "@/lib/format";
+import { useSession } from "@/lib/runlog";
 
+/** Always on screen: who made this and that AI is involved. */
 export function AiDisclosure() {
   return (
-    <div className="bg-stone-900 px-4 py-1 text-center text-xs text-stone-100">
-      Answers and reports are prepared with AI assistance from open and simulated data. They support decisions by
-      Roma Capitale officers; they do not make them.
+    <div className="flex items-center gap-3 bg-chrome-deep px-4 py-1 text-2xs text-chrome-muted">
+      <span className="hidden shrink-0 font-semibold uppercase tracking-[0.08em] md:inline">Open-source prototype · not an official service</span>
+      <span className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-right">
+        <Sparkles className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <span className="truncate" title="Answers and reports are prepared with AI assistance from open and simulated data. They support decisions by Roma Capitale officers; they do not make them.">
+          Answers and reports are prepared with AI assistance from open and simulated data. They support decisions by Roma
+          Capitale officers; they do not make them.
+        </span>
+      </span>
     </div>
   );
 }
 
-export function SampleModeBanner() {
+/** Where the numbers on screen come from right now. */
+export function connectionState(): { label: string; detail: string; tone: "live" | "sample" } {
+  if (isSampleMode)
+    return {
+      label: "Sample data",
+      detail: "The tool API is not connected, so every value on screen is a placeholder. Labels show the kind each layer will have.",
+      tone: "sample",
+    };
   if (isDirectMode)
-    return (
-      <div className="border-b border-stone-200 bg-stone-100 px-4 py-1 text-center text-xs text-stone-600">
-        Live data from the public tool API at the citizen tier (no login). Office features need Lovable Cloud sign-in.
-      </div>
-    );
+    return { label: "Live service · citizen tier", detail: "Live data from the public tool API, no login. Office features need sign-in.", tone: "live" };
+  return { label: "Live service", detail: "Live data through the secure office gateway.", tone: "live" };
+}
+
+/** Full-width warning, only when the app is showing placeholder data. */
+export function SampleModeBanner() {
   if (!isSampleMode) return null;
   return (
-    <div className="border-b border-amber-300 bg-amber-50 px-4 py-1 text-center text-xs font-medium text-amber-800">
-      SAMPLE DATA · The tool API is not connected, so every value on screen is a placeholder. Labels show the kind each
-      layer will have: real, estimated, or simulated (traffic loops only).
+    <div role="status" className="border-b border-estimated/40 bg-estimated/15 px-4 py-1 text-center text-xs font-semibold text-estimated">
+      SAMPLE DATA · {connectionState().detail}
     </div>
+  );
+}
+
+/** Bottom strip: connection, tier, number of tool runs and the latest run id (the audit trail at a glance). */
+export function StatusBar() {
+  const { tier, runs } = useSession();
+  const c = connectionState();
+  const last = runs[0];
+  return (
+    <footer className="flex items-center gap-4 border-t border-line bg-surface px-4 py-1 text-2xs text-muted">
+      <span className="flex items-center gap-1.5" title={c.detail}>
+        <span className="relative flex h-2 w-2">
+          {c.tone === "live" && <span className="absolute inset-0 animate-pulse-ring rounded-full bg-real" />}
+          <span className={`relative h-2 w-2 rounded-full ${c.tone === "live" ? "bg-real" : "bg-estimated"}`} />
+        </span>
+        <span className="font-semibold text-ink">{c.label}</span>
+      </span>
+      <span>
+        Tier <span className="font-semibold text-ink">{tier === "office" ? "Office" : "Citizen"}</span>
+      </span>
+      <span>
+        Tool runs this session <span className="num font-medium text-ink">{runs.length}</span>
+      </span>
+      {last && (
+        <span className="hidden min-w-0 truncate sm:inline" title={last.env.run_id}>
+          Last run <code className="text-ink">{last.env.tool}</code> · <code>{shortId(last.env.run_id)}</code>
+        </span>
+      )}
+      <span className="ml-auto hidden lg:inline">Every figure carries a run id and a real / estimated / simulated label.</span>
+    </footer>
   );
 }

@@ -1,18 +1,47 @@
 import type { Estimate } from "@/api/types";
 import { calibrationLabel, formatRange } from "@/lib/format";
 
-/** P5–P95 band with the P50 marker. `max` sets the scale so two bars can be compared. */
-export function RangeBar({ e, unit, max, label }: { e: Estimate; unit: string; max: number; label?: string }) {
-  const pct = (v: number) => `${Math.min(100, (v / max) * 100)}%`;
+/**
+ * P5–P95 band with the P50 marker. `max` sets the scale so two bars can be compared.
+ * `tone="whatif"` draws the variant of a what-if; `marker` adds a labelled reference line (e.g. a legal value).
+ */
+export function RangeBar({
+  e,
+  unit,
+  max,
+  label,
+  tone = "primary",
+  marker,
+  note = true,
+}: {
+  e: Pick<Estimate, "p5" | "p50" | "p95"> & { calibration?: Estimate["calibration"] };
+  unit: string;
+  max: number;
+  label?: string;
+  tone?: "primary" | "whatif";
+  marker?: { value: number; label: string };
+  note?: boolean;
+}) {
+  const pct = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
+  const band = tone === "whatif" ? "bg-whatif/30" : "bg-primary/30";
+  const mid = tone === "whatif" ? "bg-whatif" : "bg-link";
   return (
     <div className="space-y-1">
       {label && <div className="label">{label}</div>}
-      <div className="relative h-3 rounded bg-stone-100">
-        <div className="absolute h-3 rounded bg-roma/30" style={{ left: pct(e.p5), width: `calc(${pct(e.p95)} - ${pct(e.p5)})` }} />
-        <div className="absolute h-3 w-0.5 bg-roma" style={{ left: pct(e.p50) }} />
+      <div className="relative h-3 rounded-sm bg-sunken ring-1 ring-inset ring-line">
+        <div className={`absolute h-3 rounded-sm transition-all duration-500 ease-out ${band}`} style={{ left: pct(e.p5), width: `calc(${pct(e.p95)} - ${pct(e.p5)})` }} />
+        <div className={`absolute -top-0.5 h-4 w-0.5 transition-all duration-500 ease-out ${mid}`} style={{ left: pct(e.p50) }} />
+        {marker && marker.value <= max && (
+          <div className="absolute -top-1 h-5 w-px border-l border-dashed border-danger" style={{ left: pct(marker.value) }} title={marker.label} />
+        )}
       </div>
-      <div className="text-sm font-medium">{formatRange(e, unit)}</div>
-      <div className="text-xs text-stone-500">Estimate, not a measurement. {calibrationLabel(e.calibration)}.</div>
+      <div className="num text-sm font-medium">{formatRange(e, unit)}</div>
+      {note && (
+        <div className="hint">
+          Estimate, not a measurement.{e.calibration ? ` ${calibrationLabel(e.calibration)}.` : ""}
+          {marker && marker.value <= max ? ` Dashed line: ${marker.label}.` : ""}
+        </div>
+      )}
     </div>
   );
 }
