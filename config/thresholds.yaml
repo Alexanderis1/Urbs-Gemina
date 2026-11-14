@@ -81,21 +81,38 @@ heat:
     confidence: 90
 
 air_quality:
-  # Legal air-quality values in force in Italy (ug/m3). Used by the air belief layers' exceedance
-  # probability (p_exceed) and by the agents; the layers themselves never hard-code them.
-  source: "D.Lgs. 155/2010 (transposes Directive 2008/50/EC): Allegato XI limit values, Allegato XII ozone information and alert thresholds, Allegato VII ozone target value"
-  confidence: 90
-  note: "Directive (EU) 2024/2881 lowers several limits from 2030 (e.g. NO2 and PM10 annual 20, PM2.5 annual 10); not yet the values in force."
-  no2:
-    hourly_limit: {value: 200, meaning: "hourly mean, not to be exceeded more than 18 times a calendar year"}
-    annual_limit: {value: 40, meaning: "calendar-year mean"}
-    alert_3h: {value: 400, meaning: "alert threshold: hourly mean above it for 3 consecutive hours"}
-  pm10:
-    daily_limit: {value: 50, meaning: "daily mean, not to be exceeded more than 35 times a calendar year"}
-    annual_limit: {value: 40, meaning: "calendar-year mean"}
-  pm25:
-    annual_limit: {value: 25, meaning: "calendar-year mean"}
-  o3:
-    information_1h: {value: 180, meaning: "information threshold: hourly mean; the public must be informed"}
-    alert_1h: {value: 240, meaning: "alert threshold: hourly mean"}
-    target_8h: {value: 120, meaning: "target value: highest daily 8-hour running mean, not more than 25 days a year averaged over 3 years"}
+  # Legal limit values for the protection of human health, D.Lgs. 155/2010 Annex XI (Directive 2008/50/EC).
+  # Each applies to an averaging period; the twin's belief layers are near-instantaneous estimates.
+  no2_hourly_limit_ug_m3:
+    value: 200
+    averaging: "1-hour mean, not to be exceeded more than 18 times a calendar year"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  no2_annual_limit_ug_m3:
+    value: 40
+    averaging: "calendar-year mean"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  pm10_daily_limit_ug_m3:
+    value: 50
+    averaging: "24-hour mean, not to be exceeded more than 35 times a calendar year"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  pm10_annual_limit_ug_m3:
+    value: 40
+    averaging: "calendar-year mean"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  pm25_annual_limit_ug_m3:
+    value: 25
+    averaging: "calendar-year mean"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  o3_information_1h_ug_m3:
+    value: 180
+    averaging: "1-hour mean; information threshold: the public must be informed"
+    source: "D.Lgs. 155/2010, Allegato XII"
+  o3_alert_1h_ug_m3:
+    value: 240
+    averaging: "1-hour mean; alert threshold"
+    source: "D.Lgs. 155/2010, Allegato XII"
+  o3_target_8h_ug_m3:
+    value: 120
+    averaging: "highest daily 8-hour running mean, not more than 25 days a year averaged over 3 years (target value)"
+    source: "D.Lgs. 155/2010, Allegato VII"
+  # Directive (EU) 2024/2881 lowers several limits from 2030 (e.g. NO2 and PM10 annual 20, PM2.5 annual 10); not yet in force.

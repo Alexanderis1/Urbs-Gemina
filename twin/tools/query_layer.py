@@ -26,7 +26,7 @@ TOOL = "query_layer"
 Role = str
 
 
-def _parse_time(time: str | None) -> datetime:
+def parse_time(time: str | None) -> datetime:
     if not time:
         return datetime.now(timezone.utc).replace(microsecond=0)
     try:
@@ -36,7 +36,7 @@ def _parse_time(time: str | None) -> datetime:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
-class _SafeFeed:
+class SafeFeed:
     """A provider whose failures become a warning and no readings, so one feed down does not fail the layer."""
 
     def __init__(self, name: str, provider: Any, warnings: list[str]) -> None:
@@ -75,7 +75,7 @@ def _belief_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, li
     payload: dict[str, Any]
     if payload_fn is not None:
         # WS5 picks only the feeds named in config/beliefs.yaml (faster, and applies source conversions).
-        safe = {name: _SafeFeed(name, provider, feed_warnings) for name, provider in runtime.providers.items()}
+        safe = {name: SafeFeed(name, provider, feed_warnings) for name, provider in runtime.providers.items()}
         payload = dict(payload_fn(layer, cells, start, at, safe))
     else:
         readings = []
@@ -116,7 +116,7 @@ def query_layer(runtime: ToolRuntime, layer: str, area: Any = "city", time: str 
     cfg = runtime.settings.tools.get("query_layer", {})
     max_limit = int(cfg.get("max_limit", 5000))
     limit = min(int(limit or cfg.get("default_limit", 500)), max_limit)
-    at = _parse_time(time)
+    at = parse_time(time)
     resolved = resolve_area(area, runtime.store, runtime.settings)
     inputs = {"layer": layer, "area": area, "time": at.isoformat(), "limit": limit, "role": role}
     office_only = set(runtime.settings.tools.get("api", {}).get("office_only_detail_layers", []))

@@ -169,3 +169,44 @@ def test_wifi_sessions_layer_reads_hotspot_counts_and_states_its_caveats() -> No
     assert out["data_kinds"] == {"wifi_sessions": "estimated"}
     assert any("lower bound" in w for w in out["warnings"])
     assert any("one day behind" in w for w in out["warnings"])
+
+
+def test_starting_map_uses_the_forecast_hour_closest_to_the_layer_time() -> None:
+    spec = load_specs()["air_no2"]
+    cells = cells_in_bbox(WINDOW, 9)
+    lattice = [reading("AirQualityForecast", "no2", v, 5.0, "cams_open_meteo", lon=12.48, lat=41.9, at=T0 + timedelta(hours=h))
+               for h, v in ((0, 20.0), (5, 90.0))]
+    layer = prior_layer(spec, cells, T0, prior_field=lattice)
+    # The map is bias-corrected (offset, scale, road term), so compare with the 20 ug/m3 hour alone.
+    only_now = prior_layer(spec, cells, T0, prior_field=lattice[:1])
+    assert layer.belief(cell_of(*HERE, 9)).mean == pytest.approx(only_now.belief(cell_of(*HERE, 9)).mean)
+
+
+def test_rain_starts_from_the_forecast_map() -> None:
+    spec = load_specs()["rain"]
+    assert spec.prior_field is not None
+    assert spec.prior_field.source == "rain_forecast" and spec.prior_field.method == "idw"
+    cells = cells_in_bbox(WINDOW, 9)
+    dry = [reading("WeatherForecast", "precipitation", 0.0, 0.1, "om_rain_forecast")]
+    layer = prior_layer(spec, cells, T0, prior_field=dry)
+    # A confident dry forecast must not block a radar cloudburst: error floor of 3 mm/h.
+    assert layer.belief(cell_of(*HERE, 9)).variance >= 9.0
+
+
+def test_wind_stretches_spreading_along_its_axis() -> None:
+    spec = load_specs()["air_no2"]
+    assert spec.wind is not None and spec.wind.source == "weather_forecast"
+    cells = cells_in_bbox((12.44, 41.87, 12.52, 41.93), 9)
+    station = FakeProvider("eea_hourly", [reading("AirQualityObserved", "no2", 80.0, 1.0, "eea_hourly")])
+    # Wind from the west (270 deg) at 6 m/s: plumes run east-west.
+    wind = FakeProvider("om_weather_forecast", [Observation(
+        "w", "WeatherForecast", 12.48, 41.9, T0, {"wind_speed_ms": 6.0, "wind_direction_deg": 270.0},
+        {"wind_speed_ms": 1.0, "wind_direction_deg": 20.0}, "om_weather_forecast", False)])
+    windy = build_layer("air_no2", cells, [station], T0, T0, wind_provider=wind)
+    calm = build_layer("air_no2", cells, [station], T0, T0)
+    east = cell_of(HERE[0] + 0.03, HERE[1], 9)   # about 2.5 km downwind
+    north = cell_of(HERE[0], HERE[1] + 0.0225, 9)  # about 2.5 km across the wind
+    prior = spec.prior.mean  # no starting map passed, so the generic prior
+    assert windy.belief(east).mean - prior > windy.belief(north).mean - prior
+    assert calm.belief(east).mean == pytest.approx(calm.belief(north).mean, abs=1.5)
+    assert windy.wind_axis_deg is not None

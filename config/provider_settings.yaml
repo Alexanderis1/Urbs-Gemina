@@ -9,13 +9,12 @@ simulators:
 
   loops:
     seed: 42
-    n_stations: {value: 93, basis: "mirrors the 93 real Roma Mobilita loop stations (design proposal section 8)"}
+    n_stations: {value: 93, basis: "the 93 real Roma Capitale traffic sensors (DIPMOB:SensoriTraffico)"}
     # Committed seed built by `python -m twin.providers.build_seeds loops`:
     # centrally controlled vehicle signals on major roads (Roma Capitale layers).
     # Placeholder positions inside the city bbox are used only if it is missing.
     stations_path: twin/providers/simulated/seed_data/loop_stations.geojson
-    snap_to_road_m: {value: 40, basis: "assumption: a signal this close to a major road controls it"}
-    min_spacing_m: {value: 600, basis: "assumption: spreads 93 stations over the network instead of clustering downtown"}
+    snap_to_road_m: {value: 60, basis: "assumption: a sensor this close to a major road measures it; otherwise class 'default'"}
     peak_flow_vph:   # per station, both directions
       motorway: {min: 3000, max: 6000}
       trunk: {min: 2000, max: 4000}
@@ -89,6 +88,11 @@ open:
     clock_skew_s: {value: 120, basis: "operator clocks can run ahead of ours by up to a minute or two"}
     delay_sigma_s: {value: 60.0, basis: "assumption, used only when the feed gives no 'uncertainty' (Roma's gives about 30 s)"}
     timeout_s: 30
+
+  roma_gtfs_schedule:
+    static_gtfs_url: https://romamobilita.it/wp-content/uploads/shared/rome_static_gtfs.zip
+    cache_hours: {value: 12, basis: "the timetable zip is republished about once a day"}
+    timeout_s: 180
 
   eea_hourly:
     api_url: https://eeadmz1-downloads-api-appservice.azurewebsites.net/ParquetFile/urls
@@ -192,6 +196,15 @@ open:
       tevere_ripetta: {lon: 12.4744, lat: 41.9050, river: Tevere}
       aniene_lunghezza: {lon: 12.6930, lat: 41.9200, river: Aniene}
     timeout_s: 60
+
+  ingv_earthquakes:
+    api_url: https://webservices.ingv.it/fdsnws/event/1/query
+    lookback_days: {value: 30, basis: "earthquakes near Rome are rare: a 'now' view shows the last month"}
+    search_buffer_km: {value: 60, basis: "assumption: events within about 60 km (Colli Albani, Sabina) can be felt in the city"}
+    min_magnitude: 0.0
+    magnitude_sigma: {value: 0.2, basis: "typical ML uncertainty for small Italian events (INGV)"}
+    depth_sigma_km: {value: 2.0, basis: "assumption: typical hypocentre depth uncertainty for well-located events"}
+    timeout_s: 30
 
   cams_open_meteo:
     api_url: https://air-quality-api.open-meteo.com/v1/air-quality

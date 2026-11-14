@@ -44,20 +44,21 @@ def test_loops_from_settings_carry_the_simulator_version() -> None:
     assert len(list(provider.fetch(ROME_BBOX, T0, T0))) == 93
 
 
-def test_committed_loop_seed_sits_on_major_roads_at_controlled_signals() -> None:
+def test_committed_loop_seed_sits_at_the_real_sensor_positions() -> None:
     seed = ROOT_DIR / "twin/providers/simulated/seed_data/loop_stations.geojson"
     data = json.loads(seed.read_text(encoding="utf-8"))
     features = data["features"]
     assert len(features) == 93
+    assert "SensoriTraffico" in data["basis"]
     for feature in features:
         props = feature["properties"]
-        assert props["road_class"] in {"motorway", "trunk", "primary", "secondary"}
-        assert props["control_system"] and props["road_name"]
+        assert props["road_class"] in {"motorway", "trunk", "primary", "secondary", None}
+        assert props["sensor_code"]
+    on_major_roads = [f for f in features if f["properties"]["road_class"]]
+    assert len(on_major_roads) >= 70
     points = [tuple(f["geometry"]["coordinates"]) for f in features]
-    closest = min(distance_m(*a, *b) for i, a in enumerate(points) for b in points[i + 1:])
-    assert closest >= 600.0
     provider = SimLoopsProvider.from_settings(SETTINGS)
-    assert "signalised junctions" in provider.describe().notes
+    assert "real positions" in provider.describe().notes
     assert {(obs.lon, obs.lat) for obs in provider.fetch(ROME_BBOX, T0, T0)} == set(points)
 
 
@@ -93,3 +94,23 @@ def test_point_in_polygon_respects_holes() -> None:
     assert in_polygons(1.0, 1.0, [square])
     assert not in_polygons(5.0, 5.0, [square])
     assert not in_polygons(11.0, 5.0, [square])
+
+
+def test_loops_sit_on_the_citys_real_traffic_sensor_positions() -> None:
+    from twin.providers.build_seeds import real_sensor_stations
+
+    road = {"type": "Feature", "properties": {"code": 5113, "name": "Via Nomentana"},
+            "geometry": {"type": "LineString", "coordinates": [[12.50, 41.91], [12.52, 41.91]]}}
+
+    def sensor(lon: float, lat: float, pedestrian: str | None = None) -> dict[str, object]:
+        return {"type": "Feature", "geometry": {"type": "Point", "coordinates": [lon, lat]},
+                "properties": {"APPARATO": "IS 01065", "SENSORE": "PW", "COD": "052", "PEDONALE": pedestrian}}
+
+    result = real_sensor_stations({"features": [sensor(12.505, 41.9101), sensor(12.60, 41.80, "Pedonale")]},
+                                  {"features": [road]}, snap_m=60.0)
+    props = [f["properties"] for f in result["features"]]
+    assert [f["geometry"]["coordinates"] for f in result["features"]] == [[12.505, 41.9101], [12.6, 41.8]]
+    assert props[0]["road_class"] == "primary" and props[0]["road_name"] == "Via Nomentana"
+    assert props[1]["road_class"] is None and props[1]["pedestrian_call"] is True
+    assert props[0]["sensor_code"] == "IS 01065/PW"
+    assert "real" in result["basis"]

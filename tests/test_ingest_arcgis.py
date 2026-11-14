@@ -81,3 +81,17 @@ def test_imperviousness_is_written_as_a_clipped_cog(tmp_path: Path) -> None:
         assert set(np.unique(values)) <= {40, 255}
         assert raster.overviews(1)  # cloud optimised: has overviews
     assert entry["value_range"] == [0, 100] and entry["units"] == "percent sealed"
+
+
+def test_landslide_classes_are_renamed_to_hazard(tmp_path: Path) -> None:
+    def fetch(request: HttpRequest) -> bytes:
+        offset = urllib.parse.parse_qs(urllib.parse.urlparse(request.url).query)["resultOffset"][0]
+        features = [] if offset != "0" else [
+            {"type": "Feature", "id": 1, "geometry": square(12.4, 41.8), "properties": {"objectid": 1, "per_fr_ita": "P3"}}]
+        return json.dumps({"type": "FeatureCollection", "features": features}).encode()
+
+    entry = ingest_layer(CATALOG.layers["landslide_hazard_pai"], CATALOG, fetch, tmp_path, NOW)
+    assert entry["status"] == "ok", entry.get("error")
+    frame = gpd.read_parquet(tmp_path / "landslide_hazard_pai.parquet")
+    assert list(frame.columns) == ["hazard", "source", "data_kind", "geometry"]
+    assert frame.iloc[0]["hazard"] == "P3"

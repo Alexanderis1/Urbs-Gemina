@@ -203,3 +203,40 @@ def test_excluded_categories_never_reach_the_files(tmp_path: Path) -> None:
                          lambda r: json.dumps(collection).encode(), tmp_path, NOW)
     assert entry["status"] == "ok" and entry["features"] == 1 and entry["excluded_rows"] == 1
     assert "CampiNomadi" not in (tmp_path / "hazardous_sites.geojson").read_text(encoding="utf-8")
+
+
+def test_geometries_are_cleaned_before_writing(tmp_path: Path) -> None:
+    bowtie = [[[12.40, 41.80], [12.50, 41.90], [12.50, 41.80], [12.40, 41.90], [12.40, 41.80]]]
+    payload = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "id": "z.1", "geometry": None, "properties": {"name": "empty record", "aaa": None}},
+        {"type": "Feature", "id": "z.2", "geometry": {"type": "Polygon", "coordinates": bowtie},
+         "properties": {"name": "self-crossing", "aaa": None}},
+        {"type": "Feature", "id": "z.3", "geometry": {"type": "Point", "coordinates": [9.0, 45.0]},
+         "properties": {"name": "Milan", "aaa": None}},
+        {"type": "Feature", "id": "z.4", "geometry": {"type": "Point", "coordinates": [12.5, 41.9]},
+         "properties": {"name": "fine", "aaa": None}},
+    ]}
+
+    entry = ingest_layer(CATALOG.layers["ztl_centre"], CATALOG, lambda r: json.dumps(payload).encode(), tmp_path, NOW)
+    assert entry["status"] == "ok", entry.get("error")
+    assert entry["cleaning"] == {"dropped_no_geometry": 1, "repaired_geometries": 1, "dropped_outside_city": 1,
+                                 "dropped_empty_columns": ["aaa"]}
+    frame = gpd.read_parquet(tmp_path / "ztl_centre.parquet")
+    assert sorted(frame["name"]) == ["fine", "self-crossing"]
+    assert frame.geometry.is_valid.all()
+    assert "aaa" not in frame.columns
+
+
+def test_mislabelled_crs_is_corrected(tmp_path: Path) -> None:
+    # Roma's ReteEcologicaLinea says EPSG:6708 but holds Gauss-Boaga (EPSG:3004) numbers.
+    payload = {"type": "FeatureCollection", "features": [{"type": "Feature", "id": "r.1", "properties": {},
+               "geometry": {"type": "LineString", "coordinates": [[2313844.85, 4640843.19], [2313863.50, 4640807.82]]}}]}
+
+    def fetch(request: HttpRequest) -> bytes:
+        assert "srsName" not in parse_qs(urlparse(request.url).query)  # ask for the native numbers
+        return json.dumps(payload).encode()
+
+    entry = ingest_layer(CATALOG.layers["rete_ecologica_line"], CATALOG, fetch, tmp_path, NOW)
+    assert entry["status"] == "ok", entry.get("error")
+    x, y = gpd.read_parquet(tmp_path / "rete_ecologica_line.parquet").geometry.iloc[0].coords[0]
+    assert x == pytest.approx(12.5149, abs=1e-3) and y == pytest.approx(41.8926, abs=1e-3)

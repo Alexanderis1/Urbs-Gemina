@@ -60,6 +60,9 @@ class BeliefLayer:
     synthetic: bool = False
     warnings: tuple[str, ...] = ()
     calibration: "CalibrationReport | None" = None
+    #: Wind axis (degrees, meteorological) and stretch used when spreading readings; None = calm/unknown.
+    wind_axis_deg: float | None = None
+    wind_stretch: float = 1.0
     index: dict[str, int] = field(default_factory=dict, compare=False, repr=False)
 
     def belief(self, cell: str) -> Belief:
@@ -109,6 +112,11 @@ def prior_layer(
         key = fspec.value_key if fspec is not None else spec.value_key
         types = fspec.entity_types if fspec is not None else spec.entity_types
         points = [o for o in prior_field if o.entity_type in types and key in o.values]
+        if points:
+            # A forecast delivers many hours: keep the hour closest to the layer time.
+            target = _utc(at)
+            best = min({_utc(o.observed_at) for o in points}, key=lambda t: abs((t - target).total_seconds()))
+            points = [o for o in points if _utc(o.observed_at) == best]
         sources.update(o.source_id for o in points)
         synthetic = any(o.synthetic for o in points)
         if points and fspec is not None and fspec.method == "idw":
@@ -143,6 +151,8 @@ def prior_layer(
                 sigmas = np.array([sd for _, sd in cell_vals])
                 offset[i] = float(values.mean()) - base
                 prior_var[i] = max(float(np.mean(sigmas**2) + values.var()), 1e-6 * spec.prior.variance)
+    if prior_field is not None and spec.prior_field is not None and spec.prior_field.min_sd > 0.0:
+        prior_var = np.maximum(prior_var, spec.prior_field.min_sd**2)
     return BeliefLayer(
         spec=spec,
         resolution=res,
@@ -291,11 +301,12 @@ def _update(layer: BeliefLayer, batch: Sequence[Observation]) -> BeliefLayer:
         mean[idx] += gain * (values - mean[idx])
         var[idx] *= 1.0 - gain
         return _stamp(layer, mean, var)
+    xy = _wind_xy(layer)
     mean, var = posterior(
-        layer.xy_km,
+        xy,
         layer.mean,
         layer.variance,
-        layer.xy_km[idx],
+        xy[idx],
         layer.mean[idx],
         layer.variance[idx],
         values,
@@ -304,6 +315,28 @@ def _update(layer: BeliefLayer, batch: Sequence[Observation]) -> BeliefLayer:
         layer.spec.spatial_share,
     )
     return _stamp(layer, mean, var)
+
+
+def with_wind(layer: BeliefLayer, speed_ms: float, direction_deg: float) -> BeliefLayer:
+    """Attach the wind used to stretch spreading along its axis (from the layer's WindSpec)."""
+    wind = layer.spec.wind
+    if wind is None or speed_ms <= 0.0:
+        return layer
+    stretch = 1.0 + (wind.max_stretch - 1.0) * min(1.0, speed_ms / wind.full_at_ms)
+    return replace(layer, wind_axis_deg=direction_deg % 360.0, wind_stretch=stretch)
+
+
+def _wind_xy(layer: BeliefLayer) -> Array:
+    """Coordinates in which plain distance equals wind-stretched distance."""
+    if layer.wind_axis_deg is None or layer.wind_stretch == 1.0:
+        return layer.xy_km
+    # Unit vector along the wind axis (direction sign does not matter for a symmetric stretch).
+    theta = np.radians(layer.wind_axis_deg)
+    along = np.array([np.sin(theta), np.cos(theta)])
+    across = np.array([-along[1], along[0]])
+    xy = layer.xy_km
+    out: Array = np.stack([(xy @ along) / layer.wind_stretch, xy @ across], axis=1)
+    return out
 
 
 def _stamp(layer: BeliefLayer, mean: Array, var: Array) -> BeliefLayer:

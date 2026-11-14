@@ -58,6 +58,19 @@ class FieldSpec:
     covariate_file: str | None = None
     covariate_coef: float = 0.0
     covariate_center: float = 0.0
+    #: Floor on the map's error, for maps that understate it (a rain forecast misses cloudbursts).
+    min_sd: float = 0.0
+
+
+@dataclass(frozen=True)
+class WindSpec:
+    """Stretch spreading along the wind axis (plumes travel with the wind)."""
+
+    #: Layer name in config/providers.yaml giving WeatherForecast wind_speed_ms / wind_direction_deg.
+    source: str
+    #: Along-wind correlation length = across-wind length x this factor, reached at ``full_at_ms``.
+    max_stretch: float = 2.0
+    full_at_ms: float = 5.0
 
 
 @dataclass(frozen=True)
@@ -102,6 +115,7 @@ class LayerSpec:
     #: "none": readings are values. "count": readings are items (e.g. parked scooters) counted per cell.
     aggregate: str = "none"
     aggregate_window_minutes: float = 5.0
+    wind: WindSpec | None = None
     #: Plain-language limits of the layer, repeated in every answer's warnings.
     caveats: tuple[str, ...] = ()
     #: Share of the spread that spreads to neighbouring cells (1 = all; the rest is local, a "nugget").
@@ -164,11 +178,19 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 covariate_file=None if field.get("covariate") is None else str(field["covariate"]["file"]),
                 covariate_coef=0.0 if field.get("covariate") is None else _num(field["covariate"]["coef"]),
                 covariate_center=0.0 if field.get("covariate") is None else _num(field["covariate"]["center"]),
+                min_sd=float(field.get("min_sd", 0.0)),
             ),
             allow_simulated=bool(entry.get("allow_simulated", False)),
             aggregate=str(entry.get("aggregate", "none")),
             aggregate_window_minutes=float(entry.get("aggregate_window_minutes", 5.0)),
             caveats=tuple(str(c) for c in entry.get("caveats", [])),
+            wind=None
+            if entry.get("wind") is None
+            else WindSpec(
+                source=str(entry["wind"]["source"]),
+                max_stretch=float(entry["wind"].get("max_stretch", 2.0)),
+                full_at_ms=float(entry["wind"].get("full_at_ms", 5.0)),
+            ),
             spatial_share=_num(entry.get("spatial_share", 1.0)),
             history_hours=_num(entry.get("history_hours", 0.0)),
         )

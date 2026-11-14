@@ -89,6 +89,7 @@ def build_sensitive_sites(layer: LayerSpec, processed: Path) -> tuple[Any, dict[
     missing: list[str] = []
     no_geometry = 0
     duplicates = 0
+    identical = 0
 
     for spec in options.get("inputs") or []:
         path = processed / f"{spec['layer']}.parquet"
@@ -102,6 +103,17 @@ def build_sensitive_sites(layer: LayerSpec, processed: Path) -> tuple[Any, dict[
         rows = _rows(spec, frame, rules, subtype_map)
         if not rows:
             continue
+        # The same record listed twice in one layer (same category, name and position) is one site.
+        unique: list[dict[str, Any]] = []
+        seen: set[tuple[str, str, bytes]] = set()
+        for row in rows:
+            key = (row["category"], row["name"], row["geometry"].wkb)
+            if key in seen:
+                identical += 1
+                continue
+            seen.add(key)
+            unique.append(row)
+        rows = unique
         points = gpd.GeoSeries([r["geometry"] for r in rows], crs="EPSG:4326").to_crs(METRIC_CRS)
         points = points.representative_point()
         # Compare only with sites kept from earlier inputs, so one layer never dedupes itself.
@@ -125,6 +137,7 @@ def build_sensitive_sites(layer: LayerSpec, processed: Path) -> tuple[Any, dict[
         "counts_by_category": dict(sorted(Counter(frame["category"]).items())),
         "counts_by_provenance": dict(sorted(Counter(frame["provenance"]).items())),
         "dropped_duplicates": duplicates,
+        "dropped_identical": identical,
         "dropped_no_geometry": no_geometry,
         "missing_inputs": missing,
     }

@@ -58,6 +58,7 @@ layers:
         coef: {value: 0.01202, basis: "learned: +1.2 ug/m3 per 100 m of motor road within 100 m; explains the stations' lasting differences (spread 6.4 -> 3.7 ug/m3 on stations left out); Overture roads, ESCAPE method"}
         center: {value: 607.2, basis: "mean road length within 100 m of the 13 stations, so the station average is unchanged"}
       sd: {value: 9.26, basis: "learned: error at a station after bias and road term, shared 5.7 + local 7.3 ug/m3, station error removed"}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: no2
@@ -82,6 +83,7 @@ layers:
       offset: {value: 6.98, basis: "learned: CAMS reads 18.7 where Rome stations read 22.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
       scale: {value: 0.807, basis: "learned, same fit (2,950 daily pairs)"}
       sd: {value: 4.69, basis: "learned: corrected-CAMS error at a station; all of it beyond the stations' own error is shared city-wide"}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm10
@@ -109,6 +111,7 @@ layers:
       offset: {value: 3.66, basis: "learned: CAMS reads 12.4 where Rome stations read 11.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
       scale: {value: 0.602, basis: "learned, same fit (1,805 daily pairs, 8 stations)"}
       sd: {value: 2.8, basis: "learned: corrected-CAMS error at a station; all of it beyond the stations' own error is shared city-wide"}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm25
@@ -169,13 +172,14 @@ layers:
 
   rain:
     sources: [rain]          # Civil Protection radar (real); rain gauges can be added as a second source
+    prior_field: {source: rain_forecast, entity_types: [WeatherForecast], value_key: precipitation, method: idw, min_sd: 3.0}   # Open-Meteo ICON-2I hourly forecast; radar corrects it, then fades back to it
     unit: mm/h
     entity_types: [WeatherObserved]
     value_key: precipitation
     prior:
       mean: 0.2
-      sd: 1.0
-      basis: "assumption: dry most hours; to be replaced by the forecast"
+      sd: 5.0
+      basis: "assumption: dry most hours, but rain is heavy-tailed: sd 5 mm/h lets a radar cloudburst through (with sd 1 a 35 mm/h radar reading was pulled down to 7)"
     correlation_length_km: 5.0
     relax_tau_hours: 0.5
     min_value: 0
@@ -237,6 +241,70 @@ layers:
       - "Wi-Fi data runs about one day behind: 'now' shows yesterday's same hour"
       - "only cells with a City hotspot carry data (about 580 sites; 94 had sessions on 12 Nov 2026)"
     basis: "real counts at fixed sites; no spreading to cells without a hotspot"
+
+  transit_supply:
+    # Expected public-transport supply: buses and trams the timetable says are in each cell right now.
+    sources: [transit_schedule]   # roma_gtfs_schedule: ScheduledVehicle, one item per running trip, interpolated between stops
+    aggregate: count
+    aggregate_window_minutes: 5
+    unit: vehicles/cell
+    entity_types: [ScheduledVehicle]
+    value_key: scheduledVehicles
+    prior:
+      mean: 0
+      sd: 2
+      basis: "assumption: about 1,100 vehicles at 08:30 over thousands of cells, most cells have none"
+    correlation_length_km: 0
+    relax_tau_hours: 0.5
+    min_value: 0
+    calibration: {method: none, note: "timetable, not observed: shows planned supply, not what actually runs"}
+    caveats:
+      - "transit supply is the timetable (planned), not live positions; the live bus feed is used where it works"
+    basis: "planned positions from the official GTFS timetable"
+
+  temperature:
+    # Air temperature at 2 m: the forecast map interpolated to every cell. No live street stations yet.
+    sources: []
+    prior_field: {source: weather_forecast, entity_types: [WeatherForecast], value_key: temperature_c, method: idw, min_sd: 1.0}
+    unit: degC
+    entity_types: [WeatherObserved]
+    value_key: temperature
+    prior:
+      mean: 18
+      sd: 8
+      basis: "assumption: Rome yearly mean about 16-18 degC; only used where the forecast map is missing"
+    correlation_length_km: 3.0
+    relax_tau_hours: 3.0
+    min_value: -20
+    calibration: {method: none, note: "forecast only, no live temperature stations connected"}
+    caveats:
+      - "temperature is the weather forecast (Open-Meteo), not measured in the street; urban heat islands are not resolved"
+    basis: "forecast lattice; min_sd 1 degC because a 2 m forecast is rarely better than that"
+
+heat:
+  threshold_c: 32
+  basis: "assumption (C=55): around 32 degC the Italian heat-health bulletins start flagging risk for the elderly; real bulletins use perceived temperature"
+
+crowds:
+  # Signals shown side by side in the crowds view; a cell is 'busy' when at least min_agree
+  # of them are above their own city-wide percentile (among cells where that signal has data).
+  signals: [wifi_sessions, activity, transit_supply]
+  busy_percentile: 75
+  min_agree: 2
+  basis: "assumption (C=60): agreement of independent signals is more trustworthy than any single proxy"
+
+flood_watch:
+  heavy_rain_mm_h: 10        # operational, not legal: rain at this rate overwhelms street drains in short bursts
+  watch_probability: 0.3
+  warning_probability: 0.7
+  basis: "assumption (C=60): 10 mm/h is a common 'heavy rain' class (e.g. the Italian civil-protection 'forte' band starts around 10-20 mm/h); probabilities chosen to keep warnings rare"
+
+sensor_health:
+  # A station is flagged when its median standardised error against its neighbours is above z_flag
+  # over at least min_moments moments. Worst first, removed, then re-checked.
+  z_flag: 3.0
+  min_moments: 3
+  basis: "assumption: 3 standard deviations is rare by chance (about 0.3% per reading); the median over several moments ignores one-off spikes"
 
 calibration_rules:
   interval: 0.90            # we check the 90% range

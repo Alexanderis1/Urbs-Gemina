@@ -215,5 +215,5 @@ def test_air_quality_legal_limits_live_in_thresholds() -> None:
     import yaml
 
     air = yaml.safe_load(Path("config/thresholds.yaml").read_text(encoding="utf-8"))["air_quality"]
-    assert air["o3"]["information_1h"]["value"] == 180 and air["o3"]["alert_1h"]["value"] == 240
-    assert air["no2"]["hourly_limit"]["value"] == 200 and air["pm10"]["daily_limit"]["value"] == 50
+    assert air["o3_information_1h_ug_m3"]["value"] == 180 and air["o3_alert_1h_ug_m3"]["value"] == 240
+    assert air["no2_hourly_limit_ug_m3"]["value"] == 200 and air["pm10_daily_limit_ug_m3"]["value"] == 50
