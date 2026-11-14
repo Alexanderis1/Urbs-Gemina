@@ -7,6 +7,7 @@ models:
   permit: claude-opus-5-5
   scenario: claude-opus-5-5
   voice: claude-sonnet-5-5
+  signals: claude-sonnet-5-5   # citizen-report check (photos + texts + news), once per event
   effort: medium            # low | medium | high | xhigh | max
   max_tokens: 16000
   basis: "Opus 5.5 is the current default Claude model; Sonnet 5.5 for the voice line where latency matters."

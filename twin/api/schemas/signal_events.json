@@ -1,0 +1,219 @@
+{
+  "name": "signal_events",
+  "description": "Office only. Merge citizen reports into candidate live events, each with a confidence and its reasons.",
+  "input_schema": {
+    "$defs": {
+      "CitizenReport": {
+        "additionalProperties": false,
+        "description": "One citizen report, anonymised: 'reporter' is an opaque key (one per account), never a name.",
+        "properties": {
+          "id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "congestion",
+              "flood",
+              "fire",
+              "emergency",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "lon": {
+            "maximum": 13.1,
+            "minimum": 12.0,
+            "title": "Lon",
+            "type": "number"
+          },
+          "lat": {
+            "maximum": 42.4,
+            "minimum": 41.4,
+            "title": "Lat",
+            "type": "number"
+          },
+          "time": {
+            "description": "ISO 8601",
+            "maxLength": 40,
+            "minLength": 10,
+            "title": "Time",
+            "type": "string"
+          },
+          "reporter": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Reporter",
+            "type": "string"
+          },
+          "has_photo": {
+            "default": false,
+            "title": "Has Photo",
+            "type": "boolean"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 280,
+            "title": "Text",
+            "type": "string"
+          },
+          "photo_ref": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "storage path of the photo, if any",
+            "title": "Photo Ref"
+          },
+          "photo_gps_distance_m": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "photo EXIF GPS to device GPS distance",
+            "title": "Photo Gps Distance M"
+          },
+          "photo_age_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "minutes from the photo EXIF time to sending",
+            "title": "Photo Age Min"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "lon",
+          "lat",
+          "time",
+          "reporter"
+        ],
+        "title": "CitizenReport",
+        "type": "object"
+      },
+      "SignalCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "photo": {
+            "anyOf": [
+              {
+                "enum": [
+                  "consistent",
+                  "inconsistent",
+                  "unclear",
+                  "no_photo"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Photo"
+          },
+          "news": {
+            "anyOf": [
+              {
+                "enum": [
+                  "confirms",
+                  "no_match"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "News"
+          }
+        },
+        "title": "SignalCheck",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Office only. Merge citizen reports into candidate live events, each with a confidence and its reasons.",
+    "properties": {
+      "reports": {
+        "items": {
+          "$ref": "#/$defs/CitizenReport"
+        },
+        "maxItems": 2000,
+        "title": "Reports",
+        "type": "array"
+      },
+      "check_twin": {
+        "default": true,
+        "description": "read twin layers (rain, road speed...) around each event",
+        "title": "Check Twin",
+        "type": "boolean"
+      },
+      "checks": {
+        "anyOf": [
+          {
+            "additionalProperties": {
+              "$ref": "#/$defs/SignalCheck"
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "verdicts of verify_signal by event id",
+        "title": "Checks"
+      },
+      "now": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Now"
+      }
+    },
+    "required": [
+      "reports"
+    ],
+    "title": "SignalEventsIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/signal_events"
+  },
+  "owner": "citizen-reports"
+}
