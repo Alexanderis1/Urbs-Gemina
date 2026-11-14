@@ -88,3 +88,24 @@ def test_office_agent_is_private_and_citizen_public() -> None:
 def test_unknown_role_rejected() -> None:
     with pytest.raises(ValueError):
         build_agent_payload("admin", webhook_url="https://x/y", secret_id="s")
+
+
+def _ask_twin(role: str) -> dict[str, Any]:
+    p = build_agent_payload(role, webhook_url="https://x/y", secret_id="s")
+    return next(t for t in tools(p) if t["name"] == "ask_twin")
+
+
+def test_use_case_ids_are_listed_per_tier() -> None:
+    office = _ask_twin("office")["api_schema"]["request_body_schema"]["properties"]["use_case"]["enum"]
+    citizen = _ask_twin("citizen")["api_schema"]["request_body_schema"]["properties"]["use_case"]["enum"]
+    assert {"civil_protection_alert", "heat_plan_elderly", "site_risk_check", "event_planning",
+            "antenna_permit", "sport_deserts", "citizen_area_info"} == set(office)
+    assert set(citizen) == {"citizen_area_info", "sport_deserts"}
+
+
+def test_playbooks_get_time_and_a_spoken_wait() -> None:
+    hook = _ask_twin("office")
+    assert hook["response_timeout_secs"] == 120
+    assert hook["pre_tool_speech"] == "force"
+    props = hook["api_schema"]["request_body_schema"]["properties"]
+    assert {"attendees", "tmax_c", "discipline"} <= set(props)

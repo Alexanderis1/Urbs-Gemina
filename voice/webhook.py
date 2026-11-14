@@ -32,6 +32,11 @@ AREA_PATTERN = re.compile(r"^(?:city|municipio:(?:[1-9]|1[0-5])|zone:[A-Za-z0-9_
 #: Playbook ids from config/use_cases.yaml; the orchestrator checks the tier may run it.
 USE_CASE_PATTERN = re.compile(r"^[a-z][a-z0-9_]{2,59}$")
 MAX_PLACE_CHARS = 200
+#: Options the user states aloud, passed to the playbook as given (they are inputs, not results).
+#: basis: plausible bounds only to reject mishearings; the playbook defaults live in config/use_cases.yaml.
+MAX_ATTENDEES = 2_000_000
+TMAX_RANGE_C = (20.0, 55.0)
+MAX_DISCIPLINE_CHARS = 40
 
 
 def secrets_from_env(env: Mapping[str, str] | None = None) -> dict[str, Tier]:
@@ -85,6 +90,21 @@ def _parse(body: Mapping[str, Any]) -> tuple[str, Language, str | None, str, str
         if len(place) > MAX_PLACE_CHARS:
             raise BadRequest("place must be at most 200 characters")
         extra["place"] = place.strip()
+    attendees = params.get("attendees")
+    if attendees is not None:
+        if isinstance(attendees, bool) or not isinstance(attendees, int) or not 1 <= attendees <= MAX_ATTENDEES:
+            raise BadRequest("attendees must be a whole number of people")
+        extra["attendees"] = attendees
+    tmax = params.get("tmax_c")
+    if tmax is not None:
+        if isinstance(tmax, bool) or not isinstance(tmax, (int, float)) or not TMAX_RANGE_C[0] <= tmax <= TMAX_RANGE_C[1]:
+            raise BadRequest("tmax_c must be a temperature between 20 and 55 °C")
+        extra["tmax_c"] = tmax
+    discipline = params.get("discipline")
+    if isinstance(discipline, str) and discipline.strip():
+        if len(discipline) > MAX_DISCIPLINE_CHARS:
+            raise BadRequest("discipline must be at most 40 characters")
+        extra["discipline"] = discipline.strip()
     return question.strip(), language, area, mode, use_case, extra
 
 

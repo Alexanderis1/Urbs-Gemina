@@ -36,7 +36,7 @@ def _contract_rules() -> str:
     return "\n".join(line for line in lines if line.startswith("- "))
 
 
-def ask_twin_tool(webhook_url: str, secret_id: str, languages: list[str]) -> dict[str, Any]:
+def ask_twin_tool(webhook_url: str, secret_id: str, languages: list[str], use_cases: list[str] | None = None) -> dict[str, Any]:
     return {
         "type": "webhook",
         "name": "ask_twin",
@@ -44,7 +44,10 @@ def ask_twin_tool(webhook_url: str, secret_id: str, languages: list[str]) -> dic
             "Ask the Urbs Gemina digital twin. It runs the deterministic tools, checks every number "
             "and returns the text to speak. Use it for every question about Rome."
         ),
-        "response_timeout_secs": 60,
+        # Playbooks run several tools; 120 s is the ElevenLabs maximum. The agent says a short
+        # "un momento" before the call so the wait is not silent.
+        "response_timeout_secs": 120,
+        "pre_tool_speech": "force",
         "api_schema": {
             "url": webhook_url,
             "method": "POST",
@@ -68,7 +71,20 @@ def ask_twin_tool(webhook_url: str, secret_id: str, languages: list[str]) -> dic
                     },
                     "use_case": {
                         "type": "string",
+                        "enum": list(use_cases or []),
                         "description": "Optional ready-made check, only when the request clearly matches one listed in the prompt",
+                    },
+                    "attendees": {
+                        "type": "integer",
+                        "description": "event_planning only: expected attendance, only if the officer said it",
+                    },
+                    "tmax_c": {
+                        "type": "number",
+                        "description": "heat_plan_elderly only: a what-if maximum temperature in °C, only if the officer said it",
+                    },
+                    "discipline": {
+                        "type": "string",
+                        "description": "sport_deserts only: the sport asked about, in Italian (e.g. 'nuoto'), only if the user said it",
                     },
                     "place": {
                         "type": "string",
@@ -121,7 +137,7 @@ def build_agent_payload(role: str, *, webhook_url: str, secret_id: str, voice_id
                     "llm": common["llm"],
                     "temperature": common["temperature"],
                     "timezone": common["timezone"],
-                    "tools": [ask_twin_tool(webhook_url, secret_id, languages), *client_tools],
+                    "tools": [ask_twin_tool(webhook_url, secret_id, languages, list(agent.get("use_cases") or [])), *client_tools],
                     "built_in_tools": _language_tools(common["other_languages"]),
                 },
             },

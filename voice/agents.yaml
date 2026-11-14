@@ -22,6 +22,9 @@ office:
   private: true
   prompt_file: prompts/office.md
   client_tools: [fly_to, show_area, show_layer, show_radius, open_screen]
+  # basis: playbooks in config/use_cases.yaml whose tiers include office (the briefing goes
+  # through mode=briefing). The server checks the tier again.
+  use_cases: [civil_protection_alert, heat_plan_elderly, site_risk_check, event_planning, antenna_permit, sport_deserts, citizen_area_info]
   first_message:
     it: "Buongiorno, sono un assistente di intelligenza artificiale di Urbs Gemina, il gemello digitale di Roma. Supporto le decisioni, non le prendo. Come posso aiutarti?"
     en: "Hello, I am an AI assistant of Urbs Gemina, the digital twin of Rome. I support decisions, I do not make them. How can I help?"
@@ -31,6 +34,8 @@ citizen:
   private: false
   prompt_file: prompts/citizen.md
   client_tools: [fly_to, show_area, show_layer, open_screen]
+  # basis: playbooks in config/use_cases.yaml whose tiers include citizen.
+  use_cases: [citizen_area_info, sport_deserts]
   first_message:
     it: "Buongiorno, sono un assistente di intelligenza artificiale del Comune di Roma, basato sul gemello digitale Urbs Gemina. Le mie risposte sono informative. Cosa vuoi sapere?"
     en: "Hello, I am an AI assistant based on Urbs Gemina, the digital twin of Rome. My answers are for information only. What would you like to know?"

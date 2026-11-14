@@ -166,3 +166,21 @@ def test_use_case_and_place_reach_the_orchestrator() -> None:
 def test_bad_use_case_id_is_rejected() -> None:
     status, resp, _ = call({"question": "x", "use_case": "Robert'); DROP"})
     assert status == 400
+
+
+def test_officer_stated_options_reach_the_playbook() -> None:
+    status, _, orch = call({"question": "Concerto al Circo Massimo", "use_case": "event_planning",
+                            "place": "Circo Massimo", "attendees": 30000})
+    assert status == 200 and orch.calls[0].params == {"place": "Circo Massimo", "attendees": 30000}
+    _, _, orch = call({"question": "E se arrivassimo a 41 gradi?", "use_case": "heat_plan_elderly",
+                       "area": "municipio:5", "tmax_c": 41})
+    assert orch.calls[0].params == {"tmax_c": 41}
+    _, _, orch = call({"question": "piscine", "use_case": "sport_deserts", "area": "municipio:6", "discipline": "nuoto"})
+    assert orch.calls[0].params == {"discipline": "nuoto"}
+
+
+def test_out_of_range_options_are_rejected() -> None:
+    for extra in ({"attendees": -5}, {"attendees": "tanti"}, {"tmax_c": 90}, {"discipline": "x" * 100}):
+        status, _, orch = call({"question": "x", "use_case": "event_planning", **extra})
+        assert status == 400, extra
+        assert orch.calls == []
