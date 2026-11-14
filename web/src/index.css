@@ -21,6 +21,7 @@
     --c-ink: 23 50 77;
     --c-muted: 85 103 121;
     --c-primary: 0 102 204;
+    --c-brand-mark: 0 102 204;
     --c-primary-hover: 0 89 179;
     --c-primary-soft: 229 240 250;
     --c-link: 0 102 204;
@@ -80,7 +81,16 @@
 
 @layer components {
   /* Surfaces */
-  .card { @apply rounded border border-line bg-surface p-4 shadow-panel; }
+/* The public service wears PA blue, the staff workspace navy: one glance tells which one you are in. */
+  .chrome-public {
+    --c-chrome: 0 102 204;
+    --c-chrome-deep: 0 76 153;
+    --c-chrome-ink: 255 255 255;
+    --c-chrome-muted: 230 240 250;
+    --c-chrome-line: 102 163 224;
+    --c-brand-mark: 255 255 255;
+  }
+    .card { @apply rounded border border-line bg-surface p-4 shadow-panel; }
   .panel { @apply flex h-full shrink-0 flex-col border-line bg-surface; }
   .panel-body { @apply min-h-0 flex-1 space-y-5 overflow-y-auto p-4; }
   .map-float { @apply rounded border border-line bg-surface/95 shadow-float backdrop-blur-sm; }

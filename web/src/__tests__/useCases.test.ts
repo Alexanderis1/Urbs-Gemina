@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildUseCaseQuestion, paramFields, parseUseCases, useCaseTurnLabel, type UseCase } from "@/lib/useCases";
+import { buildUseCaseQuestion, forTier, paramFields, residentWording, parseUseCases, useCaseTurnLabel, type UseCase } from "@/lib/useCases";
+import SAMPLE from "@/api/sampleUseCases.json";
 
 const briefing = {
   id: "municipio_briefing",
@@ -60,5 +61,40 @@ describe("ready-made use cases", () => {
     const input = { place: "", area: { type: "municipio", id: "5" } as const, values: {}, language: "en" as const, conversationId: null };
     expect(buildUseCaseQuestion(uc, input)).toMatchObject({ question: "Morning municipio briefing: Municipio V", area: "municipio:5", params: {} });
     expect(useCaseTurnLabel(uc, input)).toBe("Morning municipio briefing · Municipio V");
+  });
+});
+
+describe("tasks by audience (sample mode; the live service filters by itself)", () => {
+  const sample = parseUseCases(SAMPLE);
+
+  it("the sample list carries who may run each task", () => {
+    expect(sample.length).toBeGreaterThanOrEqual(11);
+    expect(sample.every((u) => u.tiers && u.tiers.length > 0)).toBe(true);
+  });
+
+  it("residents get only the tasks marked for citizens; staff get all of them", () => {
+    const citizen = forTier(sample, "citizen").map((u) => u.id);
+    expect(citizen).toContain("citizen_area_info");
+    expect(citizen).toContain("sport_deserts");
+    expect(citizen).not.toContain("antenna_permit");
+    expect(citizen).not.toContain("industrial_accident");
+    expect(forTier(sample, "office")).toHaveLength(sample.length);
+  });
+
+  it("a task with no audience given (as the live service sends it) is kept: the service already filtered", () => {
+    const [uc] = parseUseCases([{ id: "x", title: { en: "X" } }]) as [UseCase];
+    expect(uc.tiers).toBeUndefined();
+    expect(forTier([uc], "citizen")).toHaveLength(1);
+  });
+});
+
+describe("wording for residents", () => {
+  it("speaks to the resident, not about citizens", () => {
+    const [uc] = parseUseCases([{ id: "citizen_area_info", title: { en: "Citizen information about their area" }, summary: { en: "Air, rain, transit…" } }]) as [UseCase];
+    expect(residentWording(uc).title).toBe("Around my address");
+  });
+  it("keeps the service's own words for a task it does not know", () => {
+    const [uc] = parseUseCases([{ id: "new_task", title: { en: "A new task" }, summary: { en: "What it does." } }]) as [UseCase];
+    expect(residentWording(uc)).toEqual({ title: "A new task", summary: "What it does." });
   });
 });

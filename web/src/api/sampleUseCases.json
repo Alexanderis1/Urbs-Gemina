@@ -9,6 +9,9 @@
       "it": "Trasporti, traffico, aria, pioggia, fiume, notizie e stato dei dati per un municipio.",
       "en": "Transit, traffic, air, rain, river, news and data status for one municipio."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "area"
     ],
@@ -34,6 +37,9 @@
       "it": "Pioggia e piena previste, dove si accumula l'acqua, sottopassi, siti sensibili e accesso dei soccorsi.",
       "en": "Forecast rain and river levels, where water collects, underpasses, sensitive sites and emergency access."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "area"
     ],
@@ -61,6 +67,9 @@
       "it": "Dove fa più caldo di giorno e di notte, quanti over 65 vivono lì, RSA e ospedali vicini, effetto di nuovi alberi.",
       "en": "Hottest streets by day and night, residents over 65 there, care homes and hospitals nearby, effect of new trees."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "area"
     ],
@@ -90,6 +99,9 @@
       "it": "Per un indirizzo: siti sensibili vicini, aree a rischio alluvione, zone Seveso, vincoli e tempi dei soccorsi.",
       "en": "For one address: nearby sensitive sites, flood hazard, Seveso zones, constraints and emergency reach."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "place"
     ],
@@ -118,13 +130,17 @@
       "it": "Folla attesa, traffico, trasporti, ospedali vicini e accesso dei soccorsi con l'area chiusa.",
       "en": "Expected crowd, traffic, transit, hospitals nearby and emergency access with the area closed."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "place"
     ],
     "params": {
       "attendees": 20000,
       "radius_m": 400,
-      "district_radius_m": 2500
+      "district_radius_m": 2500,
+      "traffic_radius_m": 900
     },
     "steps": [
       "where the event is",
@@ -146,6 +162,9 @@
       "it": "Siti sensibili entro il raggio, stima del campo con incertezza, quadro normativo. Non decide.",
       "en": "Sensitive sites within the radius, field estimate with uncertainty, legal frame. It does not decide."
     },
+    "tiers": [
+      "office"
+    ],
     "needs": [
       "place"
     ],
@@ -172,11 +191,15 @@
       "it": "Residenti senza un impianto per una disciplina a distanza di cammino, e impianti esistenti.",
       "en": "Residents without a facility for a discipline within walking time, and existing facilities."
     },
+    "tiers": [
+      "office",
+      "citizen"
+    ],
     "needs": [
       "area"
     ],
     "params": {
-      "discipline": "calcio"
+      "discipline": "football"
     },
     "steps": [
       "facilities for the discipline",
@@ -193,6 +216,10 @@
       "it": "Aria, pioggia, trasporti e servizi sanitari vicini a un indirizzo, in parole semplici.",
       "en": "Air, rain, transit and health services near an address, in plain words."
     },
+    "tiers": [
+      "office",
+      "citizen"
+    ],
     "needs": [
       "place"
     ],
@@ -207,6 +234,89 @@
       "public transport nearby",
       "pharmacies nearby",
       "emergency hospitals"
+    ]
+  },
+  {
+    "id": "industrial_accident",
+    "title": {
+      "it": "Incidente in uno stabilimento a rischio (Seveso)",
+      "en": "Accident at a high-risk (Seveso) plant"
+    },
+    "summary": {
+      "it": "Nube tossica con il vento previsto: zone sopra le soglie sanitarie, residenti e siti sensibili, zone ufficiali del piano, ospedali.",
+      "en": "Toxic cloud with the forecast wind: areas above health thresholds, residents and sensitive sites, official plan zones, hospitals."
+    },
+    "tiers": [
+      "office"
+    ],
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "substance": "ammonia",
+      "release_kg_s": null
+    },
+    "steps": [
+      "wind and temperature forecast (coarse grid over all of Rome)",
+      "toxic cloud with the forecast wind (Gaussian plume ensemble)",
+      "official damage zones of the external emergency plans",
+      "emergency hospitals",
+      "news about the plant (unverified)",
+      "external emergency plan rules"
+    ]
+  },
+  {
+    "id": "air_quality_episode",
+    "title": {
+      "it": "Episodio di inquinamento dell'aria",
+      "en": "Air pollution episode"
+    },
+    "summary": {
+      "it": "Stazioni ufficiali, sensori dei cittadini e modello CAMS, vento previsto, scuole e nidi dell'area, norme sui limiti.",
+      "en": "Official stations, citizen sensors and the CAMS model, forecast wind, schools and nurseries in the area, legal limits."
+    },
+    "tiers": [
+      "office"
+    ],
+    "needs": [
+      "area"
+    ],
+    "params": {},
+    "steps": [
+      "official stations (EEA, ARPA Lazio)",
+      "citizen PM sensors (noisier)",
+      "CAMS model background (coarse grid over all of Rome)",
+      "wind forecast (coarse grid over all of Rome)",
+      "state schools",
+      "municipal nurseries",
+      "legal limits",
+      "traffic bans and notices (unverified)"
+    ]
+  },
+  {
+    "id": "strike_day_mobility",
+    "title": {
+      "it": "Giornata di sciopero dei trasporti",
+      "en": "Public transport strike day"
+    },
+    "summary": {
+      "it": "Ritardi dei mezzi, velocità stradali, monopattini disponibili, affollamento e notizie sullo sciopero.",
+      "en": "Transit delays, road speeds, shared e-scooters available, crowding and news about the strike."
+    },
+    "tiers": [
+      "office"
+    ],
+    "needs": [
+      "area"
+    ],
+    "params": {},
+    "steps": [
+      "public transport delays (GTFS-RT)",
+      "transit delay map with uncertainty",
+      "road speed map (simulated loops fused)",
+      "shared e-scooters available",
+      "public Wi-Fi activity (crowd proxy)",
+      "strike notices (unverified)"
     ]
   }
 ]

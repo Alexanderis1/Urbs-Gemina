@@ -4,6 +4,7 @@
 import type { Language, TwinQuestionBody } from "@/api/twin";
 import { areaLabel, areaToArg, type Area, type AreaArg } from "./area";
 import { humanise } from "./scenarioResult";
+import type { Tier } from "./tiers";
 
 export interface UseCase {
   id: string;
@@ -15,6 +16,8 @@ export interface UseCase {
   params: Record<string, string | number | boolean | null>;
   /** Plain labels of the tool steps, in the order the server runs them. */
   steps: string[];
+  /** Who may run it. Only the sample list carries this; the live service sends each caller their own list. */
+  tiers?: Tier[];
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -45,9 +48,28 @@ export function parseUseCases(raw: unknown): UseCase[] {
       needs: (Array.isArray(r.needs) ? r.needs : []).filter((n): n is "area" | "place" => n === "area" || n === "place"),
       params,
       steps: (Array.isArray(r.steps) ? r.steps : []).filter((s): s is string => typeof s === "string"),
+      ...(Array.isArray(r.tiers) ? { tiers: r.tiers.filter((t): t is Tier => t === "citizen" || t === "office") } : {}),
     });
   }
   return out;
+}
+
+/** The tasks one tier may run. A task without `tiers` is kept (the service has already filtered its list). */
+export function forTier(list: UseCase[], tier: Tier): UseCase[] {
+  return list.filter((u) => !u.tiers || u.tiers.includes(tier));
+}
+
+/** Titles on the residents' home page: the service names tasks for officers ("Citizen information about their area"). */
+const RESIDENT_WORDING: Record<string, { title: string; summary: string }> = {
+  citizen_area_info: { title: "Around my address", summary: "Air, rain, public transport, pharmacies and hospitals nearby, in plain words." },
+  citizen_emergency_info: {
+    title: "In an emergency near home",
+    summary: "Where to gather, flood and landslide areas at your address, industrial zones and the nearest emergency hospitals.",
+  },
+};
+
+export function residentWording(uc: UseCase): { title: string; summary: string } {
+  return RESIDENT_WORDING[uc.id] ?? { title: uc.title.en, summary: uc.summary.en };
 }
 
 export interface ParamField {

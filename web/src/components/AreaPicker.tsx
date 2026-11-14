@@ -8,16 +8,21 @@ export function AreaPicker({
   onChange,
   drawing,
   onDraw,
+  label = "Operating area",
+  simple = false,
 }: {
   area: Area;
   onChange: (a: Area) => void;
   drawing?: boolean;
   onDraw?: () => void;
+  label?: string;
+  /** Whole city or a municipio only (public service): no urban-zone codes. */
+  simple?: boolean;
 }) {
   const value = area.type === "municipio" ? `m:${area.id}` : area.type;
   return (
     <div className="space-y-2">
-      <Field label="Operating area" hint={`Selected: ${areaLabel(area)}`}>
+      <Field label={label} hint={simple ? undefined : `Selected: ${areaLabel(area)}`}>
         <select
           className="input"
           value={value}
@@ -34,7 +39,7 @@ export function AreaPicker({
               Municipio {roman(Number(m))}
             </option>
           ))}
-          <option value="zone">Urban zone…</option>
+          {!simple && <option value="zone">Urban zone…</option>}
           {area.type === "polygon" && <option value="polygon">Drawn area</option>}
         </select>
       </Field>

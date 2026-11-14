@@ -1,20 +1,23 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { needsCityView, onMapAction } from "@/lib/mapbus";
-import type { ActionScreen } from "@/lib/mapActions";
+import { useSession } from "@/lib/runlog";
+import { experienceOf, screenPath } from "@/lib/tiers";
 
-const PATHS: Record<ActionScreen, string> = { city: "/", ask: "/ask", permit: "/permit", scenario: "/scenarios", honesty: "/data" };
-
-/** Handles open_screen, and switches to City view when a map action arrives while no map is showing. */
+/**
+ * Handles open_screen, and switches to the map when a map action arrives while no map is showing.
+ * Each experience has its own addresses; a screen the current one does not have is simply not opened.
+ */
 export function ScreenRouter() {
   const navigate = useNavigate();
+  const experience = experienceOf(useSession().tier);
   useEffect(
     () =>
       onMapAction((a) => {
-        if (a.tool === "open_screen") navigate(PATHS[a.args.screen]);
-        else if (needsCityView(a)) navigate("/");
+        const to = a.tool === "open_screen" ? screenPath(experience, a.args.screen) : needsCityView(a) ? screenPath(experience, "city") : null;
+        if (to) navigate(to);
       }),
-    [navigate],
+    [navigate, experience],
   );
   return null;
 }

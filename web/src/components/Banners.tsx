@@ -3,17 +3,22 @@ import { isDirectMode, isSampleMode } from "@/api/client";
 import { shortId } from "@/lib/format";
 import { useSession } from "@/lib/runlog";
 import { useServiceStatus } from "@/lib/serviceStatus";
+import type { Experience } from "@/lib/tiers";
+
+const DISCLOSURE: Record<Experience, string> = {
+  public: "Answers are prepared with AI assistance from open data. They are for information only and are not official notices.",
+  staff: "Answers and reports are prepared with AI assistance from open and simulated data. They support decisions by Roma Capitale officers; they do not make them.",
+};
 
 /** Always on screen: who made this and that AI is involved. */
-export function AiDisclosure() {
+export function AiDisclosure({ audience }: { audience: Experience }) {
   return (
     <div className="flex items-center gap-3 bg-chrome-deep px-4 py-1 text-2xs text-chrome-muted">
       <span className="hidden shrink-0 font-semibold uppercase tracking-[0.08em] md:inline">Open-source prototype · not an official service</span>
       <span className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-right">
         <Sparkles className="h-3 w-3 shrink-0" aria-hidden="true" />
-        <span className="truncate" title="Answers and reports are prepared with AI assistance from open and simulated data. They support decisions by Roma Capitale officers; they do not make them.">
-          Answers and reports are prepared with AI assistance from open and simulated data. They support decisions by Roma
-          Capitale officers; they do not make them.
+        <span className="truncate" title={DISCLOSURE[audience]}>
+          {DISCLOSURE[audience]}
         </span>
       </span>
     </div>
@@ -29,7 +34,7 @@ export function connectionState(): { label: string; detail: string; tone: "live"
       tone: "sample",
     };
   if (isDirectMode)
-    return { label: "Live service · citizen tier", detail: "Live data from the public tool API, no login. Office features need sign-in.", tone: "live" };
+    return { label: "Live service · public data", detail: "Live data from the public tool API, without the secure staff gateway: office-only details are not served.", tone: "live" };
   return { label: "Live service", detail: "Live data through the secure office gateway.", tone: "live" };
 }
 
@@ -71,7 +76,7 @@ export function StatusBar() {
         <span className="font-semibold text-ink">{c.label}</span>
       </span>
       <span>
-        Tier <span className="font-semibold text-ink">{tier === "office" ? "Office" : "Citizen"}</span>
+        Signed in as <span className="font-semibold text-ink">{tier === "office" ? "city staff" : "resident"}</span>
       </span>
       <span>
         Tool runs this session <span className="num font-medium text-ink">{runs.length}</span>

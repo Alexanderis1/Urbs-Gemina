@@ -2,26 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
-import {
-  Activity,
-  AlertTriangle,
-  Bike,
-  Building2,
-  Bus,
-  Car,
-  CloudRain,
-  Gauge,
-  Hospital,
-  Layers as LayersIcon,
-  Map as MapIcon,
-  RadioTower,
-  School,
-  Thermometer,
-  Timer,
-  Wind,
-  Zap,
-  type LucideIcon,
-} from "lucide-react";
+import { AlertTriangle, Building2, Map as MapIcon, type LucideIcon } from "lucide-react";
 import { CityMap, type MapFocus } from "@/map/CityMap";
 import { AreaPicker } from "@/components/AreaPicker";
 import { RunMeta } from "@/components/RunMeta";
@@ -52,45 +33,10 @@ import { calibrationLabel } from "@/lib/format";
 import { BUILDING_VIEWS, LEGENDS, ROOF_COLORS, type BuildingView } from "@/lib/buildingStyles";
 import { useSession } from "@/lib/runlog";
 import { useTheme } from "@/lib/useTheme";
+import { GROUPS, isFused, layerLabel, layersFor } from "@/lib/layerCatalogue";
+import type { Experience } from "@/lib/tiers";
 import type { Envelope, QueryLayerResult } from "@/api/types";
 import { errorText } from "@/lib/errors";
-
-type LayerGroup = "fused" | "fields" | "mobility" | "health" | "environment";
-
-// Layer ids as the live query_layer knows them (twin/api). Labels are for people; caveats go in `hint`.
-// "fused" layers are the twin's own estimate for every 170 m cell (config/beliefs.yaml): sensors + a starting map.
-export const MAP_LAYERS: { id: string; label: string; hint?: string; group: LayerGroup; icon: LucideIcon }[] = [
-  { id: "air_no2", label: "Air: NO₂", hint: "Stations + European model", group: "fused", icon: Wind },
-  { id: "air_pm10", label: "Air: PM10", group: "fused", icon: Wind },
-  { id: "air_pm25", label: "Air: PM2.5", group: "fused", icon: Wind },
-  { id: "air_o3", label: "Air: ozone", group: "fused", icon: Wind },
-  { id: "road_speed", label: "Road speed", hint: "Simulated loops + real buses", group: "fused", icon: Gauge },
-  { id: "transit_delay", label: "Bus delay", hint: "Live bus feed", group: "fused", icon: Timer },
-  { id: "rain", label: "Rain", hint: "Radar + forecast", group: "fused", icon: CloudRain },
-  { id: "air_temperature", label: "Air temperature", hint: "Forecast + night heat island", group: "fused", icon: Thermometer },
-  { id: "emf", label: "Electric field", hint: "Cartoradio map + measurements", group: "fused", icon: Zap },
-  { id: "activity", label: "Street activity", hint: "Parked shared scooters, a weak proxy", group: "fused", icon: Activity },
-  { id: "antenna_register", label: "Antenna sites", hint: "Count per 500 m cell", group: "fields", icon: RadioTower },
-  { id: "emf_baseline", label: "EMF model points", hint: "Cartoradio grid", group: "fields", icon: Zap },
-  { id: "traffic_flow", label: "Traffic loops", group: "mobility", icon: Car },
-  { id: "micromobility", label: "Shared scooters and bikes", group: "mobility", icon: Bike },
-  { id: "hospitals", label: "Hospitals", group: "health", icon: Hospital },
-  { id: "schools_state", label: "State schools", group: "health", icon: School },
-  { id: "air_quality", label: "Air quality stations", group: "environment", icon: Wind },
-  { id: "air_quality_model", label: "Air quality model", group: "environment", icon: LayersIcon },
-  { id: "transit", label: "Transit", hint: "Live buses", group: "mobility", icon: Bus },
-];
-
-const GROUPS: { id: LayerGroup; label: string; hint?: string }[] = [
-  { id: "fused", label: "Live estimates (sensor fusion)", hint: "One value and its range for every 170 m cell." },
-  { id: "fields", label: "Antennas and fields" },
-  { id: "mobility", label: "Mobility" },
-  { id: "health", label: "Health and schools" },
-  { id: "environment", label: "Environment" },
-];
-
-const layerLabel = (id: string | null) => MAP_LAYERS.find((l) => l.id === id)?.label ?? "Buildings only";
-const isFused = (id: string | null) => MAP_LAYERS.some((l) => l.id === id && l.group === "fused");
 
 /** One selectable row. A real radio input (visually hidden) keeps arrow keys and screen readers working. */
 function LayerRow({
@@ -135,7 +81,13 @@ function legendTitle(d: MapData): string {
   return `${metricInfo(d.metric).label}${cell}${d.unit ? ` (${d.unit})` : ""}`;
 }
 
-export default function CityView() {
+/**
+ * The map of Rome with one data layer on it. Staff get the full console (every layer, drawing, time, display
+ * options, evidence open); residents get a short list in plain words and the evidence folded away.
+ */
+export default function CityView({ audience = "staff" }: { audience?: Experience }) {
+  const staff = audience === "staff";
+  const catalogue = layersFor(audience);
   const { run } = useSession();
   const { theme, palette } = useTheme();
   // Opens on a fused layer over the centre: it answers fast and shows the twin doing its job.
@@ -360,14 +312,18 @@ export default function CityView() {
   const hovered = hover && data ? describeItem(hover.item, data) : null;
 
   const panel = (
-    <Panel title="City view" icon={MapIcon} subtitle="Pick one layer and an area to see what the twin knows about it.">
-      <Section title="Layer">
+    <Panel
+      title={staff ? "City view" : "City map"}
+      icon={MapIcon}
+      subtitle={staff ? "Pick one layer and an area to see what the twin knows about it." : "Pick what you want to see, and where. Each map says how sure it is."}
+    >
+      <Section title={staff ? "Layer" : "Show on the map"}>
         <div role="radiogroup" aria-label="Map layer" className="space-y-3">
-          {GROUPS.map((g) => (
-            <div key={g.id} className="space-y-0.5">
-              <div className="px-1 text-2xs font-semibold text-muted">{g.label}</div>
+          {(staff ? GROUPS : [{ id: null, label: "", hint: undefined }]).map((g) => (
+            <div key={g.id ?? "all"} className="space-y-0.5">
+              {g.label && <div className="px-1 text-2xs font-semibold text-muted">{g.label}</div>}
               {g.hint && <p className="hint px-1 pb-0.5">{g.hint}</p>}
-              {MAP_LAYERS.filter((l) => l.group === g.id).map((l) => (
+              {catalogue.filter((l) => g.id === null || l.group === g.id).map((l) => (
                 <LayerRow
                   key={l.id}
                   label={l.label}
@@ -385,10 +341,14 @@ export default function CityView() {
       </Section>
 
       <Section title="Where">
-        <AreaPicker area={area} onChange={setArea} drawing={drawing} onDraw={toggleDraw} />
+        {staff ? (
+          <AreaPicker area={area} onChange={setArea} drawing={drawing} onDraw={toggleDraw} />
+        ) : (
+          <AreaPicker area={area} onChange={setArea} label="Part of the city" simple />
+        )}
       </Section>
 
-      <Section title="When">
+      {staff && <Section title="When">
         <input
           type="range"
           min={0}
@@ -406,9 +366,9 @@ export default function CityView() {
         <p className="text-sm">
           Showing: <span className="font-semibold">{hoursAgo === 0 ? "now (latest data)" : `${hoursAgo} ${hoursAgo === 1 ? "hour" : "hours"} ago`}</span>
         </p>
-      </Section>
+      </Section>}
 
-      <Section title="Display" collapsible>
+      {staff && <Section title="Display" collapsible>
         <div>
           <label className="check">
             <input type="checkbox" checked={showUncertainty} onChange={(e) => setShowUncertainty(e.target.checked)} />
@@ -445,9 +405,9 @@ export default function CityView() {
           <input type="checkbox" checked={showTrees} onChange={(e) => setShowTrees(e.target.checked)} />
           Trees (zoom in to see them)
         </label>
-      </Section>
+      </Section>}
 
-      <Section title="Evidence" collapsible>
+      <Section title={staff ? "Evidence" : "How we know this"} collapsible defaultOpen={staff}>
         {error && (
           <Callout tone="error" title="The layer could not be loaded">
             {error}
@@ -478,7 +438,7 @@ export default function CityView() {
       <MapFloat position="top-left" className="max-w-[min(22rem,calc(100%-6rem))]">
         <div role="status" aria-live="polite" className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">{layerLabel(layer)}</span>
+            <span className="text-sm font-semibold">{layerLabel(layer, audience)}</span>
             {layer && kind && !busy && <KindBadge kind={kind} />}
           </div>
           <div className="text-xs text-muted">
@@ -490,7 +450,7 @@ export default function CityView() {
                 Loading layer…
               </span>
             ) : error ? (
-              <span className="text-danger">Could not load this layer. See Evidence.</span>
+              <span className="text-danger">{staff ? "Could not load this layer. See Evidence." : `This could not be loaded right now. ${error}`}</span>
             ) : refusal ? (
               <span className="inline-flex items-start gap-1.5">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-estimated" aria-hidden="true" />

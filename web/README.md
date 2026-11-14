@@ -33,6 +33,15 @@ Two themes: light "Institutional" (default) and dark "Operations room" (button i
 Tokens, components, vocabulary and the decisions log are in [`docs/design-system.md`](docs/design-system.md).
 New screens are assembled from `src/components/ui.tsx`; colours come from the tokens, never hard-coded.
 
+## Two experiences
+
+The app has two front doors (see `docs/design-system.md`, "Two experiences"):
+
+- **Public service** (no account, PA-blue header): My area (address in, plain answer out), City map, Sport, Ask, About the data.
+- **Operations workspace** (city staff, navy header): City, Ask, Permit, Scenarios, Sport, Data, Admin.
+
+Staff sign in at `/staff`. With Lovable Cloud the role comes from `user_roles`; without it the page has a demo button.
+
 ## Screens
 
 City view (3D map of Rome, live sensor-fusion layers as cells and sensor layers as dots drawn on the buildings, area picker incl. drawing, time slider, uncertainty toggle) ·
@@ -66,7 +75,7 @@ traffic event, antenna; key figures first, footprint on the map) · Data honesty
   `ELEVENLABS_OFFICE_AGENT_ID`.
 - Voice: the header button starts the public citizen agent directly; signed-in office users get the private office
   agent through `POST /voice/signed_url`. The agents move the map with the five client tools of `voice/client_tools.json`.
-- To make someone an officer: insert a row `(user_id, 'office')` in `user_roles` from the Cloud dashboard.
+- To make someone an officer: insert a row `(user_id, 'office')` in `user_roles` from the Cloud dashboard. They sign in at `/staff` and land in the operations workspace; everyone else gets the public service.
 
 ## Lovable
 

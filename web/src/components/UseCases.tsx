@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import {
+  Bus,
   CalendarDays,
   ChevronRight,
+  Factory,
   Home,
+  LifeBuoy,
   ListChecks,
   Play,
   RadioTower,
@@ -11,6 +14,7 @@ import {
   Sunrise,
   ThermometerSun,
   Trophy,
+  Wind,
   type LucideIcon,
 } from "lucide-react";
 import { isSampleMode, proxyRead } from "@/api/client";
@@ -20,9 +24,10 @@ import SAMPLE from "@/api/sampleUseCases.json";
 import { AreaPicker } from "./AreaPicker";
 import { Field, Panel, Section, Spinner } from "./ui";
 import type { Area } from "@/lib/area";
-import { paramFields, parseUseCases, useCaseReady, type UseCase } from "@/lib/useCases";
+import { forTier, paramFields, parseUseCases, useCaseReady, type UseCase } from "@/lib/useCases";
+import { useSession } from "@/lib/runlog";
 
-const ICON: Record<string, LucideIcon> = {
+export const USE_CASE_ICON: Record<string, LucideIcon> = {
   municipio_briefing: Sunrise,
   civil_protection_alert: Siren,
   heat_plan_elderly: ThermometerSun,
@@ -31,14 +36,19 @@ const ICON: Record<string, LucideIcon> = {
   antenna_permit: RadioTower,
   sport_deserts: Trophy,
   citizen_area_info: Home,
+  citizen_emergency_info: LifeBuoy,
+  industrial_accident: Factory,
+  air_quality_episode: Wind,
+  strike_day_mobility: Bus,
 };
 
 /** The use cases this session may run. Empty while loading, when the service has none, or when it cannot be reached. */
 export function useUseCases(): UseCase[] {
+  const { tier } = useSession();
   const [list, setList] = useState<UseCase[]>([]);
   useEffect(() => {
     let live = true;
-    if (isSampleMode) return setList(parseUseCases(SAMPLE));
+    if (isSampleMode) return setList(forTier(parseUseCases(SAMPLE), tier));
     proxyRead("/use_cases")
       .then((r) => (r.ok ? r.json() : []))
       .then((raw) => live && setList(parseUseCases(raw)))
@@ -46,7 +56,7 @@ export function useUseCases(): UseCase[] {
     return () => {
       live = false;
     };
-  }, []);
+  }, [tier]);
   return list;
 }
 
@@ -59,11 +69,15 @@ export interface UseCaseRun {
 
 /** Left panel of the Ask screen: pick a ready-made task, give it a place or an area, run it. */
 export function UseCasePanel({
+  title,
+  subtitle,
   useCases,
   language,
   busy,
   onRun,
 }: {
+  title: string;
+  subtitle: string;
   useCases: UseCase[];
   language: Language;
   busy: boolean;
@@ -75,15 +89,10 @@ export function UseCasePanel({
   const [values, setValues] = useState<Record<string, string>>({});
 
   return (
-    <Panel
-      title="Ready-made tasks"
-      icon={ListChecks}
-      subtitle="Fixed checklists of tool runs. The assistant writes the note; every figure is checked."
-      width="w-[23rem]"
-    >
+    <Panel title={title} icon={ListChecks} subtitle={subtitle} width="w-[23rem]">
       <ul className="space-y-1.5">
         {useCases.map((uc) => {
-          const Icon = ICON[uc.id] ?? ListChecks;
+          const Icon = USE_CASE_ICON[uc.id] ?? ListChecks;
           const open = uc.id === openId;
           const fields = paramFields(uc);
           const needsPlace = uc.needs.includes("place");

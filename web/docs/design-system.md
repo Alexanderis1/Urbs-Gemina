@@ -82,6 +82,46 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
 26. **No call is started more than twice.** After a missing answer the service is woken with a light request and
     the call runs once more; a request the service cannot serve is not repeated (every start costs money).
 
+
+## Two experiences
+
+One twin, two front doors (decided 14 Nov 2026, on Alessandro's request for a clear division between public
+users and city administration personnel). Which one a person gets is decided by their role, never by a
+setting in the page: no sign-in or no staff role means the public service.
+
+| | Public service ("Rome for residents") | Operations workspace (city staff) |
+|---|---|---|
+| Who | Anyone, no account | Signed-in personnel with the `office` role |
+| Question it answers | "What is happening around me?" | "What is happening in the city, and what if?" |
+| Header | PA blue, sections named in words across the top | Navy, "City staff" badge, icon rail on the left |
+| Opens on | My area: one address field, one answer in plain words | City view: the 3D console with every layer |
+| Sections | My area, City map, Sport, Ask, About the data | City, Ask, Permit, Scenarios, Sport, Data, Admin |
+| Map | A short list of layers in plain words, whole city or a municipio | Every layer, drawn areas, last 24 hours, display options |
+| Evidence | Folded under "How we know this" | Open: run ids, sources, the status bar with the run log |
+| Theme | Always light | Light or dark "operations room" |
+| Voice | Citizen line | Office assistant |
+| Footer | "Information only. In an emergency call 112." | Connection, role, number of runs, last run id |
+
+Rules:
+
+1. **The colour of the header says where you are.** PA blue = public, navy = staff. Nothing else changes colour.
+2. **Residents never see an office tool, not even greyed out.** Permit check, Scenario lab and Admin exist only
+   in the workspace. Simulated layers (traffic loops, road speed) and raw model points are not in the public map.
+3. **The public side leads with the person's address**, not with a tool. The topics offered come from the
+   service's own list of tasks for citizens, so a new citizen task appears without a change here.
+4. **The honesty labels stay on both sides.** REAL / ESTIMATED / SIMULATED / NOT AVAILABLE are public
+   information too; only the run ids and the tool trace are folded away for residents.
+5. **One door between the two:** "City staff sign-in" in the public header leads to `/staff` (magic link through
+   Lovable Cloud). "Sign out" in the workspace leads back. A signed-in account without the staff role stays on
+   the public side and is told why.
+6. **Without Lovable Cloud (demo, local run)** the same page offers "Enter the staff workspace (demo)"; the
+   choice is remembered in the browser. Data the service reserves for staff stays reserved either way.
+
+Where it lives: `src/lib/tiers.ts` (who sees which screen, and each screen's address), `src/shell/PublicShell.tsx`
+and `src/shell/StaffShell.tsx` (the two frames), `src/lib/layerCatalogue.ts` (layers and their wording per
+experience), `src/pages/Home.tsx` and `src/pages/StaffAccess.tsx`. Screens shared by both (`CityView`, `Ask`)
+take an `audience` prop and change wording and density, not behaviour.
+
 ## Tokens
 
 Colours are CSS variables (`--c-*`, as `R G B`) so Tailwind opacity works: `bg-real/10`, `border-line`.
