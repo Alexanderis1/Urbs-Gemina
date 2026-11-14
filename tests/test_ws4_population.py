@@ -68,7 +68,7 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 
     def check_sensors(name: str, observations: Any) -> Any:
         seen["check"] = (name, list(observations))
-        return [{"station": "st1", "median_z": 4.2}]
+        return [{"station": "st1", "median_z": 4.2, "flag": True}, {"station": "st2", "median_z": 0.5, "flag": False}]
 
     api.check_sensors = check_sensors  # type: ignore[attr-defined]
     api.adapt = lambda obs, source, spec: iter(obs)  # type: ignore[attr-defined]
@@ -142,4 +142,5 @@ def test_check_sensors_reads_the_layer_feeds(runtime: ToolRuntime, fake_ws5: dic
     env = check_sensors_tool(runtime, "air_no2", SQUARE)
     assert env["status"] == "ok" and env["tool"] == "check_sensors"
     assert fake_ws5["check"] == ("air_no2", ["obs1", "obs2"])
-    assert env["result"]["flagged"] == [{"station": "st1", "median_z": 4.2}] and env["result"]["readings"] == 2
+    assert [s["station"] for s in env["result"]["flagged"]] == ["st1"] and len(env["result"]["stations"]) == 2
+    assert env["result"]["readings"] == 2

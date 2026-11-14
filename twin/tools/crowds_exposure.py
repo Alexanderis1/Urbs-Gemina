@@ -190,9 +190,10 @@ def check_sensors_tool(runtime: ToolRuntime, layer: str, area: Any = "city", tim
     if not used:
         return runtime.envelope("check_sensors", inputs, None, {layer: "not_available"}, [], feed_warnings,
                                 status="not_available", reason=f"No source connected for layer '{layer}'.")
-    flagged = list(api.check_sensors(layer, readings))
+    stations = list(api.check_sensors(layer, readings))
     result = {"layer": layer, "area": resolved.describe(), "from": start.isoformat(), "to": at.isoformat(),
-              "readings": len(readings), "flagged": flagged,
+              "readings": len(readings), "stations": stations,
+              "flagged": [s for s in stations if s.get("flag")],
               "meaning": "A flagged station disagrees with its neighbours again and again: check it before trusting it."}
     sources = [Source(id=name, retrieved_at=at.isoformat()) for name in used]
     return runtime.envelope("check_sensors", inputs, result, {name: "real" for name in used}, sources,
