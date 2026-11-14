@@ -35,3 +35,25 @@ def test_plain_problems_and_withheld_notes_are_in_italian() -> None:
 
     assert plain_problem(Problem("uncited_number", "'42' has no run id"), "it").startswith("una cifra")
     assert plain_problem(Problem("uncited_number", "'42' has no run id"), "en").startswith("a figure")
+
+
+def test_citizens_get_an_information_disclosure_not_the_office_one() -> None:
+    """The office line 'decide il funzionario' is wrong for a resident; they get 'information only, 112'."""
+    from agents.config import load_agent_config
+
+    cfg = load_agent_config()
+    office, citizen = cfg.disclosure_for("office", "it"), cfg.disclosure_for("citizen", "it")
+    assert "funzionario" in office
+    assert "funzionario" not in citizen and "112" in citizen and "intelligenza artificiale" in citizen
+    assert "112" in cfg.disclosure_for("citizen", "en")
+
+
+def test_citizen_use_case_answer_opens_with_the_citizen_disclosure() -> None:
+    from agents.orchestrator import TwinOrchestrator
+    from tests.test_use_cases import CitingLLM, FakeGateway
+
+    orch = TwinOrchestrator(llm=CitingLLM(), gateway=FakeGateway())
+    q = TwinQuestion(question="Via del Corso 1", tier="citizen", language="it", use_case="citizen_area_info")
+    text = orch.ask(q).text
+    assert text.startswith("Sono un assistente") and "112" in text.split("\n\n")[0]
+    assert "funzionario" not in text.split("\n\n")[0]

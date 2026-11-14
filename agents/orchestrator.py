@@ -123,7 +123,7 @@ class Answer:
 
 
 def _finalise(text: str, report: VerifierReport, state: LoopResult, language: str, first_message: bool,
-              cfg: AgentConfig) -> Answer:
+              cfg: AgentConfig, tier: str = "office") -> Answer:
     verified = report.ok and bool(text.strip())
     problems = list(report.problems)
     if not text.strip():
@@ -133,7 +133,7 @@ def _finalise(text: str, report: VerifierReport, state: LoopResult, language: st
         text = INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " " + (
             "Problem found: " if language == "en" else "Problema: ") + "; ".join(missing) + "."
     if first_message:
-        text = cfg.disclosure.get(language, cfg.disclosure["en"]) + "\n\n" + _drop_self_disclosure(text)
+        text = cfg.disclosure_for(tier, language) + "\n\n" + _drop_self_disclosure(text)
     return Answer(text=text, verified=verified, problems=problems, runs=state.runs,
                   blocked_calls=state.blocked_calls, warnings=state.warnings,
                   cited_run_ids=list(report.cited_runs) if verified else [], language=language)
@@ -195,7 +195,7 @@ def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[st
     if not report.ok:
         # Codes and flagged figures only: no draft text in logs (guardrail 11, privacy).
         LOG.warning("verifier blocked answer: %s", "; ".join(f"{p.code} {p.message}" for p in report.problems))
-    out = _finalise(state.text, report, state, language, first_message, cfg)
+    out = _finalise(state.text, report, state, language, first_message, cfg, tier)
     if out.verified:
         out.citations = citation_trace(state.text, flatten_runs(state.runs), auto_lines)
     return out
@@ -260,8 +260,7 @@ class TwinOrchestrator:
         place = params.pop("place", None)
         if place is None and uc is not None and "place" in uc.needs:
             place = question.question  # the question text names the place ("Via del Corso 1")
-        disclosure = (self.cfg.disclosure.get(question.language, self.cfg.disclosure["en"])
-                      if _first_message(question) else None)
+        disclosure = self.cfg.disclosure_for(question.tier, question.language) if _first_message(question) else None
         try:
             rep = run_use_case(use_case, llm=llm, gateway=self._base_gateway(question.tier), area=question.area,
                                place=str(place) if place is not None else None, params=params,
