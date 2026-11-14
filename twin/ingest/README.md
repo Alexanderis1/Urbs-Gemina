@@ -34,6 +34,25 @@ A manifest snapshot looks like this:
 A layer that fails gets `"status": "not_available"` and an `error`; the run carries on
 (gate A no-go rule). Exit code 1 means at least one layer failed.
 
+## Cleaning and quality checks
+
+Every downloaded layer is cleaned before it is written (`clean_geometries` in `static.py`),
+and the manifest entry says what was done under `cleaning`:
+
+- features without geometry are dropped (e.g. empty records in the ZTL layer);
+- invalid geometries (self-crossing rings) are repaired with `make_valid`, keeping the
+  original dimension;
+- features entirely outside the city bbox are dropped (regional layers fetched by envelope);
+- columns empty in every row are dropped (`keep_columns` are always kept).
+
+A layer whose server announces the wrong CRS sets `options.true_crs`; the native numbers
+are then read in that CRS (Roma's `DIPAU:ReteEcologicaLinea` says EPSG:6708 but holds
+EPSG:3004 coordinates).
+
+`python -m twin.ingest.quality [layer ...]` checks the processed files again and writes
+`data/processed/quality_report.json`. Exact duplicate positions that remain are expected
+(several schools in one building, geocoded places on the same street, nested flood scenarios).
+
 ## Sensitive sites (one merged layer)
 
 `sensitive_sites` (built last, from the files in `data/processed/`) puts every sensitive
