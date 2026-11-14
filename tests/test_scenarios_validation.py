@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from twin.scenarios import config, validation
 from twin.scenarios.flood import _rating
@@ -37,3 +38,15 @@ def test_every_checked_model_says_how_it_was_checked() -> None:
     for kind, word in (("river_flood", "PGRA"), ("rain_flood", "cloudbursts"), ("chemical_plume", "FAC2"),
                        ("heatwave", "stations"), ("emergency_access", "118")):
         assert word in str(config.value(cfg[kind], "calibration")), kind
+
+
+def test_run_id_changes_when_the_scenario_code_changes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """A cached result from older code must not be served after a deploy (the cache lives on a volume)."""
+    from twin.scenarios import config, engine
+
+    change = {"action": "add", "site": {"lon": 12.48, "lat": 41.9, "height_m": 20}, "eirp_w": 100.0}
+    first = engine.run("antenna", "city", change, cache_dir=tmp_path)["run_id"]
+    assert engine.run("antenna", "city", change, cache_dir=tmp_path)["run_id"] == first
+    monkeypatch.setattr(config, "code_hash", lambda: "a-newer-version")
+    out = engine.run("antenna", "city", change, cache_dir=tmp_path)
+    assert out["run_id"] != first and not out.get("cached")

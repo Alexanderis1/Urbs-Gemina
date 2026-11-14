@@ -30,6 +30,21 @@ def value(section: dict[str, Any], key: str) -> Any:
 
 
 @lru_cache(maxsize=None)
+@lru_cache(maxsize=1)
+def code_hash() -> str:
+    """Hash of the scenario and physics code: a deploy with new code never reuses cached results."""
+    digest = hashlib.sha256()
+    pkg = Path(__file__).resolve().parent
+    files = sorted(pkg.glob("*.py")) + sorted((pkg.parent / "physics").glob("*.py")) + \
+        sorted((pkg.parent / "tools").glob("emf.py"))
+    for path in files:
+        digest.update(path.name.encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def config_hashes() -> dict[str, str]:
-    return {f"config/{name}": hashlib.sha256((CONFIG_DIR / name).read_bytes()).hexdigest()
-            for name in RESULT_CONFIGS}
+    out = {f"config/{name}": hashlib.sha256((CONFIG_DIR / name).read_bytes()).hexdigest()
+           for name in RESULT_CONFIGS}
+    out["code"] = code_hash()
+    return out
