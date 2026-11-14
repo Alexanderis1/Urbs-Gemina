@@ -21,8 +21,8 @@ from agents.verifier import Problem, VerifierReport, auto_cite_marked, citation_
 
 LOG = logging.getLogger("urbs.agents")
 
-DEFAULT_TOOLS = ["resolve_place", "context_check", "estimate_field", "query_layer", "run_scenario",
-                 "legal_lookup", "find_dataset", "data_status"]
+DEFAULT_TOOLS = ["run_use_case", "resolve_place", "context_check", "estimate_field", "query_layer", "run_scenario",
+                 "sports_facilities", "sport_coverage", "legal_lookup", "find_dataset", "news_search", "data_status"]
 
 PLAIN_PROBLEMS = {
     "uncited_number": "a figure without a tool run or source",
@@ -191,23 +191,56 @@ class TwinOrchestrator:
         self.gateway = gateway
         self.model_role = model_role
 
-    def _gateway_for(self, tier: str) -> ToolGateway:
+    def _base_gateway(self, tier: str) -> ToolGateway:
         if self.gateway is not None:
             return self.gateway
         specs, _ = load_tool_specs()
         return CompositeGateway(LocalWebTools(specs, config=self.cfg), HttpToolGateway(specs, role=tier, config=self.cfg))
 
+    def _gateway_for(self, tier: str, language: str = "it") -> ToolGateway:
+        """Base tools plus ``run_use_case`` (playbooks run by code, see agents/use_cases.py)."""
+        from agents.use_cases import UseCaseTool
+
+        base = self._base_gateway(tier)
+        return CompositeGateway(base, UseCaseTool(base, tier=tier, language=language))
+
     def ask(self, question: TwinQuestion) -> TwinAnswer:
         role = "voice" if question.channel == "voice" else self.model_role
         llm = self.llm or AnthropicLLM(role=role, config=self.cfg)
+        use_case = question.use_case or ("municipio_briefing" if question.mode == "briefing" else None)
+        if use_case:
+            return self._run_use_case(use_case, question, llm)
         prompt = question.question
         if question.area:
             prompt += f"\n\nOperating area chosen in the interface: {question.area}"
         if question.mode == "briefing":
             prompt = f"Morning briefing requested. {prompt}"
-        result = answer(prompt, llm=llm, gateway=self._gateway_for(question.tier), language=question.language,
-                        tier=question.tier, first_message=question.conversation_id is None, config=self.cfg)
+        result = answer(prompt, llm=llm, gateway=self._gateway_for(question.tier, question.language),
+                        language=question.language, tier=question.tier,
+                        first_message=question.conversation_id is None, config=self.cfg)
         return to_twin_answer(result)
+
+    def _run_use_case(self, use_case: str, question: TwinQuestion, llm: LLM) -> TwinAnswer:
+        """A named playbook: code runs the tool plan, the model writes one verified narrative."""
+        from agents.use_cases import UseCaseError, load_use_cases, run_use_case
+        from agents.use_cases import to_twin_answer as use_case_answer
+
+        params = dict(question.params)
+        uc = load_use_cases().get(use_case)
+        place = params.pop("place", None)
+        if place is None and uc is not None and "place" in uc.needs:
+            place = question.question  # the question text names the place ("Via del Corso 1")
+        disclosure = (self.cfg.disclosure.get(question.language, self.cfg.disclosure["en"])
+                      if question.conversation_id is None else None)
+        try:
+            rep = run_use_case(use_case, llm=llm, gateway=self._base_gateway(question.tier), area=question.area,
+                               place=str(place) if place is not None else None, params=params,
+                               language=question.language, tier=question.tier, question=question.question, config=self.cfg)
+        except UseCaseError as error:
+            text = INSUFFICIENT.get(question.language, INSUFFICIENT["en"]) + f" {error}."
+            return TwinAnswer(text=(disclosure + "\n\n" + text) if disclosure else text, verified=False, run_ids=(),
+                              sources=(), data_kinds={}, synthetic=False, missing=(str(error),))
+        return use_case_answer(rep, disclosure=disclosure)
 
 
 def to_twin_answer(a: Answer) -> TwinAnswer:

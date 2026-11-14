@@ -23,6 +23,10 @@ class TwinQuestion:
     mode: Mode = "question"
     conversation_id: str | None = None
     channel: str = "chat"
+    #: Optional playbook id from config/use_cases.yaml (e.g. "heat_plan_elderly"); code runs its tool plan.
+    use_case: str | None = None
+    #: Playbook inputs other than the area, e.g. {"place": "Piazza del Popolo", "attendees": 30000}.
+    params: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
