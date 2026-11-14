@@ -98,10 +98,14 @@ def resolve_area(area: AreaArg, *, lookup: AreaLookup | None = None) -> Area:
     return Area(id=area_id, kind=kind, geometry=geometry, bbox=bbox, area_km2=km2)
 
 
-def check_heavy(area: Area) -> None:
-    """Heavy simulations refuse areas above ``heavy_tools_max_area_km2``."""
+def check_heavy(area: Area, limit_km2: float | None = None) -> None:
+    """Heavy simulations refuse areas above ``heavy_tools_max_area_km2`` (or a tighter per-kind limit)."""
     limit = float(config.load("areas.yaml")["heavy_tools_max_area_km2"])
+    if limit_km2 is not None and limit_km2 < limit:
+        limit = limit_km2
+        hint = "Draw a smaller polygon around the street or event (a few blocks)."
+    else:
+        hint = "Pick a municipio, an urban zone or draw a smaller polygon."
     if area.area_km2 > limit:
         raise AreaTooLarge(
-            f"This simulation runs on at most {limit:g} km2; area '{area.id}' is {area.area_km2:.1f} km2. "
-            "Pick a municipio, an urban zone or draw a smaller polygon.")
+            f"This simulation runs on at most {limit:g} km2; area '{area.id}' is {area.area_km2:.1f} km2. {hint}")
