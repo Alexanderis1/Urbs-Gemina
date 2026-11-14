@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { KindBadge } from "@/components/Badge";
 import { Chips, CitizenMap, HeatLegend, HereCard, MapScreen, PositionBar } from "@/components/CitizenMap";
 import { GlyphIcon } from "@/components/MarkerCard";
+import { LiveBadge } from "@/components/LiveBadge";
 import { texts, tr } from "@/lib/i18n";
 import { metricInfo } from "@/lib/layers";
 import { useHeatmap, useHereAnswer } from "@/lib/useCitizenData";
@@ -102,6 +103,7 @@ export default function Environment() {
               {heat.kind && <KindBadge kind={heat.kind} />}
             </div>
             <HeatLegend heat={heat.data} unit={unit} />
+            {heat.live && <LiveBadge live={heat.live} />}
             <p className="hint">{t.estimateNote}</p>
           </section>
         )}

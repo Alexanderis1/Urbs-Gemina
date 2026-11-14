@@ -38,7 +38,9 @@ import { useTheme } from "@/lib/useTheme";
 import { GROUPS, isFused, layerLabel, layersFor } from "@/lib/layerCatalogue";
 import type { Experience } from "@/lib/tiers";
 import type { Envelope, QueryLayerResult } from "@/api/types";
-import { errorText } from "@/lib/errors";
+import { cacheKey, maxAgeMs, savable } from "@/lib/liveLayer";
+import { useLive } from "@/lib/useLive";
+import { LiveBadge } from "@/components/LiveBadge";
 import { locale, texts, tr } from "@/lib/i18n";
 
 const T = texts({
@@ -191,7 +193,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const t = tr(T);
   const staff = audience === "staff";
   const catalogue = layersFor(audience);
-  const { run } = useSession();
+  const { run, tier } = useSession();
   const { theme, palette } = useTheme();
   // Opens on a fused layer over the centre: it answers fast and shows the twin doing its job.
   const [layer, setLayer] = useState<string | null>("air_no2");
@@ -200,9 +202,6 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const [showUncertainty, setShowUncertainty] = useState(true);
   const [buildingView, setBuildingView] = useState<BuildingView>("plain");
   const [showTrees, setShowTrees] = useState(false);
-  const [env, setEnv] = useState<Envelope<QueryLayerResult> | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [draft, setDraft] = useState<[number, number][]>([]);
   const [radius, setRadius] = useState<{ lon: number; lat: number; radius_m: number } | null>(null);
@@ -244,23 +243,18 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   useEffect(() => {
     setHover(null);
     setSelected(null);
-    if (!layer) {
-      setBusy(false);
-      return setEnv(null);
-    }
-    if (area.type === "zone" && !area.id) return;
-    const time = hoursAgo === 0 ? null : new Date(Date.now() - hoursAgo * 3600_000).toISOString();
-    let live = true;
-    setError(null);
-    setBusy(true);
-    run<QueryLayerResult>("query_layer", { layer, area: areaToArg(area), time, limit: 5000 })
-      .then((e) => live && setEnv(e))
-      .catch((e: unknown) => live && setError(errorText(e)))
-      .finally(() => live && setBusy(false));
-    return () => {
-      live = false;
-    };
-  }, [layer, area, hoursAgo, run]);
+  }, [layer, area, hoursAgo]);
+
+  // The last answer saved in this browser shows at once; the live data replaces it when it arrives (lib/liveLayer.ts).
+  const question = layer && !(area.type === "zone" && !area.id) ? { layer, area: areaToArg(area) } : null;
+  const live = useLive<Envelope<QueryLayerResult>>(
+    question && cacheKey({ tool: "query_layer", tier, ...question, hoursAgo }),
+    () => run<QueryLayerResult>("query_layer", { ...question!, time: hoursAgo === 0 ? null : new Date(Date.now() - hoursAgo * 3600_000).toISOString(), limit: 5000 }),
+    { maxAgeMs: maxAgeMs(layer), keep: (e) => isOk(e) && savable(layer) },
+  );
+  const env = live.idle ? null : live.value;
+  const busy = !live.idle && live.phase === "loading";
+  const error = live.phase === "error" ? live.error : null;
 
   // Sensors that report several values (NO₂, PM10, PM2.5): the operator picks which one is shown.
   const metrics = useMemo(() => (env && isOk(env) ? availableMetrics(env.result) : []), [env]);
@@ -574,6 +568,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
               </span>
             ) : null}
           </div>
+          {layer && data && !error && <LiveBadge live={live} />}
           {!busy && !error && data?.truncated && data.count ? (
             <p className="flex gap-1.5 text-xs text-estimated">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />

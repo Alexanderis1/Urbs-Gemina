@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { KindBadge } from "@/components/Badge";
+import { LiveBadge } from "@/components/LiveBadge";
 import { Chips, CitizenMap, HeatLegend, LevelPill, MapScreen, PositionBar } from "@/components/CitizenMap";
 import { GlyphIcon, ResourceDetail } from "@/components/MarkerCard";
 import { Callout, Skeleton } from "@/components/ui";
@@ -247,6 +248,7 @@ export default function Transport() {
                   {heat.kind && <KindBadge kind={heat.kind} />}
                 </div>
                 <HeatLegend heat={heat.data} unit={unit} invert={lensId !== "bus"} />
+                {heat.live && <LiveBadge live={heat.live} />}
               </section>
             )}
           </>

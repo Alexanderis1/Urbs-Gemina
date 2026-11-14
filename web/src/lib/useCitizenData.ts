@@ -22,12 +22,23 @@ import {
   type FeedState,
 } from "@/lib/here";
 import { metricInfo, normalizeLayer } from "@/lib/layers";
+import { cacheKey, maxAgeMs, savable, type LiveState } from "@/lib/liveLayer";
+import { useLive } from "@/lib/useLive";
 import { useSession } from "@/lib/runlog";
 
 export type Loaded<T> =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "ok"; data: T; env: Envelope; kind?: DataKind; /** True when the layer tools answered instead of the citizen tool. */ fallback: boolean }
+  | {
+      status: "ok";
+      data: T;
+      env: Envelope;
+      kind?: DataKind;
+      /** True when the layer tools answered instead of the citizen tool. */
+      fallback: boolean;
+      /** How fresh the data is, for answers that are saved in the browser and shown at once (lib/liveLayer.ts). */
+      live?: Pick<LiveState<unknown>, "phase" | "at">;
+    }
   /** The live service does not offer this yet. */
   | { status: "missing" }
   | { status: "error"; text: string };
@@ -72,20 +83,30 @@ function useLoaded<T>(key: string | null, load: () => Promise<Loaded<T>>): Loade
 
 /** The whole city for one layer, as patches. `time` in the future asks for a prediction where the tool has one. */
 export function useHeatmap(layer: string | null, time: string | null = null): Loaded<CityHeatmap> {
-  const { run } = useSession();
-  return useLoaded<CityHeatmap>(layer ? `${layer}|${time ?? ""}` : null, async () => {
-    const env = await ask(run, "city_heatmap", { layer, ...(time ? { time } : {}) });
-    if (env) {
-      const data = parseCityHeatmap(env.result);
-      if (data.cells.length) return { status: "ok", data, env, kind: firstKind(env, layer!), fallback: false };
-    }
-    // The layer tool thins a whole-city answer evenly; merged into larger hexagons it covers the city again.
-    const raw = (await run("query_layer", { layer, area: "city", time, limit: 5000 })) as Envelope;
-    if (!isOk(raw)) return { status: "missing" };
-    const fine = normalizeLayer(raw.result);
-    const data: CityHeatmap = { cells: coarseCells(fine.items, 7), legend: [], unit: fine.unit };
-    return data.cells.length ? { status: "ok", data, env: raw, kind: firstKind(raw, layer!), fallback: true } : { status: "missing" };
-  });
+  const { run, tier } = useSession();
+  type Answer = Extract<Loaded<CityHeatmap>, { status: "ok" | "missing" }>;
+  // The whole city is the heaviest question of the citizen screens: the last answer shows at once, then the live one.
+  const live = useLive<Answer>(
+    layer && cacheKey({ what: "city_heatmap", tier, layer, time }),
+    async () => {
+      const env = await ask(run, "city_heatmap", { layer, ...(time ? { time } : {}) });
+      if (env) {
+        const data = parseCityHeatmap(env.result);
+        if (data.cells.length) return { status: "ok", data, env, kind: firstKind(env, layer!), fallback: false };
+      }
+      // The layer tool thins a whole-city answer evenly; merged into larger hexagons it covers the city again.
+      const raw = (await run("query_layer", { layer, area: "city", time, limit: 5000 })) as Envelope;
+      if (!isOk(raw)) return { status: "missing" };
+      const fine = normalizeLayer(raw.result);
+      const data: CityHeatmap = { cells: coarseCells(fine.items, 7), legend: [], unit: fine.unit };
+      return data.cells.length ? { status: "ok", data, env: raw, kind: firstKind(raw, layer!), fallback: true } : { status: "missing" };
+    },
+    { maxAgeMs: maxAgeMs(layer), keep: (a) => a.status === "ok" && savable(layer) },
+  );
+  if (live.idle) return { status: "idle" };
+  if (live.phase === "error") return { status: "error", text: live.error ?? "" };
+  if (!live.value) return { status: "loading" };
+  return live.value.status === "ok" ? { ...live.value, live: { phase: live.phase, at: live.at } } : live.value;
 }
 
 /** Half side of the square asked around a position when falling back to the layer tool (covers the cell and its neighbours). */

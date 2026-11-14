@@ -111,6 +111,18 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     (`src/lib/useCitizenData.ts`, `src/lib/here.ts`).
 
 
+32. **A layer opens at once from its saved copy, then goes LIVE** (Alessandro, 14 Nov). The last answer of
+    each layer is kept in the browser (IndexedDB, `src/lib/layerStore.ts`) and shown immediately, with the
+    time of its data and "Caricamento dati live…". When the fresh answer arrives the green round **LIVE**
+    badge appears with "Aggiornato alle hh:mm". Each layer has a life (`src/lib/liveLayer.ts`: 5 min for bus
+    and traffic feeds, 10 for rain, 30 for air and fields, 12 h for registers, each with its basis); when it
+    ends the badge goes and the layer is asked again. A copy still within its life is LIVE without a new
+    request, and nothing is asked while the page is not on screen: the service is not woken for nobody.
+    LIVE is about freshness only, the kind badge (REAL / ESTIMATED / SIMULATED) stays next to it. Never
+    saved: refusals, the Cartoradio grid, the antenna register and single field measurements (sources that
+    may not be passed on); the key holds the access tier and leaving the staff workspace wipes the copies.
+    Used by the City view and by the city heatmap of Ambiente and Trasporti.
+
 ## Two experiences
 
 One twin, two front doors (decided 14 Nov 2026, on Alessandro's request for a clear division between public
