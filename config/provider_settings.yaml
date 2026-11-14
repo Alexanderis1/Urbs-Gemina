@@ -63,6 +63,22 @@ estimated:
     position_sigma_osm_m: {value: 30, basis: "assumption: OSM mast mapping accuracy"}
     position_sigma_peak_m: {value: 75, basis: "half a Cartoradio cell diagonal (100 m Web Mercator = about 74 m on the ground)"}
     position_sigma_opencellid_m: {value: 300, basis: "OpenCelliD centroids lie 100 m-1 km from the mast (C=70)"}
+    # Register v2 (twin/providers/estimated/refit.py). Cartoradio's own method (cartoradio.it/faq, read
+    # 13 Nov 2026): 100 m pixels, isotropic receiver at the pixel centre, an empirical-statistical urban
+    # path-loss model plus terrain diffraction, fed by the operators' real azimuth, tilt, gain and height.
+    # So the fit uses an empirical path-loss exponent and tri-sector patterns, not free space.
+    refit:
+      enabled: {value: true, basis: "v2 beat v1 on held-out Cartoradio cells: 9.17 -> 7.24 dB (docs/register_refit.md, 13 Nov 2026)"}
+      runtime_exponent: {value: 2.0, basis: "exponent chosen on held-out cells among 2.0-4.0 (docs/register_refit.md)"}
+      exponents: {value: [2.0, 2.5, 3.0, 3.5, 4.0], basis: "range of urban path-loss exponents (free space = 2; Hata urban about 3.5)"}
+      reference_distance_m: {value: 100.0, basis: "one Cartoradio pixel; below it the field follows the 1/d^2 near law"}
+      receptor_height_m: {value: 1.5, basis: "assumption: Cartoradio does not state it; the usual CEI 211-10 head height"}
+      tilt_deg: {value: 6.0, basis: "middle of the 2-10 deg urban downtilt range (config/physics.yaml)"}
+      mast_offset_m: {value: 4.0, basis: "assumption: rooftop panels sit 3-6 m above the roof on a pole or frame (C=60)"}
+      tower_height_m: {value: 25.0, basis: "assumption: ground-based towers in Rome are 20-35 m (C=50)"}
+      azimuth_passes: {value: 2, basis: "two coordinate-descent sweeps; the second changed under 5% of sites in tests"}
+      holdout_share: {value: 0.2, basis: "one cell in five held back to compare models fairly"}
+      seed: {value: 20261113, basis: "fixed split, so the reported errors repeat"}
 
 open:
   roma_gtfs_rt:
