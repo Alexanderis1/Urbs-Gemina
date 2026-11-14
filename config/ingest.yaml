@@ -1,0 +1,586 @@
+# Static context layers and live feeds pulled by twin/ingest (workstream WS1).
+#
+# Every layer says what kind of data it is (real | estimated | simulated) and
+# which manifest source it comes from (data/manifest.json "sources").
+# Run:  python scripts/fetch_static_layers.py [layer ...]
+#       python -m twin.ingest.live [feed ...]
+
+# Fields whose NAME matches one of these patterns are dropped from every
+# feature before anything touches the disk (hard rule: no personal data).
+# Matching is case-insensitive, Python regular expressions on the field name.
+privacy:
+  basis: "CLAUDE.md hard rule; design-proposal section 7 lists ref-nome, ref-cell, telefono, e-mail on DIPPC:241"
+  drop_field_patterns:
+    - '^ref[-_]'                 # ref-nome, ref-cell, ref_mail (Roma 241)
+    - 'referent'                 # referente, nome_referente
+    - '(^|[^a-z])tel'            # tel, telefono, fax_tel (not "castello")
+    - 'phone'                    # phone, contact:phone, operator:phone (OSM)
+    - 'fax'
+    - 'mail'                     # e-mail, email, contact:email
+    - '(^|[^a-z])cell'           # cell, cellulare
+    - '(^|[^a-z])pec($|[^a-z])'  # certified e-mail address
+    - '^contact:'                # every OSM contact:* tag
+    - 'cognome'
+    - 'codice_fiscale'
+
+# Roma Capitale bounding box from config/areas.yaml is used to clip regional
+# and national layers. Whole city by default.
+sources:
+  roma_geoserver:
+    protocol: wfs
+    url: "https://geoportale.comune.roma.it/geoserver/ows"
+  lazio_geoserver:
+    protocol: wfs
+    url: "https://geoportale.regione.lazio.it/geoserver/ows"
+  sitap:
+    protocol: wfs
+    url: "https://sitap.cultura.gov.it/geoserver/ows"
+  osm:
+    # Every Overpass server (overpass-api.de, kumi, private.coffee) and Geofabrik reset or
+    # timed out from the cloud sandbox on 2026-11-13, so OSM layers are filtered locally
+    # from the openstreetmap.fr Lazio extract (about 130 MB, updated daily, ODbL).
+    # To use Overpass instead, set protocol: overpass and list interpreter URLs.
+    protocol: osm_extract
+    url: "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf"
+  derived:
+    # Layers built from other processed layers (no download). Run them after their inputs.
+    protocol: derived
+    url: "data/processed"
+  lazio_open_data:
+    # Regione Lazio CKAN portal; tables that already carry latitude/longitude.
+    protocol: csv_points
+    url: "https://dati.lazio.it"
+  indicepa:
+    # IndicePA (IPA), the national register of public bodies; addresses only, geocoded
+    # offline on the OSM extract's addr:* tags (no outside geocoder sees the data).
+    protocol: csv_geocoded
+    url: "https://indicepa.gov.it/ipa-dati"
+  ispra_flood:
+    # ISPRA national mosaic of flood hazard areas (PGRA scenarios, v5.0 2020). The WFS on
+    # sdi.isprambiente.it resets cloud connections; the ArcGIS MapServer works.
+    protocol: arcgis_features
+    url: "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer"
+  copernicus_hrl:
+    # Copernicus Land Monitoring Service, High Resolution Layer Imperviousness Density 2018.
+    protocol: arcgis_image
+    url: "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer"
+  salute_open_data:
+    # Ministry of Health open data (NSIS statistics). Tables with addresses only; geocoded
+    # offline on the OSM extract like IndicePA.
+    protocol: csv_geocoded
+    url: "https://www.dati.salute.gov.it"
+  salute_asl:
+    # Same portal: ASL-to-municipio table and ASL activity figures, joined to the municipi.
+    protocol: asl_areas
+    url: "https://www.dati.salute.gov.it"
+  istat_census:
+    protocol: istat_census
+    url: "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip"
+
+layers:
+  # --- Boundaries -----------------------------------------------------------
+  municipi:              {source: roma_geoserver, type_name: "DIPPC:210_RomaCapitale_Municipi", data_kind: real, theme: boundaries}
+  # DIPDIT:ZoneUrbanistiche returns a server error ("variable not found in subplan target list").
+  urban_zones:           {source: roma_geoserver, type_name: "DIPPC:rc_zone_urbanistiche", data_kind: real, theme: boundaries, notes: "155 zones; code_zu is the zone code, municipi the municipio"}
+  census_sections:
+    source: istat_census
+    data_kind: real
+    theme: boundaries
+    # ISTAT municipality code of Roma Capitale (PRO_COM 58091).
+    filter: {PRO_COM: 58091}
+    notes: "ISTAT 2021 census sections of Roma Capitale with residents and children 0-14 (census at 31 Dec 2021)"
+    # Output fields are fixed by the hub contract: sez_id, residents, children_0_14, municipio, zone.
+    options:
+      shapes_member: "SHP/R12_21_WGS84.shp"
+      zones_member: "TAB/ASC3_R12_21.csv"        # COM_ASC3 -> urban-zone code (COD_ASC3_T)
+      population_url: "https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip"
+      population_member: "Roma_indicatori_2021_sezioni.xlsx"
+      population_sheet: "Roma_2021"
+      residents_column: P1                         # Popolazione residente - totale
+      children_columns: [P14, P15, P16]            # eta < 5, 5-9, 10-14
+
+  # --- Planning and heritage (Roma Capitale) --------------------------------
+  rete_ecologica_poly:   {source: roma_geoserver, type_name: "DIPAU:ReteEcologicaPoligono", data_kind: real, theme: planning}
+  rete_ecologica_line:   {source: roma_geoserver, type_name: "DIPAU:ReteEcologicaLinea", data_kind: real, theme: planning}
+  cpq_morfologie:        {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Morfologie_Poligono", data_kind: real, theme: planning}
+  cpq_preesistenze:      {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Preesistenze_Poligono", data_kind: real, theme: heritage}
+  cpq_spazi_aperti:      {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Elementi_Spazi_Aperti_Poligono", data_kind: real, theme: heritage}
+  cpq_edilizia_speciale: {source: roma_geoserver, type_name: "DIPAU:CartaPerLaQualita_Edifici_Edilizia_Speciale", data_kind: real, theme: heritage}
+  unesco:                {source: roma_geoserver, type_name: "SOVR:SitoUnescoPoly", data_kind: real, theme: heritage}
+  unesco_buffer:         {source: roma_geoserver, type_name: "SOVR:buffer_zone", data_kind: real, theme: heritage}
+  protected_areas:       {source: roma_geoserver, type_name: "DIPPC:235_AreeProtette", data_kind: real, theme: environment}
+  ptpr_paesaggi_roma:    {source: roma_geoserver, type_name: "REGLAZ:tavola_a_paesaggi", data_kind: real, theme: landscape, clip_to_city: true, notes: "PTPR Tavola A cascaded from Lazio; the full layer covers the whole region"}
+  acoustic_zoning:       {source: roma_geoserver, type_name: "DIPAMB:ZonizzazioneAcustica", data_kind: real, theme: environment, notes: "2002 zoning, not hit-tested before"}
+
+  # --- Sensitive sites for the 300 m antenna context (Challenge 02) ---------
+  schools_state:         {source: roma_geoserver, type_name: "DIPSCU:mv_portale_rete_statale", data_kind: real, theme: sensitive_sites}
+  nidi:                  {source: roma_geoserver, type_name: "DIPSCU:mv_portale_nidi_capitolini", data_kind: real, theme: sensitive_sites}
+  infanzia:              {source: roma_geoserver, type_name: "DIPSCU:mv_portale_infanzia_capitolina", data_kind: real, theme: sensitive_sites}
+  hospitals:             {source: roma_geoserver, type_name: "DIPAMB:Ospedali", data_kind: real, theme: sensitive_sites, notes: "38 features, looks incomplete (C=60)"}
+  health_care:
+    source: roma_geoserver
+    type_name: "DIPPC:241_ServiziSanitarieAssistenziali"
+    data_kind: real
+    theme: sensitive_sites
+    # Named explicitly as well, in case a pattern above ever misses them.
+    drop_fields: ["ref-nome", "ref-cell", "telefono", "e-mail"]
+  care_homes_osm:
+    source: osm
+    data_kind: real
+    theme: sensitive_sites
+    selectors: ['nwr["amenity"="nursing_home"]', 'nwr["social_facility"="nursing_home"]', 'nwr["social_facility"="assisted_living"]']
+    notes: "No official RSA layer exists; OSM is incomplete"
+  playgrounds_osm:
+    source: osm
+    data_kind: real
+    theme: sensitive_sites
+    selectors: ['nwr["leisure"="playground"]']
+    notes: "No official playground layer exists; OSM is incomplete"
+
+  # --- Antenna seeds (used by WS3 sim_register) ------------------------------
+  masts_osm:
+    source: osm
+    data_kind: real
+    theme: antennas
+    selectors: ['nwr["man_made"="mast"]["tower:type"="communication"]', 'nwr["man_made"="tower"]["tower:type"="communication"]']
+    notes: "About 191 mobile masts in Roma Capitale were counted earlier (C=80)"
+    options: {tiles: 4}
+
+  # --- Sports (Challenge 04, consumed by WS10) -------------------------------
+  sports_municipal:      {source: roma_geoserver, type_name: "DIPPC:243_ServiziSportivi", data_kind: real, theme: sports}
+
+  pools_municipal:       {source: roma_geoserver, type_name: "GABSIN:piscine", data_kind: real, theme: sports}
+  osm_sports:
+    source: osm
+    data_kind: real
+    theme: sports
+    # Same tags as twin.modules.sports.pipeline.overpass_query() (WS10).
+    selectors: ['nwr["leisure"="sports_centre"]', 'nwr["leisure"="pitch"]', 'nwr["leisure"="fitness_centre"]', 'nwr["leisure"="swimming_pool"]', 'nwr["leisure"="stadium"]', 'nwr["leisure"="track"]', 'nwr["leisure"="ice_rink"]', 'nwr["leisure"="sports_hall"]']
+    notes: "Private and public sports venues from OSM; also saved as Overpass-style JSON for WS10"
+    options:
+      tiles: 4          # Overpass times out on the whole city at once
+      raw_json: true    # also write data/processed/osm_sports.json (elements with tags and center, contacts dropped)
+
+  # --- Regional landscape plan (Regione Lazio PTPR), clipped to Rome --------
+  ptpr_a_aree_tutela_dm: {source: lazio_geoserver, type_name: "geonode:ptpr_tavola_a_aree_tutela_dm_57472580c4fa53a68da4d38bd9ee2093", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_ex_1497_ab:     {source: lazio_geoserver, type_name: "geonode:ex_1497_ab", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_ex_1497_cd:     {source: lazio_geoserver, type_name: "geonode:ptpr_tavola_b_ex_1497_cd_468ef73f428b4e868f9cac53332be356", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_boschi:         {source: lazio_geoserver, type_name: "geonode:boschi", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_acque_pubbliche: {source: lazio_geoserver, type_name: "geonode:acque_pubbliche0", data_kind: real, theme: landscape, clip_to_city: true}
+  ptpr_b_aree_archeologiche: {source: lazio_geoserver, type_name: "geonode:aree_archeologiche", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_decreti_archeologici: {source: lazio_geoserver, type_name: "geonode:decreti_archeologici", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_punti_archeologici: {source: lazio_geoserver, type_name: "geonode:punti_archeologici", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_centri_storici: {source: lazio_geoserver, type_name: "geonode:centri_storici", data_kind: real, theme: heritage, clip_to_city: true}
+  ptpr_b_aree_naturali_protette: {source: lazio_geoserver, type_name: "geonode:aree_naturali_protette1", data_kind: real, theme: environment, clip_to_city: true}
+  ptpr_b_usi_civici:     {source: lazio_geoserver, type_name: "geonode:usi_civici", data_kind: real, theme: landscape, clip_to_city: true}
+  natura2000:            {source: lazio_geoserver, type_name: "geonode:rete_natura200000", data_kind: real, theme: environment, clip_to_city: true}
+  land_use_2016:         {source: lazio_geoserver, type_name: "geonode:cus_2016", data_kind: real, theme: environment, clip_to_city: true, notes: "Regione Lazio land use map 1:25,000, 2016 update (Corine-style classes)"}
+  monumental_trees:      {source: lazio_geoserver, type_name: "geonode:alberi_monumentali", data_kind: real, theme: landscape, clip_to_city: true}
+
+  # More PTPR (Regione Lazio landscape plan). PTPR is the official landscape source of
+  # the twin (theme: landscape_ptpr). Tavola C is not published as WFS (C=70).
+  ptpr_a_punti_vincoli:      {source: lazio_geoserver, type_name: "geonode:punti_5_vincoli", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_a_rispetto_vincoli:   {source: lazio_geoserver, type_name: "geonode:rispetto_5_vincoli", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_a_visuali:            {source: lazio_geoserver, type_name: "geonode:visuali_5_vincoli0", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_a_piani_attuativi:    {source: lazio_geoserver, type_name: "geonode:piani_attuativi_valenza_paesistica", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_linee_archeologiche: {source: lazio_geoserver, type_name: "geonode:linee_archeologiche", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_punti_archeologici_tipizzati: {source: lazio_geoserver, type_name: "geonode:punti_archeologici_tipizzati3", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rispetto_punti_archeologici: {source: lazio_geoserver, type_name: "geonode:rispetto_punti_archeologici", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rispetto_linee_archeologiche: {source: lazio_geoserver, type_name: "geonode:rispetto_linee_archeologiche", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rispetto_punti_archeologici_tipizzati: {source: lazio_geoserver, type_name: "geonode:rispetto_punti_archeologici_tipizzati", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_centri_storici_rispetto: {source: lazio_geoserver, type_name: "geonode:centri_storici_rispetto_150", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_zone_umide:         {source: lazio_geoserver, type_name: "geonode:zone_umide", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_geomorfologici:     {source: lazio_geoserver, type_name: "geonode:geomorfologici_tipizzati", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_ptp_1512:           {source: lazio_geoserver, type_name: "geonode:ptp_1512", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_agro_identitario:   {source: lazio_geoserver, type_name: "geonode:agro_identitario", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_rurali_identitari:  {source: lazio_geoserver, type_name: "geonode:rurali_identitari", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptpr_b_aree_urbanizzate:   {source: lazio_geoserver, type_name: "geonode:aree_urbanizzate", data_kind: real, theme: landscape_ptpr, clip_to_city: true}
+  ptp_beni_art134_c:         {source: lazio_geoserver, type_name: "geonode:PTP_15_12_beni_articolo_134_co_1_lett_c", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Beni paesaggistici art. 134 c.1 lett. c (PTP 15/12)"}
+  ptp_vincoli_1089:          {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_1089", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Archaeological and monumental constraints L. 1089/1939 (PTP 15/12)"}
+  ptp_vincoli_1497_ab:       {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_ex_1497_39_ab", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Art. 136 a/b equivalent (PTP 15/12)"}
+  ptp_vincoli_1497_cd:       {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_ex_1497_39_cd", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Art. 136 c/d equivalent (PTP 15/12)"}
+  ptp_vincoli_431_m:         {source: lazio_geoserver, type_name: "geonode:PTP_15_12_vincoli_431_85_lettera_m_con_specif", data_kind: real, theme: landscape_ptpr, clip_to_city: true, notes: "Art. 142 lett. m (archaeological interest) equivalent"}
+
+  # --- More official sensitive-site layers (Roma Capitale, Protezione Civile) --
+  hazardous_sites:
+    source: roma_geoserver
+    type_name: "DIPPC:263_StabilimentiImpiantiRilevanti"
+    data_kind: real
+    theme: sensitive_sites
+    # Informal settlements are not industrial sites and describe a community; never ingested.
+    exclude: {tipologia: ["CampiNomadi"]}
+    notes: "Seveso (D.Lgs. 105/2015) plants, nuclear reactor, landfills, waste storage, car breakers"
+  seveso_perimeters:         {source: roma_geoserver, type_name: "DIPPC:306_RIR_Perimetri_Industrie", data_kind: real, theme: sensitive_sites}
+  seveso_damage_zones:       {source: roma_geoserver, type_name: "DIPPC:306_RIR_ZoneDanno", data_kind: real, theme: sensitive_sites}
+  stations_ports_airports:   {source: roma_geoserver, type_name: "DIPPC:253_StazioniPortiAeroporti", data_kind: real, theme: sensitive_sites}
+  embassies:                 {source: roma_geoserver, type_name: "DIPPC:ambasciate_consolati", data_kind: real, theme: sensitive_sites}
+  police_fire:               {source: roma_geoserver, type_name: "DIPPC:mappa_roma_notte_forzeordine_vigilifuoco", data_kind: real, theme: sensitive_sites}
+  emergency_hospitals:       {source: roma_geoserver, type_name: "DIPPC:ospedali_prontosoccorso", data_kind: real, theme: sensitive_sites}
+  civil_protection_sites:    {source: roma_geoserver, type_name: "DIPPC:421_SediEdificiProtezioneCivile", data_kind: real, theme: sensitive_sites}
+  parks_municipal:           {source: roma_geoserver, type_name: "GABSIN:parchi", data_kind: real, theme: sensitive_sites}
+
+  # --- OSM gap filler for sensitive sites (one pass over the Lazio extract) ---
+  osm_sensitive_pois:
+    source: osm
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Gap filler only; official layers win when both describe the same site"
+    selectors:
+      - 'nwr["amenity"="hospital"]'
+      - 'nwr["amenity"="clinic"]'
+      - 'nwr["healthcare"="hospital"]'
+      - 'nwr["healthcare"="clinic"]'
+      - 'nwr["amenity"="school"]'
+      - 'nwr["amenity"="kindergarten"]'
+      - 'nwr["amenity"="childcare"]'
+      - 'nwr["amenity"="university"]'
+      - 'nwr["amenity"="college"]'
+      - 'nwr["leisure"="park"]'
+      - 'nwr["power"="substation"]'
+      - 'nwr["power"="plant"]'
+      - 'nwr["man_made"="water_works"]'
+      - 'nwr["man_made"="wastewater_plant"]'
+      - 'nwr["man_made"="gasometer"]'
+      - 'nwr["railway"="station"]'
+      - 'nwr["station"="subway"]'
+      - 'nwr["aeroway"="aerodrome"]'
+      - 'nwr["amenity"="police"]'
+      - 'nwr["amenity"="fire_station"]'
+      - 'nwr["amenity"="townhall"]'
+      - 'nwr["amenity"="courthouse"]'
+      - 'nwr["amenity"="prison"]'
+      - 'nwr["office"="government"]'
+      - 'nwr["office"="diplomatic"]'
+      - 'nwr["amenity"="embassy"]'
+
+  # --- Flood context for WS6 (lines, short schema) ------------------------------
+  road_underpasses_osm:
+    source: osm
+    data_kind: estimated
+    theme: flood
+    notes: "Road sections below ground level (tunnel or layer < 0) where water collects; OSM mapping is incomplete (C=70)"
+    selectors:
+      - 'way["highway"]["tunnel"="yes"]'
+      - 'way["highway"]["tunnel"="building_passage"]'
+      - 'way["highway"]["layer"="-1"]'
+      - 'way["highway"]["layer"="-2"]'
+    options: {lines: true, keep_columns: [osm_id, name, highway, tunnel, layer]}
+  rivers_osm:
+    source: osm
+    data_kind: real
+    theme: flood
+    notes: "River, stream and canal centrelines (relations skipped; their member ways are included)"
+    selectors:
+      - 'way["waterway"="river"]'
+      - 'way["waterway"="stream"]'
+      - 'way["waterway"="canal"]'
+    options: {lines: true, keep_columns: [osm_id, name, waterway]}
+
+  flood_hazard_pgra:
+    source: ispra_flood
+    data_kind: real
+    theme: flood
+    notes: "P3 = frequent floods (return period 20-50 years), P2 = 100-200 years, P1 = rare or extreme events. Areas overlap: a P3 area is also inside P2 and P1."
+    options:
+      sublayers: {P3: 0, P2: 1, P1: 2}
+      class_field: hazard
+      constants: {source: "ISPRA mosaic v5.0 (2020)", data_kind: real}
+      clip_geometry: true
+      keep_columns: [hazard, source, data_kind]
+  imperviousness_2018:
+    source: copernicus_hrl
+    data_kind: real
+    theme: flood
+    notes: "Share of sealed soil per 20 m pixel, 0-100 %, 255 = no data. Native 10 m resampled by the server with nearest neighbour."
+    options:
+      basis: "20 m keeps the city in one request (the server allows at most 4100 pixels in height) and is finer than the flood model grid"
+      epsg: 3035
+      pixel_m: 20
+      nodata: 255
+      value_range: [0, 100]
+      units: "percent sealed"
+
+  # --- Official registers (tables) for sensitive sites --------------------------
+  # Only the columns under "columns" are kept, so owners' names, VAT numbers, managers'
+  # names and e-mails in these tables never reach the files.
+  health_accredited_lazio:
+    source: lazio_open_data
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Private health facilities accredited by Regione Lazio (list of 26/11/2014, with coordinates). Old list: some may have closed or moved (C=70)."
+    options:
+      url: "https://dati.lazio.it/dataset/9c87461b-4e37-4357-b70d-85bdc07146c1/resource/1a59e29a-da23-4fb9-8b14-78289f3333cb/download/struttureprivateaccreditate.csv"
+      delimiter: ","
+      encoding: utf-8-sig
+      filter: {COMUNE: ROMA}
+      lat_column: Latitude
+      lon_column: Longitude
+      columns: {facility_id: ID_PR, name: NOME PRESIDIO}
+      generic_name:
+        basis: "Partnership names (s.a.s., s.n.c.) and doctors' practices contain a person's name by law; no personal data"
+        patterns: ['\bs\.?\s?a\.?\s?s\b', '\bs\.?\s?n\.?\s?c\b', '\bdott', '\bdr\.', '\bprof\.', 'studio medico']
+        label: "Struttura sanitaria accreditata"
+  public_bodies_ipa:
+    source: indicepa
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Head offices of national and local public bodies in Rome from IndicePA; position from OSM addresses (geocode_quality address = exact house number, street = centre of the street)"
+    options:
+      url: "https://indicepa.gov.it/ipa-dati/dataset/502ff370-1b2c-4310-94c7-f39ceb7500e3/resource/3ed63523-ff9c-41f6-a6fe-980f3d9e501f/download/amministrazioni.txt"
+      delimiter: "\t"
+      encoding: utf-8-sig
+      filter: {Comune: Roma}
+      filter_in:
+        tipologia_istat:
+          - "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato"
+          - "Organi Costituzionali e di Rilievo Costituzionale"
+          - "Autorita' Amministrative Indipendenti"
+          - "Agenzie Fiscali"
+          - "Forze di Polizia ad Ordinamento Civile e Militare per la Tutela dell'Ordine e della Sicurezza Pubblica"
+          - "Regioni, Province Autonome e loro Consorzi e Associazioni"
+          - "Citta' Metropolitane"
+          - "Enti Pubblici Non Economici"
+          - "Enti di Previdenza ed Assistenza Sociale in Conto Economico Consolidato pubblici"
+          - "Aziende ed Amministrazioni dello Stato ad Ordinamento Autonomo"
+      address_column: Indirizzo
+      address_source: osm
+      columns: {ipa_code: cod_amm, name: des_amm, body_type: tipologia_istat}
+      address_overrides:
+        basis: "IPA lists a building name or a misspelt street for these bodies; replaced by the postal address of the same building"
+        "Palazzo Viminale": "Piazza del Viminale, 1"
+        "Piazzale della Farnersina, 1": "Piazzale della Farnesina, 1"
+
+  # --- Health system of Rome (ASL Roma 1, 2, 3) ------------------------------------
+  # Ministry of Health open data, Italian Open Data Licence v2.0. Run hospital_beds_2023,
+  # consultori_roma and pharmacies_roma before asl_roma, which counts them per ASL.
+  hospital_beds_2023:
+    source: salute_open_data
+    data_kind: real
+    theme: health_system
+    notes: "Hospitals and accredited private clinics in Rome with beds on 1 Jan 2023 (acute, rehabilitation, long-term care). Positions geocoded on OSM addresses."
+    options:
+      url: "https://www.dati.salute.gov.it/sites/default/files/2025-07/Posti%20letto%20per%20struttura%20ospedaliera_2023.csv"
+      delimiter: ";"
+      encoding: latin-1
+      filter: {Codice Regione: "120", Comune: ROMA}
+      aggregate:
+        by: [Codice struttura]
+        first: [Denominazione struttura, Indirizzo, Descrizione tipo struttura, Codice Azienda]
+        pivot: {column: Tipo di Disciplina, value: Totale posti letto, prefix: beds_}
+        total: beds_total
+      address_column: Indirizzo
+      address_source: osm
+      columns: {facility_code: Codice struttura, name: Denominazione struttura, facility_type: Descrizione tipo struttura,
+                azienda_code: Codice Azienda, beds_acute: beds_acuti, beds_rehab: beds_riabilitazione,
+                beds_long_term: beds_lungodegenza, beds_total: beds_total}
+      numeric_columns: [beds_acute, beds_rehab, beds_long_term, beds_total]
+  consultori_roma:
+    source: salute_open_data
+    data_kind: real
+    theme: health_system
+    notes: "Family health centres (consultori familiari) in Rome, 2022 register"
+    options:
+      url: "https://www.dati.salute.gov.it/sites/default/files/2024-05/Consultori_familiari.csv"
+      delimiter: ";"
+      encoding: latin-1
+      filter: {Codice Regione: "120", Comune: ROMA}
+      address_column: Indirizzo
+      address_source: osm
+      columns: {facility_code: Codice struttura, name: Denominazione struttura, asl_name: Denominazione Azienda,
+                public_or_private: Tipo rapporto con il S.S.N.}
+  pharmacies_roma:
+    source: salute_open_data
+    data_kind: real
+    theme: health_system
+    notes: "Open pharmacies in Rome from the national register (updated daily). The register's own coordinates are often wrong (e.g. Testaccio placed in Tiburtino), so the address is geocoded on OSM instead."
+    options:
+      url: "https://www.dati.salute.gov.it/sites/default/files/opendata/FRM_FARMA_5_20261113.csv"
+      delimiter: ";"
+      encoding: utf-8-sig
+      filter: {comune: ROMA, data_fine_validita: "-"}
+      address_column: indirizzo
+      address_source: osm
+      columns: {pharmacy_code: cod_farmacia, name: descrizione_farmacia, kind: descrizione_tipologia}
+      generic_name:
+        basis: "Pharmacy company names often contain the owners' names; no personal data"
+        patterns: ['\bs\.?\s?a\.?\s?s\b', '\bs\.?\s?n\.?\s?c\b', '\bdott', '\bdr\.', '\bdi\b']
+        label: "Farmacia"
+  asl_roma:
+    source: salute_asl
+    data_kind: real
+    theme: health_system
+    notes: "ASL Roma 1, 2, 3 as unions of their municipi, with 2024 residents, 2022 ASL activity figures and facility counts. The Ministry's 2022 table gives ROMA 1 and ROMA 2 identical GP and paediatrician figures (918 / 171): likely a copy error in the source (C=40 for those two values)."
+    options:
+      mapping_url: "https://www.dati.salute.gov.it/sites/default/files/2026-05/ASL_comuni_popolazione_2024.csv"
+      indicators_url: "https://www.dati.salute.gov.it/sites/default/files/2024-05/Strutture_e_attivit%C3%A0_ASL.csv"
+      encoding: latin-1
+      region_code: "120"
+      comune_code: "058091"
+      municipi_layer: municipi
+      municipio_field: municipio
+      indicator_columns:
+        residents_2022: Totale Residenti
+        children_2022: Residenti in Età Infantile
+        elderly_2022: Residenti Anziani
+        gps_2022: Totale medici
+        pediatricians_2022: Totale pediatri
+        outpatient_clinics_2022: Ambulatori e Laboratori
+        out_of_hours_points_2022: Numero medio punti di guardia medica
+        home_care_cases_2022: Assistenza Domiciliare Integrata Casi Trattati
+      facility_counts:
+        hospitals: {layer: hospital_beds_2023}
+        hospital_beds: {layer: hospital_beds_2023, sum: beds_total}
+        consultori: {layer: consultori_roma}
+        pharmacies: {layer: pharmacies_roma}
+      ratios:
+        basis: "Simple divisions of the official figures above; residents of the same year as the numerator where possible"
+        beds_per_1000: {numerator: hospital_beds, denominator: residents_2024, scale: 1000}
+        residents_per_gp: {numerator: residents_2022, denominator: gps_2022}
+        residents_per_pharmacy: {numerator: residents_2024, denominator: pharmacies}
+
+  # --- One merged layer of sensitive sites ------------------------------------
+  # Inputs are read from data/processed, in this order. Official layers come first;
+  # a later feature within dedupe_m metres of an already-kept site of the same
+  # category is treated as the same site and dropped. Run this layer last.
+  sensitive_sites:
+    source: derived
+    data_kind: real
+    theme: sensitive_sites
+    notes: "Official layers first, OSM fills gaps; each row says its source layer and provenance"
+    options:
+      basis: "Challenge 02 asks for sensitive sites within 300 m; categories follow the design proposal section 7"
+      dedupe_m: {default: 50, green: 100, critical_infrastructure: 30, hazardous_industry: 100}
+      inputs:
+        - {layer: hospitals, provenance: official, category: health, subtype: hospital, name: DESCRIZION}
+        - {layer: emergency_hospitals, provenance: official, category: health, subtype: emergency_department, name: denominazione}
+        - {layer: health_care, provenance: official, category: health, subtype: hospital, name: denominaz}
+        - {layer: health_accredited_lazio, provenance: official, category: health, subtype: accredited_facility, name: name, id: facility_id}
+        - {layer: care_homes_osm, provenance: osm, category: health, subtype: care_home, name: name}
+        - {layer: nidi, provenance: official, category: education, subtype: nursery, name: denominazione}
+        - {layer: infanzia, provenance: official, category: education, subtype: preschool, name: denominazione}
+        - {layer: schools_state, provenance: official, category: education, subtype: school, name: denominazione}
+        - {layer: parks_municipal, provenance: official, category: green, subtype: park, name: name}
+        - {layer: protected_areas, provenance: official, category: green, subtype: protected_area, name: nome_gazz_}
+        - {layer: playgrounds_osm, provenance: osm, category: green, subtype: playground, name: name}
+        - {layer: hazardous_sites, provenance: official, category: hazardous_industry, subtype_field: tipologia, name: denominaz}
+        - {layer: seveso_perimeters, provenance: official, category: hazardous_industry, subtype: seveso_plant, name: nome}
+        - {layer: stations_ports_airports, provenance: official, category: critical_infrastructure, subtype_field: tipologia, name: nome}
+        - {layer: masts_osm, provenance: osm, category: critical_infrastructure, subtype: telecom_mast, name: name}
+        - {layer: embassies, provenance: official, category: government, subtype_field: tipologia, name: denominazione}
+        - {layer: police_fire, provenance: official, category: government, subtype_field: _tipologia, name: _denominaz}
+        - {layer: civil_protection_sites, provenance: official, category: government, subtype: civil_protection, name: denominaz}
+        - {layer: public_bodies_ipa, provenance: official, category: government, subtype_field: body_type, name: name, id: ipa_code, data_kind_field: data_kind}
+        - {layer: osm_sensitive_pois, provenance: osm, name: name, osm_rules: true}
+      # Official labels (from subtype_field) mapped to the same codes the OSM rules use.
+      subtype_map:
+        "Presidenza del Consiglio dei Ministri, Ministeri e Avvocatura dello Stato": ministry
+        "Organi Costituzionali e di Rilievo Costituzionale": constitutional_body
+        "Autorita' Amministrative Indipendenti": independent_authority
+        "Agenzie Fiscali": tax_agency
+        "Forze di Polizia ad Ordinamento Civile e Militare per la Tutela dell'Ordine e della Sicurezza Pubblica": police_hq
+        "Regioni, Province Autonome e loro Consorzi e Associazioni": regional_government
+        "Citta' Metropolitane": metropolitan_city
+        "Enti Pubblici Non Economici": public_agency
+        "Enti di Previdenza ed Assistenza Sociale in Conto Economico Consolidato pubblici": public_agency
+        "Aziende ed Amministrazioni dello Stato ad Ordinamento Autonomo": public_agency
+        "Aeroporti": airport
+        "Porti": port
+        "STAZIONI FERROVIE REGIONALI (FL 1-8)": railway_station
+        "Stazioni Alta Velocità": railway_station
+        "Stazioni COTRAL": bus_station
+        "Stazioni METROPOLITANE A-B-C": metro_station
+        "Stazioni ROMA VITERBO E ROMA LIDO": railway_station
+        "Ambasciate": embassy
+        "Consolati": consulate
+        "Carabinieri": police
+        "Guardia di Finanza": police
+        "Polizia Locale": police
+        "Polizia di Stato": police
+        "Vigili del Fuoco": fire_station
+        "Autodemolitori": car_breaker
+        "Discariche": landfill
+        "Reattore": nuclear_reactor
+        "Siti Stoccaggio Rifiuti": waste_storage
+        "Stabilimenti a incidente a rischio rilevante": seveso_plant
+      # For osm_rules: the first matching tag decides category and subtype.
+      osm_rules:
+        - {tag: amenity, value: hospital, category: health, subtype: hospital}
+        - {tag: healthcare, value: hospital, category: health, subtype: hospital}
+        - {tag: amenity, value: clinic, category: health, subtype: clinic}
+        - {tag: healthcare, value: clinic, category: health, subtype: clinic}
+        - {tag: amenity, value: kindergarten, category: education, subtype: preschool}
+        - {tag: amenity, value: childcare, category: education, subtype: nursery}
+        - {tag: amenity, value: school, category: education, subtype: school}
+        - {tag: amenity, value: university, category: education, subtype: university}
+        - {tag: amenity, value: college, category: education, subtype: college}
+        - {tag: leisure, value: park, category: green, subtype: park}
+        - {tag: power, value: substation, category: critical_infrastructure, subtype: power_substation}
+        - {tag: power, value: plant, category: critical_infrastructure, subtype: power_plant}
+        - {tag: man_made, value: water_works, category: critical_infrastructure, subtype: water_works}
+        - {tag: man_made, value: wastewater_plant, category: critical_infrastructure, subtype: wastewater_plant}
+        - {tag: man_made, value: gasometer, category: critical_infrastructure, subtype: gas_facility}
+        - {tag: station, value: subway, category: critical_infrastructure, subtype: metro_station}
+        - {tag: railway, value: station, category: critical_infrastructure, subtype: railway_station}
+        - {tag: aeroway, value: aerodrome, category: critical_infrastructure, subtype: airport}
+        - {tag: amenity, value: police, category: government, subtype: police}
+        - {tag: amenity, value: fire_station, category: government, subtype: fire_station}
+        - {tag: amenity, value: townhall, category: government, subtype: town_hall}
+        - {tag: amenity, value: courthouse, category: government, subtype: court}
+        - {tag: amenity, value: prison, category: government, subtype: prison}
+        - {tag: office, value: diplomatic, category: government, subtype: embassy}
+        - {tag: amenity, value: embassy, category: government, subtype: embassy}
+        - {tag: office, value: government, category: government, subtype: government_office}
+
+  # --- National landscape constraints (MiC SITAP), clipped to Rome ----------
+  sitap_art136_cd:       {source: sitap, type_name: "sitap_ws_clone:LAZIO_art_136_c_d", data_kind: real, theme: landscape, clip_to_city: true}
+  sitap_art136_ab:       {source: sitap, type_name: "sitap_ws_clone:LAZIO_art_136_a_b", data_kind: real, theme: landscape, clip_to_city: true, notes: "type name guessed from the c_d layer; marked not_available if wrong"}
+
+# Live public feeds. Each pull stores the raw bytes under data/snapshots/<feed>/
+# with its SHA-256 in data/snapshots/<feed>/index.jsonl. Parsing is done by the
+# WS3 providers, which can read these snapshot files.
+live_feeds:
+  gtfs_rt_vehicle_positions:
+    source: roma_gtfs_rt
+    data_kind: real
+    method: get
+    url: "https://romamobilita.it/wp-content/uploads/shared/rome_rtgtfs_vehicle_positions_feed.pb"
+    extension: pb
+    cadence: "30 s upstream; pull every 60 s"
+  gtfs_rt_trip_updates:
+    source: roma_gtfs_rt
+    data_kind: real
+    method: get
+    url: "https://romamobilita.it/wp-content/uploads/shared/rome_rtgtfs_trip_updates_feed.pb"
+    extension: pb
+    cadence: "30 s upstream; pull every 60 s"
+  gtfs_rt_service_alerts:
+    source: roma_gtfs_rt
+    data_kind: real
+    method: get
+    url: "https://romamobilita.it/wp-content/uploads/shared/rome_rtgtfs_service_alerts_feed.pb"
+    extension: pb
+    cadence: "pull every 5 min"
+  eea_no2_hourly:
+    source: eea_hourly
+    data_kind: real
+    method: eea_parquet_zip
+    url: "https://eeadmz1-downloads-api-appservice.azurewebsites.net/ParquetFile"
+    # Last 48 hours of unverified (E2a) hourly data for Rome.
+    request: {countries: ["IT"], cities: ["Roma"], pollutants: ["NO2", "PM10", "PM2.5", "O3"], dataset: 1, aggregationType: "hour", lookback_hours: 48}
+    extension: zip
+    cadence: "hourly"
+  dpc_radar_vmi:
+    source: dpc_radar
+    data_kind: real
+    method: dpc_radar
+    url: "https://radar-api.protezionecivile.it"
+    product_type: VMI
+    extension: tif
+    cadence: "every 5 min"
+  bird_gbfs_vehicles:
+    source: bird_gbfs
+    data_kind: real
+    method: get
+    url: "https://mds.bird.co/gbfs/v2/public/rome/free_bike_status.json"
+    extension: json
+    cadence: "every 5 min"

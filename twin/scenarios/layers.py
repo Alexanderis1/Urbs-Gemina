@@ -16,8 +16,10 @@ def search_dirs() -> list[Path]:
     return [Path(d) if Path(d).is_absolute() else config.ROOT / d for d in dirs]
 
 
-def find(file_name: str) -> Path | None:
-    for directory in search_dirs():
+def find(file_name: str, dirs: list[str] | None = None) -> Path | None:
+    candidates = search_dirs() if dirs is None else [
+        Path(d) if Path(d).is_absolute() else config.ROOT / d for d in dirs]
+    for directory in candidates:
         path = directory / file_name
         if path.exists():
             return path
@@ -67,6 +69,6 @@ def snapshots(names: list[str]) -> dict[str, str]:
     """Hashes of the layer files a run reads, for the run id."""
     out: dict[str, str] = {}
     for name in names:
-        path = find(name)
+        path = find(name) or find(name, dirs=config.value(config.load("scenarios.yaml")["terrain"], "search_dirs"))
         out[f"layer/{name}"] = file_hash(path) if path is not None else "missing"
     return out

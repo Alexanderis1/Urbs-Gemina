@@ -14,6 +14,9 @@ air_quality: eea_hourly            # real, open: official stations
 air_quality_citizen: sensor_community  # real, open: citizen PM sensors (noisier, larger sigma)
 air_quality_model: cams_open_meteo # estimated: CAMS model background for the belief layer
 rain: dpc_radar                    # real, open
+rain_forecast: om_rain_forecast    # estimated: hourly rain forecast, next 48 h (Open-Meteo, ICON-2I)
+weather_forecast: om_weather_forecast  # estimated: hourly wind at 10 m and temperature at 2 m
+river_discharge: glofas_flood      # estimated: daily Tiber and Aniene discharge (GloFAS)
 micromobility: bird_gbfs           # real, open: available shared e-scooters
 activity_wifi: roma_wifi           # real, open: public Wi-Fi sessions per hotspot and hour (crowd proxy)
 context_layers: roma_wfs           # real, open (see scripts/fetch_static_layers.py)

@@ -1,0 +1,4 @@
+# Downloaded and generated data. Provenance is the SHA-256 in manifest.json, not the files.
+raw/
+processed/
+snapshots/

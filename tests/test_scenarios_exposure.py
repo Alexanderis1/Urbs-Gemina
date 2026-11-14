@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from twin.scenarios import engine, layers
+from twin.scenarios import antenna, engine, layers
 from twin.scenarios.data import FieldSample, ScenarioData
 
 LON, LAT = 12.4823, 41.8960
@@ -26,6 +26,11 @@ def section(east_m: float, sid: str, pop: int, side_m: float = 50.0) -> dict[str
 
 CENSUS = {"type": "FeatureCollection", "features": [section(0.0, "near", 120), section(250.0, "far", 300)]}
 CHANGE = {"action": "add", "site": {"lon": LON, "lat": LAT, "height_m": 6.0}, "eirp_w": 5000.0}
+
+
+@pytest.fixture(autouse=True)
+def free_space_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(antenna, "physics_engine", lambda: None)
 
 
 def data() -> ScenarioData:
@@ -66,3 +71,19 @@ def test_census_file_is_read_when_present(tmp_path: Path, monkeypatch: pytest.Mo
     out = engine.run("population_exposure", "city", CHANGE, data=ScenarioData(), cache_dir=tmp_path / "c")
     assert out["status"] == "ok"
     assert out["result"]["residents_total"] == 420
+
+
+def test_exposure_uses_the_building_aware_field(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    calls: list[int] = []
+
+    def fake() -> Any:
+        def run(site: Any, points: Any, receptor_h: float) -> tuple[list[tuple[float, float]], str]:
+            calls.append(len(points))
+            return [(0.2, 6.0)] * len(points), "building_aware"
+        return run
+    monkeypatch.setattr(antenna, "physics_engine", fake)
+    out = engine.run("population_exposure", "city", CHANGE, data=data(), cache_dir=tmp_path)
+    r = out["result"]
+    assert calls == [2]  # one batch for both section centroids
+    assert r["model"] == "building_aware"
+    assert r["variant"]["residents_flagged_attention"] == 0  # the field behind buildings is weak

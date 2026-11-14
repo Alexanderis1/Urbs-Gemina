@@ -148,6 +148,37 @@ open:
     humid_sigma_factor: {value: 2.0, basis: "assumption"}
     timeout_s: 90
 
+  om_rain_forecast:
+    api_url: https://api.open-meteo.com/v1/forecast
+    # Tried in order; the first with data is used. ICON-2I (ARPAE/ItaliaMeteo, 2.2 km) covers Italy;
+    # ICON-D2 does not reach Rome (Open-Meteo answered "No data is available for this location", 13 Nov 2026).
+    models: [italia_meteo_arpae_icon_2i, icon_eu, best_match]
+    step_deg: {value: 0.1, basis: "about 10 km between points keeps the city to about 30 points per call (rate limit)"}
+    sigma:
+      precipitation: {absolute: 0.3, relative: 1.0, basis: "assumption: hourly rain forecasts at a point are uncertain by about their own size"}
+    timeout_s: 60
+
+  om_weather_forecast:
+    api_url: https://api.open-meteo.com/v1/forecast
+    models: [italia_meteo_arpae_icon_2i, icon_eu, best_match]
+    step_deg: {value: 0.1, basis: "as om_rain_forecast"}
+    sigma:
+      wind_speed_ms: {absolute: 1.5, relative: 0.2, basis: "assumption: typical 10 m wind forecast error in the first 48 h"}
+      wind_direction_deg: {absolute: 30.0, basis: "assumption: typical direction error, larger in light wind"}
+      temperature_c: {absolute: 1.5, basis: "assumption: typical 2 m temperature error in the first 48 h"}
+    timeout_s: 60
+
+  glofas_flood:
+    api_url: https://flood-api.open-meteo.com/v1/flood
+    relative_sigma: {value: 0.3, basis: "assumption, used only when the ensemble spread is missing"}
+    # GloFAS cells are about 5 km: a point snaps to the nearest modelled river cell, so the Aniene
+    # point is taken upstream of the confluence (C=55 that it reads the Aniene, not the Tiber).
+    # Ripetta and Ponte Milvio fall in the same GloFAS cell (41.925 N, 12.475 E), so only Ripetta is kept.
+    points:
+      tevere_ripetta: {lon: 12.4744, lat: 41.9050, river: Tevere}
+      aniene_lunghezza: {lon: 12.6930, lat: 41.9200, river: Aniene}
+    timeout_s: 60
+
   cams_open_meteo:
     api_url: https://air-quality-api.open-meteo.com/v1/air-quality
     lookback_hours: {value: 1, basis: "hourly model values: a 'now' window still gets the hour it falls in"}

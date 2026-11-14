@@ -17,6 +17,8 @@ class MatchingConfig:
     same_kind_distance_m: float
     unlocated_name_similarity_min: float
     name_stopwords: frozenset[str]
+    part_of_site_distance_m: float = 0.0
+    part_kinds: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,7 @@ class SportsConfig:
     desert_min_residents: float
     school_gym_default_disciplines: tuple[str, ...]
     source_fields: dict[str, tuple[str, ...]]
+    exclude_osm_unnamed_pools_without_access: bool = True
 
     def priority(self, source: str) -> int:
         """Lower is more trusted. Unknown sources rank last."""
@@ -94,6 +97,8 @@ def load_config(path: Path = DEFAULT_PATH) -> SportsConfig:
             same_kind_distance_m=float(m["same_kind_distance_m"]),
             unlocated_name_similarity_min=float(m["unlocated_name_similarity_min"]),
             name_stopwords=frozenset(_strs(m.get("name_stopwords"))),
+            part_of_site_distance_m=float(m.get("part_of_site_distance_m", 0.0)),
+            part_kinds=frozenset(_strs(m.get("part_kinds"))),
         ),
         source_priority=_strs(raw["source_priority"]),
         reach=ReachConfig(float(r["walk_minutes"]), float(r["walk_speed_kmh"]), float(r["detour_factor"]),
@@ -112,4 +117,6 @@ def load_config(path: Path = DEFAULT_PATH) -> SportsConfig:
         desert_min_residents=float(d["min_residents"]),
         school_gym_default_disciplines=defaults,
         source_fields={str(k): _strs(v) for k, v in fields.items()},
+        exclude_osm_unnamed_pools_without_access=bool(
+            (raw.get("coverage") or {}).get("exclude_osm_unnamed_pools_without_access", True)),
     )
