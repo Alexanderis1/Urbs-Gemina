@@ -6,6 +6,7 @@ import type { Envelope } from "@/api/types";
 import { supabase } from "@/integrations/supabase/client";
 import { callWithWakeUp } from "@/lib/retry";
 import sample from "@/api/sampleSignals.json";
+import samplePlan from "@/api/sampleMaintenance.json";
 import {
   readPhotoMeta,
   toToolReports,
@@ -16,6 +17,7 @@ import {
   type SignalEventsResult,
   type StaffReportRow,
   type Verification,
+  type MaintenancePlan,
 } from "@/lib/signals";
 
 export const PHOTO_BUCKET = "report-photos";
@@ -210,4 +212,12 @@ export async function setReportsStatus(ids: string[], status: "confirmed" | "dis
     const { error } = await supabase.rpc("set_report_status", { report_id: id, new_status: status });
     if (error) throw new Error(error.message);
   }
+}
+
+/** Crew plan for the events on screen. Without Lovable Cloud: the sample plan for the sample events. */
+export async function planMaintenance(events: Record<string, unknown>[], crews: { roads: number; sewers: number }): Promise<{ plan: MaintenancePlan; sample: boolean }> {
+  if (!supabase) return { plan: samplePlan as unknown as MaintenancePlan, sample: true };
+  const env = await postTool<MaintenancePlan>("plan_maintenance", { events: events.slice(0, 300), crews });
+  if ((env.status ?? "ok") !== "ok") throw new Error(env.reason ?? "plan_maintenance not available");
+  return { plan: env.result as MaintenancePlan, sample: false };
 }

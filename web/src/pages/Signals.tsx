@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import { Check, Megaphone, RefreshCw, Sparkles, X } from "lucide-react";
+import { ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import type { PickingInfo } from "@deck.gl/core";
+import { Check, ListChecks, Megaphone, RefreshCw, Route, Sparkles, Truck, Wrench, X } from "lucide-react";
 import { CityMap, type MapFocus } from "@/map/CityMap";
-import { Callout, EmptyState, MapFloat, Panel, Skeleton, Spinner, Workspace } from "@/components/ui";
+import { Callout, EmptyState, MapFloat, Panel, Segmented, Skeleton, Spinner, Workspace } from "@/components/ui";
 import { KindBadge, SampleBadge } from "@/components/Badge";
 import { errorText } from "@/lib/errors";
 import { locale, texts, tr } from "@/lib/i18n";
-import { levelColour, type Level, type SignalEvent, type StaffReportRow, type TwinEvidence, type Verification } from "@/lib/signals";
-import { loadStaffReports, photoUrls, runSignalEvents, setReportsStatus, verifyEvent, type Checks } from "@/lib/reportApi";
+import { levelColour, routePath, toPlanEvents, type CrewRoute, type Level, type MaintenancePlan, type SignalEvent, type StaffReportRow, type TwinEvidence, type Verification } from "@/lib/signals";
+import { loadStaffReports, photoUrls, planMaintenance, runSignalEvents, setReportsStatus, verifyEvent, type Checks } from "@/lib/reportApi";
 
 const T = texts({
   it: {
@@ -41,6 +42,22 @@ const T = texts({
     honesty: "Le segnalazioni non sono verificate finché un operatore non le conferma. La fiducia è un modello, non un fatto.",
     noIdentity: "Chi ha segnalato non è visibile: ogni account conta una volta sola.",
     legend: "Fiducia",
+    tabs: { events: "Eventi", plan: "Piano squadre" },
+    planLead: "Manda le squadre strade e fogne alle buche, ai tombini e ai cantieri segnalati: prima i più urgenti, con meno strada possibile.",
+    roads: "Squadre strade",
+    sewers: "Squadre fogne",
+    runPlan: "Calcola il piano",
+    planSample: "Piano di esempio sugli eventi di esempio.",
+    planTotal: (n: number, km: string, h: string, eur: string) => `${n} interventi · ${km} km · ${h} ore · ${eur} €`,
+    baseline: (km: string, h: string, eur: string) => `Senza piano (una squadra per ogni segnalazione): ${km} km · ${h} ore · ${eur} €`,
+    saving: (p: string) => `Risparmio stimato: ${p}% dei costi`,
+    crew: (c: string) => c.replace("roads", "Strade").replace("sewers", "Fogne"),
+    stop: (n: number, label: string, min: number) => `${n}. ${label} · arrivo dopo ${min} min`,
+    unserved: (n: number) => `${n} interventi non entrano nel turno: restano per il prossimo.`,
+    skippedNote: (n: number) => `${n} eventi esclusi (fiducia sotto il 45% e non confermati, oppure non sono lavori per le squadre).`,
+    planHonesty: "Distanze in linea d'aria per un fattore di percorso, depositi ipotetici, costi orari stimati: un ordine di grandezza, non un preventivo.",
+    markFixed: "Segna come risolto",
+    hoverReports: (n: number) => `${n} segnalazion${n === 1 ? "e" : "i"}`,
   },
   en: {
     title: "Reports",
@@ -73,6 +90,22 @@ const T = texts({
     honesty: "Reports are unverified until an officer confirms them. Confidence is a model, not a fact.",
     noIdentity: "Who reported is not visible: each account counts once.",
     legend: "Confidence",
+    tabs: { events: "Events", plan: "Crew plan" },
+    planLead: "Send road and sewer crews to the reported potholes, drains and worksites: most urgent first, with as little driving as possible.",
+    roads: "Road crews",
+    sewers: "Sewer crews",
+    runPlan: "Plan the crews",
+    planSample: "Sample plan on the sample events.",
+    planTotal: (n: number, km: string, h: string, eur: string) => `${n} jobs · ${km} km · ${h} hours · €${eur}`,
+    baseline: (km: string, h: string, eur: string) => `Without a plan (one crew per report): ${km} km · ${h} hours · €${eur}`,
+    saving: (p: string) => `Estimated saving: ${p}% of the cost`,
+    crew: (c: string) => c.replace("roads", "Roads").replace("sewers", "Sewers"),
+    stop: (n: number, label: string, min: number) => `${n}. ${label} · arrives after ${min} min`,
+    unserved: (n: number) => `${n} jobs do not fit in the shift: left for the next one.`,
+    skippedNote: (n: number) => `${n} events left out (confidence below 45% and not confirmed, or not a crew job).`,
+    planHonesty: "Straight-line distances times a detour factor, hypothetical depots, estimated hourly costs: an order of magnitude, not a quote.",
+    markFixed: "Mark as fixed",
+    hoverReports: (n: number) => `${n} report${n === 1 ? "" : "s"}`,
   },
 });
 
@@ -90,6 +123,12 @@ export default function Signals() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<MapFocus | null>(null);
+  const [tab, setTab] = useState<"events" | "plan">("events");
+  const [crews, setCrews] = useState({ roads: 2, sewers: 1 });
+  const [plan, setPlan] = useState<MaintenancePlan | null>(null);
+  const [planSample, setPlanSample] = useState(false);
+  const [planBusy, setPlanBusy] = useState(false);
+  const [hover, setHover] = useState<{ x: number; y: number; e: SignalEvent } | null>(null);
 
   const refresh = useCallback(async (nextChecks: Checks) => {
     setBusy(true);
@@ -115,36 +154,80 @@ export default function Signals() {
 
   const layers = useMemo(() => {
     if (!events) return [];
-    return [
-      new ScatterplotLayer<SignalEvent>({
+    const showPlan = tab === "plan" && plan !== null;
+    const out = [
+      // Columns rising from the 3D city: height = how many reports, colour = how sure we are.
+      new ColumnLayer<SignalEvent>({
         id: "signals",
         data: events,
+        diskResolution: 24,
+        radius: 22,
+        extruded: true,
         getPosition: (e) => [e.lon, e.lat],
-        getRadius: (e) => Math.max(e.radius_m, 90),
-        radiusUnits: "meters",
-        radiusMinPixels: 9,
-        getFillColor: (e) => [...levelColour(e.level), e.stale ? 70 : 150] as [number, number, number, number],
-        getLineColor: (e) => (e.id === selected ? [0, 0, 0, 255] : [255, 255, 255, 230]),
-        lineWidthMinPixels: 2,
-        stroked: true,
+        getElevation: (e) => 60 + 45 * Math.min(e.n_reports, 8),
+        getFillColor: (e) => [...levelColour(e.level), showPlan ? 90 : e.stale ? 120 : 235] as [number, number, number, number],
+        getLineColor: [255, 255, 255, 255],
         pickable: true,
-        onClick: (info) => info.object && setSelected(info.object.id),
-        updateTriggers: { getLineColor: selected },
+        autoHighlight: true,
+        highlightColor: [0, 102, 204, 255],
+        onHover: (info: PickingInfo<SignalEvent>) => setHover(info.object ? { x: info.x, y: info.y, e: info.object } : null),
+        onClick: (info: PickingInfo<SignalEvent>) => info.object && select(info.object),
+        updateTriggers: { getFillColor: showPlan },
       }),
-      new TextLayer<SignalEvent>({
-        id: "signals-count",
-        data: events,
+      new ScatterplotLayer<SignalEvent>({
+        id: "signals-ring",
+        data: events.filter((e) => e.id === selected),
         getPosition: (e) => [e.lon, e.lat],
-        getText: (e) => String(e.n_reports),
-        getSize: 14,
-        getColor: [255, 255, 255, 255],
-        fontWeight: 700,
-        outlineWidth: 2,
-        outlineColor: [0, 0, 0, 160],
-        fontSettings: { sdf: true },
+        getRadius: (e) => Math.max(e.radius_m, 60),
+        radiusUnits: "meters",
+        stroked: true,
+        filled: false,
+        getLineColor: [0, 102, 204, 255],
+        lineWidthMinPixels: 3,
       }),
     ];
-  }, [events, selected]);
+    if (showPlan && plan) {
+      out.push(
+        new PathLayer<CrewRoute>({
+          id: "crew-routes",
+          data: plan.routes,
+          getPath: routePath,
+          getColor: (r) => (r.crew_type === "roads" ? [0, 102, 204, 230] : [0, 140, 120, 230]),
+          getWidth: 5,
+          widthMinPixels: 3,
+          capRounded: true,
+          jointRounded: true,
+        }) as never,
+        new ScatterplotLayer({
+          id: "crew-depots",
+          data: plan.depots,
+          getPosition: (d: { lon: number; lat: number }) => [d.lon, d.lat],
+          getRadius: 120,
+          radiusUnits: "meters",
+          radiusMinPixels: 7,
+          getFillColor: [23, 50, 77, 255],
+          getLineColor: [255, 255, 255, 255],
+          stroked: true,
+          lineWidthMinPixels: 2,
+        }) as never,
+        new TextLayer({
+          id: "crew-stop-numbers",
+          data: plan.routes.flatMap((r) => r.stops.map((st, i) => ({ ...st, n: i + 1 }))),
+          getPosition: (st: { lon: number; lat: number }) => [st.lon, st.lat],
+          getText: (st: { n: number }) => String(st.n),
+          getSize: 15,
+          getColor: [255, 255, 255, 255],
+          fontWeight: 700,
+          outlineWidth: 3,
+          outlineColor: [23, 50, 77, 255],
+          fontSettings: { sdf: true },
+          getPixelOffset: [0, -18],
+        }) as never,
+      );
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events, selected, plan, tab]);
 
   const select = (e: SignalEvent) => {
     setSelected(e.id);
@@ -166,11 +249,47 @@ export default function Signals() {
           }
           footer={<p className="hint">{t.honesty} {t.noIdentity}</p>}
         >
+          <Segmented
+            label={t.title}
+            value={tab}
+            onChange={setTab}
+            options={[
+              { id: "events", label: t.tabs.events, icon: ListChecks },
+              { id: "plan", label: t.tabs.plan, icon: Route },
+            ]}
+          />
           {sample && <Callout tone="warn">{t.sample}</Callout>}
           {error && <Callout tone="error">{error}</Callout>}
-          {events === null && <Skeleton lines={5} />}
-          {events?.length === 0 && <EmptyState icon={Megaphone} title={t.none}>{t.noneText}</EmptyState>}
-          <ul className="space-y-2">
+          {tab === "plan" && (
+            <PlanPanel
+              crews={crews}
+              setCrews={setCrews}
+              plan={plan}
+              sample={planSample}
+              busy={planBusy}
+              disabled={!events?.length}
+              onRun={async () => {
+                if (!events) return;
+                setPlanBusy(true);
+                setError(null);
+                try {
+                  const confirmed = new Set(rows.filter((r) => r.status === "confirmed").map((r) => r.id));
+                  const out = await planMaintenance(toPlanEvents(events, confirmed), crews);
+                  setPlan(out.plan);
+                  setPlanSample(out.sample);
+                  setFocus({ lon: 12.4964, lat: 41.8902, zoom: 11.3, pitch: 40 });
+                } catch (e) {
+                  setError(errorText(e));
+                } finally {
+                  setPlanBusy(false);
+                }
+              }}
+              eventLabel={(id) => events?.find((e) => e.id === id)?.category_label ?? id}
+            />
+          )}
+          {tab === "events" && events === null && <Skeleton lines={5} />}
+          {tab === "events" && events?.length === 0 && <EmptyState icon={Megaphone} title={t.none}>{t.noneText}</EmptyState>}
+          <ul className={`space-y-2 ${tab === "events" ? "" : "hidden"}`}>
             {events?.map((e) => (
               <li key={e.id}>
                 <EventCard
@@ -197,7 +316,21 @@ export default function Signals() {
         </Panel>
       }
     >
-      <CityMap layers={layers} pitch={35} focus={focus} />
+      <CityMap layers={layers} pitch={45} focus={focus} />
+      {hover && (
+        <div
+          className="map-float pointer-events-none absolute z-20 max-w-xs px-3 py-2 text-xs"
+          style={{ left: hover.x + 14, top: hover.y + 14 }}
+          role="tooltip"
+        >
+          <div className="text-sm font-semibold">{hover.e.category_label}</div>
+          <div className="text-muted">
+            {t.level[hover.e.level]}
+            {hover.e.confidence !== null ? ` · ${pct(hover.e.confidence)}` : ""} · {t.hoverReports(hover.e.n_reports)}
+          </div>
+          {hover.e.texts[0] && <div className="mt-1 line-clamp-2">«{hover.e.texts[0]}»</div>}
+        </div>
+      )}
       <MapFloat position="bottom-left">
         <div className="space-y-1 text-xs">
           <div className="font-semibold">{t.legend}</div>
@@ -368,6 +501,83 @@ function EventCard({
               </button>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlanPanel({
+  crews,
+  setCrews,
+  plan,
+  sample,
+  busy,
+  disabled,
+  onRun,
+  eventLabel,
+}: {
+  crews: { roads: number; sewers: number };
+  setCrews: (c: { roads: number; sewers: number }) => void;
+  plan: MaintenancePlan | null;
+  sample: boolean;
+  busy: boolean;
+  disabled: boolean;
+  onRun: () => void;
+  eventLabel: (id: string) => string;
+}) {
+  const t = tr(T);
+  const n = (v: number, d = 1) => v.toLocaleString(locale(), { maximumFractionDigits: d });
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted">{t.planLead}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {(["roads", "sewers"] as const).map((k) => (
+          <label key={k} className="space-y-1 text-xs font-semibold">
+            <span className="flex items-center gap-1">{k === "roads" ? <Wrench className="h-3.5 w-3.5" aria-hidden="true" /> : <Truck className="h-3.5 w-3.5" aria-hidden="true" />}{k === "roads" ? t.roads : t.sewers}</span>
+            <input
+              type="number"
+              min={0}
+              max={10}
+              className="input"
+              value={crews[k]}
+              onChange={(e) => setCrews({ ...crews, [k]: Math.max(0, Math.min(10, Number(e.target.value) || 0)) })}
+            />
+          </label>
+        ))}
+      </div>
+      <button className="btn w-full" disabled={busy || disabled} onClick={onRun}>
+        {busy ? <Spinner /> : <Route className="h-4 w-4" aria-hidden="true" />} {t.runPlan}
+      </button>
+      {plan && (
+        <div className="space-y-3">
+          {sample && <Callout tone="warn">{t.planSample}</Callout>}
+          <div className="rounded border border-line bg-sunken p-3 text-sm">
+            <div className="font-semibold">{t.planTotal(plan.total.stops, n(plan.total.km), n(plan.total.hours), n(plan.total.cost_eur, 0))}</div>
+            <div className="text-xs text-muted">{t.baseline(n(plan.baseline.km), n(plan.baseline.hours), n(plan.baseline.cost_eur, 0))}</div>
+            <div className="mt-1 font-bold text-real">{t.saving(n(plan.savings.cost_pct))}</div>
+          </div>
+          {plan.unserved.length > 0 && <Callout tone="warn">{t.unserved(plan.unserved.length)}</Callout>}
+          <ul className="space-y-2">
+            {plan.routes.map((r) => (
+              <li key={r.crew} className="rounded border border-line p-2 text-xs">
+                <div className="flex items-center justify-between gap-2 text-sm font-semibold">
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: r.crew_type === "roads" ? "rgb(0,102,204)" : "rgb(0,140,120)" }} />
+                    {t.crew(r.crew)}
+                  </span>
+                  <span className="num text-muted">{n(r.km)} km · {n(r.hours)} h</span>
+                </div>
+                <ol className="mt-1 space-y-0.5">
+                  {r.stops.map((st, i) => (
+                    <li key={st.id}>{t.stop(i + 1, eventLabel(st.id), st.arrive_min)}</li>
+                  ))}
+                </ol>
+              </li>
+            ))}
+          </ul>
+          {plan.skipped.length > 0 && <p className="hint">{t.skippedNote(plan.skipped.length)}</p>}
+          <p className="hint">{t.planHonesty}</p>
         </div>
       )}
     </div>

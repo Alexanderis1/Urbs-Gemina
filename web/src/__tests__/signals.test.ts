@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   EMPTY_DRAFT,
+  routePath,
+  toPlanEvents,
   checkPhoto,
   exifDate,
   nextStep,
@@ -132,5 +134,16 @@ describe("staff rows", () => {
     const out = toToolReports([row, { ...row, id: "r2", status: "dismissed" }]);
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({ id: "r1", reporter: "k1", has_photo: true, photo_gps_distance_m: 20, time: row.created_at });
+  });
+});
+
+describe("maintenance plan helpers", () => {
+  it("sends anonymous events with the confirmed flag and closes each route at its depot", () => {
+    const ev = { id: "sig-1", category: "pothole", category_label: "Buca", lon: 12.5, lat: 41.9, confidence: 0.3, scored: true, report_ids: ["r1"], n_reports: 2, texts: ["x"] };
+    const [out] = toPlanEvents([ev as never], new Set(["r1"]));
+    expect(out).toEqual({ id: "sig-1", category: "pothole", category_label: "Buca", lon: 12.5, lat: 41.9, confidence: 0.3, scored: true, confirmed: true, n_reports: 2 });
+    const path = routePath({ crew: "roads-1", crew_type: "roads", depot: "d", depot_lon: 12.4, depot_lat: 41.8, stops: [{ id: "a", kind: "pothole", label: "", lon: 12.5, lat: 41.9, priority: 1, arrive_min: 5 }], km: 1, hours: 1, cost_eur: 1 });
+    expect(path[0]).toEqual(path[path.length - 1]);
+    expect(path).toHaveLength(3);
   });
 });

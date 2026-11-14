@@ -332,3 +332,57 @@ export function levelColour(level: Level): [number, number, number] {
   if (level === "not_scored") return [0, 112, 127];
   return level === "likely" ? [204, 51, 51] : level === "probable" ? [230, 140, 0] : [120, 130, 145];
 }
+
+// ---- Maintenance mission plan (tool plan_maintenance) ---------------------------------------------------------
+
+export interface PlanStop {
+  id: string;
+  kind: string;
+  label: string;
+  lon: number;
+  lat: number;
+  priority: number;
+  arrive_min: number;
+}
+
+export interface CrewRoute {
+  crew: string;
+  crew_type: "roads" | "sewers";
+  depot: string;
+  depot_lon: number;
+  depot_lat: number;
+  stops: PlanStop[];
+  km: number;
+  hours: number;
+  cost_eur: number;
+}
+
+export interface MaintenancePlan {
+  routes: CrewRoute[];
+  unserved: { id: string; reason: string }[];
+  skipped: { id: string; reason: string }[];
+  total: { stops: number; km: number; hours: number; cost_eur: number };
+  baseline: { km: number; hours: number; cost_eur: number; what: string };
+  savings: { km_pct: number; hours_pct: number; cost_pct: number };
+  depots: { id: string; name: string; lon: number; lat: number }[];
+}
+
+/** Events the planner needs (anonymous, no texts or photos). Confirmed = an officer confirmed one of its reports. */
+export function toPlanEvents(events: SignalEvent[], confirmedIds: Set<string>): Record<string, unknown>[] {
+  return events.map((e) => ({
+    id: e.id,
+    category: e.category,
+    category_label: e.category_label,
+    lon: e.lon,
+    lat: e.lat,
+    confidence: e.confidence,
+    scored: e.scored,
+    confirmed: e.report_ids.some((r) => confirmedIds.has(r)),
+    n_reports: e.n_reports,
+  }));
+}
+
+/** A crew route as a closed path depot -> stops -> depot. */
+export function routePath(r: CrewRoute): [number, number][] {
+  return [[r.depot_lon, r.depot_lat], ...r.stops.map((s) => [s.lon, s.lat] as [number, number]), [r.depot_lon, r.depot_lat]];
+}

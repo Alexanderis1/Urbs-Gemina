@@ -85,3 +85,29 @@ verify:
   photo_hosts: ["supabase.co", "supabase.in"]   # photos are fetched only from Lovable Cloud storage
   max_texts: 8
   basis: "cost control: one Claude call and one Exa search per event, never per report"
+
+maintenance:
+  # Maintenance mission planner (Alessandro, 14 Nov 2026): send road and sewer crews to the reported problems,
+  # ordered by distance and priority, and compare with one trip per problem. Straight-line distance times a detour
+  # factor (no road network yet); every number below is an assumption with its basis.
+  kinds:
+    pothole: {crew: roads, service_min: 45, severity: 1.0}
+    flood:   {crew: sewers, service_min: 60, severity: 1.5}
+    roadworks: {crew: roads, service_min: 20, severity: 0.5}
+  basis_kinds: "assumption (C=50): a cold-patch pothole repair takes 30-60 min on site; clearing a drain or sewer inlet about an hour and matters more (flooding); checking an unannounced worksite is a short inspection"
+  min_confidence: 0.45       # only 'probable' or 'likely' events (or ones an officer confirmed) get a crew
+  depots:
+    # Placeholder depots spread over the city, to be replaced by the real municipal and ACEA yards.
+    - {id: depot_nord, name: "Deposito nord (ipotetico)", lon: 12.4900, lat: 41.9500}
+    - {id: depot_est, name: "Deposito est (ipotetico)", lon: 12.5600, lat: 41.8900}
+    - {id: depot_sud, name: "Deposito sud (ipotetico)", lon: 12.4800, lat: 41.8300}
+    - {id: depot_ovest, name: "Deposito ovest (ipotetico)", lon: 12.4100, lat: 41.8900}
+  depots_basis: "hypothetical: four yards inside the GRA, one per quadrant; the real yards are not in open data"
+  speed_kmh: 18              # urban van speed including traffic
+  detour_factor: 1.35        # road distance / straight-line distance
+  shift_hours: 6             # productive hours per crew per shift
+  cost_per_crew_hour_eur: 95 # two workers plus van
+  cost_per_km_eur: 0.6       # fuel and wear
+  max_crews: 10
+  max_items: 300
+  basis: "assumption (C=45): Rome average urban speed ~18 km/h for service vans; detour factor 1.3-1.4 is typical for dense street grids; crew cost from typical Italian public works rates (two workers ~35 EUR/h each plus van)"

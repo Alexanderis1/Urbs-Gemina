@@ -21,6 +21,7 @@ from twin.tools.estimate_field import estimate_field
 from twin.tools.permit_context import run_context_check
 from twin.tools.query_layer import query_layer
 from twin.tools.resolve_place import resolve_place
+from twin.tools.maintenance import plan_maintenance
 from twin.tools.signals import load_signal_config, signal_events
 from twin.tools.runtime import ToolRuntime
 
@@ -327,6 +328,21 @@ def _screen_report(rt: ToolRuntime, req: m.ScreenReportIn, role: str) -> dict[st
     return _delegate("screen_report", "agents.report_screen", "screen_report", "citizen-reports", inputs, run)
 
 
+def _plan_maintenance(rt: ToolRuntime, req: m.PlanMaintenanceIn, role: str) -> dict[str, Any]:
+    inputs = {"events": len(req.events), "crews": dict(req.crews), "shift_hours": req.shift_hours}
+    refused = _office_only(rt, "plan_maintenance", inputs, role)
+    if refused is not None:
+        return refused
+    cfg = load_signal_config(rt.settings.paths.config / "signals.yaml")
+    max_crews = int(cfg["maintenance"].get("max_crews", 10))
+    crews: dict[str, int] = {str(k): max(0, min(int(v), max_crews)) for k, v in req.crews.items()}
+    out = plan_maintenance([_dump(e) for e in req.events], cfg, crews, req.shift_hours)
+    warnings = ["Distances are straight lines times a detour factor, not the road network; depots are hypothetical.",
+                "Costs use assumed crew and van rates (config/signals.yaml maintenance)."]
+    return rt.envelope("plan_maintenance", inputs, out, {"citizen_reports": "real", "crew_routes": "estimated"},
+                       [Source(id="citizen_reports", retrieved_at=utc_now())], warnings)
+
+
 TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("resolve_place", m.ResolvePlaceIn, lambda rt, req, role: resolve_place(rt, req.text)),
     ToolSpec("context_check", m.ContextCheckIn,
@@ -361,6 +377,7 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("signal_events", m.SignalEventsIn, _signal_events, owner="citizen-reports"),
     ToolSpec("verify_signal", m.VerifySignalIn, _verify_signal, owner="citizen-reports"),
     ToolSpec("screen_report", m.ScreenReportIn, _screen_report, owner="citizen-reports"),
+    ToolSpec("plan_maintenance", m.PlanMaintenanceIn, _plan_maintenance, owner="citizen-reports"),
 ]}
 
 

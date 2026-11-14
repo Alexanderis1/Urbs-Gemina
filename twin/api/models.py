@@ -245,6 +245,30 @@ class ScreenReportIn(Strict):
     photo_url: str | None = Field(default=None, max_length=2000, description="short-lived signed URL from Lovable Cloud storage")
 
 
+def _default_crews() -> dict[Literal["roads", "sewers"], int]:
+    return {"roads": 2, "sewers": 1}
+
+
+class MaintenanceEvent(Strict):
+    id: str = Field(min_length=1, max_length=80)
+    category: str = Field(min_length=1, max_length=40)
+    category_label: str | None = Field(default=None, max_length=80)
+    lon: float = Field(ge=12.0, le=13.1)
+    lat: float = Field(ge=41.4, le=42.4)
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    scored: bool = True
+    confirmed: bool = False
+    n_reports: int = Field(default=1, ge=1, le=1000)
+
+
+class PlanMaintenanceIn(Strict):
+    """Office only. Plan road and sewer crews for reported problems (most urgent first, least driving), vs one trip each."""
+
+    events: list[MaintenanceEvent] = Field(max_length=300)
+    crews: dict[Literal["roads", "sewers"], int] = Field(default_factory=_default_crews)
+    shift_hours: float | None = Field(default=None, gt=0, le=12)
+
+
 class VerifySignalIn(Strict):
     """Office only, costs one Claude call and one Exa search: check one event's photos and look for news about it."""
 

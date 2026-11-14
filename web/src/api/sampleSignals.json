@@ -54,6 +54,152 @@
    ]
   },
   {
+   "id": "sig-1487e9d653",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.510225,
+   "lat": 41.9012,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:30:00+00:00",
+   "last_seen": "2026-11-14T08:40:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-100",
+    "sample-101"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-1b50dfc9e8",
+   "category": "flood",
+   "category_label": "Allagamento o fogna",
+   "scored": true,
+   "subtypes": {
+    "sewer": 2
+   },
+   "lon": 12.515,
+   "lat": 41.86005,
+   "radius_m": 6,
+   "first_seen": "2026-11-14T08:31:00+00:00",
+   "last_seen": "2026-11-14T08:45:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-200",
+    "sample-201"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Tombino otturato, acqua in strada",
+    "Fogna che rigurgita"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-4e472a2c32",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.501125,
+   "lat": 41.9405,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:38:00+00:00",
+   "last_seen": "2026-11-14T08:48:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-116",
+    "sample-117"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
    "id": "sig-6e16930f10",
    "category": "traffic",
    "category_label": "Traffico e trasporti",
@@ -105,6 +251,54 @@
    ]
   },
   {
+   "id": "sig-70abea25ae",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.449825,
+   "lat": 41.8712,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:34:00+00:00",
+   "last_seen": "2026-11-14T08:44:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-108",
+    "sample-109"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
    "id": "sig-78dddd3d59",
    "category": "pothole",
    "category_label": "Buca in strada",
@@ -129,6 +323,492 @@
    "texts": [
     "Buca profonda sulla corsia di destra, pericolosa per gli scooter",
     "Buca grande davanti alla fermata"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-85dbcdc2d1",
+   "category": "flood",
+   "category_label": "Allagamento o fogna",
+   "scored": true,
+   "subtypes": {
+    "sewer": 2
+   },
+   "lon": 12.47,
+   "lat": 41.94505,
+   "radius_m": 6,
+   "first_seen": "2026-11-14T08:32:00+00:00",
+   "last_seen": "2026-11-14T08:46:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-202",
+    "sample-203"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Tombino otturato, acqua in strada",
+    "Fogna che rigurgita"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-9f30050c50",
+   "category": "flood",
+   "category_label": "Allagamento o fogna",
+   "scored": true,
+   "subtypes": {
+    "sewer": 2
+   },
+   "lon": 12.54,
+   "lat": 41.90005,
+   "radius_m": 6,
+   "first_seen": "2026-11-14T08:34:00+00:00",
+   "last_seen": "2026-11-14T08:48:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-206",
+    "sample-207"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Tombino otturato, acqua in strada",
+    "Fogna che rigurgita"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-a180db3e4b",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.524325,
+   "lat": 41.9118,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:39:00+00:00",
+   "last_seen": "2026-11-14T08:49:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-118",
+    "sample-119"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-a4e8bc7c05",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.461225,
+   "lat": 41.865,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:35:00+00:00",
+   "last_seen": "2026-11-14T08:45:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-110",
+    "sample-111"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-a5eda15387",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.535525,
+   "lat": 41.8869,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:31:00+00:00",
+   "last_seen": "2026-11-14T08:41:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-102",
+    "sample-103"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-a6e8a96896",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.430525,
+   "lat": 41.8902,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:36:00+00:00",
+   "last_seen": "2026-11-14T08:46:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-112",
+    "sample-113"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-ad6e435180",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.559025,
+   "lat": 41.8705,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:33:00+00:00",
+   "last_seen": "2026-11-14T08:43:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-106",
+    "sample-107"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-cd2c6a4a8e",
+   "category": "flood",
+   "category_label": "Allagamento o fogna",
+   "scored": true,
+   "subtypes": {
+    "sewer": 2
+   },
+   "lon": 12.44,
+   "lat": 41.90005,
+   "radius_m": 6,
+   "first_seen": "2026-11-14T08:33:00+00:00",
+   "last_seen": "2026-11-14T08:47:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-204",
+    "sample-205"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Tombino otturato, acqua in strada",
+    "Fogna che rigurgita"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-d78f267360",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.547825,
+   "lat": 41.8781,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:32:00+00:00",
+   "last_seen": "2026-11-14T08:42:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-104",
+    "sample-105"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-f2a25d96ff",
+   "category": "pothole",
+   "category_label": "Buca in strada",
+   "scored": true,
+   "subtypes": {},
+   "lon": 12.488525,
+   "lat": 41.9301,
+   "radius_m": 2,
+   "first_seen": "2026-11-14T08:37:00+00:00",
+   "last_seen": "2026-11-14T08:47:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-114",
+    "sample-115"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Buca pericolosa sull'asfalto",
+    "Buca profonda, auto che sbandano"
    ],
    "twin": [],
    "checks": {},
@@ -318,7 +998,7 @@
    "factors": []
   }
  ],
- "n_reports": 11,
+ "n_reports": 39,
  "as_of": "2026-11-14T08:30:00+00:00",
  "warnings": []
 }
