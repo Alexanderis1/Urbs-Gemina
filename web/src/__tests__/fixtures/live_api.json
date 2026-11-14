@@ -1,0 +1,1550 @@
+{
+ "rain": {
+  "run_id": "f44188e71405e0377dba61b21a9bbe498b27293073cecfe92bfca3527f185c29",
+  "tool": "query_layer",
+  "status": "ok",
+  "inputs": {
+   "layer": "rain",
+   "area": "municipio:1",
+   "time": "2026-11-13T20:39:25+00:00",
+   "limit": 2,
+   "role": "citizen"
+  },
+  "result": {
+   "layer": "rain",
+   "unit": "mm/h",
+   "as_of": "2026-11-13T20:39:25Z",
+   "grid": "h3:9",
+   "method": "P1: per-cell Bayesian update + kriging of residuals (sensor fusion weighted by sigma), relaxing to the starting map",
+   "n_observations": 228,
+   "calibration": "uncalibrated",
+   "calibration_report": {
+    "status": "uncalibrated",
+    "reason": "not checked yet (no leave-one-station-out run on this layer)",
+    "n_predictions": 0,
+    "coverage": null,
+    "z_mean": null,
+    "z_sd": null,
+    "rmse": null
+   },
+   "type": "belief",
+   "area": {
+    "id": "municipio:1",
+    "kind": "municipio",
+    "name": "I",
+    "bbox": [
+     12.43985,
+     41.87076404,
+     12.5189,
+     41.93509004
+    ],
+    "area_km2": 19.994
+   },
+   "cells": [
+    {
+     "cell": "891e8050103ffff",
+     "mean": 0.047,
+     "sd": 0.698,
+     "p5": 0.0,
+     "p50": 0.047,
+     "p95": 1.195,
+     "updated_at": "2026-11-13T20:30:00Z",
+     "staleness_s": 565
+    },
+    {
+     "cell": "891e8050107ffff",
+     "mean": 0.047,
+     "sd": 0.698,
+     "p5": 0.0,
+     "p50": 0.047,
+     "p95": 1.195,
+     "updated_at": "2026-11-13T20:30:00Z",
+     "staleness_s": 565
+    }
+   ],
+   "count": 181,
+   "truncated": true
+  },
+  "data_kinds": {
+   "rain": "estimated"
+  },
+  "sources": [
+   {
+    "id": "layer:municipi",
+    "retrieved_at": "2026-11-13T20:38:53+00:00"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T1935Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T1940Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T1945Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T1950Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T1955Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T2000Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T2005Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T2010Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T2015Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T2020Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T2025Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   },
+   {
+    "id": "dpc_radar@SRI-20261113T2030Z",
+    "retrieved_at": "2026-11-13T20:39:25Z"
+   }
+  ],
+  "synthetic": false,
+  "warnings": [
+   "360 readings fell outside the layer's cells and were not used",
+   "uncertainty is uncalibrated: not checked yet (no leave-one-station-out run on this layer)"
+  ],
+  "cached": false
+ },
+ "traffic_flow": {
+  "run_id": "fee94761ef66ca55ebaad5be4a41c3d21ec2d348a829d745dc22de8604e0411d",
+  "tool": "query_layer",
+  "status": "ok",
+  "inputs": {
+   "layer": "traffic_flow",
+   "area": "municipio:1",
+   "time": "2026-11-13T20:39:24+00:00",
+   "limit": 2,
+   "role": "citizen"
+  },
+  "result": {
+   "type": "observations",
+   "area": {
+    "id": "municipio:1",
+    "kind": "municipio",
+    "name": "I",
+    "bbox": [
+     12.43985,
+     41.87076404,
+     12.5189,
+     41.93509004
+    ],
+    "area_km2": 19.994
+   },
+   "provider": "sim_loops",
+   "count": 11,
+   "truncated": true,
+   "observations": [
+    {
+     "id": "urn:ngsi-ld:TrafficFlowObserved:sim-loop-010",
+     "entity_type": "TrafficFlowObserved",
+     "lon": 12.445914,
+     "lat": 41.906322,
+     "observed_at": "2026-11-13T20:35:00+00:00",
+     "values": {
+      "intensity": 627.5,
+      "averageVehicleSpeed": 39.1,
+      "occupancy": 11.46
+     },
+     "sigma": {
+      "intensity": 50.2,
+      "averageVehicleSpeed": 2.0,
+      "occupancy": 2.0
+     },
+     "synthetic": true
+    },
+    {
+     "id": "urn:ngsi-ld:TrafficFlowObserved:sim-loop-012",
+     "entity_type": "TrafficFlowObserved",
+     "lon": 12.451304,
+     "lat": 41.913788,
+     "observed_at": "2026-11-13T20:35:00+00:00",
+     "values": {
+      "intensity": 472.9,
+      "averageVehicleSpeed": 37.0,
+      "occupancy": 9.12
+     },
+     "sigma": {
+      "intensity": 37.8,
+      "averageVehicleSpeed": 1.9,
+      "occupancy": 2.0
+     },
+     "synthetic": true
+    }
+   ]
+  },
+  "data_kinds": {
+   "traffic_flow": "simulated"
+  },
+  "sources": [
+   {
+    "id": "layer:municipi",
+    "retrieved_at": "2026-11-13T20:38:53+00:00"
+   },
+   {
+    "id": "sim_loops",
+    "retrieved_at": "2026-11-13T20:39:24+00:00"
+   }
+  ],
+  "synthetic": true,
+  "warnings": [
+   "SIMULATED data: generated values, not measurements."
+  ],
+  "cached": false
+ },
+ "antenna_register": {
+  "run_id": "9b8af325bfd4a2d9b097fb76c445f60c13f3980d3a6cedcc0d07caf78b41f579",
+  "tool": "query_layer",
+  "status": "ok",
+  "inputs": {
+   "layer": "antenna_register",
+   "area": "municipio:1",
+   "time": "2026-11-13T20:40:14+00:00",
+   "limit": 2,
+   "role": "citizen"
+  },
+  "result": {
+   "type": "aggregate",
+   "area": {
+    "id": "municipio:1",
+    "kind": "municipio",
+    "name": "I",
+    "bbox": [
+     12.43985,
+     41.87076404,
+     12.5189,
+     41.93509004
+    ],
+    "area_km2": 19.994
+   },
+   "provider": "est_register",
+   "cell_m": 500.0,
+   "total": 144,
+   "cells": [
+    {
+     "lon": 12.447323,
+     "lat": 41.906111,
+     "count": 1
+    },
+    {
+     "lon": 12.447323,
+     "lat": 41.910607,
+     "count": 1
+    },
+    {
+     "lon": 12.447323,
+     "lat": 41.928594,
+     "count": 1
+    }
+   ]
+  },
+  "data_kinds": {
+   "antenna_register": "estimated"
+  },
+  "sources": [
+   {
+    "id": "layer:municipi",
+    "retrieved_at": "2026-11-13T20:38:53+00:00"
+   },
+   {
+    "id": "est_register",
+    "retrieved_at": "2026-11-13T20:40:14+00:00"
+   }
+  ],
+  "synthetic": false,
+  "warnings": [
+   "Citizen view: single records are aggregated."
+  ],
+  "cached": false
+ },
+ "schools_state": {
+  "run_id": "7551b451f13e1e0520674c2422be31c87e7d1d1b13eeb78cac1caa4962446ce3",
+  "tool": "query_layer",
+  "status": "ok",
+  "inputs": {
+   "layer": "schools_state",
+   "area": "municipio:1",
+   "time": "2026-11-13T20:40:16+00:00",
+   "limit": 2,
+   "role": "citizen"
+  },
+  "result": {
+   "type": "features",
+   "area": {
+    "id": "municipio:1",
+    "kind": "municipio",
+    "name": "I",
+    "bbox": [
+     12.43985,
+     41.87076404,
+     12.5189,
+     41.93509004
+    ],
+    "area_km2": 19.994
+   },
+   "count": 55,
+   "features": {
+    "type": "FeatureCollection",
+    "features": [
+     {
+      "type": "Feature",
+      "id": "mv_portale_rete_statale.fid-7dd5c160_1a1d66c922e_4e7e",
+      "geometry": {
+       "type": "Point",
+       "coordinates": [
+        12.464869,
+        41.91866104,
+        86.83394328
+       ]
+      },
+      "geometry_name": "geometrie",
+      "properties": {
+       "denominazione": "VIA MONTEZEBIO"
+      },
+      "bbox": [
+       12.464869,
+       41.91866104,
+       12.464869,
+       41.91866104
+      ]
+     },
+     {
+      "type": "Feature",
+      "id": "mv_portale_rete_statale.fid-7dd5c160_1a1d66c922e_4e7f",
+      "geometry": {
+       "type": "Point",
+       "coordinates": [
+        12.458882,
+        41.91320804,
+        87.48352352
+       ]
+      },
+      "geometry_name": "geometrie",
+      "properties": {
+       "denominazione": "LEONARDA VACCARI"
+      },
+      "bbox": [
+       12.458882,
+       41.91320804,
+       12.458882,
+       41.91320804
+      ]
+     }
+    ]
+   },
+   "truncated": true
+  },
+  "data_kinds": {
+   "schools_state": "real"
+  },
+  "sources": [
+   {
+    "id": "layer:municipi",
+    "retrieved_at": "2026-11-13T20:38:53+00:00"
+   },
+   {
+    "id": "layer:schools_state",
+    "retrieved_at": "2026-11-13T20:37:48+00:00"
+   }
+  ],
+  "synthetic": false,
+  "warnings": [
+   "Features are included when at least one vertex lies inside the area."
+  ],
+  "cached": false
+ },
+ "emf_baseline": {
+  "run_id": "11e70d276a71dc62eee70d7fb607f50ece8d9329791cf99173fad2429cddfd68",
+  "tool": "query_layer",
+  "status": "ok",
+  "inputs": {
+   "layer": "emf_baseline",
+   "area": "municipio:1",
+   "time": "2026-11-13T20:40:07+00:00",
+   "limit": 2,
+   "role": "citizen"
+  },
+  "result": {
+   "type": "observations",
+   "area": {
+    "id": "municipio:1",
+    "kind": "municipio",
+    "name": "I",
+    "bbox": [
+     12.43985,
+     41.87076404,
+     12.5189,
+     41.93509004
+    ],
+    "area_km2": 19.994
+   },
+   "provider": "cartoradio_grid",
+   "count": 3609,
+   "truncated": true,
+   "observations": [
+    {
+     "id": "urn:ngsi-ld:EMFEstimate:cartoradio-r8052-c6474",
+     "entity_type": "EMFEstimate",
+     "lon": 12.441218,
+     "lat": 41.934347,
+     "observed_at": "2026-09-08T00:00:00+00:00",
+     "values": {
+      "electricField": 0.37,
+      "at_cap": 0.0
+     },
+     "sigma": {
+      "electricField": 0.216,
+      "at_cap": 0.0
+     },
+     "synthetic": false
+    },
+    {
+     "id": "urn:ngsi-ld:EMFEstimate:cartoradio-r8052-c6475",
+     "entity_type": "EMFEstimate",
+     "lon": 12.442116,
+     "lat": 41.934347,
+     "observed_at": "2026-09-08T00:00:00+00:00",
+     "values": {
+      "electricField": 0.349,
+      "at_cap": 0.0
+     },
+     "sigma": {
+      "electricField": 0.204,
+      "at_cap": 0.0
+     },
+     "synthetic": false
+    }
+   ]
+  },
+  "data_kinds": {
+   "emf_baseline": "estimated"
+  },
+  "sources": [
+   {
+    "id": "layer:municipi",
+    "retrieved_at": "2026-11-13T20:38:53+00:00"
+   },
+   {
+    "id": "cartoradio_grid",
+    "retrieved_at": "2026-11-13T20:40:14+00:00"
+   }
+  ],
+  "synthetic": false,
+  "warnings": [],
+  "cached": false
+ },
+ "resolve_place": {
+  "run_id": "4a9117b467f995c5ba844dd16fec2959e069897c603e856f660804d603120274",
+  "tool": "resolve_place",
+  "status": "ok",
+  "inputs": {
+   "text": "Via Nazionale 194, Roma"
+  },
+  "result": {
+   "found": true,
+   "lon": 12.490193,
+   "lat": 41.899526,
+   "label": "Palazzo delle Esposizioni, 194, Via Nazionale, Monti, Municipio Roma I, Roma, Lazio, 00184, Italia",
+   "precision": "tourism",
+   "method": "osm_nominatim",
+   "municipio": {
+    "status": "ok",
+    "id": "1",
+    "name": "I"
+   },
+   "urban_zone": {
+    "status": "ok",
+    "id": "1E",
+    "name": "Esquilino"
+   },
+   "alternatives": [
+    {
+     "lon": 12.489762,
+     "lat": 41.899572,
+     "label": "Open Colonna, 194, Via Nazionale, Monti, Municipio Roma I, Roma, Lazio, 00184, Italia"
+    },
+    {
+     "lon": 12.490431,
+     "lat": 41.899313,
+     "label": "194, Via Nazionale, Monti, Municipio Roma I, Roma, Lazio, 00184, Italia"
+    }
+   ]
+  },
+  "data_kinds": {
+   "place": "real",
+   "municipi": "real",
+   "urban_zones": "real"
+  },
+  "sources": [
+   {
+    "id": "osm_nominatim",
+    "url": "https://nominatim.openstreetmap.org/search",
+    "retrieved_at": "2026-11-13T20:39:03+00:00"
+   },
+   {
+    "id": "layer:municipi",
+    "retrieved_at": "2026-11-13T20:38:53+00:00"
+   },
+   {
+    "id": "layer:urban_zones",
+    "retrieved_at": "2026-11-13T20:38:54+00:00"
+   }
+  ],
+  "synthetic": false,
+  "warnings": [
+   "3 matches; the first is used. Check the alternatives."
+  ],
+  "cached": false
+ },
+ "context_check": {
+  "run_id": "4957fbd9e28156ed9010775d0adfdd4c39c4e208b8f1f23e7e4e17a8bdac7860",
+  "tool": "context_check",
+  "status": "ok",
+  "inputs": {
+   "point": {
+    "lon": 12.4925,
+    "lat": 41.9005
+   },
+   "radius_m": 300.0
+  },
+  "result": {
+   "point": {
+    "lon": 12.4925,
+    "lat": 41.9005
+   },
+   "radius_m": 300.0,
+   "meaning": "Context information only. Not a prohibition (Consiglio di Stato, Sez. IV, 2021).",
+   "groups": {
+    "sensitive_site": {
+     "label": "Sensitive sites (schools, care, health, play areas)",
+     "layers": [
+      {
+       "layer": "schools_state",
+       "label": "State schools",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "nidi",
+       "label": "Municipal nurseries (nidi)",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "infanzia",
+       "label": "Municipal pre-schools",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "hospitals",
+       "label": "Hospitals",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "health_care",
+       "label": "Health and care facilities (Roma 241)",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "care_homes_osm",
+       "label": "Care homes (RSA, OpenStreetMap)",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "playgrounds_osm",
+       "label": "Playgrounds (OpenStreetMap)",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      }
+     ]
+    },
+    "constraint": {
+     "label": "Planning, landscape and heritage constraints",
+     "layers": [
+      {
+       "layer": "unesco",
+       "label": "UNESCO World Heritage site",
+       "status": "ok",
+       "count": 1,
+       "hits": [
+        {
+         "distance_m": 0.0,
+         "name": "Centro storico di Roma"
+        }
+       ]
+      },
+      {
+       "layer": "unesco_buffer",
+       "label": "UNESCO buffer zone",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "protected_areas",
+       "label": "Protected areas",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "natura2000",
+       "label": "Natura 2000 sites",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "rete_ecologica_poly",
+       "label": "Ecological network (areas)",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "rete_ecologica_line",
+       "label": "Ecological network (lines)",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "cpq_morfologie",
+       "label": "Carta per la Qualita: urban morphologies",
+       "status": "ok",
+       "count": 0,
+       "hits": []
+      },
+      {
+       "layer": "cpq_preesistenze",
+       "label": "Carta per la Qualita: archaeological and historic remains",
+       "status": "ok",
+       "count": 4,
+       "hits": [
+        {
+         "distance_m": 149.1,
+         "name": "S. Vitale"
+        },
+        {
+         "distance_m": 227.6,
+         "name": "Resti di muratura, Via XX Settembre"
+        },
+        {
+         "distance_m": 268.9,
+         "name": "Villino Huffer"
+        },
+        {
+         "distance_m": 271.3,
+         "name": "Resti di muratura, Via XX Settembre"
+        }
+       ]
+      },
+      {
+       "layer": "cpq_spazi_aperti",
+       "label": "Carta per la Qualita: open spaces",
+       "status": "ok",
+       "count": 18,
+       "hits": [
+        {
+         "distance_m": 12.3,
+         "name": null
+        },
+        {
+         "distance_m": 52.7,
+         "name": null
+        },
+        {
+         "distance_m": 97.4,
+         "name": null
+        },
+        {
+         "distance_m": 125.0,
+         "name": null
+        },
+        {
+         "distance_m": 136.0,
+         "name": null
+        },
+        {
+         "distance_m": 146.5,
+         "name": null
+        },
+        {
+         "distance_m": 167.3,
+         "name": null
+        },
+        {
+         "distance_m": 204.8,
+         "name": null
+        },
+        {
+         "distance_m": 208.8,
+         "name": null
+        },
+        {
+         "distance_m": 209.9,
+         "name": null
+        },
+        {
+         "distance_m": 212.3,
+         "name": null
+        },
+        {
+         "distance_m": 213.6,
+         "name": null
+        },
+        {
+         "distance_m": 226.9,
+         "name": null
+        },
+        {
+         "distance_m": 248.4,
+         "name": null
+        },
+        {
+         "distance_m": 249.2,
+         "name": null
+        },
+        {
+         "distance_m": 251.1,
+         "name": null
+        },
+        {
+         "distance_m": 276.3,
+         "name": null
+        },
+        {
+         "distance_m": 279.2,
+         "name": null
+        }
+       ]
+      },
+      {
+       "layer": "cpq_edilizia_speciale",
+       "label": "Carta per la Qualita: special buildings",
+       "status": "ok",
+       "count": 70,
+       "hits": [
+        {
+         "distance_m": 49.1,
+         "name": "Ex Casa Generalizia dei Padri Domenicani"
+        },
+        {
+         "distance_m": 66.1,
+         "name": "Convento di S.Paolo"
+        },
+        {
+         "distance_m": 69.9,
+         "name": "Palazzo"
+        },
+        {
+         "distance_m": 71.4,
+         "name": "Ex Casa Generalizia dei Padri Domenicani"
+        },
+        {
+         "distance_m": 79.6,
+         "name": "S. Paolo Eremita, sconsacrata"
+        },
+        {
+         "distance_m": 80.8,
+         "name": "Palazzo"
+        },
+        {
+         "distance_m": 84.4,
+         "name": "Sede dell'IMI e dell'Istituto Italiano Cambi"
+        },
+        {
+         "distance_m": 96.3,
+         "name": "Convento di S.Paolo"
+        },
+        {
+         "distance_m": 111.6,
+         "name": "Palazzo per uffici"
+        },
+        {
+         "distance_m": 112.9,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 118.4,
+         "name": "Edificio per servizi ed uffici"
+        },
+        {
+         "distance_m": 123.6,
+         "name": "Caserma centrale dei Vigili del Fuoco"
+        },
+        {
+         "distance_m": 132.5,
+         "name": "Ministero degli Interni"
+        },
+        {
+         "distance_m": 136.8,
+         "name": "Edificio seriale"
+        },
+        {
+         "distance_m": 138.9,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 142.4,
+         "name": "Sede dell'IMI e dell'Istituto Italiano Cambi"
+        },
+        {
+         "distance_m": 144.1,
+         "name": "Casa Rattazzi - Albergo Doria"
+        },
+        {
+         "distance_m": 144.9,
+         "name": "S. Paolo dentro le mura"
+        },
+        {
+         "distance_m": 149.1,
+         "name": "Chiesa di S. Vitale"
+        },
+        {
+         "distance_m": 150.7,
+         "name": "PALAZZO ALBANI"
+        },
+        {
+         "distance_m": 151.2,
+         "name": "Convento dei Trinitari Spagnoli"
+        },
+        {
+         "distance_m": 151.5,
+         "name": "Sede dell'IMI e dell'Istituto Italiano Cambi"
+        },
+        {
+         "distance_m": 152.2,
+         "name": "Ministero degli Interni"
+        },
+        {
+         "distance_m": 162.9,
+         "name": "Convento dei Trinitari Spagnoli"
+        },
+        {
+         "distance_m": 179.2,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 183.1,
+         "name": "SS. Anna e Gioacchino alle Quattro Fontane"
+        },
+        {
+         "distance_m": 185.4,
+         "name": "PALAZZO DELLE ESPOSIZIONI"
+        },
+        {
+         "distance_m": 187.3,
+         "name": "PALAZZO ALBANI"
+        },
+        {
+         "distance_m": 194.6,
+         "name": "Convento dei Trinitari Spagnoli"
+        },
+        {
+         "distance_m": 195.3,
+         "name": "Ministero degli Interni"
+        },
+        {
+         "distance_m": 195.8,
+         "name": "S. CARLINO ALLE QUATTRO FONTANE"
+        },
+        {
+         "distance_m": 195.9,
+         "name": "Convento S. Andrea al Quirinale"
+        },
+        {
+         "distance_m": 197.5,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 203.7,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 209.9,
+         "name": "Ministero degli Interni"
+        },
+        {
+         "distance_m": 210.8,
+         "name": "Convento S. Andrea al Quirinale"
+        },
+        {
+         "distance_m": 213.6,
+         "name": "Trasformazione del Teatro Costanzi in Teatro dell'Opera"
+        },
+        {
+         "distance_m": 215.8,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 217.4,
+         "name": "Ministero degli Interni"
+        },
+        {
+         "distance_m": 223.3,
+         "name": "PALAZZO VOLPI DI MISURATA SANTONETTI"
+        },
+        {
+         "distance_m": 223.6,
+         "name": "Edificio per servizi ed uffici"
+        },
+        {
+         "distance_m": 227.9,
+         "name": "Palazzo"
+        },
+        {
+         "distance_m": 228.2,
+         "name": "PALAZZO DEL QUIRINALE"
+        },
+        {
+         "distance_m": 232.3,
+         "name": "Ministero degli Interni"
+        },
+        {
+         "distance_m": 234.7,
+         "name": "ISTITUTO CENTRALE STATISTICA"
+        },
+        {
+         "distance_m": 235.4,
+         "name": "Convento S.Andrea al Quirinale"
+        },
+        {
+         "distance_m": 235.8,
+         "name": "Ministero degli Interni"
+        },
+        {
+         "distance_m": 236.8,
+         "name": "Palazzo dell'Ist. Romano dei Beni Stabili"
+        },
+        {
+         "distance_m": 237.4,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 243.8,
+         "name": "Palazzo Calabresi/Uffici Centro Studi Difesa Civile"
+        },
+        {
+         "distance_m": 244.4,
+         "name": "Palazzo"
+        },
+        {
+         "distance_m": 246.3,
+         "name": "MINISTERO DELLA DIFESA"
+        },
+        {
+         "distance_m": 247.0,
+         "name": "S. ANDREA AL QUIRINALE"
+        },
+        {
+         "distance_m": 249.3,
+         "name": "Palazzo"
+        },
+        {
+         "distance_m": 252.9,
+         "name": "ISTITUTO CENTRALE STATISTICA"
+        },
+        {
+         "distance_m": 253.1,
+         "name": "PALAZZO DEL QUIRINALE"
+        },
+        {
+         "distance_m": 256.3,
+         "name": "Edificio per servizi ed uffici"
+        },
+        {
+         "distance_m": 257.5,
+         "name": "Palazzo dell'Ist. Romano dei Beni Stabili"
+        },
+        {
+         "distance_m": 260.4,
+         "name": "Convento S. Andrea al Quirinale"
+        },
+        {
+         "distance_m": 262.3,
+         "name": "Palazzo Calabresi/Uffici Centro Studi Difesa Civile"
+        },
+        {
+         "distance_m": 265.5,
+         "name": "Villa con il parco - pertinenza"
+        },
+        {
+         "distance_m": 268.9,
+         "name": "Villa con il parco"
+        },
+        {
+         "distance_m": 275.2,
+         "name": "ISTITUTO CENTRALE STATISTICA"
+        },
+        {
+         "distance_m": 281.8,
+         "name": "St. Andrew's-Church of Scotland"
+        },
+        {
+         "distance_m": 283.9,
+         "name": "Edificio per servizi ed uffici"
+        },
+        {
+         "distance_m": 284.2,
+         "name": "Convento S.Lorenzo (Caserma P.S. uffici)"
+        },
+        {
+         "distance_m": 288.1,
+         "name": "PALAZZO BARBERINI"
+        },
+        {
+         "distance_m": 290.0,
+         "name": "Uffici Amministrazione Centrale - Banca d'Italia"
+        },
+        {
+         "distance_m": 291.9,
+         "name": "Edificio per servizi ed uffici"
+        },
+        {
+         "distance_m": 299.4,
+         "name": "MONASTERO DI S. CHIARA CON IL CHIOSTRO"
+        }
+       ]
+      },
+      {
+       "layer": "ptpr_tavola_a",
+       "label": "PTPR Tavola A (landscape systems)",
+       "status": "not_available"
+      },
+      {
+       "layer": "ptpr_tavola_b",
+       "label": "PTPR Tavola B (landscape constraints)",
+       "status": "not_available"
+      },
+      {
+       "layer": "sitap_art136",
+       "label": "Landscape constraint art. 136 D.Lgs. 42/2004",
+       "status": "not_available"
+      },
+      {
+       "layer": "sitap_art142",
+       "label": "Landscape constraint art. 142 D.Lgs. 42/2004",
+       "status": "not_available"
+      },
+      {
+       "layer": "prg_sistemi_regole",
+       "label": "PRG component (Sistemi e Regole)",
+       "status": "not_available"
+      }
+     ]
+    }
+   },
+   "summary": {
+    "sensitive_site": 0,
+    "constraint": 93
+   },
+   "not_available": [
+    "PTPR Tavola A (landscape systems)",
+    "PTPR Tavola B (landscape constraints)",
+    "Landscape constraint art. 136 D.Lgs. 42/2004",
+    "Landscape constraint art. 142 D.Lgs. 42/2004",
+    "PRG component (Sistemi e Regole)"
+   ]
+  },
+  "data_kinds": {
+   "schools_state": "real",
+   "nidi": "real",
+   "infanzia": "real",
+   "hospitals": "real",
+   "health_care": "real",
+   "care_homes_osm": "real",
+   "playgrounds_osm": "real",
+   "unesco": "real",
+   "unesco_buffer": "real",
+   "protected_areas": "real",
+   "natura2000": "real",
+   "rete_ecologica_poly": "real",
+   "rete_ecologica_line": "real",
+   "cpq_morfologie": "real",
+   "cpq_preesistenze": "real",
+   "cpq_spazi_aperti": "real",
+   "cpq_edilizia_speciale": "real",
+   "ptpr_tavola_a": "not_available",
+   "ptpr_tavola_b": "not_available",
+   "sitap_art136": "not_available",
+   "sitap_art142": "not_available",
+   "prg_sistemi_regole": "not_available"
+  },
+  "sources": [
+   {
+    "id": "layer:schools_state",
+    "retrieved_at": "2026-11-13T20:37:48+00:00"
+   },
+   {
+    "id": "layer:nidi",
+    "retrieved_at": "2026-11-13T20:37:48+00:00"
+   },
+   {
+    "id": "layer:infanzia",
+    "retrieved_at": "2026-11-13T20:37:49+00:00"
+   },
+   {
+    "id": "layer:hospitals",
+    "retrieved_at": "2026-11-13T20:37:49+00:00"
+   },
+   {
+    "id": "layer:health_care",
+    "retrieved_at": "2026-11-13T20:37:49+00:00"
+   },
+   {
+    "id": "layer:care_homes_osm",
+    "retrieved_at": "2026-11-13T20:37:50+00:00"
+   },
+   {
+    "id": "layer:playgrounds_osm",
+    "retrieved_at": "2026-11-13T20:37:50+00:00"
+   },
+   {
+    "id": "layer:unesco",
+    "retrieved_at": "2026-11-13T20:37:50+00:00"
+   },
+   {
+    "id": "layer:unesco_buffer",
+    "retrieved_at": "2026-11-13T20:37:50+00:00"
+   },
+   {
+    "id": "layer:protected_areas",
+    "retrieved_at": "2026-11-13T20:37:51+00:00"
+   },
+   {
+    "id": "layer:natura2000",
+    "retrieved_at": "2026-11-13T20:37:51+00:00"
+   },
+   {
+    "id": "layer:rete_ecologica_poly",
+    "retrieved_at": "2026-11-13T20:37:52+00:00"
+   },
+   {
+    "id": "layer:rete_ecologica_line",
+    "retrieved_at": "2026-11-13T20:37:53+00:00"
+   },
+   {
+    "id": "layer:cpq_morfologie",
+    "retrieved_at": "2026-11-13T20:37:53+00:00"
+   },
+   {
+    "id": "layer:cpq_preesistenze",
+    "retrieved_at": "2026-11-13T20:37:54+00:00"
+   },
+   {
+    "id": "layer:cpq_spazi_aperti",
+    "retrieved_at": "2026-11-13T20:37:54+00:00"
+   },
+   {
+    "id": "layer:cpq_edilizia_speciale",
+    "retrieved_at": "2026-11-13T20:37:55+00:00"
+   }
+  ],
+  "synthetic": false,
+  "warnings": [
+   "Layer not available, so not checked: PTPR Tavola A (landscape systems).",
+   "Layer not available, so not checked: PTPR Tavola B (landscape constraints).",
+   "Layer not available, so not checked: Landscape constraint art. 136 D.Lgs. 42/2004.",
+   "Layer not available, so not checked: Landscape constraint art. 142 D.Lgs. 42/2004.",
+   "Layer not available, so not checked: PRG component (Sistemi e Regole)."
+  ],
+  "cached": false
+ },
+ "estimate_field": {
+  "run_id": "954c94b2d16677baef6cb68d9127ff64364236d686c23276bd9f495b772ef96c",
+  "tool": "estimate_field",
+  "status": "ok",
+  "inputs": {
+   "point": {
+    "lon": 12.4925,
+    "lat": 41.9005
+   },
+   "area": null,
+   "variant": null
+  },
+  "result": {
+   "mode": "point",
+   "model": "free-space far field, isotropic (worst case, no antenna pattern, no building loss)",
+   "calibration": "uncalibrated",
+   "error_sigma_db": {
+    "baseline": 3.0,
+    "model": 4.0
+   },
+   "averaging_note": "Instantaneous worst-case estimate; the attention value is a 24-hour average.",
+   "lon": 12.4925,
+   "lat": 41.9005,
+   "unit": "V/m",
+   "p5": 0.606,
+   "p50": 1.081,
+   "p95": 1.919,
+   "exceedance": {
+    "attention_value": {
+     "threshold_v_per_m": 15.0,
+     "source": "Legge 30 dicembre 2023, n. 214, art. 10 (raised from 6 V/m)",
+     "applies_to": "buildings with prolonged stay and their outdoor pertinences",
+     "probability": 0.0
+    },
+    "exposure_limit": {
+     "threshold_v_per_m": 20.0,
+     "source": "DPCM 8 luglio 2003, art. 3",
+     "applies_to": "3 MHz - 3 GHz, general public",
+     "probability": 0.0
+    }
+   },
+   "baseline": {
+    "value_v_per_m": 1.075,
+    "capped": false,
+    "distance_to_cell_m": 27.9,
+    "credit": "Fonte: Cartoradio - MIMIT/FUB"
+   },
+   "new_sources": [],
+   "nearest_measurement": null
+  },
+  "data_kinds": {
+   "emf_field": "estimated",
+   "emf_baseline": "estimated"
+  },
+  "sources": [
+   {
+    "id": "cartoradio_grid",
+    "retrieved_at": "2026-11-13T20:39:05+00:00"
+   }
+  ],
+  "synthetic": false,
+  "warnings": [],
+  "cached": false
+ },
+ "data_status": {
+  "run_id": "571272de9547e2ed203623154f44518e54e8d1d792607b682708692fc7186ac9",
+  "tool": "data_status",
+  "status": "ok",
+  "inputs": {},
+  "result": {
+   "layers": [
+    {
+     "layer": "traffic_flow",
+     "provider": "sim_loops",
+     "status": "active",
+     "provider_kind": "simulated",
+     "synthetic": true,
+     "licence": "generated (no licence)",
+     "cadence": "5 min",
+     "redistribution": true,
+     "notes": "sim-2026.11.13. Placeholder for Roma Mobilita loop stations (DATEX II); stations at signalised junctions on major roads (loop_stations.geojson).",
+     "data_kind": "simulated"
+    },
+    {
+     "layer": "antenna_register",
+     "provider": "est_register",
+     "status": "active",
+     "provider_kind": "restricted",
+     "synthetic": false,
+     "licence": "derived at runtime from OpenCelliD (CC BY-SA 4.0), OSM (ODbL) and Cartoradio (MIMIT/FUB, reuse needs written consent)",
+     "cadence": "on demand (Cartoradio snapshot date)",
+     "redistribution": false,
+     "notes": "Estimated, uncalibrated. Positions from OpenCelliD clusters refined on Cartoradio peaks; effective EIRP fitted to the Cartoradio grid. Azimuth, height, bands and status unknown. Fonte: Cartoradio - MIMIT/FUB.",
+     "data_kind": "estimated"
+    },
+    {
+     "layer": "emf_measurements",
+     "provider": "arpa_points",
+     "status": "needs_access",
+     "synthetic": false,
+     "licence": "Roma Capitale open data, credit ARPA Lazio",
+     "redistribution": true,
+     "data_kind": "real"
+    },
+    {
+     "layer": "emf_baseline",
+     "provider": "cartoradio_grid",
+     "status": "active",
+     "provider_kind": "restricted",
+     "synthetic": false,
+     "licence": "reuse forbidden without written consent (MIMIT/FUB); consent pending",
+     "cadence": "static snapshot 2026-09-08",
+     "redistribution": false,
+     "notes": "Fonte: Cartoradio - MIMIT/FUB. Estimated field, not a measurement. Read at runtime, never stored. Values at 15 V/m mean '15 or more'.",
+     "data_kind": "estimated"
+    },
+    {
+     "layer": "transit",
+     "provider": "roma_gtfs_rt",
+     "status": "active",
+     "provider_kind": "open",
+     "synthetic": false,
+     "licence": "CC BY-SA (Roma Mobilita)",
+     "cadence": "about 30 s",
+     "redistribution": true,
+     "notes": "Vehicle positions and delay at the next stop (trip updates). Credit: Roma Mobilita.",
+     "data_kind": "real"
+    },
+    {
+     "layer": "air_quality",
+     "provider": "eea_hourly",
+     "status": "active",
+     "provider_kind": "open",
+     "synthetic": false,
+     "licence": "EEA open data (credit: European Environment Agency)",
+     "cadence": "hourly (unverified up-to-date data)",
+     "redistribution": true,
+     "notes": "Rome stations from the EEA download service; values unverified until the yearly validation.",
+     "data_kind": "real"
+    },
+    {
+     "layer": "air_quality_citizen",
+     "provider": "sensor_community",
+     "status": "active",
+     "provider_kind": "open",
+     "synthetic": false,
+     "licence": "ODbL (Sensor.Community)",
+     "cadence": "5 min",
+     "redistribution": true,
+     "notes": "Citizen low-cost PM sensors: real but noisy, larger sigma, doubled in humid air. Credit: Sensor.Community.",
+     "data_kind": "real"
+    },
+    {
+     "layer": "air_quality_model",
+     "provider": "cams_open_meteo",
+     "status": "active",
+     "provider_kind": "open",
+     "synthetic": false,
+     "licence": "CC BY 4.0 (Open-Meteo; CAMS, Copernicus Atmosphere Monitoring Service)",
+     "cadence": "hourly",
+     "redistribution": true,
+     "notes": "Model background (CAMS Europe, about 10 km), not a measurement. Credit: Open-Meteo, CAMS.",
+     "data_kind": "real"
+    },
+    {
+     "layer": "rain",
+     "provider": "dpc_radar",
+     "status": "active",
+     "provider_kind": "open",
+     "synthetic": false,
+     "licence": "CC BY (Dipartimento della Protezione Civile), C=75",
+     "cadence": "5 min",
+     "redistribution": true,
+     "notes": "Product SRI (surface rainfall intensity, mm/h). Credit: Dipartimento della Protezione Civile.",
+     "data_kind": "real"
+    },
+    {
+     "layer": "micromobility",
+     "provider": "bird_gbfs",
+     "status": "active",
+     "provider_kind": "open",
+     "synthetic": false,
+     "licence": "operator terms (Bird GBFS public feed); check before republishing",
+     "cadence": "1 min",
+     "redistribution": false,
+     "notes": "Available shared e-scooters (Bird). Weak activity proxy (C=40). Vehicle ids dropped.",
+     "data_kind": "real"
+    },
+    {
+     "layer": "context_layers",
+     "provider": "roma_wfs",
+     "status": "planned",
+     "synthetic": false,
+     "licence": null,
+     "redistribution": null,
+     "data_kind": "real"
+    }
+   ],
+   "static_snapshots": [],
+   "context_layers": [
+    {
+     "layer": "schools_state",
+     "label": "State schools",
+     "group": "sensitive_site",
+     "downloaded": true
+    },
+    {
+     "layer": "nidi",
+     "label": "Municipal nurseries (nidi)",
+     "group": "sensitive_site",
+     "downloaded": true
+    },
+    {
+     "layer": "infanzia",
+     "label": "Municipal pre-schools",
+     "group": "sensitive_site",
+     "downloaded": true
+    },
+    {
+     "layer": "hospitals",
+     "label": "Hospitals",
+     "group": "sensitive_site",
+     "downloaded": true
+    },
+    {
+     "layer": "health_care",
+     "label": "Health and care facilities (Roma 241)",
+     "group": "sensitive_site",
+     "downloaded": true
+    },
+    {
+     "layer": "care_homes_osm",
+     "label": "Care homes (RSA, OpenStreetMap)",
+     "group": "sensitive_site",
+     "downloaded": true
+    },
+    {
+     "layer": "playgrounds_osm",
+     "label": "Playgrounds (OpenStreetMap)",
+     "group": "sensitive_site",
+     "downloaded": true
+    },
+    {
+     "layer": "unesco",
+     "label": "UNESCO World Heritage site",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "unesco_buffer",
+     "label": "UNESCO buffer zone",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "protected_areas",
+     "label": "Protected areas",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "natura2000",
+     "label": "Natura 2000 sites",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "rete_ecologica_poly",
+     "label": "Ecological network (areas)",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "rete_ecologica_line",
+     "label": "Ecological network (lines)",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "cpq_morfologie",
+     "label": "Carta per la Qualita: urban morphologies",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "cpq_preesistenze",
+     "label": "Carta per la Qualita: archaeological and historic remains",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "cpq_spazi_aperti",
+     "label": "Carta per la Qualita: open spaces",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "cpq_edilizia_speciale",
+     "label": "Carta per la Qualita: special buildings",
+     "group": "constraint",
+     "downloaded": true
+    },
+    {
+     "layer": "ptpr_tavola_a",
+     "label": "PTPR Tavola A (landscape systems)",
+     "group": "constraint",
+     "downloaded": false
+    },
+    {
+     "layer": "ptpr_tavola_b",
+     "label": "PTPR Tavola B (landscape constraints)",
+     "group": "constraint",
+     "downloaded": false
+    },
+    {
+     "layer": "sitap_art136",
+     "label": "Landscape constraint art. 136 D.Lgs. 42/2004",
+     "group": "constraint",
+     "downloaded": false
+    },
+    {
+     "layer": "sitap_art142",
+     "label": "Landscape constraint art. 142 D.Lgs. 42/2004",
+     "group": "constraint",
+     "downloaded": false
+    },
+    {
+     "layer": "prg_sistemi_regole",
+     "label": "PRG component (Sistemi e Regole)",
+     "group": "constraint",
+     "downloaded": false
+    }
+   ],
+   "counts": {
+    "real": 8,
+    "estimated": 2,
+    "simulated": 1
+   },
+   "thresholds_as_of": "2026-11-13",
+   "allowed_simulated_layers": [
+    "traffic_flow"
+   ],
+   "simulation_violations": []
+  },
+  "data_kinds": {
+   "traffic_flow": "simulated",
+   "antenna_register": "estimated",
+   "emf_measurements": "real",
+   "emf_baseline": "estimated",
+   "transit": "real",
+   "air_quality": "real",
+   "air_quality_citizen": "real",
+   "air_quality_model": "real",
+   "rain": "real",
+   "micromobility": "real",
+   "context_layers": "real"
+  },
+  "sources": [],
+  "synthetic": true,
+  "warnings": [],
+  "cached": false
+ }
+}
