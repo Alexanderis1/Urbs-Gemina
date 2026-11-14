@@ -59,3 +59,12 @@ def test_unknown_job_is_404() -> None:
 
     client = TestClient(create_app())
     assert client.get("/jobs/nope").status_code == 404
+
+
+def test_model_tables_found_from_any_working_directory(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """On Modal the process does not start in the repo root; tables on data/processed must still be found."""
+    from twin.beliefs import landuse
+
+    assert all(d.is_absolute() for d in landuse.SEARCH_DIRS)
+    monkeypatch.chdir(tmp_path)
+    assert landuse.SEARCH_DIRS[1] == landuse.ROOT / "data" / "processed"
