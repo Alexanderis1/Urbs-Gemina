@@ -73,7 +73,7 @@ layers:
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm10:
-    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
+    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (rescaled to the stations, 43-59% sigma, doubled at humidity >= 80%)
     prior_field:
       source: air_quality_model
       entity_types: [AirQualityForecast]
@@ -100,7 +100,7 @@ layers:
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm25:
-    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
+    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (rescaled to the stations, 43-59% sigma, doubled at humidity >= 80%)
     prior_field:
       source: air_quality_model
       entity_types: [AirQualityForecast]

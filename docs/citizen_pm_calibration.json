@@ -1,0 +1,35 @@
+{
+  "nodes": 5,
+  "days": 90,
+  "rh_cap": 95.0,
+  "window": [
+    "2026-08-15",
+    "2026-11-12"
+  ],
+  "pm10": {
+    "n_days": 306,
+    "sensors": 4,
+    "scale": 0.527,
+    "growth_c": 0.01,
+    "raw_bias": -7.99,
+    "rmse_raw_left_out": 11.47,
+    "rmse_corrected_left_out": 11.59,
+    "bias_corrected_left_out": 1.08,
+    "relative_sigma_daily": 0.432,
+    "mean_reference": 19.73,
+    "mean_rh": 77.0
+  },
+  "pm25": {
+    "n_days": 306,
+    "sensors": 4,
+    "scale": 0.488,
+    "growth_c": 0.01,
+    "raw_bias": -3.82,
+    "rmse_raw_left_out": 5.34,
+    "rmse_corrected_left_out": 6.56,
+    "bias_corrected_left_out": 0.92,
+    "relative_sigma_daily": 0.587,
+    "mean_reference": 9.11,
+    "mean_rh": 77.0
+  }
+}
