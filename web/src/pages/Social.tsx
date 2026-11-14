@@ -42,6 +42,8 @@ const T = texts({
     missingSport: "The list of places open at a chosen time is not connected yet.",
     missingMuseum: "The list of museums and galleries is not connected yet.",
     sportMap: "Open the map of sports facilities",
+    planTitle: "Where is a new facility needed?",
+    planText: "Areas with no sport nearby, and what changes if one opens (a simulation).",
     error: "The places could not be loaded right now.",
     address: "Address",
     hours: "Opening hours",
@@ -76,6 +78,8 @@ const T = texts({
     missingSport: "L'elenco dei luoghi aperti a un orario scelto non è ancora collegato.",
     missingMuseum: "L'elenco di musei e gallerie non è ancora collegato.",
     sportMap: "Apri la mappa degli impianti sportivi",
+    planTitle: "Dove serve un nuovo impianto?",
+    planText: "Le zone senza sport vicino e che cosa cambia se ne apre uno (simulazione).",
     error: "Al momento non è stato possibile caricare i luoghi.",
     address: "Indirizzo",
     hours: "Orari",
@@ -216,6 +220,22 @@ export default function Social() {
           <PositionBar />
           {position && <p className="hint">{t.nearHint}</p>}
         </section>
+
+        {kind === "sport" && (
+          <Link
+            to={screenPath("public", "sport") ?? "/"}
+            className="group flex items-center gap-2.5 rounded border border-line px-3 py-2 transition-colors duration-150 hover:border-link"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-whatif/10 text-whatif">
+              <GlyphIcon glyph="pin" className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-link">{t.planTitle}</span>
+              <span className="block text-xs text-muted">{t.planText}</span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-link transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
+        )}
 
         {res.status === "loading" && <Skeleton lines={4} />}
         {res.status === "missing" && (

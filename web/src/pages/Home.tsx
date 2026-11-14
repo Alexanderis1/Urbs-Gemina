@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronRight, Database, Home as HomeIcon, ListChecks, Map as MapIcon, MapPin, MessagesSquare, Search, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowRight, ChevronRight, Database, Home as HomeIcon, ListChecks, Map as MapIcon, MapPin, MessagesSquare, Search, Sparkles, Trophy, type LucideIcon } from "lucide-react";
 import { buildTwinQuestion, type TwinAnswer } from "@/api/twin";
 import { AnswerText, AnswerTrace } from "@/components/Answer";
 import { GlyphIcon } from "@/components/MarkerCard";
@@ -51,9 +51,9 @@ const T = texts({
     explore: "Explore the city",
     exploreText: {
       city: "See air, rain, bus delays, hospitals and schools on the 3D map of Rome.",
-      sport: "Find a sports facility near you, and the areas that have none.",
+      sport: "Find a sports facility near you, see the areas that have none, and try where a new one would help most.",
       ask: "Ask a question in your own words and get an answer with its sources.",
-      honesty: "See where each piece of information comes from and how far to trust it.",
+      honesty: "See where each piece of information comes from and how reliable it is.",
     } as Partial<Record<ScreenId, string>>,
   },
   it: {
@@ -82,15 +82,16 @@ const T = texts({
     explore: "Esplora la città",
     exploreText: {
       city: "Guarda aria, pioggia, ritardi dei bus, ospedali e scuole sulla mappa 3D di Roma.",
-      sport: "Trova un impianto sportivo vicino a te e le zone che ne sono prive.",
+      sport: "Trova un impianto vicino a te, guarda le zone che ne sono prive e prova dove ne servirebbe uno nuovo.",
       ask: "Fai una domanda con parole tue e ricevi una risposta con le sue fonti.",
-      honesty: "Scopri da dove viene ogni informazione e quanto fidarti.",
+      honesty: "Scopri da dove viene ogni informazione e quanto è affidabile.",
     } as Partial<Record<ScreenId, string>>,
   },
 });
 
 const EXPLORE: { screen: ScreenId; icon: LucideIcon }[] = [
   { screen: "city", icon: MapIcon },
+  { screen: "sport", icon: Trophy },
   { screen: "ask", icon: MessagesSquare },
   { screen: "honesty", icon: Database },
 ];

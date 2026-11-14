@@ -9,7 +9,7 @@ export interface CitizenService {
   title: string;
   summary: string;
   glyph: Glyph;
-  /** Address inside the macro-area screen. */
+  /** Address inside the macro-area screen, or of another screen of the residents' service. */
   to: string;
 }
 
@@ -35,6 +35,7 @@ const T = texts({
     events: ["Roadworks, closures and strikes", "What is changing public transport and roads today"],
     sport: ["Where can I do sport?", "Facilities for the sport, day and time you choose"],
     museums: ["Museums and galleries", "Which ones are open on the day and time you choose"],
+    plan: ["Where is a new sports facility needed?", "Areas with no sport nearby, and what changes if one opens (a simulation)"],
     flood: ["Flooding or a sewer problem", "Water on the street, a blocked drain"],
     pothole: ["A hole in the road", "Damaged road or pavement"],
     trafficReport: ["Accident, traffic or transport problem", "A crash, a jam, a bus or metro fault"],
@@ -52,6 +53,7 @@ const T = texts({
     events: ["Cantieri, chiusure e scioperi", "Che cosa cambia oggi per strade e trasporto pubblico"],
     sport: ["Dove posso fare sport?", "Impianti per lo sport, il giorno e l'ora che scegli"],
     museums: ["Musei e gallerie", "Quali sono aperti nel giorno e all'ora che scegli"],
+    plan: ["Dove serve un nuovo impianto sportivo?", "Le zone senza sport vicino e che cosa cambia se ne apre uno (simulazione)"],
     flood: ["Allagamento o problema di fogna", "Acqua in strada, un tombino ostruito"],
     pothole: ["Una buca in strada", "Strada o marciapiede danneggiati"],
     trafficReport: ["Incidente, traffico o problema dei mezzi", "Un incidente, un ingorgo, un guasto di bus o metro"],
@@ -91,6 +93,8 @@ export function macroAreas(): MacroArea[] {
     area("social", "sport", "bg-simulated/10 text-simulated", (b) => [
       service(b, "sport", "sport", "sport", "cosa=sport"),
       service(b, "museums", "museums", "museum", "cosa=musei"),
+      // The planning of a new facility lives on the sport map (areas without sport, "what if one opens here").
+      { ...service(b, "plan", "plan", "pin", ""), to: screenPath("public", "sport") ?? b },
     ]),
     area("report", "report", "bg-estimated/10 text-estimated", (b) => [
       service(b, "flood", "flood", "flood", "tipo=flood"),
