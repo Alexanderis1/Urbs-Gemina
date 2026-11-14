@@ -151,8 +151,9 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       return tr(T).tiles.river_flood.description;
     },
     group: "Water",
-    // Default: the official 200-year flood (PGRA medium hazard). Today's river or a 3 m rise floods nothing.
-    defaults: { mode: "return", return_period: "200", rise_m: "3", gauge: "tevere_ripetta", level_m: "14" },
+    // Default: the official 500-year flood (PGRA rare-flood map, P1). Today's river or a 3 m rise floods nothing,
+    // and at 200 years the walls nearly hold, so the middle estimate in the centre can still be zero.
+    defaults: { mode: "return", return_period: "500", rise_m: "3", gauge: "tevere_ripetta", level_m: "14" },
     usesPoint: false,
   },
   {
@@ -291,7 +292,7 @@ export function buildScenarioChange(kind: ScenarioKind, f: Record<string, string
     case "river_flood":
       if (f.mode === "level") return { gauge: f.gauge ?? "tevere_ripetta", level_m: n(f.level_m) };
       if (f.mode === "forecast") return { gauge: f.gauge ?? "tevere_ripetta", forecast_day: "peak" };
-      if (f.mode === "return") return { gauge: "tevere_ripetta", return_period_years: n(f.return_period ?? "200") };
+      if (f.mode === "return") return { gauge: "tevere_ripetta", return_period_years: n(f.return_period ?? "500") };
       return { rise_m: n(f.rise_m) };
     case "rain_flood": {
       const base: Record<string, unknown> =

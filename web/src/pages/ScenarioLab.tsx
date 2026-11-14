@@ -62,7 +62,8 @@ const T = texts({
     howRiver: "How to set the river",
     returnPeriod: "Historic-size flood",
     floodSize: "Flood size",
-    yearFlood: (y: string) => (y === "200" ? "200-year flood (official medium hazard)" : `${y}-year flood`),
+    yearFlood: (y: string) =>
+      y === "200" ? "200-year flood (official medium hazard)" : y === "500" ? "500-year flood (official rare-flood map)" : `${y}-year flood`,
     returnPeriodHint:
       "Scenario, not a forecast: the Tiber flood expected on average once in that many years (official discharge at Ripetta). The 1937 flood was about a 50-year flood.",
     rise: "Rise",
@@ -186,7 +187,12 @@ const T = texts({
     howRiver: "Come impostare il fiume",
     returnPeriod: "Piena storica",
     floodSize: "Grandezza della piena",
-    yearFlood: (y: string) => (y === "200" ? "Piena duecentennale (pericolosità media ufficiale)" : `Piena con tempo di ritorno ${y} anni`),
+    yearFlood: (y: string) =>
+      y === "200"
+        ? "Piena duecentennale (pericolosità media ufficiale)"
+        : y === "500"
+          ? "Piena cinquecentennale (mappa ufficiale delle piene rare)"
+          : `Piena con tempo di ritorno ${y} anni`,
     returnPeriodHint:
       "Scenario, non previsione: la piena del Tevere attesa in media una volta ogni tanti anni (portata ufficiale a Ripetta). La piena del 1937 era circa cinquantennale.",
     rise: "Aumento",
@@ -432,7 +438,7 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
           {(f.mode ?? "return") === "return" && (
             <>
               <Field label={t.floodSize}>
-                <select className="input" value={f.return_period ?? "200"} onChange={(e) => set("return_period", e.target.value)}>
+                <select className="input" value={f.return_period ?? "500"} onChange={(e) => set("return_period", e.target.value)}>
                   {["50", "100", "200", "500"].map((y) => (
                     <option key={y} value={y}>
                       {t.yearFlood(y)}
