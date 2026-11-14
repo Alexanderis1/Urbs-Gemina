@@ -135,6 +135,16 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     readable. If the road file cannot be read the cells are drawn as before. The "zoom in to see the 3D
     buildings" offer is off on whole-city maps.
 
+34. **Smooth heatmaps, no hexagons** (Alessandro, 14 Nov: "a normal heatmap, not divided in hexagons").
+    Area layers (air, field, heat, rain, crowds) are one picture laid on the city (`src/lib/heatRaster.ts`,
+    drawn with a BitmapLayer in `src/map/heatLayer.ts`): every pixel blends the twin's cells around it with
+    a soft bell under half a cell wide, so a single high cell keeps its peak and colours flow from place to
+    place; the data fades out at its edge instead of ending in a line. It is the value field, not a density
+    (a crowded area is not hotter because it has more cells). Less certain places are more see-through on the
+    staff map; on the citizen maps good places are a light wash so the city stays readable. Hover and click
+    still give the value of the cell under the pointer; the chosen place is a ring. The sport map's
+    zoomed-out view is a smooth density picture of facilities.
+
 ## Two experiences
 
 One twin, two front doors (decided 14 Nov 2026, on Alessandro's request for a clear division between public

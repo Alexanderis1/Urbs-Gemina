@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import { PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { AlertTriangle, Building2, Map as MapIcon, type LucideIcon } from "lucide-react";
@@ -40,6 +39,10 @@ import type { Experience } from "@/lib/tiers";
 import type { Envelope, QueryLayerResult } from "@/api/types";
 import { cacheKey, maxAgeMs, savable } from "@/lib/liveLayer";
 import { useLive } from "@/lib/useLive";
+import { heatRaster } from "@/lib/heatRaster";
+import { cellToLatLng } from "h3-js";
+import { cellSpacingM } from "@/lib/here";
+import { heatLayer, rasterCanvas } from "@/map/heatLayer";
 import { LiveBadge } from "@/components/LiveBadge";
 import { locale, texts, tr } from "@/lib/i18n";
 
@@ -289,51 +292,70 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
     }));
   }, [data, extent, layer, palette]);
 
+  /** Where a grid estimate sits: its own position, or the centre of its cell. */
+  const cellCentre = (i: MapItem): [number, number] | null => {
+    if (i.position) return i.position;
+    if (!i.h3) return null;
+    const [lat, lon] = cellToLatLng(i.h3);
+    return [lon, lat];
+  };
+
+  // The estimate of a fused layer as a smooth heatmap (lib/heatRaster.ts), opacity from how certain each cell is.
+  const belief = useMemo(() => {
+    if (!data || data.kind !== "hex" || !data.items.length || !extent) return null;
+    const { min: lo, max: hi } = extent;
+    const norm = (v: number) => (hi > lo ? (v - lo) / (hi - lo) : 0.5);
+    const relU = (i: MapItem) => (i.value ? i.uncertainty / Math.abs(i.value) : i.uncertainty);
+    const maxU = Math.max(...data.items.map(relU), 0);
+    const floor = ALPHA_FLOOR[theme];
+    // Grid cells are named by their id; their centre is where the estimate sits.
+    const cells = data.items.flatMap((i) => {
+      if (i.position) return [{ item: i, lon: i.position[0], lat: i.position[1] }];
+      if (!i.h3) return [];
+      const [lat, lon] = cellToLatLng(i.h3);
+      return [{ item: i, lon, lat }];
+    });
+    const raster = heatRaster(
+      cells.map(({ item: i, lon, lat }) => ({
+        lon,
+        lat,
+        t: norm(i.value),
+        a: showUncertainty ? confidenceAlpha(relU(i), maxU, floor) / 200 : 1,
+        data: i,
+      })),
+      { ramp: rampColor, spacingM: cellSpacingM(cells) ?? 170, alpha: areaAlpha(200) },
+    );
+    return { raster, canvas: rasterCanvas(raster) };
+  }, [data, extent, showUncertainty, theme]);
+
   const layers = useMemo(() => {
     const out: Layer[] = [];
     const accent = palette.accent;
-    if (data && data.items.length && extent) {
-      const { min: lo, max: hi } = extent;
-      const norm = (v: number) => (hi > lo ? (v - lo) / (hi - lo) : 0.5);
-      const maxU = Math.max(...data.items.map((i) => (i.value ? i.uncertainty / Math.abs(i.value) : i.uncertainty)), 0);
-      const floor = ALPHA_FLOOR[theme];
-      const alpha = (i: MapItem) =>
-        showUncertainty ? confidenceAlpha(i.value ? i.uncertainty / Math.abs(i.value) : i.uncertainty, maxU, floor) : 200;
-      if (data.kind === "hex") {
-        out.push(
-          new H3HexagonLayer<MapItem>({
-            id: "belief",
-            data: data.items,
-            getHexagon: (c) => c.h3!,
-            // See-through, so the 3D buildings under each cell stay readable.
-            getFillColor: (c) => [...rampColor(norm(c.value)), areaAlpha(alpha(c))],
-            extruded: false,
-            // A thin edge in the cell's own colour keeps pale, faded cells visible over the buildings.
-            stroked: true,
-            getLineColor: (c) => [...rampColor(norm(c.value)), 150],
-            lineWidthUnits: "pixels",
-            getLineWidth: 1,
-            pickable: true,
-            updateTriggers: { getFillColor: [showUncertainty, lo, hi, maxU, theme], getLineColor: [lo, hi] },
-          }),
-        );
-      }
+    if (belief) {
+      // One smooth picture: the estimate flows from place to place; less certain places are more see-through.
+      const heatmap = heatLayer("belief", belief.raster, belief.canvas);
+      if (heatmap) out.push(heatmap);
     }
     out.push(...markerLayers(markers, { id: "pts", zoom, palette, selectedId: selected?.id, hoveredId: hover?.id }));
-    if (data?.kind === "hex" && selected?.item.h3) {
-      out.push(
-        new H3HexagonLayer<MapItem>({
-          id: "belief-selected",
-          data: [selected.item],
-          getHexagon: (c) => c.h3!,
-          filled: false,
-          extruded: false,
-          stroked: true,
-          getLineColor: [...accent, 255],
-          lineWidthUnits: "pixels",
-          getLineWidth: 3,
-        }),
-      );
+    if (belief && selected && !selected.id) {
+      // The chosen place: a ring around the point the estimate is for.
+      const at = cellCentre(selected.item);
+      if (at)
+        out.push(
+          new ScatterplotLayer({
+            id: "belief-selected",
+            data: [at],
+            getPosition: (p: [number, number]) => p,
+            getRadius: 9,
+            radiusUnits: "pixels",
+            filled: true,
+            getFillColor: [...accent, 60],
+            stroked: true,
+            getLineColor: [...accent, 255],
+            lineWidthUnits: "pixels",
+            getLineWidth: 2.5,
+          }),
+        );
     }
     if (radius) {
       out.push(
@@ -387,7 +409,10 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const onHover = (info: PickingInfo) => {
     const marker = pickedMarker<MapItem>(info, "pts");
     if (marker) setHover({ x: info.x, y: info.y, item: marker.data, id: marker.id });
-    else if (info.object && info.layer?.id === "belief") setHover({ x: info.x, y: info.y, item: info.object as MapItem });
+    else if (info.layer?.id === "belief" && belief && info.coordinate) {
+      const near = belief.raster.nearest(info.coordinate[0]!, info.coordinate[1]!);
+      setHover(near ? { x: info.x, y: info.y, item: near.data } : null);
+    }
     else setHover(null);
   };
   const onPick = (info: PickingInfo) => {
@@ -395,7 +420,10 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
     if (drawing) return false;
     const marker = pickedMarker<MapItem>(info, "pts");
     if (marker) setSelected({ item: marker.data, id: marker.id });
-    else if (info.object && info.layer?.id === "belief") setSelected({ item: info.object as MapItem });
+    else if (info.layer?.id === "belief" && belief && info.coordinate) {
+      const near = belief.raster.nearest(info.coordinate[0]!, info.coordinate[1]!);
+      setSelected(near ? { item: near.data } : null);
+    }
     else setSelected(null);
     setHover(null);
   };

@@ -1,8 +1,7 @@
 // Shared pieces of the residents' map screens (Ambiente, Trasporti, Sociale). Mobile first: the map on top,
 // a sheet with the answer under it; on a desk screen the sheet becomes the left panel.
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { PathLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { LocateFixed, MapPin, X } from "lucide-react";
 import type { DataKind } from "@/api/types";
@@ -13,6 +12,8 @@ import { Callout, Skeleton, Spinner } from "@/components/ui";
 import { rampColor } from "@/lib/colors";
 import { cellSpacingM, inRome, shareBelow, type CityHeatmap, type HeatCell, type HereAnswer, type HereReading, type LegendBand } from "@/lib/here";
 import { texts, tr } from "@/lib/i18n";
+import { heatRaster } from "@/lib/heatRaster";
+import { heatLayer, rasterCanvas } from "@/map/heatLayer";
 import { fieldOnCells, loadRoads, roadPieces, roadWidthPx, type RoadNet, type RoadPiece } from "@/lib/roads";
 import { formatValue } from "@/lib/layers";
 import type { Loaded } from "@/lib/useCitizenData";
@@ -410,8 +411,17 @@ export function CitizenMap<T>({
     if (!onRoads || !roads || !cells?.length || !cells.every((c) => c.h3)) return null;
     return roadPieces(roads, fieldOnCells(cells, score));
   }, [onRoads, roads, cells, score]);
-  // While the road file is on its way nothing is drawn (no flash of patches); without it, the cells are.
+  // While the road file is on its way nothing is drawn (no flash of colour); without it, the smooth heatmap is.
   const waitingForRoads = onRoads && roads === undefined;
+  const smooth = useMemo(() => {
+    if (!cells?.length || pieces?.length) return null;
+    const raster = heatRaster(
+      // Good places are a light wash and bad ones stand out: the city stays readable under a mostly good layer.
+      cells.map((c) => ({ lon: c.lon, lat: c.lat, t: score(c), a: 0.4 + 0.6 * score(c), data: c })),
+      { ramp, spacingM: cellSpacingM(cells) ?? 800, alpha: 175 },
+    );
+    return { raster, canvas: rasterCanvas(raster) };
+  }, [cells, pieces, score, ramp]);
 
   const layers = useMemo(() => {
     const out: Layer[] = [];
@@ -442,39 +452,10 @@ export function CitizenMap<T>({
           updateTriggers: { getWidth: [zoom], getColor: [ramp] },
         }),
       );
-    } else if (cells?.length && !waitingForRoads) {
-      const spacing = cellSpacingM(cells) ?? 1500;
-      const colour = (c: HeatCell): Rgb => ramp(score(c));
-      const tiles = cells.every((c) => c.h3);
-      out.push(
-        tiles
-          ? // The twin's own hexagons: clean tiles that cover the city without gaps or overlaps.
-            new H3HexagonLayer<HeatCell>({
-              id: "heat",
-              data: cells,
-              getHexagon: (c) => c.h3!,
-              extruded: false,
-              getFillColor: (c) => [...colour(c), 135],
-              stroked: true,
-              getLineColor: [255, 255, 255, 70],
-              lineWidthUnits: "pixels",
-              getLineWidth: 1,
-              pickable: true,
-              updateTriggers: { getFillColor: [score, ramp] },
-            })
-          : // Any other grid: round patches that just touch.
-            new ScatterplotLayer<HeatCell>({
-              id: "heat",
-              data: cells,
-              getPosition: (c) => [c.lon, c.lat],
-              getRadius: spacing * 0.5,
-              radiusUnits: "meters",
-              getFillColor: (c) => [...colour(c), 135],
-              stroked: false,
-              pickable: true,
-              updateTriggers: { getFillColor: [score, ramp] },
-            }),
-      );
+    } else if (smooth && !waitingForRoads) {
+      // One smooth picture of the whole layer: colours flow from place to place, no tiles.
+      const heatmap = heatLayer("heat", smooth.raster, smooth.canvas);
+      if (heatmap) out.push(heatmap);
     }
     out.push(...markerLayers(markers, { id: "mk", zoom, palette, selectedId, hoveredId: hoverId }));
     if (position) {
@@ -482,7 +463,7 @@ export function CitizenMap<T>({
       out.push(...markerLayers([me], { id: "me", zoom, palette, selectedId: "me" }));
     }
     return out;
-  }, [pieces, cells, waitingForRoads, score, ramp, markers, zoom, palette, selectedId, hoverId, position]);
+  }, [pieces, smooth, waitingForRoads, ramp, markers, zoom, palette, selectedId, hoverId, position]);
 
   const onHover = (info: PickingInfo) => {
     const id = info.layer?.id ?? "";
@@ -490,9 +471,13 @@ export function CitizenMap<T>({
       const m = info.object as Marker<T>;
       setHoverId(m.id);
       setHover({ x: info.x, y: info.y, ...(describeMarker?.(m) ?? { title: m.text ?? "" }) });
-    } else if (info.object && id === "heat") {
-      // A stretch of street carries the cell it runs through; a patch is the cell itself.
-      const c = "path" in (info.object as object) ? (info.object as RoadPiece).cell : (info.object as HeatCell);
+    } else if (id === "heat" && (info.object || (smooth && info.coordinate))) {
+      // A stretch of street carries the cell it runs through; on the smooth heatmap, the nearest cell under the pointer.
+      const c = info.object ? (info.object as RoadPiece).cell : smooth!.raster.nearest(info.coordinate![0]!, info.coordinate![1]!)?.data;
+      if (!c) {
+        setHover(null);
+        return;
+      }
       setHoverId(null);
       setHover({
         x: info.x,

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScatterplotLayer } from "@deck.gl/layers";
-import { H3HexagonLayer } from "@deck.gl/geo-layers";
+import { cellToLatLng } from "h3-js";
+import { heatRaster } from "@/lib/heatRaster";
+import { heatLayer, rasterCanvas } from "@/map/heatLayer";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { Trophy, X } from "lucide-react";
 import { CityMap } from "@/map/CityMap";
@@ -24,7 +26,6 @@ import {
   isInactive,
   clusterH3,
   shouldCluster,
-  type FacilityCell,
   type FacilityType,
   buildManagerUpdate,
   displayName,
@@ -49,6 +50,12 @@ const STATUS_COLOR: Record<string, string> = {
   web_unverified: "text-estimated",
   simulated: "text-simulated",
   not_known: "text-muted",
+};
+
+/** From a pale tint (few facilities) to the full point colour (many). */
+const mix = (c: readonly [number, number, number], t: number): [number, number, number] => {
+  const k = 0.25 + 0.75 * t;
+  return [0, 1, 2].map((i) => Math.round(255 + (c[i]! - 255) * k)) as [number, number, number];
 };
 
 export default function Sport() {
@@ -158,20 +165,16 @@ export default function Sport() {
       // Zoomed out over thousands of facilities: one hexagon per ~0.7 km², coloured by how many are usable.
       const cells = clusterH3(pts, zoom < 11 ? 7 : 8);
       const max = Math.max(1, ...cells.map((c) => c.count));
-      out.push(
-        new H3HexagonLayer<FacilityCell>({
-          id: "facility-cells",
-          data: cells,
-          getHexagon: (c) => c.h3,
-          extruded: false,
-          getFillColor: (c) =>
-            c.active === 0 ? [...palette.inactive, 120] : [...palette.point, Math.round(60 + 180 * (c.count / max))],
-          getLineColor: [255, 255, 255, 160],
-          lineWidthMinPixels: 0.5,
-          pickable: false,
-          updateTriggers: { getFillColor: [palette, max] },
+      // A smooth density picture: where facilities are many the colour is deep, where there are none it fades out.
+      const raster = heatRaster(
+        cells.map((c) => {
+          const [lat, lon] = cellToLatLng(c.h3);
+          return { lon, lat, t: c.count / max, a: c.active === 0 ? 0.45 : 1, data: c };
         }),
+        { ramp: (t) => mix(palette.point, t), spacingM: zoom < 11 ? 2500 : 950, alpha: 210 },
       );
+      const heatmap = heatLayer("facility-cells", raster, rasterCanvas(raster));
+      if (heatmap) out.push(heatmap);
     } else {
       // One 3D marker per facility: a column on the city model with a sport badge on top; grey when not usable.
       const markers: Marker<SportFeature>[] = pts.map((f) => ({
