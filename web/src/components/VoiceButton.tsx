@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { Mic, Square } from "lucide-react";
 import { isSampleMode, proxyFetch } from "@/api/client";
-import { buildClientTools, CITIZEN_AGENT_ID } from "@/lib/voice";
+import { buildClientTools, CITIZEN_AGENT_ID, conversationCallbacks } from "@/lib/voice";
 import { useSession } from "@/lib/runlog";
 import { errorText } from "@/lib/errors";
 import { texts, tr } from "@/lib/i18n";
@@ -55,7 +55,7 @@ export function VoiceButton() {
   const { tier, auth } = useSession();
   const clientTools = useMemo(() => buildClientTools(), []);
   const [error, setError] = useState<string | null>(null);
-  const conversation = useConversation({ clientTools, onError: (m: unknown) => setError(String(m)) });
+  const conversation = useConversation({ clientTools, ...conversationCallbacks(setError) });
   const connecting = conversation.status === "connecting";
   const live = conversation.status === "connected" || connecting;
   // The office agent needs the edge function (a signed-in office user). The demo tier switch alone does not unlock it.
