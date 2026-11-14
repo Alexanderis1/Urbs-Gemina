@@ -70,7 +70,7 @@ def test_one_city_build_per_layer_and_slot(rt: ToolRuntime) -> None:
 
 def test_emf_here_uses_the_legal_attention_value(rt: ToolRuntime) -> None:
     attention = float(rt.settings.thresholds["emf"]["attention_value_v_per_m"]["value"])
-    low = citizen.emf_here(rt, POINT, build=fake_build({"emf": 0.5}))
+    low = citizen.emf_here(rt, POINT, time="2026-11-14T07:00:00Z", build=fake_build({"emf": 0.5}))  # its own slot: builds are cached per hour
     assert low["result"]["level"]["label_it"] == "Molto basso"
     high = citizen.emf_here(rt, POINT, time="2026-11-14T09:00:00Z", build=fake_build({"emf": attention}))
     assert high["result"]["level"]["label_it"] == "Sopra il valore di attenzione"   # judged on the upper end
