@@ -167,6 +167,15 @@ open:
       aniene_lunghezza: {lon: 12.6930, lat: 41.9200, river: Aniene}
     timeout_s: 60
 
+  ingv_earthquakes:
+    api_url: https://webservices.ingv.it/fdsnws/event/1/query
+    lookback_days: {value: 30, basis: "earthquakes near Rome are rare: a 'now' view shows the last month"}
+    search_buffer_km: {value: 60, basis: "assumption: events within about 60 km (Colli Albani, Sabina) can be felt in the city"}
+    min_magnitude: 0.0
+    magnitude_sigma: {value: 0.2, basis: "typical ML uncertainty for small Italian events (INGV)"}
+    depth_sigma_km: {value: 2.0, basis: "assumption: typical hypocentre depth uncertainty for well-located events"}
+    timeout_s: 30
+
   cams_open_meteo:
     api_url: https://air-quality-api.open-meteo.com/v1/air-quality
     lookback_hours: {value: 1, basis: "hourly model values: a 'now' window still gets the hour it falls in"}

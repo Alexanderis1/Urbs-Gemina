@@ -17,6 +17,7 @@ air_quality_model: cams_open_meteo # estimated: CAMS model background for the be
 rain: dpc_radar                    # real, open
 rain_forecast: om_rain_forecast    # estimated: hourly rain forecast, next 48 h (Open-Meteo, ICON-2I)
 weather_forecast: om_weather_forecast  # estimated: hourly wind at 10 m and temperature at 2 m
+earthquakes: ingv_earthquakes     # real, open: INGV located events around Rome
 river_discharge: glofas_flood      # estimated: daily Tiber and Aniene discharge (GloFAS)
 micromobility: bird_gbfs           # real, open: available shared e-scooters
 activity_wifi: roma_wifi           # real, open: public Wi-Fi sessions per hotspot and hour (crowd proxy)

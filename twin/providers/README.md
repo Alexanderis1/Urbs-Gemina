@@ -23,6 +23,7 @@ uses real sensors, or estimates fused from real sources with a physical model.
 | rain_forecast | `om_rain_forecast` | estimated (ICON-2I via Open-Meteo, next 48 h) | `WeatherForecast`: precipitation (mm/h) |
 | weather_forecast | `om_weather_forecast` | estimated (as above) | `WeatherForecast`: wind_speed_ms, wind_direction_deg (10 m), temperature_c (2 m) |
 | river_discharge | `glofas_flood` | estimated (GloFAS via Open-Meteo, daily, 7 days) | `RiverDischargeForecast`: discharge_m3s |
+| earthquakes | `ingv_earthquakes` | real (INGV) | `EarthquakeObserved`: magnitude, depth_km |
 | micromobility | `bird_gbfs` | real | `MicromobilityVehicle`: availableVehicles, rangeKm (weak activity proxy, C=40) |
 | activity_wifi | `roma_wifi` | real (Roma Capitale public Wi-Fi sessions, about one day behind) | `CrowdFlowObserved`: peopleCount (sessions active in the hour, a lower bound on people) |
 | context_layers | `roma_wfs` | real | static GeoJSON, read at ingest |
