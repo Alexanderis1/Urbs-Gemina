@@ -26,6 +26,8 @@ const CATEGORY_GLYPH: Record<string, Glyph> = {
   chiusura: "strike",
   deviazione: "bus",
   sciopero: "strike",
+  evento: "event",
+  avviso: "info",
   segnalazione: "report",
   protezione_civile: "info",
 };
@@ -42,20 +44,24 @@ const T = texts({
     whatBus: "How late buses and trams are running, from the live feed of the transport company.",
     hereSpeed: "Around your point",
     cityNow: "The whole city",
-    events: "Roadworks, closures and strikes",
+    events: "Roadworks, closures, strikes and events",
     noEvents: "No events reported right now.",
     eventsMissing: "The list of roadworks, closures and strikes is not connected yet. The traffic map above is live.",
     eventsError: "The events could not be loaded right now.",
     stale: (id: string, when: string) => `The ${id} feed has not updated since ${when}.`,
     category: {
       lavori: "Roadworks",
-      chiusura: "Closure",
-      deviazione: "Diversion",
+      chiusura: "Road closed",
+      deviazione: "Line diverted",
       sciopero: "Strike",
+      evento: "Event",
+      avviso: "Notice",
       segnalazione: "Notice",
       protezione_civile: "Civil protection",
     } as Record<string, string>,
     lines: "Lines",
+    street: "Street",
+    details: "What it says",
     from: "From",
     until: "Until",
     source: "Source",
@@ -73,20 +79,24 @@ const T = texts({
     whatBus: "Quanto sono in ritardo autobus e tram, dai dati in tempo reale dell'azienda di trasporto.",
     hereSpeed: "Intorno al tuo punto",
     cityNow: "Tutta la città",
-    events: "Cantieri, chiusure e scioperi",
+    events: "Lavori, chiusure, scioperi ed eventi",
     noEvents: "Nessun evento segnalato in questo momento.",
     eventsMissing: "L'elenco di cantieri, chiusure e scioperi non è ancora collegato. La mappa del traffico qui sopra è in tempo reale.",
     eventsError: "Al momento non è stato possibile caricare gli eventi.",
     stale: (id: string, when: string) => `I dati ${id} non si aggiornano dalle ${when}.`,
     category: {
-      lavori: "Cantiere",
-      chiusura: "Chiusura",
-      deviazione: "Deviazione",
+      lavori: "Lavori",
+      chiusura: "Strada chiusa",
+      deviazione: "Deviazione linea",
       sciopero: "Sciopero",
+      evento: "Evento",
+      avviso: "Avviso",
       segnalazione: "Avviso",
       protezione_civile: "Protezione civile",
     } as Record<string, string>,
     lines: "Linee",
+    street: "Strada",
+    details: "Che cosa dice",
     from: "Dal",
     until: "Fino al",
     source: "Fonte",
@@ -108,9 +118,14 @@ function hourAhead(hours: number): string | null {
   return d.toISOString();
 }
 
+/** The category in words: ours in the chosen language, otherwise the tool's own. */
+const categoryText = (e: TransportEvent): string => tr(T).category[e.category] ?? e.categoryLabel ?? e.category;
+
 function eventResource(e: TransportEvent): Resource {
   const t = tr(T);
   const facts = [
+    ...(e.street ? [{ label: t.street, value: e.street }] : []),
+    ...(e.description && e.description !== e.title ? [{ label: t.details, value: e.description }] : []),
     ...(e.lines.length ? [{ label: t.lines, value: e.lines.join(", ") }] : []),
     ...(e.start ? [{ label: t.from, value: when(e.start) }] : []),
     ...(e.end ? [{ label: t.until, value: when(e.end) }] : []),
@@ -119,7 +134,7 @@ function eventResource(e: TransportEvent): Resource {
   return {
     glyph: CATEGORY_GLYPH[e.category] ?? "info",
     title: e.title,
-    category: t.category[e.category] ?? e.category,
+    category: categoryText(e),
     readings: [],
     facts,
     extra: [],
@@ -154,7 +169,8 @@ export default function Transport() {
     [events, palette],
   );
 
-  const unit = heat.status === "ok" ? heat.data.unit : "";
+  // Road speed is in km/h (config/beliefs.yaml road_speed); the tool's traffic bands carry no unit for the value itself.
+  const unit = (heat.status === "ok" && heat.data.unit) || (layer === "road_speed" ? "km/h" : "");
   const bands = heat.status === "ok" ? heat.data.legend : [];
   const label = lensId === "bus" ? metricInfo("transit_delay").label : metricInfo("road_speed").label;
   // The patch of the city heatmap the chosen point falls in (no extra request).
@@ -269,7 +285,8 @@ export default function Transport() {
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold leading-snug text-ink">{e.title}</span>
                       <span className="block text-xs text-muted">
-                        {t.category[e.category] ?? e.category}
+                        {categoryText(e)}
+                        {e.street && ` · ${e.street}`}
                         {e.lines.length > 0 && ` · ${t.lines} ${e.lines.slice(0, 6).join(", ")}`}
                         {!e.position && ` · ${t.noPosition}`}
                       </span>
@@ -294,7 +311,7 @@ export default function Transport() {
         markers={markers}
         selectedId={selected !== null ? `ev${selected}` : null}
         onPickMarker={(m) => (m ? openEvent(m.data) : setSelected(null))}
-        describeMarker={(m) => ({ title: events[m.data]?.title ?? "", line: t.category[events[m.data]?.category ?? ""] })}
+        describeMarker={(m) => ({ title: events[m.data]?.title ?? "", line: events[m.data] ? categoryText(events[m.data]!) : undefined })}
         focus={focus}
       >
         {open && (

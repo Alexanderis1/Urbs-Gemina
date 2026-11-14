@@ -3,7 +3,7 @@
 // The tools give every judgement (levels, reference values); this file never holds a threshold.
 import { cellToLatLng, cellToParent, latLngToCell } from "h3-js";
 import type { DataKind } from "@/api/types";
-import { getLang } from "@/lib/i18n";
+import { getLang, texts, tr } from "@/lib/i18n";
 import { prettyUnit, type MapItem } from "@/lib/layers";
 
 /** Box around Roma Capitale (config/areas, the same the tools use for "city"). */
@@ -145,6 +145,36 @@ export interface Reference {
   source?: string;
 }
 
+const REF = texts({
+  en: {
+    hourly_limit: "Hourly limit",
+    daily_limit: "Daily limit",
+    annual_limit: "Yearly limit",
+    information_1h: "Information threshold (1 hour)",
+    alert_1h: "Alert threshold (1 hour)",
+    target_8h: "Target value (8 hours)",
+    attention_value: "Attention value",
+    exposure_limit: "Exposure limit",
+  } as Record<string, string>,
+  it: {
+    hourly_limit: "Limite orario",
+    daily_limit: "Limite giornaliero",
+    annual_limit: "Limite annuale",
+    information_1h: "Soglia di informazione (1 ora)",
+    alert_1h: "Soglia di allarme (1 ora)",
+    target_8h: "Valore obiettivo (8 ore)",
+    attention_value: "Valore di attenzione",
+    exposure_limit: "Limite di esposizione",
+  } as Record<string, string>,
+});
+
+/** The tools name a reference value by its key ("no2_hourly_limit"); people read "Hourly limit". Only the name: the value comes from the tool. */
+export function referenceLabel(name: string): string {
+  const t = tr(REF);
+  const key = Object.keys(t).find((k) => name === k || name.endsWith(`_${k}`));
+  return key ? t[key]! : name;
+}
+
 export interface HereReading {
   id: string;
   label: string;
@@ -171,7 +201,7 @@ function level(v: unknown): Level | undefined {
 
 function references(v: unknown): Reference[] {
   return list(v)
-    .map((r) => ({ name: localized(r, "name") ?? "", value: num(r.value), averaging: localized(r, "averaging"), source: str(r.source) }))
+    .map((r) => ({ name: referenceLabel(localized(r, "name") ?? ""), value: num(r.value), averaging: localized(r, "averaging"), source: str(r.source) }))
     .filter((r) => r.name);
 }
 
@@ -221,6 +251,9 @@ export interface CityHeatmap {
   unit: string;
 }
 
+/** Layers whose bands the tool lists from worst to best. Basis: citizen.congestion in config/tools.yaml ("band 1 = slowest"). */
+const WORST_FIRST: ReadonlySet<string> = new Set(["road_speed"]);
+
 export function parseCityHeatmap(result: unknown): CityHeatmap {
   const r = isObj(result) ? result : {};
   const cells: HeatCell[] = [];
@@ -230,7 +263,9 @@ export function parseCityHeatmap(result: unknown): CityHeatmap {
     const value = num(c.value);
     if (lon === undefined || lat === undefined || value === undefined) continue;
     const lvl = isObj(c.level) ? num(c.level.index) : num(c.level);
+    const h3 = str(c.cell) ?? str(c.h3);
     cells.push({
+      ...(h3 ? { h3 } : {}),
       lon,
       lat,
       value,
@@ -246,12 +281,26 @@ export function parseCityHeatmap(result: unknown): CityHeatmap {
     if (index === undefined || !label) continue;
     legend.push({ index, label, ...(num(b.from) !== undefined ? { from: num(b.from) } : {}), ...(num(b.to) !== undefined ? { to: num(b.to) } : {}) });
   }
-  return { cells, legend, unit: prettyUnit(str(r.unit) ?? "") };
+  const ratioBands = WORST_FIRST.has(str(r.layer) ?? "");
+  // The bands of a ratio scale are not in the unit of the values, so their unit is not borrowed.
+  const unit = str(r.unit) ?? (ratioBands ? undefined : list(r.legend).map((b) => str(b.unit)).find(Boolean)) ?? "";
+  if (ratioBands && legend.length) {
+    // Turned round so that, as on every other scale of the app, a higher band is a worse one.
+    const flip = (i: number) => legend.length + 1 - i;
+    legend.reverse().forEach((b) => (b.index = flip(b.index)));
+    cells.forEach((c) => c.level !== undefined && (c.level = flip(c.level)));
+  }
+  return { cells, legend, unit: prettyUnit(unit) };
 }
 
 export interface TransportEvent {
+  id?: string;
   title: string;
   category: string;
+  /** The category in words, as the tool writes it (Italian). */
+  categoryLabel?: string;
+  /** Street the notice is about, when it names one. */
+  street?: string;
   start?: string;
   end?: string;
   source?: string;
@@ -275,8 +324,11 @@ export function parseTransportNow(result: unknown): { events: TransportEvent[]; 
     const lon = num(e.lon);
     const lat = num(e.lat);
     events.push({
+      id: str(e.id),
       title,
-      category: str(e.category) ?? "segnalazione",
+      category: str(e.category) ?? "avviso",
+      categoryLabel: str(e.category_label),
+      street: str(e.street),
       start: str(e.start),
       end: str(e.end),
       source: str(e.source),
@@ -298,6 +350,16 @@ export interface OpenPlace {
   hours?: string;
   /** True = open at the chosen time, false = closed, null = opening hours unknown. */
   open: boolean | null;
+  /** Who says the hours ("declared by the manager"). */
+  hoursNote?: string;
+  /** Metres from the chosen position. */
+  distanceM?: number;
+  /** Ticket: "yes", "no" or a short note, as the source writes it. */
+  fee?: string;
+  /** Step-free access: "yes", "limited" or "no", as the source writes it. */
+  wheelchair?: string;
+  website?: string;
+  disciplines?: string[];
   source?: string;
   position: [number, number];
 }
@@ -316,6 +378,12 @@ export function parsePlacesOpen(result: unknown): { places: OpenPlace[]; coverag
       category: str(p.category),
       hours: str(p.opening_hours),
       open: typeof p.open_at === "boolean" ? p.open_at : null,
+      hoursNote: str(p.hours_note),
+      distanceM: num(p.distance_m),
+      fee: str(p.fee),
+      wheelchair: str(p.wheelchair),
+      website: str(p.website),
+      ...(Array.isArray(p.disciplines) && p.disciplines.length ? { disciplines: p.disciplines.map((d) => String(d)) } : {}),
       source: str(p.source),
       position: [lon, lat],
     });

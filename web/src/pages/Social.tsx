@@ -48,6 +48,14 @@ const T = texts({
     type: "Type",
     source: "Source",
     state: "At the time you chose",
+    distance: "Distance",
+    away: (m: number) => (m < 950 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(1)} km`),
+    ticket: "Ticket",
+    fee: { yes: "Paid entry", no: "Free entry" } as Record<string, string>,
+    access: "Step-free access",
+    wheelchair: { yes: "Yes", limited: "In part", no: "No" } as Record<string, string>,
+    website: "Website",
+    sports: "Sports",
   },
   it: {
     choose: "Che cosa cerchi",
@@ -74,6 +82,14 @@ const T = texts({
     type: "Tipo",
     source: "Fonte",
     state: "All'ora che hai scelto",
+    distance: "Distanza",
+    away: (m: number) => (m < 950 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`),
+    ticket: "Biglietto",
+    fee: { yes: "A pagamento", no: "Ingresso gratuito" } as Record<string, string>,
+    access: "Accesso senza gradini",
+    wheelchair: { yes: "Sì", limited: "In parte", no: "No" } as Record<string, string>,
+    website: "Sito web",
+    sports: "Sport",
   },
 });
 
@@ -97,7 +113,12 @@ function placeResource(p: OpenPlace, kind: Kind): Resource {
     facts: [
       { label: t.state, value: stateText(p.open) },
       ...(p.address ? [{ label: t.address, value: p.address }] : []),
-      ...(p.hours ? [{ label: t.hours, value: p.hours }] : []),
+      ...(p.distanceM !== undefined ? [{ label: t.distance, value: t.away(p.distanceM) }] : []),
+      ...(p.hours ? [{ label: t.hours, value: p.hoursNote ? `${p.hours} (${p.hoursNote})` : p.hours }] : []),
+      ...(p.disciplines?.length ? [{ label: t.sports, value: p.disciplines.join(", ") }] : []),
+      ...(p.fee && t.fee[p.fee] ? [{ label: t.ticket, value: t.fee[p.fee]! }] : []),
+      ...(p.wheelchair && t.wheelchair[p.wheelchair] ? [{ label: t.access, value: t.wheelchair[p.wheelchair]! }] : []),
+      ...(p.website ? [{ label: t.website, value: p.website.replace(/^https?:\/\//, "").replace(/\/$/, ""), href: /^https?:\/\//.test(p.website) ? p.website : `https://${p.website}` }] : []),
       ...(p.source ? [{ label: t.source, value: p.source }] : []),
     ],
     extra: [],
@@ -246,7 +267,7 @@ export default function Social() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold leading-snug text-ink">{p.name}</span>
-                      <span className="block truncate text-xs text-muted">{[p.address, p.hours].filter(Boolean).join(" · ")}</span>
+                      <span className="block truncate text-xs text-muted">{[p.distanceM !== undefined ? t.away(p.distanceM) : null, p.address, p.hours].filter(Boolean).join(" · ")}</span>
                     </span>
                     <StateChip open={p.open} />
                   </button>
