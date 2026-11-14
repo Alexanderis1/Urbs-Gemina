@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import { PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import {
   AlertTriangle,
@@ -22,13 +22,25 @@ import { CityMap } from "@/map/CityMap";
 import { AreaPicker } from "@/components/AreaPicker";
 import { RunMeta } from "@/components/RunMeta";
 import { KindBadge } from "@/components/Badge";
-import { Callout, LegendRamp, MapFloat, Panel, Section, Skeleton, Spinner, Workspace } from "@/components/ui";
+import { Callout, Field, LegendRamp, MapFloat, Panel, Section, Skeleton, Spinner, Workspace } from "@/components/ui";
 import { areaLabel, areaToArg, type Area } from "@/lib/area";
 import { ALPHA_FLOOR, areaAlpha, confidenceAlpha, rampColor, rampGradient } from "@/lib/colors";
 import { onMapAction, registerCityView } from "@/lib/mapbus";
 import { areaFromId } from "@/lib/mapActions";
 import { isOk } from "@/api/envelope";
-import { describeItem, formatValue, normalizeLayer, valueExtent, type MapData, type MapItem } from "@/lib/layers";
+import {
+  availableMetrics,
+  describeItem,
+  dotRadiusPx,
+  formatValue,
+  metricInfo,
+  normalizeLayer,
+  pointStyle,
+  showValueLabels,
+  valueExtent,
+  type MapData,
+  type MapItem,
+} from "@/lib/layers";
 import { calibrationLabel } from "@/lib/format";
 import { BUILDING_VIEWS, LEGENDS, ROOF_COLORS, type BuildingView } from "@/lib/buildingStyles";
 import { useSession } from "@/lib/runlog";
@@ -97,12 +109,10 @@ function LayerRow({
 /** "#rrggbb" to [r, g, b], for a deck.gl outline in the panel surface colour. */
 const hexRgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
 
-/** Legend title from the data itself: metric, cell size and unit as the tool returned them. */
+/** Legend title from the data itself: the value's plain name, cell size and unit. */
 function legendTitle(d: MapData): string {
-  const metric = d.metric.replace(/_/g, " ");
   const cell = d.metric === "count" && d.cellM ? ` per ${formatValue(d.cellM)} m cell` : "";
-  const text = `${metric}${cell}${d.unit ? ` (${d.unit})` : ""}`;
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  return `${metricInfo(d.metric).label}${cell}${d.unit ? ` (${d.unit})` : ""}`;
 }
 
 export default function CityView() {
@@ -121,6 +131,9 @@ export default function CityView() {
   const [draft, setDraft] = useState<[number, number][]>([]);
   const [radius, setRadius] = useState<{ lon: number; lat: number; radius_m: number } | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number; item: MapItem } | null>(null);
+  /** The value shown, for layers whose sensors report several. Null = the usual one. */
+  const [metric, setMetric] = useState<string | null>(null);
+  useEffect(() => setMetric(null), [layer]);
 
   useEffect(() => {
     const off = onMapAction((a) => {
@@ -158,7 +171,9 @@ export default function CityView() {
     };
   }, [layer, area, hoursAgo, run]);
 
-  const data = useMemo(() => (env && isOk(env) ? normalizeLayer(env.result) : null), [env]);
+  // Sensors that report several values (NO₂, PM10, PM2.5): the operator picks which one is shown.
+  const metrics = useMemo(() => (env && isOk(env) ? availableMetrics(env.result) : []), [env]);
+  const data = useMemo(() => (env && isOk(env) ? normalizeLayer(env.result, metric ?? undefined) : null), [env, metric]);
   const extent = useMemo(() => (data ? valueExtent(data.items) : null), [data]);
   // Fading only means something when the tool returned an uncertainty for at least one item.
   const hasUncertainty = useMemo(() => !!data?.items.some((i) => i.uncertainty > 0), [data]);
@@ -193,29 +208,55 @@ export default function CityView() {
           }),
         );
       } else {
-        const sized = data.metric === "count";
-        const site = data.metric === "site";
+        const style = pointStyle(data);
+        const sized = style === "sized";
+        const site = style === "sites";
+        // Dark edge on the light map, light edge on the dark one: a dot stands out from the buildings under it.
+        const edge = hexRgb(palette.text.ink);
         out.push(
           new ScatterplotLayer<MapItem>({
             id: "points",
             data: data.items,
             getPosition: (i) => i.position!,
-            getFillColor: (i) => (site ? [...palette.point, 220] : [...rampColor(norm(i.value)), alpha(i)]),
+            // Dots stay solid enough to read over the buildings, even when the reading is uncertain.
+            getFillColor: (i) => (site ? [...palette.point, 230] : [...rampColor(norm(i.value)), Math.max(alpha(i), 190)]),
             getRadius: (i) => (sized ? Math.sqrt(i.value) * 70 : 40),
             radiusUnits: "meters",
-            radiusMinPixels: site ? 4 : 3,
+            radiusMinPixels: dotRadiusPx(data.items.length),
             stroked: true,
-            getLineColor: (i) => (i.synthetic ? [...palette.simulated, 255] : site ? [...hexRgb(palette.surface), 230] : [...palette.inactive, dark ? 220 : 120]),
+            getLineColor: (i) => (i.synthetic ? [...palette.simulated, 255] : [...edge, dark ? 230 : 190]),
             lineWidthMinPixels: 1,
-            getLineWidth: (i) => (i.synthetic ? 2 : 1),
+            getLineWidth: (i) => (i.synthetic ? 2.5 : 1.5),
             lineWidthUnits: "pixels",
             pickable: true,
             updateTriggers: {
-              getFillColor: [showUncertainty, lo, hi, maxU, theme],
+              getFillColor: [showUncertainty, lo, hi, maxU, theme, data.metric],
               getLineColor: [theme],
             },
           }),
         );
+        // A handful of sensors: write each value next to its dot, so nobody has to hover to read the city.
+        if (showValueLabels(data)) {
+          out.push(
+            new TextLayer<MapItem>({
+              id: "point-values",
+              data: data.items,
+              getPosition: (i) => i.position!,
+              getText: (i) => formatValue(i.value),
+              getSize: 12,
+              getColor: [...edge, 255],
+              getPixelOffset: [0, -20],
+              fontFamily: '"Titillium Web", sans-serif',
+              fontWeight: 600,
+              background: true,
+              getBackgroundColor: [...hexRgb(palette.surface), 235],
+              getBorderColor: [...edge, 90],
+              getBorderWidth: 1,
+              backgroundPadding: [5, 2],
+              updateTriggers: { getText: [data.metric], getColor: [theme], getBackgroundColor: [theme], getBorderColor: [theme] },
+            }),
+          );
+        }
       }
     }
     if (radius) {
@@ -417,26 +458,45 @@ export default function CityView() {
               <span>
                 <span className="num text-ink">{data.items.length.toLocaleString("en-GB")}</span> {data.kind === "hex" ? "cells" : "points"} ·{" "}
                 {areaLabel(area)}
-                {data.truncated && data.count ? ` (first ${data.items.length.toLocaleString("en-GB")} of ${data.count.toLocaleString("en-GB")})` : ""}
               </span>
             ) : null}
           </div>
+          {!busy && !error && data?.truncated && data.count ? (
+            <p className="flex gap-1.5 text-xs text-estimated">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                Incomplete: only the first {data.items.length.toLocaleString("en-GB")} of {data.count.toLocaleString("en-GB")} points arrived. Pick a
+                municipio, an urban zone or draw an area to see them all.
+              </span>
+            </p>
+          ) : null}
         </div>
       </MapFloat>
 
       {layer && data && extent && data.items.length > 0 && (
-        <MapFloat position="bottom-left" className={data.metric === "site" ? "" : "w-64"}>
-          {data.metric === "site" ? (
+        <MapFloat position="bottom-left" className={pointStyle(data) === "sites" && data.kind === "points" ? "" : "w-64"}>
+          {data.kind === "points" && pointStyle(data) === "sites" ? (
             <div className="flex items-center gap-2 text-xs">
               <span
                 className="inline-block h-3 w-3 rounded-full border border-surface"
                 style={{ background: `rgb(${palette.point.join(" ")})` }}
                 aria-hidden="true"
               />
-              One dot per site
+              One dot per {data.metric === "site" ? "site" : (metricInfo(data.metric).each ?? "record")}
             </div>
           ) : (
             <div className="space-y-1.5">
+              {metrics.length > 1 && (
+                <Field label="Value shown">
+                  <select className="input btn-sm w-full" value={data.metric} onChange={(e) => setMetric(e.target.value)}>
+                    {metrics.map((m) => (
+                      <option key={m} value={m}>
+                        {metricInfo(m).label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <div className="text-xs font-semibold text-ink">{legendTitle(data)}</div>
               <LegendRamp
                 gradient={rampGradient()}

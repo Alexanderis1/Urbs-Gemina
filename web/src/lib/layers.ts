@@ -27,12 +27,68 @@ export interface MapData {
 }
 
 /** Which value to colour by, per observation type. First match wins; otherwise the first numeric value. */
-const MAIN_VALUE = ["intensity", "electricField", "precipitation", "pm10", "pm2_5", "no2", "delay", "availableVehicles"];
+const MAIN_VALUE = ["intensity", "electricField", "precipitation", "pm10", "pm25", "pm2_5", "no2", "delay", "availableVehicles"];
+
+/** Numeric fields that are flags for the tools, not readings to map. */
+const FLAG_VALUES = new Set(["at_cap"]);
+
+export interface MetricInfo {
+  label: string;
+  unit: string;
+  /** What one dot stands for when every value is the same, e.g. "vehicle". */
+  each?: string;
+}
+
+/**
+ * Plain names and units of the values the tool returns.
+ * Basis: FIWARE Smart Data Models (AirQualityObserved, TrafficFlowObserved); EEA stations and CAMS report µg/m³;
+ * the Cartoradio grid is in V/m; the traffic loops give vehicles per hour (twin/providers/simulated/loops.py).
+ */
+const METRICS: Record<string, MetricInfo> = {
+  no2: { label: "NO₂", unit: "µg/m³" },
+  pm10: { label: "PM10", unit: "µg/m³" },
+  pm25: { label: "PM2.5", unit: "µg/m³" },
+  pm2_5: { label: "PM2.5", unit: "µg/m³" },
+  o3: { label: "Ozone", unit: "µg/m³" },
+  electricField: { label: "Electric field", unit: "V/m" },
+  intensity: { label: "Traffic flow", unit: "vehicles/h" },
+  averageVehicleSpeed: { label: "Average speed", unit: "km/h" },
+  occupancy: { label: "Road occupancy", unit: "" },
+  precipitation: { label: "Rain", unit: "" },
+  availableVehicles: { label: "Vehicles available", unit: "", each: "vehicle" },
+  rangeKm: { label: "Range left", unit: "km" },
+  count: { label: "Count", unit: "" },
+};
+
+export function metricInfo(metric: string): MetricInfo {
+  const known = METRICS[metric];
+  if (known) return known;
+  const words = metric
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase();
+  return { label: words.charAt(0).toUpperCase() + words.slice(1), unit: "" };
+}
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 
-export function normalizeLayer(result: unknown): MapData {
+/** Every numeric value the observations of a layer carry, the usual one first. Empty for other result types. */
+export function availableMetrics(result: unknown): string[] {
+  const r = isObj(result) ? result : {};
+  if (r.type !== "observations" || !Array.isArray(r.observations)) return [];
+  const first = r.observations.filter(isObj).find((o) => isObj(o.values));
+  const values = first && isObj(first.values) ? first.values : {};
+  const keys = Object.keys(values).filter((k) => num(values[k]) !== undefined && !FLAG_VALUES.has(k));
+  const rank = (k: string) => {
+    const i = MAIN_VALUE.indexOf(k);
+    return i < 0 ? MAIN_VALUE.length : i;
+  };
+  return [...keys].sort((a, b) => rank(a) - rank(b));
+}
+
+/** `prefer` is the value the operator picked, used when the layer has it. */
+export function normalizeLayer(result: unknown, prefer?: string): MapData {
   const r = isObj(result) ? result : {};
   const type = r.type;
   if (type === "belief" && Array.isArray(r.cells)) {
@@ -53,13 +109,12 @@ export function normalizeLayer(result: unknown): MapData {
   }
   if (type === "observations" && Array.isArray(r.observations)) {
     const obs = r.observations.filter(isObj);
-    const first = obs.find((o) => isObj(o.values));
-    const keys = first && isObj(first.values) ? Object.keys(first.values) : [];
-    const metric = MAIN_VALUE.find((k) => keys.includes(k)) ?? keys.find((k) => num((first!.values as Record<string, unknown>)[k]) !== undefined) ?? "value";
+    const keys = availableMetrics(r);
+    const metric = prefer && keys.includes(prefer) ? prefer : (keys[0] ?? "value");
     return {
       kind: "points",
       metric,
-      unit: "",
+      unit: metricInfo(metric).unit,
       truncated: r.truncated === true,
       count: num(r.count),
       items: obs
@@ -117,13 +172,37 @@ export function valueExtent(items: Pick<MapItem, "value">[]): { min: number; max
   return { min, max };
 }
 
+/** How a point layer is drawn: one plain dot per record, dots sized by count, or dots coloured by value. */
+export type PointStyle = "sites" | "sized" | "values";
+
+export function pointStyle(data: Pick<MapData, "metric" | "items">): PointStyle {
+  if (data.metric === "site") return "sites";
+  if (data.metric === "count") return "sized";
+  const e = valueExtent(data.items);
+  // Every record has the same value (each scooter is one vehicle): a colour scale would say nothing.
+  return e && e.min === e.max && data.items.length > 1 ? "sites" : "values";
+}
+
+/** The most dots that can each carry their value as text without covering the map. */
+export const MAX_VALUE_LABELS = 40;
+
+export function showValueLabels(data: Pick<MapData, "kind" | "metric" | "items">): boolean {
+  return data.kind === "points" && data.items.length > 0 && data.items.length <= MAX_VALUE_LABELS && pointStyle(data) === "values";
+}
+
+/** Smallest dot radius in pixels: a few sensors are drawn large, thousands of records small. */
+export function dotRadiusPx(count: number): number {
+  if (count <= 60) return 8;
+  if (count <= 1000) return 5;
+  return 4;
+}
+
 /** Hover text for one item: only the fields the tool returned. */
 export function describeItem(item: MapItem, data: Pick<MapData, "metric" | "unit">): { title?: string; lines: string[]; synthetic: boolean } {
   const u = data.unit ? ` ${data.unit}` : "";
   const synthetic = item.synthetic === true;
   if (data.metric === "site") return { title: item.label, lines: [], synthetic };
-  const name = data.metric.replace(/_/g, " ");
-  const lines = [`${name.charAt(0).toUpperCase()}${name.slice(1)}: ${formatValue(item.value)}${u}`];
+  const lines = [`${metricInfo(data.metric).label}: ${formatValue(item.value)}${u}`];
   if (item.p5 !== undefined && item.p95 !== undefined) lines.push(`Range ${formatValue(item.p5)} to ${formatValue(item.p95)}${u}`);
   if (item.uncertainty > 0) lines.push(`Uncertainty ± ${formatValue(item.uncertainty)}${u}`);
   return { title: item.label, lines, synthetic };
