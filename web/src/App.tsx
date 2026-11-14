@@ -1,3 +1,4 @@
+import { useLang } from "@/lib/i18n";
 import { experienceOf } from "@/lib/tiers";
 import { useSession } from "@/lib/runlog";
 import { ThemeProvider } from "@/lib/useTheme";
@@ -10,7 +11,13 @@ import { StaffShell } from "@/shell/StaffShell";
  */
 export default function App() {
   const { tier } = useSession();
+  const lang = useLang();
   const staff = experienceOf(tier) === "staff";
   // The public service is always light; the dark "operations room" theme belongs to the workspace.
-  return <ThemeProvider force={staff ? undefined : "light"}>{staff ? <StaffShell /> : <PublicShell />}</ThemeProvider>;
+  // Keyed on the language: switching it remounts the screens, so every text is read again (lib/i18n.ts).
+  return (
+    <ThemeProvider key={lang} force={staff ? undefined : "light"}>
+      {staff ? <StaffShell /> : <PublicShell />}
+    </ThemeProvider>
+  );
 }

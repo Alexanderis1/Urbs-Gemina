@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildUseCaseQuestion, forTier, paramFields, residentWording, parseUseCases, useCaseTurnLabel, type UseCase } from "@/lib/useCases";
 import SAMPLE from "@/api/sampleUseCases.json";
+import { setLang } from "@/lib/i18n";
 
 const briefing = {
   id: "municipio_briefing",
@@ -96,5 +97,19 @@ describe("wording for residents", () => {
   it("keeps the service's own words for a task it does not know", () => {
     const [uc] = parseUseCases([{ id: "new_task", title: { en: "A new task" }, summary: { en: "What it does." } }]) as [UseCase];
     expect(residentWording(uc)).toEqual({ title: "A new task", summary: "What it does." });
+  });
+});
+
+describe("resident wording in Italian", () => {
+  it("speaks Italian", () => {
+    setLang("it");
+    try {
+      const [uc] = parseUseCases([{ id: "citizen_emergency_info", title: { en: "E", it: "E it" }, summary: { en: "S", it: "S it" } }]) as [UseCase];
+      expect(residentWording(uc).title).toBe("In caso di emergenza vicino a casa");
+      const [other] = parseUseCases([{ id: "new_task", title: { en: "A new task", it: "Un nuovo compito" }, summary: { en: "What.", it: "Cosa fa." } }]) as [UseCase];
+      expect(residentWording(other)).toEqual({ title: "Un nuovo compito", summary: "Cosa fa." });
+    } finally {
+      setLang("en");
+    }
   });
 });

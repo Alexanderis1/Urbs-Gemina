@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { fieldLabel, filterFacilities, buildManagerUpdate, type SportFeature } from "@/lib/sport";
+import { fieldLabel, filterFacilities, buildManagerUpdate, typeLabel, accessLabel, type SportFeature } from "@/lib/sport";
+import { setLang } from "@/lib/i18n";
 import { mockSportTool } from "@/api/mockSport";
 import { parseEnvelope } from "@/api/envelope";
 
@@ -132,5 +133,19 @@ describe("access and closed facilities", () => {
     expect(shouldCluster(14062, 11.5)).toBe(true);
     expect(shouldCluster(14062, 14)).toBe(false);
     expect(shouldCluster(300, 11)).toBe(false);
+  });
+});
+
+describe("sport in Italian", () => {
+  it("speaks Italian", () => {
+    setLang("it");
+    try {
+      expect(fieldLabel({ value: 1, status: "manager_confirmed", sources: [] })).toBe("confermato dal gestore");
+      expect(typeLabel("school")).toBe("scolastico");
+      expect(accessLabel("customers")).toBe("solo clienti");
+      expect(accessLabel(null)).toBe("accesso non noto");
+    } finally {
+      setLang("en");
+    }
   });
 });

@@ -1,7 +1,10 @@
 // Shared building blocks. Every screen is assembled from these so spacing, type and motion stay consistent.
 // Rules of use are in web/docs/design-system.md.
 import { useState, type ReactNode } from "react";
+import { texts, tr } from "@/lib/i18n";
 import { AlertTriangle, ChevronDown, CircleAlert, Info, Loader2, type LucideIcon } from "lucide-react";
+
+const T = texts({ en: { loading: "Loading" }, it: { loading: "Caricamento" } });
 
 /** Screen with a docked control panel on the left and the map (or main content) filling the rest. */
 export function Workspace({ panel, children, right }: { panel: ReactNode; children: ReactNode; right?: ReactNode }) {
@@ -192,7 +195,7 @@ export function EmptyState({ icon: Icon, title, children }: { icon: LucideIcon; 
 /** Grey bars while a tool run is in flight. */
 export function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="space-y-2" role="status" aria-label="Loading">
+    <div className="space-y-2" role="status" aria-label={tr(T).loading}>
       {Array.from({ length: lines }, (_, i) => (
         <div key={i} className="skeleton h-3.5" style={{ width: `${92 - ((i * 17) % 40)}%` }} />
       ))}

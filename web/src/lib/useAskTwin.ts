@@ -3,7 +3,17 @@ import { useCallback } from "react";
 import { isSampleMode, proxyFetch } from "@/api/client";
 import { parseTwinAnswer, type TwinAnswer } from "@/api/twin";
 import type { ResolvePlaceResult } from "@/api/types";
+import { texts, tr } from "@/lib/i18n";
 import { useSession } from "@/lib/runlog";
+
+const SAMPLE_TEXT = texts({
+  en: {
+    body: "The assistant is not connected yet, so this is not an answer. It shows how answers will look: sources, run ids, data kinds and map buttons.\nSample place found",
+  },
+  it: {
+    body: "L'assistente non è ancora collegato, quindi questa non è una risposta. Mostra come saranno le risposte: fonti, id esecuzione, tipi di dato e pulsanti della mappa.\nLuogo di esempio trovato",
+  },
+});
 
 /** Returns `ask(shown, body)`: `body` goes to the service; `shown` is the request in words (used in sample mode). */
 export function useAskTwin(): (shown: string, body: unknown) => Promise<TwinAnswer> {
@@ -22,7 +32,7 @@ export function useAskTwin(): (shown: string, body: unknown) => Promise<TwinAnsw
         // No language model in sample mode. One real tool call (to the sample tools) shows the trace format.
         const place = await run<ResolvePlaceResult>("resolve_place", { text: q });
         return parseTwinAnswer({
-          text: `The assistant is not connected yet, so this is not an answer. It shows how answers will look: sources, run ids, data kinds and map buttons.\nSample place found [run:${place.run_id.slice(0, 12)}]`,
+          text: `${tr(SAMPLE_TEXT).body} [run:${place.run_id.slice(0, 12)}]`,
           verified: false,
           run_ids: [place.run_id],
           sources: place.sources.map((s) => s.id),

@@ -30,13 +30,115 @@ import {
   type MapItem,
 } from "@/lib/layers";
 import { calibrationLabel } from "@/lib/format";
-import { BUILDING_VIEWS, LEGENDS, ROOF_COLORS, type BuildingView } from "@/lib/buildingStyles";
+import { BUILDING_VIEWS, LEGENDS, ROOF_COLORS, roofLabel, type BuildingView } from "@/lib/buildingStyles";
 import { useSession } from "@/lib/runlog";
 import { useTheme } from "@/lib/useTheme";
 import { GROUPS, isFused, layerLabel, layersFor } from "@/lib/layerCatalogue";
 import type { Experience } from "@/lib/tiers";
 import type { Envelope, QueryLayerResult } from "@/api/types";
 import { errorText } from "@/lib/errors";
+import { locale, texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: {
+    cellsWord: "cells",
+    pointsWord: "points",
+    perCell: (n: string) => ` per ${n} m cell`,
+    noData: "The twin has no data for this layer yet.",
+    cityView: "City view",
+    cityMap: "City map",
+    subStaff: "Pick one layer and an area to see what the twin knows about it.",
+    subPublic: "Pick what you want to see, and where. Each map says how sure it is.",
+    layerStaff: "Layer",
+    layerPublic: "Show on the map",
+    mapLayer: "Map layer",
+    none: "None (buildings only)",
+    where: "Where",
+    partOfCity: "Part of the city",
+    when: "When",
+    timeAria: "Time, hours before now",
+    now: "Now",
+    hoursAgo: (h: number) => `${h} hours ago`,
+    ago24: "24 h ago",
+    showing: "Showing:",
+    nowLatest: "now (latest data)",
+    hoursAgoShown: (h: number) => `${h} ${h === 1 ? "hour" : "hours"} ago`,
+    display: "Display",
+    showUncertainty: "Show uncertainty",
+    lessCertain: "Less certain values are drawn fainter.",
+    buildings: "Buildings",
+    centreOnly: "Centre district only.",
+    trees: "Trees (zoom in to see them)",
+    evidenceStaff: "Evidence",
+    evidencePublic: "How we know this",
+    loadError: "The layer could not be loaded",
+    runRecord: "The record of the tool run appears here once a layer is loaded.",
+    noLayer: "No data layer selected",
+    loading: "Loading layer…",
+    errStaff: "Could not load this layer. See Evidence.",
+    errPublic: (e: string) => `This could not be loaded right now. ${e}`,
+    emptyArea: "No data in this area right now",
+    incomplete: (shown: string, total: string, things: string) =>
+      `Incomplete: only the first ${shown} of ${total} ${things} arrived. Pick a municipio, an urban zone or draw an area to see them all.`,
+    onePer: "One dot per",
+    site: "site",
+    record: "record",
+    valueShown: "Value shown",
+    sameEverywhere: "Same value everywhere:",
+    biggerDot: "Bigger dot = more sites.",
+    faded: "Faded = less certain",
+    outlined: "Outlined = simulated",
+  },
+  it: {
+    cellsWord: "celle",
+    pointsWord: "punti",
+    perCell: (n: string) => ` per cella di ${n} m`,
+    noData: "Il gemello non ha ancora dati per questo livello.",
+    cityView: "Vista città",
+    cityMap: "Mappa della città",
+    subStaff: "Scegli un livello e un'area per vedere cosa sa il gemello.",
+    subPublic: "Scegli cosa vuoi vedere e dove. Ogni mappa dice quanto è affidabile.",
+    layerStaff: "Livello",
+    layerPublic: "Mostra sulla mappa",
+    mapLayer: "Livello della mappa",
+    none: "Nessuno (solo edifici)",
+    where: "Dove",
+    partOfCity: "Parte della città",
+    when: "Quando",
+    timeAria: "Orario, ore prima di adesso",
+    now: "Adesso",
+    hoursAgo: (h: number) => `${h} ore fa`,
+    ago24: "24 h fa",
+    showing: "Stai vedendo:",
+    nowLatest: "adesso (dati più recenti)",
+    hoursAgoShown: (h: number) => `${h} ${h === 1 ? "ora" : "ore"} fa`,
+    display: "Visualizzazione",
+    showUncertainty: "Mostra l'incertezza",
+    lessCertain: "I valori meno certi sono disegnati più sbiaditi.",
+    buildings: "Edifici",
+    centreOnly: "Solo il centro.",
+    trees: "Alberi (ingrandisci per vederli)",
+    evidenceStaff: "Evidenze",
+    evidencePublic: "Come lo sappiamo",
+    loadError: "Non è stato possibile caricare il livello",
+    runRecord: "Il registro dell'esecuzione dello strumento compare qui dopo il caricamento di un livello.",
+    noLayer: "Nessun livello di dati selezionato",
+    loading: "Caricamento del livello…",
+    errStaff: "Non è stato possibile caricare questo livello. Vedi Evidenze.",
+    errPublic: (e: string) => `Al momento non è stato possibile caricarlo. ${e}`,
+    emptyArea: "Nessun dato in quest'area adesso",
+    incomplete: (shown: string, total: string, things: string) =>
+      `Incompleto: sono arrivati solo i primi ${shown} di ${total} ${things}. Scegli un municipio, una zona urbanistica o disegna un'area per vederli tutti.`,
+    onePer: "Un punto per",
+    site: "sito",
+    record: "record",
+    valueShown: "Valore mostrato",
+    sameEverywhere: "Stesso valore ovunque:",
+    biggerDot: "Punto più grande = più siti.",
+    faded: "Sbiadito = meno certo",
+    outlined: "Con contorno = simulato",
+  },
+});
 
 /** One selectable row. A real radio input (visually hidden) keeps arrow keys and screen readers working. */
 function LayerRow({
@@ -76,8 +178,9 @@ const hexRgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => p
 
 /** Legend title from the data itself: the value's plain name, cell size and unit. */
 function legendTitle(d: MapData): string {
+  const t = tr(T);
   if (d.kind === "hex") return `${metricInfo(d.metric).label}${d.unit ? ` (${d.unit})` : ""}`;
-  const cell = d.metric === "count" && d.cellM ? ` per ${formatValue(d.cellM)} m cell` : "";
+  const cell = d.metric === "count" && d.cellM ? t.perCell(formatValue(d.cellM)) : "";
   return `${metricInfo(d.metric).label}${cell}${d.unit ? ` (${d.unit})` : ""}`;
 }
 
@@ -86,6 +189,7 @@ function legendTitle(d: MapData): string {
  * options, evidence open); residents get a short list in plain words and the evidence folded away.
  */
 export default function CityView({ audience = "staff" }: { audience?: Experience }) {
+  const t = tr(T);
   const staff = audience === "staff";
   const catalogue = layersFor(audience);
   const { run } = useSession();
@@ -306,19 +410,19 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const kind = layer && env ? env.data_kinds[layer] : undefined;
   const empty = data && !busy && data.items.length === 0;
   // The tool answered, but not with data (a layer the live service does not carry yet): say so in its own words.
-  const refusal = env && !isOk(env) ? firstSentence(env.reason ?? "The twin has no data for this layer yet.") : null;
-  const things = data?.kind === "hex" ? "cells" : "points";
+  const refusal = env && !isOk(env) ? firstSentence(env.reason ?? t.noData) : null;
+  const things = data?.kind === "hex" ? t.cellsWord : t.pointsWord;
   const unit = data?.unit ? ` ${data.unit}` : "";
   const hovered = hover && data ? describeItem(hover.item, data) : null;
 
   const panel = (
     <Panel
-      title={staff ? "City view" : "City map"}
+      title={staff ? t.cityView : t.cityMap}
       icon={MapIcon}
-      subtitle={staff ? "Pick one layer and an area to see what the twin knows about it." : "Pick what you want to see, and where. Each map says how sure it is."}
+      subtitle={staff ? t.subStaff : t.subPublic}
     >
-      <Section title={staff ? "Layer" : "Show on the map"}>
-        <div role="radiogroup" aria-label="Map layer" className="space-y-3">
+      <Section title={staff ? t.layerStaff : t.layerPublic}>
+        <div role="radiogroup" aria-label={t.mapLayer} className="space-y-3">
           {(staff ? GROUPS : [{ id: null, label: "", hint: undefined }]).map((g) => (
             <div key={g.id ?? "all"} className="space-y-0.5">
               {g.label && <div className="px-1 text-2xs font-semibold text-muted">{g.label}</div>}
@@ -336,19 +440,19 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
               ))}
             </div>
           ))}
-          <LayerRow label="None (buildings only)" icon={Building2} checked={layer === null} onSelect={() => pickLayer(null)} />
+          <LayerRow label={t.none} icon={Building2} checked={layer === null} onSelect={() => pickLayer(null)} />
         </div>
       </Section>
 
-      <Section title="Where">
+      <Section title={t.where}>
         {staff ? (
           <AreaPicker area={area} onChange={setArea} drawing={drawing} onDraw={toggleDraw} />
         ) : (
-          <AreaPicker area={area} onChange={setArea} label="Part of the city" simple />
+          <AreaPicker area={area} onChange={setArea} label={t.partOfCity} simple />
         )}
       </Section>
 
-      {staff && <Section title="When">
+      {staff && <Section title={t.when}>
         <input
           type="range"
           min={0}
@@ -356,28 +460,28 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
           value={24 - hoursAgo}
           onChange={(e) => setHoursAgo(24 - Number(e.target.value))}
           className="w-full"
-          aria-label="Time, hours before now"
-          aria-valuetext={hoursAgo === 0 ? "Now" : `${hoursAgo} hours ago`}
+          aria-label={t.timeAria}
+          aria-valuetext={hoursAgo === 0 ? t.now : t.hoursAgo(hoursAgo)}
         />
         <div className="flex justify-between text-2xs text-muted">
-          <span>24 h ago</span>
-          <span>Now</span>
+          <span>{t.ago24}</span>
+          <span>{t.now}</span>
         </div>
         <p className="text-sm">
-          Showing: <span className="font-semibold">{hoursAgo === 0 ? "now (latest data)" : `${hoursAgo} ${hoursAgo === 1 ? "hour" : "hours"} ago`}</span>
+          {t.showing} <span className="font-semibold">{hoursAgo === 0 ? t.nowLatest : t.hoursAgoShown(hoursAgo)}</span>
         </p>
       </Section>}
 
-      {staff && <Section title="Display" collapsible>
+      {staff && <Section title={t.display} collapsible>
         <div>
           <label className="check">
             <input type="checkbox" checked={showUncertainty} onChange={(e) => setShowUncertainty(e.target.checked)} />
-            Show uncertainty
+            {t.showUncertainty}
           </label>
-          <p className="hint ml-6">Less certain values are drawn fainter.</p>
+          <p className="hint ml-6">{t.lessCertain}</p>
         </div>
         <label className="block space-y-1">
-          <span className="block text-xs font-semibold text-ink">Buildings</span>
+          <span className="block text-xs font-semibold text-ink">{t.buildings}</span>
           <select className="input" value={buildingView} onChange={(e) => setBuildingView(e.target.value as BuildingView)}>
             {BUILDING_VIEWS.map((v) => (
               <option key={v.id} value={v.id}>
@@ -395,21 +499,21 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
             {Object.entries(ROOF_COLORS).map(([k, c]) => (
               <span key={k} className="flex items-center gap-1.5">
                 <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm border border-line-strong" style={{ background: c }} aria-hidden="true" />
-                {k.replace(/_/g, " ")}
+                {roofLabel(k)}
               </span>
             ))}
-            <span className="hint col-span-2">Centre district only.</span>
+            <span className="hint col-span-2">{t.centreOnly}</span>
           </div>
         )}
         <label className="check">
           <input type="checkbox" checked={showTrees} onChange={(e) => setShowTrees(e.target.checked)} />
-          Trees (zoom in to see them)
+          {t.trees}
         </label>
       </Section>}
 
-      <Section title={staff ? "Evidence" : "How we know this"} collapsible defaultOpen={staff}>
+      <Section title={staff ? t.evidenceStaff : t.evidencePublic} collapsible defaultOpen={staff}>
         {error && (
-          <Callout tone="error" title="The layer could not be loaded">
+          <Callout tone="error" title={t.loadError}>
             {error}
           </Callout>
         )}
@@ -418,7 +522,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
         ) : busy ? (
           <Skeleton lines={2} />
         ) : (
-          !error && <p className="hint">The record of the tool run appears here once a layer is loaded.</p>
+          !error && <p className="hint">{t.runRecord}</p>
         )}
       </Section>
     </Panel>
@@ -443,14 +547,14 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
           </div>
           <div className="text-xs text-muted">
             {!layer ? (
-              "No data layer selected"
+              t.noLayer
             ) : busy ? (
               <span className="inline-flex items-center gap-1.5">
                 <Spinner className="h-3.5 w-3.5" />
-                Loading layer…
+                {t.loading}
               </span>
             ) : error ? (
-              <span className="text-danger">{staff ? "Could not load this layer. See Evidence." : `This could not be loaded right now. ${error}`}</span>
+              <span className="text-danger">{staff ? t.errStaff : t.errPublic(error)}</span>
             ) : refusal ? (
               <span className="inline-flex items-start gap-1.5">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-estimated" aria-hidden="true" />
@@ -459,11 +563,11 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
             ) : empty ? (
               <span className="inline-flex items-center gap-1.5 text-estimated">
                 <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-                No data in this area right now
+                {t.emptyArea}
               </span>
             ) : data ? (
               <span>
-                <span className="num text-ink">{data.items.length.toLocaleString("en-GB")}</span> {things} ·{" "}
+                <span className="num text-ink">{data.items.length.toLocaleString(locale())}</span> {things} ·{" "}
                 {areaLabel(area)}
               </span>
             ) : null}
@@ -472,8 +576,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
             <p className="flex gap-1.5 text-xs text-estimated">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>
-                Incomplete: only the first {data.items.length.toLocaleString("en-GB")} of {data.count.toLocaleString("en-GB")} {things} arrived. Pick a
-                municipio, an urban zone or draw an area to see them all.
+                {t.incomplete(data.items.length.toLocaleString(locale()), data.count.toLocaleString(locale()), things)}
               </span>
             </p>
           ) : null}
@@ -489,12 +592,12 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
                 style={{ background: `rgb(${palette.point.join(" ")})` }}
                 aria-hidden="true"
               />
-              One dot per {data.metric === "site" ? "site" : (metricInfo(data.metric).each ?? "record")}
+              {t.onePer} {data.metric === "site" ? t.site : (metricInfo(data.metric).each ?? t.record)}
             </div>
           ) : (
             <div className="space-y-1.5">
               {metrics.length > 1 && (
-                <Field label="Value shown">
+                <Field label={t.valueShown}>
                   <select className="input btn-sm w-full" value={data.metric} onChange={(e) => setMetric(e.target.value)}>
                     {metrics.map((m) => (
                       <option key={m} value={m}>
@@ -508,7 +611,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
               {formatValue(extent.min) === formatValue(extent.max) ? (
                 // One value everywhere (a calm night, a dry hour): a colour scale from x to x would say nothing.
                 <p className="text-xs">
-                  Same value everywhere:{" "}
+                  {t.sameEverywhere}{" "}
                   <span className="num font-semibold text-ink">
                     {formatValue(extent.min)}
                     {unit}
@@ -521,15 +624,15 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
                   high={`${formatValue(extent.max)}${unit}`}
                 />
               )}
-              {data.metric === "count" && <p className="hint">Bigger dot = more sites.</p>}
-              {showUncertainty && hasUncertainty && <p className="hint">Faded = less certain</p>}
+              {data.metric === "count" && <p className="hint">{t.biggerDot}</p>}
+              {showUncertainty && hasUncertainty && <p className="hint">{t.faded}</p>}
               {data.calibration && (data.calibration === "calibrated" || data.calibration === "uncalibrated") && (
                 <p className="hint">{calibrationLabel(data.calibration)}</p>
               )}
               {data.items.some((i) => i.synthetic) && (
                 <p className="flex items-center gap-1.5 text-2xs text-muted">
                   <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-dashed border-simulated" aria-hidden="true" />
-                  Outlined = simulated
+                  {t.outlined}
                 </p>
               )}
             </div>

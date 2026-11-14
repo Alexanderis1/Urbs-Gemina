@@ -1,6 +1,7 @@
 // Turns any query_layer result (belief, observations, aggregate, features) into one map-ready shape.
 // Shapes follow the live tool API (twin/api, 13 Nov 2026).
 import type { Area } from "@/lib/area";
+import { locale, texts, tr } from "@/lib/i18n";
 
 export interface MapItem {
   h3?: string;
@@ -45,41 +46,119 @@ export interface MetricInfo {
  * Basis: FIWARE Smart Data Models (AirQualityObserved, TrafficFlowObserved); EEA stations and CAMS report µg/m³;
  * the Cartoradio grid is in V/m; the traffic loops give vehicles per hour (twin/providers/simulated/loops.py).
  */
-const METRICS: Record<string, MetricInfo> = {
-  no2: { label: "NO₂", unit: "µg/m³" },
-  pm10: { label: "PM10", unit: "µg/m³" },
-  pm25: { label: "PM2.5", unit: "µg/m³" },
-  pm2_5: { label: "PM2.5", unit: "µg/m³" },
-  o3: { label: "Ozone", unit: "µg/m³" },
-  electricField: { label: "Electric field", unit: "V/m" },
-  intensity: { label: "Traffic flow", unit: "vehicles/h" },
-  averageVehicleSpeed: { label: "Average speed", unit: "km/h" },
-  occupancy: { label: "Road occupancy", unit: "" },
-  precipitation: { label: "Rain", unit: "" },
-  availableVehicles: { label: "Vehicles available", unit: "", each: "vehicle" },
-  rangeKm: { label: "Range left", unit: "km" },
-  count: { label: "Count", unit: "" },
-  // Fused layers (config/beliefs.yaml). Their unit comes with the answer, so none is written here.
-  air_no2: { label: "NO₂", unit: "" },
-  air_pm10: { label: "PM10", unit: "" },
-  air_pm25: { label: "PM2.5", unit: "" },
-  air_o3: { label: "Ozone", unit: "" },
-  road_speed: { label: "Road speed", unit: "" },
-  emf: { label: "Electric field", unit: "" },
-  rain: { label: "Rain", unit: "" },
-  temperature: { label: "Air temperature", unit: "" },
-  air_temperature: { label: "Air temperature", unit: "" },
-  activity: { label: "Shared scooters parked", unit: "" },
-  transit_delay: { label: "Bus delay", unit: "" },
-  transit_supply: { label: "Buses and trams planned", unit: "" },
-  wifi_sessions: { label: "Wi-Fi sessions", unit: "" },
+const LABELS = texts({
+  en: {
+    no2: "NO₂",
+    pm10: "PM10",
+    pm25: "PM2.5",
+    pm2_5: "PM2.5",
+    o3: "Ozone",
+    electricField: "Electric field",
+    intensity: "Traffic flow",
+    averageVehicleSpeed: "Average speed",
+    occupancy: "Road occupancy",
+    precipitation: "Rain",
+    availableVehicles: "Vehicles available",
+    rangeKm: "Range left",
+    count: "Count",
+    air_no2: "NO₂",
+    air_pm10: "PM10",
+    air_pm25: "PM2.5",
+    air_o3: "Ozone",
+    road_speed: "Road speed",
+    emf: "Electric field",
+    rain: "Rain",
+    temperature: "Air temperature",
+    air_temperature: "Air temperature",
+    activity: "Shared scooters parked",
+    transit_delay: "Bus delay",
+    transit_supply: "Buses and trams planned",
+    wifi_sessions: "Wi-Fi sessions",
+  } as Record<string, string>,
+  it: {
+    no2: "NO₂",
+    pm10: "PM10",
+    pm25: "PM2.5",
+    pm2_5: "PM2.5",
+    o3: "Ozono",
+    electricField: "Campo elettrico",
+    intensity: "Flusso di traffico",
+    averageVehicleSpeed: "Velocità media",
+    occupancy: "Occupazione stradale",
+    precipitation: "Pioggia",
+    availableVehicles: "Veicoli disponibili",
+    rangeKm: "Autonomia residua",
+    count: "Conteggio",
+    air_no2: "NO₂",
+    air_pm10: "PM10",
+    air_pm25: "PM2.5",
+    air_o3: "Ozono",
+    road_speed: "Velocità su strada",
+    emf: "Campo elettrico",
+    rain: "Pioggia",
+    temperature: "Temperatura dell'aria",
+    air_temperature: "Temperatura dell'aria",
+    activity: "Monopattini in sosta",
+    transit_delay: "Ritardo degli autobus",
+    transit_supply: "Autobus e tram previsti",
+    wifi_sessions: "Sessioni Wi-Fi",
+  } as Record<string, string>,
+});
+
+const WORDS = texts({
+  en: {
+    vehicle: "vehicle",
+    vehiclesPerHour: "vehicles/h",
+    perCell: "per cell",
+    perHour: "per hour",
+    range: (lo: string, hi: string, u: string) => `Range ${lo} to ${hi}${u}`,
+    uncertainty: (v: string, u: string) => `Uncertainty ± ${v}${u}`,
+  },
+  it: {
+    vehicle: "veicolo",
+    vehiclesPerHour: "veicoli/h",
+    perCell: "per cella",
+    perHour: "all'ora",
+    range: (lo: string, hi: string, u: string) => `Intervallo da ${lo} a ${hi}${u}`,
+    uncertainty: (v: string, u: string) => `Incertezza ± ${v}${u}`,
+  },
+});
+
+/** Metrics with a fixed unit. The label comes from LABELS, in the current language. */
+const METRICS: Record<string, { unit: string; each?: string }> = {
+  no2: { unit: "µg/m³" },
+  pm10: { unit: "µg/m³" },
+  pm25: { unit: "µg/m³" },
+  pm2_5: { unit: "µg/m³" },
+  o3: { unit: "µg/m³" },
+  electricField: { unit: "V/m" },
+  intensity: { unit: "vehicles/h" }, // shown through WORDS.vehiclesPerHour
+  averageVehicleSpeed: { unit: "km/h" },
+  occupancy: { unit: "" },
+  precipitation: { unit: "" },
+  availableVehicles: { unit: "", each: "vehicle" },
+  rangeKm: { unit: "km" },
+  count: { unit: "" },
+  air_no2: { unit: "" },
+  air_pm10: { unit: "" },
+  air_pm25: { unit: "" },
+  air_o3: { unit: "" },
+  road_speed: { unit: "" },
+  emf: { unit: "" },
+  rain: { unit: "" },
+  temperature: { unit: "" },
+  air_temperature: { unit: "" },
+  activity: { unit: "" },
+  transit_delay: { unit: "" },
+  transit_supply: { unit: "" },
+  wifi_sessions: { unit: "" },
 };
 
 /** Units as the tools write them (plain ASCII), shown the way people read them. */
-const UNITS: Record<string, string> = { "ug/m3": "µg/m³", degC: "°C", "vehicles/cell": "per cell", "sessions/hour": "per hour" };
-
 export function prettyUnit(unit: string): string {
-  return UNITS[unit] ?? unit;
+  const w = tr(WORDS);
+  const units: Record<string, string> = { "ug/m3": "µg/m³", degC: "°C", "vehicles/cell": w.perCell, "sessions/hour": w.perHour };
+  return units[unit] ?? unit;
 }
 
 /** The box of the area a tool answered for, to frame the map. Null for the whole city (the map already shows it). */
@@ -110,7 +189,14 @@ export function firstSentence(text: string): string {
 
 export function metricInfo(metric: string): MetricInfo {
   const known = METRICS[metric];
-  if (known) return known;
+  if (known) {
+    const w = tr(WORDS);
+    return {
+      label: tr(LABELS)[metric] ?? metric,
+      unit: known.unit === "vehicles/h" ? w.vehiclesPerHour : known.unit,
+      ...(known.each ? { each: w.vehicle } : {}),
+    };
+  }
   const words = metric
     .replace(/_/g, " ")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -203,11 +289,12 @@ export function normalizeLayer(result: unknown, prefer?: string): MapData {
   return { kind: "points", metric: "value", unit: "", items: [] };
 }
 
-const NUM = new Intl.NumberFormat("en-GB", { maximumSignificantDigits: 3 });
+const NUM: Record<string, Intl.NumberFormat> = {};
 
 /** At most three significant digits, for legends and tooltips. The value itself is unchanged. */
 export function formatValue(n: number): string {
-  return NUM.format(n).replace(/^−/, "-");
+  const loc = locale();
+  return (NUM[loc] ??= new Intl.NumberFormat(loc, { maximumSignificantDigits: 3 })).format(n).replace(/^−/, "-");
 }
 
 /** Real minimum and maximum of what is on screen. */
@@ -253,7 +340,7 @@ export function describeItem(item: MapItem, data: Pick<MapData, "metric" | "unit
   const synthetic = item.synthetic === true;
   if (data.metric === "site") return { title: item.label, lines: [], synthetic };
   const lines = [`${metricInfo(data.metric).label}: ${formatValue(item.value)}${u}`];
-  if (item.p5 !== undefined && item.p95 !== undefined) lines.push(`Range ${formatValue(item.p5)} to ${formatValue(item.p95)}${u}`);
-  if (item.uncertainty > 0) lines.push(`Uncertainty ± ${formatValue(item.uncertainty)}${u}`);
+  if (item.p5 !== undefined && item.p95 !== undefined) lines.push(tr(WORDS).range(formatValue(item.p5), formatValue(item.p95), u));
+  if (item.uncertainty > 0) lines.push(tr(WORDS).uncertainty(formatValue(item.uncertainty), u));
   return { title: item.label, lines, synthetic };
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { PUBLIC_SCREENS, STAFF_ACCESS_PATH, STAFF_SCREENS, canOpen, experienceOf, resolveTier, screenPath, screensFor } from "@/lib/tiers";
+import { PUBLIC_SCREENS, STAFF_ACCESS_PATH, STAFF_SCREENS, canOpen, experienceOf, resolveTier, screenPath, screenText, screensFor } from "@/lib/tiers";
+import { setLang } from "@/lib/i18n";
 
 describe("role tiers (UI side; the server enforces the same rule)", () => {
   it("hides Admin and Permit check from citizens", () => {
@@ -51,5 +52,22 @@ describe("two experiences: a public service and a staff workspace", () => {
     expect(resolveTier(null)).toBe("citizen");
     expect(resolveTier("office")).toBe("office");
     expect(resolveTier("admin")).toBe("citizen");
+  });
+
+  it("names every screen of both experiences, in Italian and in English", () => {
+    for (const lang of ["it", "en"] as const) {
+      setLang(lang);
+      for (const e of ["public", "staff"] as const)
+        for (const s of screensFor(e)) {
+          const t = screenText(e, s.id);
+          expect(t.label.length).toBeGreaterThan(0);
+          expect(t.hint.length).toBeGreaterThan(0);
+        }
+    }
+    setLang("it");
+    expect(screenText("public", "home").label).toBe("La mia zona");
+    expect(screenText("staff", "scenario").label).toBe("Scenari");
+    setLang("en");
+    expect(screenText("public", "home").label).toBe("My area");
   });
 });
