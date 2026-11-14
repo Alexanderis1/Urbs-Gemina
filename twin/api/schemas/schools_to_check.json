@@ -1,0 +1,54 @@
+{
+  "name": "schools_to_check",
+  "description": "Schools ranked by how close the air (NO2, PM10, PM2.5) comes to its legal limits, worst first.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Schools ranked by how close the air (NO2, PM10, PM2.5) comes to its legal limits, worst first.",
+    "properties": {
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "top": {
+        "default": 10,
+        "maximum": 100,
+        "minimum": 1,
+        "title": "Top",
+        "type": "integer"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      }
+    },
+    "title": "SchoolsToCheckIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/schools_to_check"
+  },
+  "owner": "WS5"
+}
