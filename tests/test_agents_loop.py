@@ -76,7 +76,7 @@ def test_answer_is_verified_and_disclosed() -> None:
         tool_turn(ToolCall("t1", "context_check", {"lon": 1.0})),
         text_turn(f"One school lies 182 m from the point [run:{rid}]. This is context, not a ban."),
     ])
-    out = answer("Any schools near?", llm=llm, gateway=gw, tool_names=["context_check"], first_message=True)
+    out = answer("Any schools near?", llm=llm, gateway=gw, tool_names=["context_check"], first_message=True, language="en")
     assert out.verified
     assert out.text.startswith("I am an AI assistant")
     assert out.runs[0]["tool"] == "context_check"
@@ -88,7 +88,7 @@ def test_unverifiable_answer_becomes_insufficient_data() -> None:
         text_turn("There are 4 schools within 300 m."),
         text_turn("There are still 4 schools within 300 m."),
     ])
-    out = answer("Any schools near?", llm=llm, gateway=gw, tool_names=["context_check"], first_message=False)
+    out = answer("Any schools near?", llm=llm, gateway=gw, tool_names=["context_check"], first_message=False, language="en")
     assert not out.verified
     assert out.text.lower().startswith("insufficient data")
     assert "4 schools" not in out.text

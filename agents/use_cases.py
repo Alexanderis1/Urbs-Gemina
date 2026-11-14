@@ -278,6 +278,7 @@ class UseCaseReport:
     warnings: list[str] = field(default_factory=list)
     citations: list[dict[str, Any]] = field(default_factory=list)
     cited_run_ids: list[str] = field(default_factory=list)
+    language: str = "it"
 
     @property
     def missing(self) -> list[str]:
@@ -286,9 +287,9 @@ class UseCaseReport:
             if r.get("status", "ok") != "ok":
                 out.append(f"{r.get('tool')}: {r.get('reason') or r.get('status')}")
         if not self.verified:
-            from agents.orchestrator import PLAIN_PROBLEMS
+            from agents.orchestrator import plain_problem
 
-            out += sorted({PLAIN_PROBLEMS.get(p.code, p.code) for p in self.problems})
+            out += sorted({plain_problem(p, self.language, with_figure=False) for p in self.problems})
         return out
 
 
@@ -393,22 +394,26 @@ def run_use_case(use_case: str, *, llm: LLM, gateway: ToolGateway, area: Any = N
         text, report, auto_lines, withheld = _withhold_lines(text, report, by_id, cfg, ask, language)
     if withheld:
         warnings.append(f"{withheld} line(s) withheld: a figure could not be traced to a tool run")
-        skipped.append({"step": "narrative", "tool": "verifier", "label": "note",
-                        "reason": f"{withheld} line(s) withheld because a figure could not be traced to a tool run"})
+        reason = (f"{withheld} riga/righe omesse: una cifra non era riconducibile a un'esecuzione di uno strumento"
+                  if language == "it" else
+                  f"{withheld} line(s) withheld because a figure could not be traced to a tool run")
+        skipped.append({"step": "narrative", "tool": "verifier", "label": "nota" if language == "it" else "note",
+                        "reason": reason})
 
     if report.ok and text.strip():
         from agents.orchestrator import _drop_self_disclosure
 
         text = _drop_self_disclosure(text)  # code adds the AI disclosure line once, at the start of a conversation
         return UseCaseReport(use_case, text, True, [], runs, skipped, warnings,
-                             citations=citation_trace(text, by_id, auto_lines), cited_run_ids=list(report.cited_runs))
-    from agents.orchestrator import INSUFFICIENT, PLAIN_PROBLEMS
+                             citations=citation_trace(text, by_id, auto_lines), cited_run_ids=list(report.cited_runs),
+                             language=language)
+    from agents.orchestrator import INSUFFICIENT, plain_problem
 
     problems = list(report.problems) or [Problem("no_answer", "the agent produced no answer")]
-    missing = sorted({PLAIN_PROBLEMS.get(p.code, p.code) for p in problems})
+    missing = sorted({plain_problem(p, language, with_figure=False) for p in problems})
     fallback = (INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " "
                 + ("Problem found: " if language == "en" else "Problema: ") + "; ".join(missing) + ".")
-    return UseCaseReport(use_case, fallback, False, problems, runs, skipped, warnings)
+    return UseCaseReport(use_case, fallback, False, problems, runs, skipped, warnings, language=language)
 
 
 def to_twin_answer(rep: UseCaseReport, *, disclosure: str | None = None) -> TwinAnswer:

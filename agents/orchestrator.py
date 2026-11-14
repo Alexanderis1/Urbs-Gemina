@@ -24,6 +24,19 @@ LOG = logging.getLogger("urbs.agents")
 DEFAULT_TOOLS = ["run_use_case", "resolve_place", "context_check", "estimate_field", "query_layer", "run_scenario",
                  "sports_facilities", "sport_coverage", "legal_lookup", "find_dataset", "news_search", "data_status"]
 
+PLAIN_PROBLEMS_IT = {
+    "uncited_number": "una cifra senza esecuzione di uno strumento o fonte",
+    "untraced_number": "una cifra che non corrisponde al risultato dello strumento",
+    "unknown_citation": "una citazione a un'esecuzione o fonte che non esiste",
+    "missing_range": "una stima senza il suo intervallo",
+    "missing_calibration": "una stima senza lo stato di calibrazione",
+    "missing_estimate_label": "una stima non indicata come tale",
+    "missing_simulated_label": "dati simulati non indicati come tali",
+    "decision_language": "una formulazione che trasforma il contesto in una decisione",
+    "no_answer": "nessuna risposta entro il limite di strumenti",
+    "model_refused": "il modello ha rifiutato la richiesta",
+}
+
 PLAIN_PROBLEMS = {
     "uncited_number": "a figure without a tool run or source",
     "untraced_number": "a figure that does not match the tool output",
@@ -43,11 +56,17 @@ INSUFFICIENT = {
 }
 
 
-def _plain(p: Problem) -> str:
-    """Plain wording of a problem, naming the figure when there is one (for logs and the officer)."""
-    base = PLAIN_PROBLEMS.get(p.code, p.code)
+def plain_problem(p: Problem, language: str = "it", with_figure: bool = True) -> str:
+    """Plain wording of a problem in the answer's language, naming the figure when there is one (and asked)."""
+    table = PLAIN_PROBLEMS_IT if language == "it" else PLAIN_PROBLEMS
+    base = table.get(p.code, p.code)
     m = re.match(r"'([^']+)'", p.message)
-    return f"{base} ('{m.group(1)}')" if m and p.code in ("uncited_number", "untraced_number") else base
+    return (f"{base} ('{m.group(1)}')" if with_figure and m and p.code in ("uncited_number", "untraced_number")
+            else base)
+
+
+def _plain(p: Problem) -> str:
+    return plain_problem(p, "en")
 
 
 @dataclass
@@ -62,6 +81,7 @@ class Answer:
     cited_run_ids: list[str] = field(default_factory=list)
     #: Tool trace of citations: {"line", "kind", "ref", "cite_mode": "explicit" | "auto"}.
     citations: list[dict[str, Any]] = field(default_factory=list)
+    language: str = "it"
 
     def _label_runs(self) -> list[dict[str, Any]]:
         if self.verified and self.cited_run_ids:
@@ -93,7 +113,7 @@ class Answer:
     @property
     def missing(self) -> list[str]:
         """Plain-language gaps: verifier problems plus every tool result that was not available or refused."""
-        out = sorted({_plain(p) for p in self.problems}) if not self.verified else []
+        out = sorted({plain_problem(p, self.language) for p in self.problems}) if not self.verified else []
         for r in self.runs:
             if r.get("status", "ok") != "ok":
                 reason = str(r.get("reason") or r.get("status"))
@@ -109,14 +129,14 @@ def _finalise(text: str, report: VerifierReport, state: LoopResult, language: st
     if not text.strip():
         problems.append(Problem("no_answer", "the agent produced no answer"))
     if not verified:
-        missing = sorted({_plain(p) for p in problems})
+        missing = sorted({plain_problem(p, language) for p in problems})
         text = INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " " + (
             "Problem found: " if language == "en" else "Problema: ") + "; ".join(missing) + "."
     if first_message:
         text = cfg.disclosure.get(language, cfg.disclosure["en"]) + "\n\n" + _drop_self_disclosure(text)
     return Answer(text=text, verified=verified, problems=problems, runs=state.runs,
                   blocked_calls=state.blocked_calls, warnings=state.warnings,
-                  cited_run_ids=list(report.cited_runs) if verified else [])
+                  cited_run_ids=list(report.cited_runs) if verified else [], language=language)
 
 
 SELF_DISCLOSURE = re.compile(
@@ -149,7 +169,7 @@ def _label_simulated(state: LoopResult, runs: dict[str, dict[str, Any]], cfg: Ag
 
 
 def answer(question: str, *, llm: LLM, gateway: ToolGateway, tool_names: list[str] | None = None,
-           first_message: bool = False, language: str = "en", tier: str = "office", agent: str = "orchestrator",
+           first_message: bool = False, language: str = "it", tier: str = "office", agent: str = "orchestrator",
            config: AgentConfig | None = None) -> Answer:
     cfg = config or load_agent_config()
     loop = AgentLoop(llm=llm, gateway=gateway, system=system_prompt(agent, language, tier),
@@ -210,6 +230,11 @@ class TwinOrchestrator:
         return CompositeGateway(base, UseCaseTool(base, tier=tier, language=language))
 
     def ask(self, question: TwinQuestion) -> TwinAnswer:
+        from dataclasses import replace
+
+        from agents.language import answer_language
+
+        question = replace(question, language=answer_language(question))  # Italian unless they wrote in English
         role = "voice" if question.channel == "voice" else self.model_role
         llm = self.llm or AnthropicLLM(role=role, config=self.cfg)
         use_case = question.use_case or ("municipio_briefing" if question.mode == "briefing" else None)
