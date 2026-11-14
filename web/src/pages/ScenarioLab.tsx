@@ -60,6 +60,11 @@ const T = texts({
     longitude: "Longitude",
     latitude: "Latitude",
     howRiver: "How to set the river",
+    returnPeriod: "Historic-size flood",
+    floodSize: "Flood size",
+    yearFlood: (y: string) => (y === "200" ? "200-year flood (official medium hazard)" : `${y}-year flood`),
+    returnPeriodHint:
+      "Scenario, not a forecast: the Tiber flood expected on average once in that many years (official discharge at Ripetta). The 1937 flood was about a 50-year flood.",
     rise: "Rise",
     gaugeLevel: "Gauge level",
     forecast: "Forecast",
@@ -179,6 +184,11 @@ const T = texts({
     longitude: "Longitudine",
     latitude: "Latitudine",
     howRiver: "Come impostare il fiume",
+    returnPeriod: "Piena storica",
+    floodSize: "Grandezza della piena",
+    yearFlood: (y: string) => (y === "200" ? "Piena duecentennale (pericolosità media ufficiale)" : `Piena con tempo di ritorno ${y} anni`),
+    returnPeriodHint:
+      "Scenario, non previsione: la piena del Tevere attesa in media una volta ogni tanti anni (portata ufficiale a Ripetta). La piena del 1937 era circa cinquantennale.",
     rise: "Aumento",
     gaugeLevel: "Livello idrometro",
     forecast: "Previsione",
@@ -397,9 +407,10 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
         <>
           <Segmented
             label={t.howRiver}
-            value={(f.mode ?? "rise") as "rise" | "level" | "forecast"}
+            value={(f.mode ?? "return") as "return" | "rise" | "level" | "forecast"}
             onChange={(v) => set("mode", v)}
             options={[
+              { id: "return", label: t.returnPeriod },
               { id: "rise", label: t.rise },
               { id: "level", label: t.gaugeLevel },
               { id: "forecast", label: t.forecast },
@@ -418,7 +429,21 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
           ) : null}
           {f.mode === "level" && <NumField label={t.waterLevel} unit="m" value={f.level_m ?? ""} onChange={(v) => set("level_m", v)} />}
           {f.mode === "forecast" && <p className="hint">{t.riverForecastHint}</p>}
-          {(f.mode ?? "rise") === "rise" && (
+          {(f.mode ?? "return") === "return" && (
+            <>
+              <Field label={t.floodSize}>
+                <select className="input" value={f.return_period ?? "200"} onChange={(e) => set("return_period", e.target.value)}>
+                  {["50", "100", "200", "500"].map((y) => (
+                    <option key={y} value={y}>
+                      {t.yearFlood(y)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <p className="hint">{t.returnPeriodHint}</p>
+            </>
+          )}
+          {f.mode === "rise" && (
             <NumField label={t.riverRise} unit="m" value={f.rise_m ?? ""} onChange={(v) => set("rise_m", v)} />
           )}
         </>

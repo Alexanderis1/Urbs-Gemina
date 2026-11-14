@@ -39,7 +39,7 @@ KINDS: dict[str, Kind] = {
                                 "Residents in census sections above the EMF thresholds, baseline vs variant",
                                 ("census_sections.geojson",)),
     "river_flood": Kind(run_river_flood, False,
-                        "Tiber / Aniene rises by X m: flooded area, residents and sensitive sites (P5/P50/P95), "
+                        "Tiber / Aniene rises by X m, or the T-year flood (return_period_years): flooded area, residents and sensitive sites (P5/P50/P95), "
                         "beside the official PGRA hazard areas",
                         ("dtm_glo30_ground.tif", "rivers_osm.geojson", "flood_hazard_pgra.geojson",
                          "census_sections.geojson", "sensitive_sites.geojson"), True),

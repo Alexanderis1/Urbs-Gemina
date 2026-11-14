@@ -74,6 +74,23 @@ def test_discharge_becomes_a_level_with_alert_probabilities(tmp_path: Path) -> N
     assert out["data_kinds"]["river_level"] == "estimated"
 
 
+def test_return_period_is_a_labelled_scenario_with_the_official_discharge(tmp_path: Path) -> None:
+    out = run_river({"gauge": "tevere_ripetta", "return_period_years": 200}, tmp_path)
+    r = out["result"]
+    assert r["return_period_years"] == 200
+    assert r["discharge_m3s"] == pytest.approx(3360)  # Calenda et al. 2017, T200 at Ripetta
+    assert 16.5 < r["gauge_level_m"]["p50"] < 18.5  # just below the 18.45 m walls
+    assert r["scenario"].startswith("200-year flood")
+    assert out["data_kinds"]["river_level"] == "hypothetical"
+    assert any("scenario" in w.lower() and "not a forecast" in w for w in out["warnings"])
+    assert r["flooded_km2"]["p50"] > 0
+    # a rarer flood is bigger; the gauge defaults to the Tiber at Ripetta
+    rarer = run_river({"return_period_years": 500}, tmp_path)["result"]
+    assert rarer["gauge"] == "tevere_ripetta" and rarer["discharge_m3s"] > r["discharge_m3s"]
+    with pytest.raises(ValueError):
+        run_river({"gauge": "tevere_ripetta", "return_period_years": 75}, tmp_path)
+
+
 def test_missing_live_gauge_is_not_available(tmp_path: Path) -> None:
     out = run_river({"gauge": "tevere_ripetta", "live": True}, tmp_path)
     assert out["status"] == "not_available"
