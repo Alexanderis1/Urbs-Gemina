@@ -288,3 +288,31 @@ def test_ask_serialises_citations(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     rt = ToolRuntime(settings=Settings.load(), store=LayerStore(raw_dir=tmp_path))
     body = TestClient(create_app(rt, api_keys={})).post("/ask", json={"question": "ciao"}).json()
     assert body["citations"] == [{"line": 1, "kind": "run", "ref": "abc", "cite_mode": "auto"}]
+
+
+def test_scenario_sources_without_retrieval_time_still_validate(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """WS6 cites static files as {"id", "file"}: the API adds the read time instead of failing with HTTP 500."""
+    import sys
+    import types
+
+    engine = types.ModuleType("twin.scenarios.engine")
+    engine.kinds = lambda: {"heatwave": "x"}  # type: ignore[attr-defined]
+
+    def run(kind: str, area: Any, change: Any, data: Any = None) -> Any:
+        return {"run_id": "a" * 64, "tool": "run_scenario", "inputs": {}, "result": {"status": "ok"},
+                "data_kinds": {"tree_cover": "real"}, "sources": [{"id": "copernicus_hrl_tree_cover", "file": "tree_cover_2018.tif"}],
+                "synthetic": False, "warnings": [], "status": "ok", "cached": False}
+
+    engine.run = run  # type: ignore[attr-defined]
+    area_mod = types.ModuleType("twin.scenarios.area")
+    area_mod.AreaTooLarge = type("AreaTooLarge", (Exception,), {})  # type: ignore[attr-defined]
+    area_mod.AreaNotAvailable = type("AreaNotAvailable", (Exception,), {})  # type: ignore[attr-defined]
+    data_mod = types.ModuleType("twin.scenarios.data")
+    data_mod.ScenarioData = lambda **kw: kw  # type: ignore[attr-defined]
+    data_mod.FieldSample = lambda v, s: (v, s)  # type: ignore[attr-defined]
+    for mod in (engine, area_mod, data_mod):
+        monkeypatch.setitem(sys.modules, mod.__name__, mod)
+    r = client.post("/tools/run_scenario", json={"kind": "heatwave", "area": "municipio:1", "change": {}})
+    assert r.status_code == 200, r.text
+    src = r.json()["sources"][0]
+    assert src["id"] == "copernicus_hrl_tree_cover" and src["retrieved_at"]

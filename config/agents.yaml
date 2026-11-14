@@ -16,6 +16,13 @@ loop:
   verifier_retries: 1       # one rewrite attempt after the verifier rejects a draft
   basis: "Permit flow needs 4 tool calls; 8 leaves room for clarifying lookups without letting a loop run away."
 
+model_view:
+  # What the model sees of a tool output. Polygons and lines are replaced by a placeholder and long lists keep
+  # their first items (tools list the most important first; totals stay). The stored run is unchanged, so the
+  # verifier and the map still see everything.
+  max_list_items: 25
+  basis: "Dry run 14 Nov 2026: one PGRA flood query returned 15 MB and a parks query 175 KB, far beyond what an answer needs; 25 rows cover every list the prompts ask for."
+
 claude_api:
   api_key_envs: [CLAUDE_API_KEY, ANTHROPIC_API_KEY]   # first one set wins; values never committed
   base_url: https://api.anthropic.com

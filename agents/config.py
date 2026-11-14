@@ -64,6 +64,10 @@ class AgentConfig:
     circle_vertices: int
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
+    @property
+    def model_view_max_items(self) -> int:
+        return int((self.raw.get("model_view") or {}).get("max_list_items", 25))
+
 
 def _read(path: Path) -> dict[str, Any]:
     with path.open(encoding="utf-8") as f:

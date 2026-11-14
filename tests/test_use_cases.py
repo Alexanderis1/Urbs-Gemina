@@ -105,7 +105,9 @@ def test_place_refs_are_filled_from_resolve_place() -> None:
     pgra = next(a for n, a in gw.calls if n == "query_layer" and a["layer"] == "flood_hazard_pgra")
     assert pgra["area"]["type"] == "Polygon" and len(pgra["area"]["coordinates"][0]) > 10
     access = next(a for n, a in gw.calls if n == "run_scenario")
-    assert access["area"] == "municipio:1"
+    assert access["area"]["type"] == "Polygon"  # a district under the heavy-run size limit, not the municipio
+    air = next(a for n, a in gw.calls if n == "query_layer" and a["layer"] == "air_quality")
+    assert air["area"] == "municipio:1"
     assert skipped == [] and len(runs) == len(gw.calls)
 
 
@@ -194,3 +196,23 @@ def test_run_use_case_tool_returns_a_composite_envelope() -> None:
     assert env["result"]["use_case"] == "site_risk_check"
     spec = use_case_tool_spec("citizen")
     assert "event_planning" not in str(spec.input_schema) and "citizen_area_info" in str(spec.input_schema)
+
+
+def test_model_view_drops_geometry_and_caps_long_lists() -> None:
+    from agents.envelope import compact_for_model
+
+    poly = {"type": "Polygon", "coordinates": [[[12.0 + i / 1000, 41.9] for i in range(5000)]]}
+    env = {"run_id": "r", "inputs": {"area": poly}, "result": {
+        "count": 900, "features": {"type": "FeatureCollection", "features": [
+            {"type": "Feature", "geometry": poly, "properties": {"name": f"zone {i}"}} for i in range(900)]},
+        "sections": [{"sez_id": str(i), "tmax_c": {"p50": 35.0}} for i in range(50)],
+        "point": {"type": "Point", "coordinates": [12.48, 41.89]}}}
+    out = compact_for_model(env, max_items=20)
+    text = str(out)
+    assert "12.001" not in text and len(text) < 8000
+    assert out["result"]["count"] == 900  # totals are kept
+    feats = out["result"]["features"]["features"]
+    assert len(feats) == 21 and "880 more" in str(feats[-1])
+    assert out["result"]["sections"][0]["sez_id"] == "0"  # order kept: tools list the most important first
+    assert out["result"]["point"]["coordinates"] == [12.48, 41.89]  # points are small and useful
+    assert env["result"]["features"]["features"][0]["geometry"] is poly  # the stored run is untouched

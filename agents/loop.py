@@ -9,7 +9,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from agents.envelope import check_envelope
+from agents.config import load_agent_config
+from agents.envelope import check_envelope, compact_for_model
 from agents.llm import LLM
 from agents.tools import ToolError, ToolGateway, error_envelope
 from agents.web import quote_untrusted
@@ -26,9 +27,10 @@ class LoopResult:
     web_content_seen: bool = False
 
 
-def render_for_model(env: dict[str, Any], untrusted: bool) -> str:
-    """Envelope as the model sees it: JSON, with any web text replaced by a fenced quote."""
-    shown = json.loads(json.dumps(env, default=str))
+def render_for_model(env: dict[str, Any], untrusted: bool, max_items: int | None = None) -> str:
+    """Envelope as the model sees it: compact JSON (no polygons, long lists capped), web text fenced."""
+    limit = max_items if max_items is not None else load_agent_config().model_view_max_items
+    shown = compact_for_model(json.loads(json.dumps(env, default=str)), limit)
     if untrusted:
         items = shown.get("result", {}).get("results", [])
         for item in items if isinstance(items, list) else []:

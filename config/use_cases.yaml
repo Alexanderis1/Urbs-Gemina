@@ -13,6 +13,8 @@
 #   {<step id>.point}       [lon, lat] from a resolve_place step
 #   {<step id>.municipio}   "municipio:<n>" of that place
 #   {<step id>.circle}      polygon of radius params.radius_m around that place
+#   {<step id>.district}    polygon of radius params.district_radius_m (for heavy runs on a road network)
+# Static feature layers carry limit: 30 (the count stays the full total; config/agents.yaml model_view trims the rest).
 # A step whose refs cannot be filled (e.g. the place was not found) is skipped, and the reason is
 # handed to the model and to the officer. A step that fails or is not available is reported, not hidden.
 
@@ -57,8 +59,8 @@ use_cases:
          label: "where rain water collects (forecast rain, sewers, outfalls)"}
       - {id: river_flood, tool: run_scenario, args: {kind: river_flood, area: "{area}", change: {gauge: tevere_ripetta, forecast_day: peak}},
          label: "Tiber at its forecast peak"}
-      - {id: underpasses, tool: query_layer, args: {layer: road_underpasses_osm, area: "{area}"}, label: "road underpasses"}
-      - {id: pgra, tool: query_layer, args: {layer: flood_hazard_pgra, area: "{area}"}, label: "official flood hazard areas (PGRA)"}
+      - {id: underpasses, tool: query_layer, args: {layer: road_underpasses_osm, area: "{area}", limit: 30}, label: "road underpasses"}
+      - {id: pgra, tool: query_layer, args: {layer: flood_hazard_pgra, area: "{area}", limit: 30}, label: "official flood hazard areas (PGRA)"}
       - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{area}", change: {service: ambulance, flood: {kind: rain_flood, change: {source: forecast, duration_h: "{params.duration_h}"}}}},
          label: "ambulance reach with flooded roads closed"}
       - {id: alerts, tool: news_search, args: {query: "allerta meteo protezione civile Roma {area_label}"}, label: "official alerts and news (unverified)"}
@@ -78,10 +80,10 @@ use_cases:
       - {id: heat, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast}}, label: "heat by street, residents over 65 above thresholds"}
       - {id: trees, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast, plant_trees: {cover_added_pct: "{params.cover_added_pct}"}}},
          label: "what-if: more tree cover across the area"}
-      - {id: care_homes, tool: query_layer, args: {layer: care_homes_osm, area: "{area}"}, label: "care homes (RSA)"}
-      - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{area}"}, label: "emergency hospitals"}
-      - {id: pharmacies, tool: query_layer, args: {layer: pharmacies_roma, area: "{area}"}, label: "pharmacies"}
-      - {id: parks, tool: query_layer, args: {layer: parks_municipal, area: "{area}"}, label: "municipal parks (shade)"}
+      - {id: care_homes, tool: query_layer, args: {layer: care_homes_osm, area: "{area}", limit: 30}, label: "care homes (RSA)"}
+      - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{area}", limit: 30}, label: "emergency hospitals"}
+      - {id: pharmacies, tool: query_layer, args: {layer: pharmacies_roma, area: "{area}", limit: 30}, label: "pharmacies"}
+      - {id: parks, tool: query_layer, args: {layer: parks_municipal, area: "{area}", limit: 30}, label: "municipal parks (shade)"}
       - {id: law, tool: legal_lookup, args: {question: "piano ondate di calore anziani Roma Capitale Ministero della Salute bollettino"}, label: "official heat plan"}
     basis: "Coordinator brief (14 Nov): heat plan for the elderly. Heat model, census 65+ and tree cover are WS6 (real Copernicus and ISTAT layers)."
 
@@ -94,14 +96,17 @@ use_cases:
     prompt: site_risk
     params:
       radius_m: {default: 500, basis: "Walking-distance ring around a school or hospital for hazards; not a legal distance."}
+      district_radius_m: {default: 2500, basis: "Road-network district for emergency reach: about 20 km2, under the 40 km2 heavy-run limit in config/areas.yaml."}
+      duration_h: {default: 3, basis: "Same storm window as the civil-protection playbook."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the site is"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "sensitive sites and constraints around it"}
-      - {id: pgra, tool: query_layer, args: {layer: flood_hazard_pgra, area: "{place.circle}"}, label: "official flood hazard areas (PGRA) within the ring"}
-      - {id: seveso, tool: query_layer, args: {layer: seveso_damage_zones, area: "{place.circle}"}, label: "Seveso plant damage zones within the ring"}
-      - {id: underpasses, tool: query_layer, args: {layer: road_underpasses_osm, area: "{place.circle}"}, label: "road underpasses within the ring"}
+      - {id: pgra, tool: query_layer, args: {layer: flood_hazard_pgra, area: "{place.circle}", limit: 30}, label: "official flood hazard areas (PGRA) within the ring"}
+      - {id: seveso, tool: query_layer, args: {layer: seveso_damage_zones, area: "{place.circle}", limit: 30}, label: "Seveso plant damage zones within the ring"}
+      - {id: underpasses, tool: query_layer, args: {layer: road_underpasses_osm, area: "{place.circle}", limit: 30}, label: "road underpasses within the ring"}
       - {id: air, tool: query_layer, args: {layer: air_quality, area: "{place.municipio}"}, label: "air quality in its municipio"}
-      - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{place.municipio}", change: {service: ambulance}}, label: "ambulance reach in its municipio"}
+      - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{place.district}", change: {service: ambulance, flood: {kind: rain_flood, change: {source: forecast, duration_h: "{params.duration_h}"}}}},
+         label: "ambulance reach in the district around it, with roads flooded by the forecast rain closed"}
     basis: "Coordinator brief (14 Nov): school and hospital risk checks. Hazards come from official layers (PGRA, Seveso), not from the model."
 
   event_planning:
@@ -114,16 +119,17 @@ use_cases:
     params:
       attendees: {default: 20000, basis: "Placeholder crowd size when the officer gives none; the officer should state the real figure."}
       radius_m: {default: 400, basis: "Typical closed perimeter around a large square event in Rome."}
+      district_radius_m: {default: 2500, basis: "Road-network district for traffic and emergency reach: about 20 km2, under the 40 km2 heavy-run limit."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the event is"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "sensitive sites inside the perimeter"}
       - {id: crowd, tool: query_layer, args: {layer: activity_wifi, area: "{place.circle}"}, label: "usual crowd now (public Wi-Fi sessions)"}
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{place.municipio}"}, label: "public transport delays"}
-      - {id: traffic, tool: run_scenario, args: {kind: traffic_event, area: "{place.circle}", change: {event: {lon: "{place.lon}", lat: "{place.lat}", attendees: "{params.attendees}", radius_m: "{params.radius_m}"}}},
+      - {id: traffic, tool: run_scenario, args: {kind: traffic_event, area: "{place.district}", change: {event: {lon: "{place.lon}", lat: "{place.lat}", attendees: "{params.attendees}", radius_m: "{params.radius_m}"}}},
          label: "traffic with the event (SUMO, synthetic demand)"}
-      - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{place.municipio}", change: {service: ambulance, closed_area: "{place.circle}"}},
+      - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{place.district}", change: {service: ambulance, closed_area: "{place.circle}"}},
          label: "ambulance reach with the perimeter closed"}
-      - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{place.municipio}"}, label: "emergency hospitals"}
+      - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{place.municipio}", limit: 30}, label: "emergency hospitals"}
     basis: "Coordinator brief (14 Nov): event planning (traffic plus crowd plus emergency access)."
 
   antenna_permit:
@@ -135,11 +141,13 @@ use_cases:
     prompt: permit_playbook
     params:
       radius_m: {default: 300, basis: "Same value as config/thresholds.yaml context radius (Challenge 02 brief); kept equal by a test."}
+      band: {default: "3500", basis: "Most new applications in Rome are 5G n78 (3.5 GHz); EIRP per band comes from config/emf_params.yaml."}
+      height_m: {default: 25, basis: "Typical rooftop mast height in Rome; the officer should give the real one from the application."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the antenna would be"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "sensitive sites and constraints"}
       - {id: field, tool: estimate_field, args: {area: "{place.circle}"}, label: "field estimate today (P5-P95)"}
-      - {id: exposure, tool: run_scenario, args: {kind: population_exposure, area: "{place.municipio}", change: {action: add, site: {lon: "{place.lon}", lat: "{place.lat}", height_m: 25}}},
+      - {id: exposure, tool: run_scenario, args: {kind: population_exposure, area: "{place.municipio}", change: {action: add, site: {lon: "{place.lon}", lat: "{place.lat}", height_m: "{params.height_m}", band: "{params.band}"}}},
          label: "residents above thresholds, before and after"}
       - {id: law, tool: legal_lookup, args: {question: "valore di attenzione campi elettromagnetici legge 214/2023 articolo 10"}, label: "attention value"}
     basis: "Challenge 02. Same facts as the permit flow (agents/permit.py), reachable from chat and voice."
@@ -173,6 +181,6 @@ use_cases:
       - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: "{place.municipio}"}, label: "rain forecast"}
       - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: "{place.municipio}"}, label: "temperature forecast"}
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{place.circle}"}, label: "public transport nearby"}
-      - {id: pharmacies, tool: query_layer, args: {layer: pharmacies_roma, area: "{place.circle}"}, label: "pharmacies nearby"}
-      - {id: health, tool: query_layer, args: {layer: emergency_hospitals, area: "{place.municipio}"}, label: "emergency hospitals"}
+      - {id: pharmacies, tool: query_layer, args: {layer: pharmacies_roma, area: "{place.circle}", limit: 30}, label: "pharmacies nearby"}
+      - {id: health, tool: query_layer, args: {layer: emergency_hospitals, area: "{place.municipio}", limit: 30}, label: "emergency hospitals"}
     basis: "Coordinator brief (14 Nov): citizen Q&A. Aggregated, public layers only; the API applies the citizen tier itself."
