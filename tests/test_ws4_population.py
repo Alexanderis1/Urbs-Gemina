@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from twin.tools.crowds_exposure import crowds_view, exposure_count
+from twin.tools.crowds_exposure import check_sensors_tool, crowds_view, exposure_count, site_values_at
 from twin.tools.envelope import ToolError
 from twin.tools.layers import LayerStore
 from twin.tools.runtime import ToolRuntime
@@ -58,7 +58,21 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         return _part(city={"people_above": {"expected": 3}})
 
     exposure.exposure = exposure_fn  # type: ignore[attr-defined]
-    for mod in (api, grid, bconfig, crowds, exposure):
+    sites = types.ModuleType("twin.beliefs.sites")
+
+    def site_values(layer: Any, path: Any, threshold: Any = None, categories: Any = None) -> Any:
+        seen["sites"] = (layer, path, threshold, categories)
+        return _part(sites=[{"name": f"s{i}"} for i in range(5)], summary={})
+
+    sites.site_values = site_values  # type: ignore[attr-defined]
+
+    def check_sensors(name: str, observations: Any) -> Any:
+        seen["check"] = (name, list(observations))
+        return [{"station": "st1", "median_z": 4.2}]
+
+    api.check_sensors = check_sensors  # type: ignore[attr-defined]
+    api.adapt = lambda obs, source, spec: iter(obs)  # type: ignore[attr-defined]
+    for mod in (api, grid, bconfig, crowds, exposure, sites):
         monkeypatch.setitem(sys.modules, mod.__name__, mod)
     return seen
 
@@ -105,3 +119,27 @@ def test_without_ws5_the_tools_say_not_available(runtime: ToolRuntime, monkeypat
     monkeypatch.setitem(sys.modules, "twin.beliefs.crowds", None)
     env = crowds_view(runtime, SQUARE)
     assert env["status"] == "not_available" and "WS5" in env["reason"]
+
+
+def test_site_values_named_threshold_categories_and_limit(runtime: ToolRuntime, fake_ws5: dict[str, Any],
+                                                          tmp_path: Path) -> None:
+    (tmp_path / "processed" / "sensitive_sites.geojson").write_text('{"type": "FeatureCollection", "features": []}')
+    runtime.providers = {"air_quality": object()}  # type: ignore[dict-item]
+    env = site_values_at(runtime, "emf", SQUARE, "attention_value", ["education", "health"], limit=2)
+    assert env["status"] == "ok" and env["tool"] == "site_values"
+    _, path, threshold, categories = fake_ws5["sites"]
+    assert threshold == 15.0 and categories == ["education", "health"]
+    assert str(path).endswith("sensitive_sites.geojson")
+    assert len(env["result"]["sites"]) == 2 and env["result"]["truncated"] is True
+
+
+def test_check_sensors_reads_the_layer_feeds(runtime: ToolRuntime, fake_ws5: dict[str, Any]) -> None:
+    class Feed:
+        def fetch(self, bbox: Any, start: Any, end: Any) -> list[str]:
+            return ["obs1", "obs2"]
+
+    runtime.providers = {"air_quality": Feed()}  # type: ignore[dict-item]
+    env = check_sensors_tool(runtime, "air_no2", SQUARE)
+    assert env["status"] == "ok" and env["tool"] == "check_sensors"
+    assert fake_ws5["check"] == ("air_no2", ["obs1", "obs2"])
+    assert env["result"]["flagged"] == [{"station": "st1", "median_z": 4.2}] and env["result"]["readings"] == 2

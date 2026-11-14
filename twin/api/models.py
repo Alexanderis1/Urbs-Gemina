@@ -89,6 +89,27 @@ class ExposureIn(Strict):
     time: str | None = Field(default=None, description="ISO 8601; default now")
 
 
+class SiteValuesIn(Strict):
+    """A belief layer read at each sensitive site (schools, hospitals...) in the area, riskiest first."""
+
+    layer: str = Field(min_length=1, max_length=80, description="belief layer, e.g. emf, air_no2, air_pm10, rain")
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    threshold: str | None = Field(default=None, max_length=60,
+                                  description="optional named legal threshold, same names as the exposure tool")
+    categories: list[Literal["education", "health", "green", "government", "critical_infrastructure",
+                             "hazardous_industry"]] | None = None
+    limit: int = Field(default=50, ge=1, le=500)
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class CheckSensorsIn(Strict):
+    """Stations of a layer that keep disagreeing with their neighbours (possible faulty sensors)."""
+
+    layer: str = Field(min_length=1, max_length=80, description="belief layer, e.g. air_no2, air_pm10, rain")
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
 class RunScenarioIn(Strict):
     """Run a what-if scenario on an operating area: baseline vs variant with ranges."""
 

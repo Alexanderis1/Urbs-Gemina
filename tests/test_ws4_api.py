@@ -292,6 +292,6 @@ def test_ask_serialises_citations(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
 
 def test_population_tools_are_registered(client: TestClient) -> None:
     names = {t["name"] for t in client.get("/tools").json()}
-    assert {"crowds", "exposure"} <= names
+    assert {"crowds", "exposure", "site_values", "check_sensors"} <= names
     r = client.post("/tools/exposure", json={"layer": "emf", "area": "city", "threshold": "no2_hourly_limit"})
     assert r.status_code == 400  # threshold of another layer
