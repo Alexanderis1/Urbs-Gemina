@@ -408,6 +408,42 @@
       "redistribution": true,
       "status": "verified (downloaded 2026-11-13)",
       "what": "Ministry of Health open data: ASL-municipio correspondence with residents 2024 and ASL structures/activity 2022, joined to the Roma Capitale municipi"
+    },
+    "gba_lod1": {
+      "kind": "estimated",
+      "what": "GlobalBuildingAtlas LoD1: building polygons with a machine-learning height and its variance (PlanetScope imagery)",
+      "endpoint": "https://data.source.coop/tge-labs/globalbuildingatlas-lod1/e010_n45_e015_n40.parquet",
+      "access": "download (one 5-degree Parquet tile, about 660 MB)",
+      "licence": "CC BY-NC 4.0 (non-commercial; accepted by the project owner on 2026-11-13)",
+      "redistribution": true,
+      "status": "verified, used by the G0 city model (WS2)"
+    },
+    "urban_atlas_building_height": {
+      "kind": "estimated",
+      "what": "Copernicus Urban Atlas Building Height 2012, 10 m, as 10 height classes; core urban area only",
+      "endpoint": "https://copernicus.discomap.eea.europa.eu/arcgis/rest/services/UrbanAtlas/UA_BuildingHeights_2012_10m/ImageServer",
+      "access": "ArcGIS ImageServer exportImage, no login",
+      "licence": "Copernicus data policy: free and open, attribution",
+      "redistribution": true,
+      "status": "verified, used as fallback height and as the independent height check (WS2)"
+    },
+    "copernicus_dem_glo30": {
+      "kind": "real",
+      "what": "Copernicus DEM GLO-30 surface model (30 m), ground level under buildings until TINITALY is wired in",
+      "endpoint": "https://copernicus-dem-30m.s3.amazonaws.com/",
+      "access": "Cloud-optimised GeoTIFF on AWS, no login",
+      "licence": "Copernicus DEM licence: free, attribution ('produced using Copernicus WorldDEM-30 (c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH 2014-2018')",
+      "redistribution": true,
+      "status": "verified (WS2)"
+    },
+    "mase_lidar_download_api": {
+      "kind": "real",
+      "what": "MASE LiDAR DSM First and DTM, 1 m, flown 2008-2011: 1,265 surveyed 1 km tiles over Roma Capitale (far more than the Tiber strip)",
+      "endpoint": "https://sim.mase.gov.it/core/api/esri/api/v1/downloads",
+      "access": "POST a tile list (grid: gis.platform.sim.mase.gov.it Grigliato_lidar layer 2), poll the session, download the ZIP; see scripts/build_lidar.py",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "download tested 13 Nov 2026; tiles align with Overture footprints within 1 m"
     }
   },
   "snapshots": {
