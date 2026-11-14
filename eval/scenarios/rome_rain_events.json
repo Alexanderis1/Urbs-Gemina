@@ -1,0 +1,45 @@
+{
+  "what": "Past cloudbursts in Rome with measured or officially reported rainfall and the places reported flooded, for checking the rain flood + sewer model",
+  "data_kind": "real",
+  "note": "Rain is given per municipio as reported; places are official street names (Roma Capitale toponomastica) or metro stations. A place 'near' another is the stretch of the first street closest to the second.",
+  "events": [
+    {
+      "id": "2024-09-03",
+      "rain": {"1": {"mm": 60, "hours": 1}, "5": {"mm": 40, "hours": 1}, "6": {"mm": 40, "hours": 1}},
+      "rain_source": "Roma Capitale Protezione Civile via la Repubblica Roma, 3 Sep 2024: about 60 mm in under an hour in Municipio I; Municipi I, V, VI, XV over 40 mm",
+      "reports_source": "Corriere della Sera Roma, la Repubblica Roma, Il Fatto Quotidiano, Sky TG24 (3 Sep 2024); 120 Polizia Locale interventions for flooding",
+      "places": [
+        {"street": "VIA VITTOR PISANI"},
+        {"street": "PIAZZA DEI PRATI DEGLI STROZZI"},
+        {"street": "VIALE GIULIO CESARE"},
+        {"street": "CORSO D'ITALIA"},
+        {"street": "VIA DEL TRITONE"},
+        {"street": "LUNGOTEVERE IN SASSIA"},
+        {"street": "VIA DELLE FORNACI"},
+        {"station": "Lepanto"},
+        {"station": "Manzoni"},
+        {"street": "VIA SICULIANA"},
+        {"street": "VIA CASILINA", "near": "VIA BORGHESIANA"},
+        {"street": "VIA DI TOR BELLA MONACA", "near": "VIA CASILINA"},
+        {"street": "VIA PRENESTINA", "near": "VIALE PALMIRO TOGLIATTI"}
+      ]
+    },
+    {
+      "id": "2011-09-19",
+      "rain": {"7": {"mm": 30, "hours": 1}, "5": {"mm": 30, "hours": 1}, "6": {"mm": 30, "hours": 1}},
+      "rain_source": "Dipartimento Protezione Civile Centro Funzionale via Roma Capitale: 30.8 mm/h at Roma EUR (30 mm in 15 minutes) and 30 mm/h at Casilino, between 03:00 and 04:00",
+      "reports_source": "la Repubblica Roma, 19 Sep 2011",
+      "places": [
+        {"station": "San Giovanni"},
+        {"station": "Ponte Lungo"},
+        {"station": "Colli Albani"},
+        {"station": "Porta Furba/Quadraro"},
+        {"station": "Numidio Quadrato"},
+        {"station": "Lucio Sestio"},
+        {"street": "VIALE GIULIO AGRICOLA"},
+        {"street": "VIA PRENESTINA", "near": "VIALE PALMIRO TOGLIATTI"}
+      ]
+    }
+  ],
+  "dry_check": {"rain_mm": 10, "hours": 1, "municipi": ["1", "7"], "note": "an ordinary 10 mm/h shower: no flooding is normally reported"}
+}

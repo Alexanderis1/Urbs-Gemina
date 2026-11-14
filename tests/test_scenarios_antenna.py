@@ -1,10 +1,11 @@
 """Antenna what-if: baseline (Cartoradio) vs variant (baseline + new antenna)."""
 import math
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-from twin.scenarios import engine
+from twin.scenarios import antenna, engine
 from twin.scenarios.antenna import combine_lognormal
 from twin.scenarios.data import FieldSample, ScenarioData
 from twin.tools.emf import free_space_field
@@ -12,6 +13,12 @@ from twin.tools.emf import free_space_field
 LON, LAT = 12.4823, 41.8960
 SITE = {"lon": LON, "lat": LAT, "height_m": 25.0}
 ADD = {"action": "add", "site": SITE, "eirp_w": 2000.0}
+
+
+@pytest.fixture(autouse=True)
+def free_space_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Most tests pin the free-space engine so their numbers hold whether or not twin/physics is installed."""
+    monkeypatch.setattr(antenna, "physics_engine", lambda: None)
 
 
 def flat_baseline(value: float) -> ScenarioData:
@@ -112,3 +119,49 @@ def test_points_outside_the_area_are_dropped(tmp_path: Path) -> None:
 def test_bad_change_is_rejected() -> None:
     with pytest.raises(ValueError):
         engine.run("antenna", "city", {"action": "add", "site": SITE})  # no eirp_w or band
+
+
+def _fake_engine(value: float, sigma: float, calls: list[dict[str, Any]]) -> Any:
+    def run(site: Any, points: Any, receptor_h: float) -> tuple[list[tuple[float, float]], str]:
+        calls.append({"site": dict(site), "points": len(points), "receptor_h": receptor_h})
+        return [(value, sigma)] * len(points), "building_aware"
+    return run
+
+
+def test_building_aware_physics_replaces_free_space(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(antenna, "physics_engine", lambda: _fake_engine(0.5, 6.0, calls))
+    sectors = [{"azimuth_deg": 0}, {"azimuth_deg": 120}, {"azimuth_deg": 240}]
+    change = {**ADD, "band": "1800", "site": {**SITE, "sectors": sectors}}
+    out = engine.run("antenna", "city", change, data=ScenarioData(), cache_dir=tmp_path)
+    r = out["result"]
+    assert r["model"] == "building_aware"
+    peak = max(r["points"], key=lambda p: p["variant"]["p50"])
+    assert peak["variant"]["p50"] == pytest.approx(0.5, rel=1e-6)  # far below free space under the mast
+    assert calls and calls[0]["site"]["sectors"] == sectors and calls[0]["site"]["eirp_w"] == 2000.0
+    assert calls[0]["receptor_h"] == 1.5
+    assert out["data_kinds"]["field_model"] == "estimated"
+    assert any("buildings" in w and "3GPP" in w for w in out["warnings"])
+
+
+def test_physics_failure_falls_back_to_free_space(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def broken() -> Any:
+        def run(site: Any, points: Any, receptor_h: float) -> Any:
+            raise RuntimeError("city model unreadable")
+        return run
+    monkeypatch.setattr(antenna, "physics_engine", broken)
+    out = engine.run("antenna", "city", ADD, data=ScenarioData(), cache_dir=tmp_path)
+    assert out["result"]["model"] == "free_space_isotropic"
+    peak = max(out["result"]["points"], key=lambda p: p["variant"]["p50"])
+    assert peak["variant"]["p50"] == pytest.approx(free_space_field(2000.0, 23.5), abs=1e-3)
+    assert any("city model unreadable" in w for w in out["warnings"])
+
+
+def test_real_physics_engine_stays_below_free_space(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    pytest.importorskip("twin.physics.api")
+    monkeypatch.setattr(antenna, "physics_engine", antenna.default_physics_engine)
+    out = engine.run("antenna", "city", ADD, data=ScenarioData(), cache_dir=tmp_path, use_cache=False)
+    r = out["result"]
+    assert r["model"] in ("building_aware", "raytrace", "open_ground")
+    peak = max(r["points"], key=lambda p: p["variant"]["p50"])
+    assert 0 < peak["variant"]["p50"] <= free_space_field(2000.0, 23.5) * 1.05

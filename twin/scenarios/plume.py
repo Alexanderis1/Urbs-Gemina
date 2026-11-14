@@ -163,7 +163,7 @@ def run_chemical_plume(area: Area, change: Mapping[str, Any], data: ScenarioData
         }
     official = _official_zones(site_name)
     result = {
-        "model": "gaussian_plume_briggs_urban", "calibration": "uncalibrated",
+        "model": "gaussian_plume_briggs_urban", "calibration": str(_cfg()["calibration"]),
         "site": {"name": site_name, "lon": round(lon, 6), "lat": round(lat, 6)},
         "substance": substance, "release_kg_s": release, "wind": {"speed_ms": u0, "from_deg": from_deg},
         "members": members, "zones": zones, "official_damage_zones": official,

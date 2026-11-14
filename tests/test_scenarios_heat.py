@@ -57,44 +57,69 @@ def run(change: dict[str, Any], data: ScenarioData | None = None) -> dict[str, A
     return engine.run("heatwave", AREA, change, data=data or ScenarioData(census=CENSUS), use_cache=False)
 
 
-def test_sealed_ground_is_hotter_than_trees() -> None:
-    out = run({"tmax_c": 34.0, "tmin_c": 19.0})
+def test_nights_follow_sealing_and_days_follow_the_forecast() -> None:
+    out = run({"tmax_c": 35.5, "tmin_c": 19.0})
     assert out["status"] == "ok"
     r = out["result"]
     hot = r["hot_day"]
     assert hot["threshold_c"] == 35
-    assert hot["residents"]["p50"] == 400
-    assert hot["elderly_65_plus"]["p50"] == 100
+    assert hot["residents"]["p50"] == 700  # by day Rome's stations differ little: the forecast decides
+    assert hot["elderly_65_plus"]["p50"] == 180
     assert hot["residents"]["p5"] <= hot["residents"]["p50"] <= hot["residents"]["p95"]
     night = r["tropical_night"]
-    assert night["residents"]["p50"] == 400
+    assert night["residents"]["p50"] == 400  # only the sealed side stays above 20 C at night
     sections = {s["sez_id"]: s for s in r["sections"]}
-    assert sections["W"]["tmax_c"]["p50"] > 35 > 33 > sections["E"]["tmax_c"]["p50"]
+    assert sections["W"]["tmin_c"]["p50"] > 20 > sections["E"]["tmin_c"]["p50"]
     assert out["data_kinds"]["temperature"] == "hypothetical"
     assert out["data_kinds"]["tree_cover"] == "real"
     assert out["synthetic"] is False
     assert r["hot_map_p50"]["type"] == "MultiPolygon" and r["hot_map_p50"]["coordinates"]
 
 
-def test_planting_trees_cools_the_sealed_side() -> None:
-    out = run({"tmax_c": 34.0, "tmin_c": 15.0, "plant_trees": {"where": WEST, "cover_added_pct": 80}})
+def test_contrast_matches_rome_stations() -> None:
+    """Rome summer stations: nights warm with the sealing of the whole district, days barely differ."""
+    r = run({"tmax_c": 30.0, "tmin_c": 18.0})["result"]
+    sections = {s["sez_id"]: s for s in r["sections"]}
+    # half-sealed district (the 2.2 km forecast cell straddles the divide): even the green side is warmer
+    assert 0.0 < sections["E"]["tmin_c"]["p50"] - 18.0 < 2.5
+    assert 0.5 < sections["W"]["tmin_c"]["p50"] - sections["E"]["tmin_c"]["p50"] < 3.0
+    day = sections["W"]["tmax_c"]["p50"] - sections["E"]["tmax_c"]["p50"]
+    assert 0.0 < day < 1.5
+    assert abs(sections["E"]["tmax_c"]["p50"] - 30.0) < 1.0  # no district term by day
+    assert r["calibration"].startswith("stations")
+
+
+def test_sealed_district_is_warmer_at_night_than_open_country(heat_layers: Path) -> None:
+    raster = _raster  # uniform rasters: the whole district sealed, then open country
+    raster(heat_layers / "imperviousness_2018.tif", 100, 100)
+    raster(heat_layers / "tree_cover_2018.tif", 0, 0)
+    sealed = run({"tmax_c": 30.0, "tmin_c": 18.0})["result"]["sections"][0]["tmin_c"]["p50"]
+    raster(heat_layers / "imperviousness_2018.tif", 0, 0)
+    open_country = run({"tmax_c": 30.0, "tmin_c": 18.0})["result"]["sections"][0]["tmin_c"]["p50"]
+    assert 2.0 < sealed - open_country < 4.0  # Rome: about 2.9 C per 100 % district sealing
+
+
+def test_planting_trees_cools_the_night_more_than_the_day() -> None:
+    out = run({"tmax_c": 35.5, "tmin_c": 18.0, "plant_trees": {"where": WEST, "cover_added_pct": 80}})
     r = out["result"]
-    assert r["hot_day"]["residents"]["p50"] == 400  # baseline
+    assert r["hot_day"]["residents"]["p50"] == 700  # baseline
+    assert r["tropical_night"]["residents"]["p50"] == 400
     what_if = r["what_if"]
-    assert what_if["hot_day_residents"]["p50"] == 0
-    assert what_if["cooling_day_c"]["p50"] > 2
+    assert 0 < what_if["cooling_day_c"]["p50"] < what_if["cooling_night_c"]["p50"]
+    assert 0.5 < what_if["cooling_night_c"]["p50"] < 1.5
     assert what_if["trees_added"] > 1000
-    assert what_if["residents_no_longer_hot"]["p50"] == 400
+    assert what_if["tropical_night_residents"]["p50"] <= 400
+    assert what_if["residents_no_longer_tropical"]["p95"] == 400
 
 
 def test_forecast_temperature_picks_the_hottest_day() -> None:
     data = ScenarioData(census=CENSUS, temperature={
         "2026-07-20": [(LON0, LAT0, 30.0, 18.0, 1.0)],
-        "2026-07-21": [(LON0, LAT0, 33.5, 21.0, 1.0)]})
+        "2026-07-21": [(LON0, LAT0, 35.5, 21.0, 1.0)]})
     out = run({"temperature": "forecast"}, data)
     assert out["result"]["day"] == "2026-07-21"
     assert out["data_kinds"]["temperature"] == "estimated"
-    assert out["result"]["hot_day"]["residents"]["p50"] == 400
+    assert out["result"]["hot_day"]["residents"]["p50"] == 700
 
 
 def test_no_forecast_is_not_available() -> None:
@@ -108,5 +133,5 @@ def test_elderly_counts_are_joined_from_the_ages_file(heat_layers: Path) -> None
               "features": [_section("W", WEST, 400, 0), _section("E", EAST, 300, 0)]}
     for f in census["features"]:
         del f["properties"]["elderly_65_plus"]
-    out = run({"tmax_c": 34.0, "tmin_c": 15.0}, ScenarioData(census=census))
-    assert out["result"]["hot_day"]["elderly_65_plus"]["p50"] == 123
+    out = run({"tmax_c": 35.5, "tmin_c": 15.0}, ScenarioData(census=census))
+    assert out["result"]["hot_day"]["elderly_65_plus"]["p50"] == 130

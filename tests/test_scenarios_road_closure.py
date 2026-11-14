@@ -224,3 +224,13 @@ def test_worker_down_is_not_available(tmp_path: Path, monkeypatch: pytest.Monkey
     monkeypatch.setattr(remote, "call", broken)
     out = engine.run("road_closure", DISTRICT, CLOSE, data=ScenarioData(), cache_dir=tmp_path)
     assert out["status"] == "not_available" and "worker" in out["reason"]
+
+
+def test_random_trips_says_when_the_router_wrote_nothing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """In a container without SUMO's system libraries duarouter dies silently; say so instead of a bare file error."""
+    from twin.scenarios import traffic
+
+    monkeypatch.setattr(traffic, "_run", lambda *a, **k: None)  # randomTrips "ran" but produced nothing
+    cfg = {"duration_s": 600, "min_trip_distance_m": 300, "fringe_factor": 5}
+    with pytest.raises(RuntimeError, match="duarouter"):
+        traffic._random_trips(tmp_path, tmp_path / "x.net.xml", tmp_path / "out.trips.xml", 1, 10.0, cfg, {}, tmp_path)

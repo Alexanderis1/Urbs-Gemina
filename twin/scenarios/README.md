@@ -46,6 +46,10 @@ All parameters (grid, sigma, demand density, replicates...) are in `config/scena
 
 `twin.scenarios.traffic.build_network(osm_file, out)` builds the district SUMO network from an OSM extract (street names kept). SUMO: `pip install -e .[scenarios]`.
 
+## Validation
+
+Each model was checked against real events or official figures: see `docs/scenario-validation.md`. Every result has a `calibration` field saying how.
+
 ## Planned
 
-Calibration of sewer efficiency against reported flood events; street temperature sensors for the heatwave; Sionna RT ray tracing on a district (GPU), viewshed on the protected skyline, buses from GTFS in SUMO, noise, shadow.
+Traffic calibration on real loop counts; street-level temperature sensors for the daytime heat map; Sionna RT ray tracing on a district (GPU), viewshed on the protected skyline, buses from GTFS in SUMO, noise, shadow.
