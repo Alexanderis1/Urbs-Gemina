@@ -258,10 +258,10 @@ def _runs_block(uc: UseCase, runs: Sequence[Mapping[str, Any]], skipped: Sequenc
     labels = {s.id: s.label for s in uc.steps}
     parts = []
     for r in runs:
-        parts.append(f"step: {labels.get(str(r.get('step')), r.get('tool'))}\nrun_id: {r['run_id']}\ntool: {r['tool']}\n"
+        parts.append(f"step: {r.get('step')} ({labels.get(str(r.get('step')), r.get('tool'))})\nrun_id: {r['run_id']}\ntool: {r['tool']}\n"
                      f"{render_for_model(dict(r), r['tool'] in untrusted)}")
     for s in skipped:
-        parts.append(f"step: {s['label']}\nNOT RUN ({s['reason']})")
+        parts.append(f"step: {s['step']} ({s['label']})\nNOT RUN ({s['reason']})")
     return "\n\n".join(parts)
 
 
