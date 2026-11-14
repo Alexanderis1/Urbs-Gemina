@@ -195,3 +195,21 @@ describe("live estimates (sensor fusion)", () => {
     expect(firstSentence("")).toBe("");
   });
 });
+
+describe("layers in Italian", () => {
+  it("speaks Italian", async () => {
+    const { setLang } = await import("@/lib/i18n");
+    setLang("it");
+    try {
+      expect(metricInfo("rain").label).toBe("Pioggia");
+      expect(formatValue(1.5)).toBe("1,5");
+      expect(describeItem({ value: 2, uncertainty: 0.5, p5: 1, p95: 3 }, { metric: "no2", unit: "µg/m³" }).lines).toEqual([
+        "NO₂: 2 µg/m³",
+        "Intervallo da 1 a 3 µg/m³",
+        "Incertezza ± 0,5 µg/m³",
+      ]);
+    } finally {
+      setLang("en");
+    }
+  });
+});

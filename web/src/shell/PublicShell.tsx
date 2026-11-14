@@ -3,14 +3,34 @@ import { Database, Home as HomeIcon, LogIn, Map as MapIcon, MessagesSquare, Trop
 import { AiDisclosure, SampleModeBanner, WakingBanner } from "@/components/Banners";
 import { ScreenRouter } from "@/components/ScreenRouter";
 import { VoiceButton } from "@/components/VoiceButton";
-import { PUBLIC_SCREENS, STAFF_ACCESS_PATH, type ScreenId } from "@/lib/tiers";
+import { texts, tr } from "@/lib/i18n";
+import { PUBLIC_SCREENS, STAFF_ACCESS_PATH, screenPath, screenText, type ScreenId } from "@/lib/tiers";
 import CityView from "@/pages/CityView";
 import Ask from "@/pages/Ask";
 import DataHonesty from "@/pages/DataHonesty";
 import Home from "@/pages/Home";
 import Sport from "@/pages/Sport";
 import StaffAccess from "@/pages/StaffAccess";
-import { Brand, SkipLink } from "./Brand";
+import { Brand, LangSwitch, SkipLink } from "./Brand";
+
+const T = texts({
+  en: {
+    tagline: "Rome for residents",
+    staff: "City staff sign-in",
+    nav: "Sections",
+    infoOnly: "Information only, not an alert service.",
+    call112: "In an emergency call 112.",
+    sources: "Every answer shows its sources.",
+  },
+  it: {
+    tagline: "Roma per i cittadini",
+    staff: "Accesso personale del Comune",
+    nav: "Sezioni",
+    infoOnly: "Solo informazioni, non un servizio di allerta.",
+    call112: "In caso di emergenza chiama il 112.",
+    sources: "Ogni risposta mostra le sue fonti.",
+  },
+});
 
 const VIEW: Partial<Record<ScreenId, { icon: LucideIcon; el: JSX.Element }>> = {
   home: { icon: HomeIcon, el: <Home /> },
@@ -25,6 +45,7 @@ const VIEW: Partial<Record<ScreenId, { icon: LucideIcon; el: JSX.Element }>> = {
  * always light, no account. City personnel reach their workspace through "City staff sign-in".
  */
 export function PublicShell() {
+  const t = tr(T);
   return (
     <div className="flex h-full flex-col">
       <SkipLink />
@@ -33,26 +54,28 @@ export function PublicShell() {
         <AiDisclosure audience="public" />
         <header className="bg-chrome text-chrome-ink">
           <div className="flex items-center gap-4 px-4 pt-2.5">
-            <Brand tagline="Rome for residents" />
+            <Brand tagline={t.tagline} />
             <div className="flex-1" />
             <VoiceButton />
+            <LangSwitch />
             <Link
               to={STAFF_ACCESS_PATH}
               className="inline-flex min-h-9 items-center gap-1.5 rounded px-2.5 text-xs font-semibold text-chrome-muted underline-offset-2 transition-colors duration-150 hover:text-chrome-ink hover:underline"
             >
               <LogIn className="h-4 w-4" aria-hidden="true" />
-              City staff sign-in
+              {t.staff}
             </Link>
           </div>
-          <nav aria-label="Sections" className="flex gap-1 overflow-x-auto px-3 pt-1.5">
+          <nav aria-label={t.nav} className="flex gap-1 overflow-x-auto px-3 pt-1.5">
             {PUBLIC_SCREENS.map((s) => {
               const Icon = VIEW[s.id]!.icon;
+              const text = screenText("public", s.id);
               return (
                 <NavLink
                   key={s.id}
                   to={s.path}
                   end
-                  title={s.hint}
+                  title={text.hint}
                   className={({ isActive }) =>
                     `inline-flex shrink-0 items-center gap-2 rounded-t border-b-[3px] px-3.5 py-2 text-sm font-semibold transition-colors duration-150 ${
                       isActive ? "border-white bg-white/10 text-white" : "border-transparent text-chrome-muted hover:bg-white/10 hover:text-white"
@@ -60,7 +83,7 @@ export function PublicShell() {
                   }
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
-                  {s.label}
+                  {text.label}
                 </NavLink>
               );
             })}
@@ -80,12 +103,12 @@ export function PublicShell() {
       </main>
       <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line bg-surface px-4 py-1.5 text-2xs text-muted">
         <span>
-          Information only, not an alert service. <span className="font-semibold text-ink">In an emergency call 112.</span>
+          {t.infoOnly} <span className="font-semibold text-ink">{t.call112}</span>
         </span>
         <span className="ml-auto">
-          Every answer shows its sources.{" "}
-          <Link to="/data" className="font-semibold text-link hover:underline">
-            About the data
+          {t.sources}{" "}
+          <Link to={screenPath("public", "honesty") ?? "/"} className="font-semibold text-link hover:underline">
+            {screenText("public", "honesty").label}
           </Link>
         </span>
       </footer>

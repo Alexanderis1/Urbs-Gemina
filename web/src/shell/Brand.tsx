@@ -1,3 +1,10 @@
+import { LANGS, LANG_LABEL, setLang, texts, tr, useLang } from "@/lib/i18n";
+
+const T = texts({
+  en: { skip: "Skip to content", language: "Language" },
+  it: { skip: "Vai al contenuto", language: "Lingua" },
+});
+
 /** Two overlapping squares: the city and its twin. */
 function Logo() {
   return (
@@ -24,7 +31,31 @@ export function Brand({ tagline }: { tagline: string }) {
 export function SkipLink() {
   return (
     <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2">
-      Skip to content
+      {tr(T).skip}
     </a>
+  );
+}
+
+/** IT | EN in the header. Italian comes first and is the default. */
+export function LangSwitch() {
+  const lang = useLang();
+  return (
+    <div role="group" aria-label={tr(T).language} className="flex overflow-hidden rounded border border-chrome-line text-2xs font-bold">
+      {LANGS.map((l) => (
+        <button
+          key={l}
+          type="button"
+          lang={l}
+          title={LANG_LABEL[l]}
+          aria-pressed={l === lang}
+          onClick={() => setLang(l)}
+          className={`min-h-9 px-2 uppercase tracking-wide transition-colors duration-150 ${
+            l === lang ? "bg-chrome-ink text-chrome" : "text-chrome-muted hover:bg-chrome-line hover:text-chrome-ink"
+          }`}
+        >
+          {l}
+        </button>
+      ))}
+    </div>
   );
 }

@@ -38,7 +38,7 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
    prototype and carries the AI notice on every screen.
 8. **Status bar at the bottom**: connection, tier, number of tool runs, last run id. It makes the audit trail
    visible without opening Admin.
-9. **Interface language stays English** (as built); the voice assistant speaks Italian. Labels use plain words:
+9. **Interface language: Italian first, English as a switch** (changed 14 Nov 2026, see "Language"; it was English only before); the voice assistant speaks Italian. Labels use plain words:
    "Operating area", "Check context", "Compare".
 10. **Scenario lab shows all eight scenario kinds**, grouped by theme (water, heat, hazard, mobility, antenna).
     A kind the service cannot run right now shows a clear notice with the server's reason instead of failing silently.
@@ -95,7 +95,7 @@ setting in the page: no sign-in or no staff role means the public service.
 | Question it answers | "What is happening around me?" | "What is happening in the city, and what if?" |
 | Header | PA blue, sections named in words across the top | Navy, "City staff" badge, icon rail on the left |
 | Opens on | My area: one address field, one answer in plain words | City view: the 3D console with every layer |
-| Sections | My area, City map, Sport, Ask, About the data | City, Ask, Permit, Scenarios, Sport, Data, Admin |
+| Sections | La mia zona, Mappa della città, Sport, Chiedi, I dati (My area, City map, Sport, Ask, About the data) | Città, Chiedi, Istanze, Scenari, Sport, Dati, Admin (City, Ask, Permit, Scenarios, Sport, Data, Admin) |
 | Map | A short list of layers in plain words, whole city or a municipio | Every layer, drawn areas, last 24 hours, display options |
 | Evidence | Folded under "How we know this" | Open: run ids, sources, the status bar with the run log |
 | Theme | Always light | Light or dark "operations room" |
@@ -121,6 +121,23 @@ Where it lives: `src/lib/tiers.ts` (who sees which screen, and each screen's add
 and `src/shell/StaffShell.tsx` (the two frames), `src/lib/layerCatalogue.ts` (layers and their wording per
 experience), `src/pages/Home.tsx` and `src/pages/StaffAccess.tsx`. Screens shared by both (`CityView`, `Ask`)
 take an `audience` prop and change wording and density, not behaviour.
+
+
+## Language
+
+Italian first, English as a switch (Alessandro, 14 Nov 2026; this replaces the earlier "UI in English" choice).
+
+- The app opens in Italian. `IT | EN` in the header switches; the choice is remembered in the browser.
+- Every text the interface writes exists in both languages, side by side, in the file that uses it:
+  `const T = texts({ en: {...}, it: {...} })`, read with `tr(T)` (`src/lib/i18n.ts`). The compiler refuses a
+  text that exists in one language only.
+- Numbers follow the language (`locale()`): 12.345,6 in Italian, 12,345.6 in English.
+- Text that arrives from the service is shown as it arrives: warnings, refusal reasons, place names. Assistant
+  answers are requested in the interface language.
+- Italian style follows Designers Italia: simple and direct, informal "tu" ("Scegli", "Riprova"), short
+  sentences, no bureaucratic wording. Fixed vocabulary: livello, area operativa, reale / stimato / simulato /
+  ipotesi / non disponibile, esecuzione, fonte, evidenze, incertezza, intervallo, istanza, sala operativa.
+- Tests run in English (`src/__tests__/setup.ts`); each text library has an "in Italian" case.
 
 ## Tokens
 

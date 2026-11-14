@@ -1,3 +1,10 @@
+import { texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: { unnamed: "(unnamed)" },
+  it: { unnamed: "(senza nome)" },
+});
+
 // Reads the live context_check result: groups -> layers -> hits.
 export interface ContextHit {
   group: string;
@@ -34,7 +41,7 @@ export function contextRows(result: unknown): ContextHit[] {
   for (const [group, g] of Object.entries(r.groups ?? {}))
     for (const l of g.layers)
       for (const h of l.hits ?? [])
-        rows.push({ group, groupLabel: g.label, layer: l.layer, layerLabel: l.label, name: h.name ?? "(unnamed)", distance_m: h.distance_m });
+        rows.push({ group, groupLabel: g.label, layer: l.layer, layerLabel: l.label, name: h.name ?? tr(T).unnamed, distance_m: h.distance_m });
   return rows.sort((a, b) => a.distance_m - b.distance_m);
 }
 

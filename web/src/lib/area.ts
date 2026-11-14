@@ -1,4 +1,10 @@
 import type { PolygonGeometry } from "@/api/types";
+import { texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: { city: "Whole city", municipio: "Municipio", zone: "Zone", drawn: "Drawn area" },
+  it: { city: "Tutta la città", municipio: "Municipio", zone: "Zona", drawn: "Area disegnata" },
+});
 
 // Shared interface 2: `area` = "city", a municipio id, an urban-zone id, or a GeoJSON polygon.
 // Ids fixed by the hub: "city", "municipio:<1..15>", "zone:<CODE>" (DIPDIT:ZoneUrbanistiche code, upper case),
@@ -25,15 +31,16 @@ export function areaToArg(a: Area): AreaArg {
 }
 
 export function areaLabel(a: Area): string {
+  const t = tr(T);
   switch (a.type) {
     case "city":
-      return "Whole city";
+      return t.city;
     case "municipio":
-      return `Municipio ${roman(Number(a.id))}`;
+      return `${t.municipio} ${roman(Number(a.id))}`;
     case "zone":
-      return a.name ? `Zone ${a.id} ${a.name}` : `Zone ${a.id}`;
+      return a.name ? `${t.zone} ${a.id} ${a.name}` : `${t.zone} ${a.id}`;
     case "polygon":
-      return "Drawn area";
+      return t.drawn;
   }
 }
 

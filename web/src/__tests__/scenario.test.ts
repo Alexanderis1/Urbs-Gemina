@@ -149,3 +149,20 @@ describe("form checks", () => {
     expect(changeProblem("river_flood", { mode: "forecast", gauge: "tevere_ripetta" })).toBeNull();
   });
 });
+
+describe("scenario text in Italian", () => {
+  it("speaks Italian", async () => {
+    const { setLang } = await import("@/lib/i18n");
+    const { changeProblem, scenarioSpec, groupLabel } = await import("@/lib/scenario");
+    setLang("it");
+    try {
+      expect(changeProblem("road_closure", { street: " " })).toBe("Scrivi il nome della strada.");
+      expect(changeProblem("river_flood", { mode: "rise", rise_m: "abc" })).toBe("Aumento del fiume: inserisci un numero.");
+      expect(scenarioSpec("heatwave").label).toBe("Ondata di calore");
+      expect(groupLabel("Water")).toBe("Acqua");
+    } finally {
+      setLang("en");
+    }
+    expect(scenarioSpec("heatwave").label).toBe("Heatwave");
+  });
+});

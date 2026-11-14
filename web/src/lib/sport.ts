@@ -1,4 +1,5 @@
 import { latLngToCell } from "h3-js";
+import { texts, tr } from "@/lib/i18n";
 // Shapes and helpers for the Sport screen (Challenge 04). Shapes follow the sports workstream's
 // sports_facilities / sport_deserts tools (twin/modules/sports, PR #5).
 
@@ -76,24 +77,61 @@ export interface WhatIf {
   delta: { residents_newly_covered: number; children_newly_covered: number };
 }
 
-const STATUS_TEXT: Record<FieldStatus, string> = {
-  official: "official",
-  open_data: "open data",
-  web_unverified: "from the web, unverified",
-  manager_confirmed: "confirmed by manager",
-  simulated: "simulated",
-  not_known: "not known",
-};
+const T = texts({
+  en: {
+    status: {
+      official: "official",
+      open_data: "open data",
+      web_unverified: "from the web, unverified",
+      manager_confirmed: "confirmed by manager",
+      simulated: "simulated",
+      not_known: "not known",
+    } as Record<FieldStatus, string>,
+    typeNotKnown: "type not known",
+    types: { public: "public", school: "school", private: "private", unclassified: "type not known" } as Record<FacilityType, string>,
+    access: {
+      yes: "open to the public",
+      customers: "customers only",
+      private: "private",
+      no: "no access",
+    } as Record<FacilityAccess, string>,
+    accessNotKnown: "access not known",
+    fieldCannotBeEdited: (field: string) => `Field "${field}" cannot be edited`,
+    badAccount: "account_ref must be an organisational account, e.g. org:asd-roma",
+  },
+  it: {
+    status: {
+      official: "ufficiale",
+      open_data: "dati aperti",
+      web_unverified: "dal web, non verificato",
+      manager_confirmed: "confermato dal gestore",
+      simulated: "simulato",
+      not_known: "non noto",
+    } as Record<FieldStatus, string>,
+    typeNotKnown: "tipo non noto",
+    types: { public: "pubblico", school: "scolastico", private: "privato", unclassified: "tipo non noto" } as Record<FacilityType, string>,
+    access: {
+      yes: "aperto al pubblico",
+      customers: "solo clienti",
+      private: "privato",
+      no: "nessun accesso",
+    } as Record<FacilityAccess, string>,
+    accessNotKnown: "accesso non noto",
+    fieldCannotBeEdited: (field: string) => `Il campo "${field}" non si può modificare`,
+    badAccount: "account_ref deve essere un account di un'organizzazione, per esempio org:asd-roma",
+  },
+});
 
 export function fieldLabel(f: SportField): string {
-  return f.label ?? STATUS_TEXT[f.status];
+  return f.label ?? tr(T).status[f.status];
 }
 
 export type FacilityType = "public" | "school" | "private" | "unclassified";
 export const FACILITY_TYPES: FacilityType[] = ["public", "school", "private", "unclassified"];
 
 export function typeLabel(t: FacilityType | undefined): string {
-  return !t || t === "unclassified" ? "type not known" : t;
+  const x = tr(T);
+  return !t || t === "unclassified" ? x.typeNotKnown : x.types[t] ?? t;
 }
 
 export interface SportFilter {
@@ -134,8 +172,8 @@ export function buildManagerUpdate(
   accountRef: string,
   confirmedAt: string,
 ): ManagerUpdate {
-  if (!(EDITABLE_FIELDS as readonly string[]).includes(field)) throw new Error(`Field "${field}" cannot be edited`);
-  if (!/^org:[a-z0-9-]+$/.test(accountRef)) throw new Error("account_ref must be an organisational account, e.g. org:asd-roma");
+  if (!(EDITABLE_FIELDS as readonly string[]).includes(field)) throw new Error(tr(T).fieldCannotBeEdited(field));
+  if (!/^org:[a-z0-9-]+$/.test(accountRef)) throw new Error(tr(T).badAccount);
   return { facility_id: facilityId, field, value, account_ref: accountRef, confirmed_at: confirmedAt };
 }
 
@@ -150,15 +188,9 @@ export function displayName(f: SportFeature): string {
 
 export type FacilityAccess = "yes" | "customers" | "private" | "no";
 
-const ACCESS_LABELS: Record<FacilityAccess, string> = {
-  yes: "open to the public",
-  customers: "customers only",
-  private: "private",
-  no: "no access",
-};
-
 export function accessLabel(a: FacilityAccess | null | undefined): string {
-  return a ? ACCESS_LABELS[a] ?? a : "access not known";
+  const x = tr(T);
+  return a ? x.access[a] ?? a : x.accessNotKnown;
 }
 
 /** Closed, private or no-access facilities are greyed out and do not count in sport_coverage. */

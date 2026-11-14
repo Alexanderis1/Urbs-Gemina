@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { errorText, isNetworkError } from "@/lib/errors";
+import { setLang } from "@/lib/i18n";
 
 describe("errorText", () => {
   it("turns a browser network failure into a plain sentence", () => {
@@ -20,5 +21,17 @@ describe("errorText", () => {
   it("never returns an empty message", () => {
     expect(errorText(undefined)).toBe("Something went wrong. Try again.");
     expect(errorText(new Error(""))).toBe("Something went wrong. Try again.");
+  });
+});
+
+describe("errorText in Italian", () => {
+  it("speaks Italian", () => {
+    setLang("it");
+    try {
+      expect(errorText(new TypeError("Failed to fetch"))).toMatch(/Il servizio live non ha risposto/);
+      expect(errorText("")).toBe("Qualcosa è andato storto. Riprova.");
+    } finally {
+      setLang("en");
+    }
   });
 });

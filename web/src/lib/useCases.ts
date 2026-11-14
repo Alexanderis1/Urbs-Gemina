@@ -2,6 +2,7 @@
 // caller's tier may run; POST /ask with `use_case` runs one and returns the usual TwinAnswer.
 // The plan of tool calls is fixed on the server, so this file only describes and addresses them.
 import type { Language, TwinQuestionBody } from "@/api/twin";
+import { getLang } from "@/lib/i18n";
 import { areaLabel, areaToArg, type Area, type AreaArg } from "./area";
 import { humanise } from "./scenarioResult";
 import type { Tier } from "./tiers";
@@ -60,16 +61,31 @@ export function forTier(list: UseCase[], tier: Tier): UseCase[] {
 }
 
 /** Titles on the residents' home page: the service names tasks for officers ("Citizen information about their area"). */
-const RESIDENT_WORDING: Record<string, { title: string; summary: string }> = {
-  citizen_area_info: { title: "Around my address", summary: "Air, rain, public transport, pharmacies and hospitals nearby, in plain words." },
-  citizen_emergency_info: {
-    title: "In an emergency near home",
-    summary: "Where to gather, flood and landslide areas at your address, industrial zones and the nearest emergency hospitals.",
+const RESIDENT_WORDING: Record<Language, Record<string, { title: string; summary: string }>> = {
+  en: {
+    citizen_area_info: { title: "Around my address", summary: "Air, rain, public transport, pharmacies and hospitals nearby, in plain words." },
+    sport_deserts: { title: "Where sports facilities are missing", summary: "For one sport: who has a facility within walking distance, who does not, and the facilities that exist." },
+    citizen_emergency_info: {
+      title: "In an emergency near home",
+      summary: "Where to gather, flood and landslide areas at your address, industrial zones and the nearest emergency hospitals.",
+    },
+  },
+  it: {
+    sport_deserts: { title: "Dove mancano gli impianti sportivi", summary: "Per uno sport: chi ha un impianto raggiungibile a piedi, chi no, e gli impianti che ci sono." },
+    citizen_area_info: {
+      title: "Intorno al mio indirizzo",
+      summary: "Aria, pioggia, trasporto pubblico, farmacie e ospedali vicini, in parole semplici.",
+    },
+    citizen_emergency_info: {
+      title: "In caso di emergenza vicino a casa",
+      summary: "Dove ritrovarsi, aree a rischio alluvione e frana al tuo indirizzo, zone industriali e gli ospedali di emergenza più vicini.",
+    },
   },
 };
 
 export function residentWording(uc: UseCase): { title: string; summary: string } {
-  return RESIDENT_WORDING[uc.id] ?? { title: uc.title.en, summary: uc.summary.en };
+  const lang = getLang();
+  return RESIDENT_WORDING[lang][uc.id] ?? { title: uc.title[lang], summary: uc.summary[lang] };
 }
 
 export interface ParamField {

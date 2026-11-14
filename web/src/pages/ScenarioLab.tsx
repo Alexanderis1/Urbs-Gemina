@@ -31,6 +31,7 @@ import type { Envelope, ScenarioResult } from "@/api/types";
 import {
   buildScenarioChange,
   changeProblem,
+  groupLabel,
   isHeavy,
   needsSmallArea,
   resolveKind,
@@ -45,6 +46,238 @@ import {
 } from "@/lib/scenario";
 import { fmtNumber, keyFigures, MAX_ROWS, rangeText, summariseScenario, unitFor, type Quantile } from "@/lib/scenarioResult";
 import { errorText } from "@/lib/errors";
+import { texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: {
+    clickMove: (what: string) => `Click the map to move the ${what}`,
+    clickPlace: (what: string) => `Click the map to place the ${what}`,
+    longitude: "Longitude",
+    latitude: "Latitude",
+    howRiver: "How to set the river",
+    rise: "Rise",
+    gaugeLevel: "Gauge level",
+    forecast: "Forecast",
+    riverGauge: "River gauge",
+    waterLevel: "Water level at the gauge",
+    riverForecastHint: "Uses the highest level in the river forecast for the coming days.",
+    riverRise: "River rise above normal",
+    rainSource: "Where the rain comes from",
+    amount: "Amount",
+    radarNow: "Radar now",
+    rain: "Rain",
+    over: "Over",
+    hours: "hours",
+    radarHint: "Uses the rain the radar sees now.",
+    rainForecastHint: "Uses the rain forecast.",
+    highRiver: "High river, optional",
+    eg3: "e.g. 3",
+    highRiverHint: "A high Tiber blocks sewer outfalls. Leave empty to ignore.",
+    temperatures: "Temperatures",
+    enterValues: "Enter values",
+    dayMax: "Day maximum",
+    nightMin: "Night minimum",
+    tempForecastHint: "Uses the temperature forecast for the area.",
+    changesToTest: "Changes to test, optional",
+    treeCover: "Tree cover added",
+    sealed: "Sealed ground removed",
+    eg10: "e.g. 10",
+    releaseWhere: "Where the release happens",
+    pointOnMap: "Point on map",
+    namedSite: "Named site",
+    hazardousSite: "Hazardous site",
+    siteHint: "Name of a listed hazardous (Seveso) site.",
+    releasePoint: "release point",
+    substance: "Substance",
+    releaseRate: "Release rate",
+    wind: "Wind",
+    windForecast: "Wind forecast",
+    enterWind: "Enter wind",
+    windSpeed: "Wind speed",
+    blowingFrom: "Blowing from",
+    degrees: "degrees",
+    windHint: "270 = from the west",
+    kindOfChange: "Kind of change",
+    closeRoad: "Close a road",
+    publicEvent: "Public event",
+    roadworks: "Roadworks",
+    street: "Street",
+    egCorso: "e.g. Via del Corso",
+    attending: "People attending",
+    lanesClosed: "Lanes closed",
+    emergencyService: "Emergency service",
+    streetToClose: "Street to close",
+    egOstiense: "e.g. Via Ostiense",
+    floodSameTime: "River flood at the same time, optional",
+    mRise: "m rise",
+    floodHint: "Flooded streets are closed too. Leave empty to ignore.",
+    antenna: "antenna",
+    height: "Height above ground",
+    band: "Frequency band",
+    noSpread: "no spread",
+    na: "n/a",
+    whatIf: "what-if",
+    nothingComputed: "Nothing was computed for this run.",
+    measuredAs: (m: string) => `Measured as: ${m}`,
+    notAvailableTitle: "Not available for this run",
+    todayBaseline: "Today (baseline)",
+    withChange: "With the change",
+    todayAndChange: "Today and with the change",
+    measure: "Measure",
+    today: "Today",
+    difference: "Difference",
+    rangeHint: "Middle value, with the 5th to 95th percentile range under it. Estimates, not measurements.",
+    baselineAndChange: "Baseline and change",
+    withChangeVariant: "With the change (variant)",
+    sameScale: "Same scale for both bars. Band = 5th to 95th percentile, line = middle value. Estimates, not measurements.",
+    otherFigures: "Other figures",
+    estimatesHint: "Estimates, not measurements: read every figure with its range.",
+    andMore: (n: number) => `and ${n} more`,
+    details: "Details",
+    noFigures: "The run returned no figures to show.",
+    labTitle: "Scenario lab",
+    labSubtitle: "Try a change on the city and compare it with today.",
+    running: "Running…",
+    runScenario: "Run scenario",
+    footerHint: "Results compare today (baseline) with your change (variant) and always carry a range.",
+    step1: "1 · Scenario",
+    step2: "2 · Where",
+    step3: "3 · What changes",
+    smallerTitle: "Pick a smaller area",
+    smallerBody: "This is a heavy simulation: it runs on a municipio, an urban zone or a drawn area. The tool will refuse larger areas.",
+    drawSmallTitle: "Draw a small area",
+    drawSmallBody:
+      'Traffic is simulated street by street, so it runs on a few blocks only. Use "Draw an area on the map" around the street or the event. The tool refuses a larger area and tells you its limit.',
+    result: "Result",
+    closeResult: "Close result",
+    runningScenario: "Running the scenario…",
+    runFailed: "The run failed",
+    addPoints: " · click the map to add points",
+    movePoint: " · click the map to move the point",
+    placeIt: " · click the map to place it",
+    onMap: "On the map",
+    yourChange: "Your change (what-if)",
+    likelyExtent: "Likely extent (P50)",
+    possibleExtent: "Possible extent (P95)",
+    placesListed: "Places listed in the result",
+    whatIfNote: "What-if result: an estimate, not a measured event.",
+    showResult: "Show result",
+  },
+  it: {
+    clickMove: (what: string) => `Clicca sulla mappa per spostare ${what}`,
+    clickPlace: (what: string) => `Clicca sulla mappa per indicare ${what}`,
+    longitude: "Longitudine",
+    latitude: "Latitudine",
+    howRiver: "Come impostare il fiume",
+    rise: "Aumento",
+    gaugeLevel: "Livello idrometro",
+    forecast: "Previsione",
+    riverGauge: "Idrometro del fiume",
+    waterLevel: "Livello dell'acqua all'idrometro",
+    riverForecastHint: "Usa il livello più alto della previsione del fiume per i prossimi giorni.",
+    riverRise: "Aumento del fiume sopra il normale",
+    rainSource: "Da dove viene la pioggia",
+    amount: "Quantità",
+    radarNow: "Radar adesso",
+    rain: "Pioggia",
+    over: "In",
+    hours: "ore",
+    radarHint: "Usa la pioggia che il radar vede adesso.",
+    rainForecastHint: "Usa la previsione della pioggia.",
+    highRiver: "Fiume in piena, facoltativo",
+    eg3: "es. 3",
+    highRiverHint: "Un Tevere alto blocca gli scarichi delle fognature. Lascia vuoto per ignorarlo.",
+    temperatures: "Temperature",
+    enterValues: "Inserisci i valori",
+    dayMax: "Massima di giorno",
+    nightMin: "Minima di notte",
+    tempForecastHint: "Usa la previsione delle temperature per l'area.",
+    changesToTest: "Modifiche da provare, facoltativo",
+    treeCover: "Verde aggiunto",
+    sealed: "Suolo impermeabile rimosso",
+    eg10: "es. 10",
+    releaseWhere: "Dove avviene il rilascio",
+    pointOnMap: "Punto sulla mappa",
+    namedSite: "Sito con nome",
+    hazardousSite: "Sito a rischio",
+    siteHint: "Nome di un sito a rischio (Seveso) in elenco.",
+    releasePoint: "il punto del rilascio",
+    substance: "Sostanza",
+    releaseRate: "Portata del rilascio",
+    wind: "Vento",
+    windForecast: "Previsione del vento",
+    enterWind: "Inserisci il vento",
+    windSpeed: "Velocità del vento",
+    blowingFrom: "Soffia da",
+    degrees: "gradi",
+    windHint: "270 = da ovest",
+    kindOfChange: "Tipo di modifica",
+    closeRoad: "Chiudi una strada",
+    publicEvent: "Evento pubblico",
+    roadworks: "Cantiere",
+    street: "Strada",
+    egCorso: "es. Via del Corso",
+    attending: "Persone presenti",
+    lanesClosed: "Corsie chiuse",
+    emergencyService: "Servizio di soccorso",
+    streetToClose: "Strada da chiudere",
+    egOstiense: "es. Via Ostiense",
+    floodSameTime: "Piena del fiume nello stesso momento, facoltativo",
+    mRise: "m di aumento",
+    floodHint: "Anche le strade allagate sono chiuse. Lascia vuoto per ignorarlo.",
+    antenna: "l'antenna",
+    height: "Altezza da terra",
+    band: "Banda di frequenza",
+    noSpread: "nessuna variazione",
+    na: "n.d.",
+    whatIf: "ipotesi",
+    nothingComputed: "Per questa esecuzione non è stato calcolato nulla.",
+    measuredAs: (m: string) => `Misurato come: ${m}`,
+    notAvailableTitle: "Non disponibile per questa esecuzione",
+    todayBaseline: "Oggi",
+    withChange: "Con la modifica",
+    todayAndChange: "Oggi e con la modifica",
+    measure: "Misura",
+    today: "Oggi",
+    difference: "Differenza",
+    rangeHint: "Valore centrale, con sotto l'intervallo dal 5º al 95º percentile. Stime, non misure.",
+    baselineAndChange: "Oggi e con la modifica",
+    withChangeVariant: "Con la modifica",
+    sameScale: "Stessa scala per le due barre. Fascia = dal 5º al 95º percentile, linea = valore centrale. Stime, non misure.",
+    otherFigures: "Altri valori",
+    estimatesHint: "Stime, non misure: leggi ogni valore insieme al suo intervallo.",
+    andMore: (n: number) => `e altre ${n}`,
+    details: "Dettagli",
+    noFigures: "L'esecuzione non ha restituito valori da mostrare.",
+    labTitle: "Laboratorio di scenari",
+    labSubtitle: "Prova una modifica sulla città e confrontala con oggi.",
+    running: "In corso…",
+    runScenario: "Avvia scenario",
+    footerHint: "I risultati confrontano oggi con la tua modifica e hanno sempre un intervallo.",
+    step1: "1 · Scenario",
+    step2: "2 · Dove",
+    step3: "3 · Cosa cambia",
+    smallerTitle: "Scegli un'area più piccola",
+    smallerBody: "È una simulazione pesante: funziona su un municipio, una zona urbanistica o un'area disegnata. Lo strumento rifiuta le aree più grandi.",
+    drawSmallTitle: "Disegna un'area piccola",
+    drawSmallBody:
+      'Il traffico è simulato strada per strada, quindi funziona solo su pochi isolati. Usa "Disegna un\'area sulla mappa" intorno alla strada o all\'evento. Lo strumento rifiuta un\'area più grande e ti dice il suo limite.',
+    result: "Risultato",
+    closeResult: "Chiudi il risultato",
+    runningScenario: "Scenario in corso…",
+    runFailed: "L'esecuzione non è riuscita",
+    addPoints: " · clicca sulla mappa per aggiungere punti",
+    movePoint: " · clicca sulla mappa per spostare il punto",
+    placeIt: " · clicca sulla mappa per indicarlo",
+    onMap: "Sulla mappa",
+    yourChange: "La tua modifica (ipotesi)",
+    likelyExtent: "Estensione probabile (P50)",
+    possibleExtent: "Estensione possibile (P95)",
+    placesListed: "Luoghi elencati nel risultato",
+    whatIfNote: "Risultato di un'ipotesi: una stima, non un evento misurato.",
+    showResult: "Mostra il risultato",
+  },
+});
 
 const ICONS: Record<ScenarioTile, LucideIcon> = {
   river_flood: Waves,
@@ -92,39 +325,41 @@ function TextField({ label, value, onChange, hint, placeholder, list }: { label:
 }
 
 function PointFields({ f, set, what }: { f: Form; set: (k: string, v: string) => void; what: string }) {
+  const t = tr(T);
   const placed = f.lon?.trim() && f.lat?.trim();
   return (
     <div className="space-y-2 rounded border border-dashed border-whatif/60 bg-whatif/5 p-2.5">
       <p className="flex items-center gap-1.5 text-xs font-semibold text-whatif">
         <Crosshair className="h-3.5 w-3.5" aria-hidden="true" />
-        {placed ? `Click the map to move the ${what}` : `Click the map to place the ${what}`}
+        {placed ? t.clickMove(what) : t.clickPlace(what)}
       </p>
       <div className="grid grid-cols-2 gap-2">
-        <NumField label="Longitude" value={f.lon ?? ""} onChange={(v) => set("lon", v)} placeholder="12.4833" />
-        <NumField label="Latitude" value={f.lat ?? ""} onChange={(v) => set("lat", v)} placeholder="41.9009" />
+        <NumField label={t.longitude} value={f.lon ?? ""} onChange={(v) => set("lon", v)} placeholder="12.4833" />
+        <NumField label={t.latitude} value={f.lat ?? ""} onChange={(v) => set("lat", v)} placeholder="41.9009" />
       </div>
     </div>
   );
 }
 
 function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: string, v: string) => void }) {
+  const t = tr(T);
   const two = "grid grid-cols-2 gap-2";
   switch (tile) {
     case "river_flood":
       return (
         <>
           <Segmented
-            label="How to set the river"
+            label={t.howRiver}
             value={(f.mode ?? "rise") as "rise" | "level" | "forecast"}
             onChange={(v) => set("mode", v)}
             options={[
-              { id: "rise", label: "Rise" },
-              { id: "level", label: "Gauge level" },
-              { id: "forecast", label: "Forecast" },
+              { id: "rise", label: t.rise },
+              { id: "level", label: t.gaugeLevel },
+              { id: "forecast", label: t.forecast },
             ]}
           />
           {f.mode === "level" || f.mode === "forecast" ? (
-            <Field label="River gauge">
+            <Field label={t.riverGauge}>
               <select className="input" value={f.gauge} onChange={(e) => set("gauge", e.target.value)}>
                 {SCENARIO_GAUGES.map((g) => (
                   <option key={g.id} value={g.id}>
@@ -134,10 +369,10 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
               </select>
             </Field>
           ) : null}
-          {f.mode === "level" && <NumField label="Water level at the gauge" unit="m" value={f.level_m ?? ""} onChange={(v) => set("level_m", v)} />}
-          {f.mode === "forecast" && <p className="hint">Uses the highest level in the river forecast for the coming days.</p>}
+          {f.mode === "level" && <NumField label={t.waterLevel} unit="m" value={f.level_m ?? ""} onChange={(v) => set("level_m", v)} />}
+          {f.mode === "forecast" && <p className="hint">{t.riverForecastHint}</p>}
           {(f.mode ?? "rise") === "rise" && (
-            <NumField label="River rise above normal" unit="m" value={f.rise_m ?? ""} onChange={(v) => set("rise_m", v)} />
+            <NumField label={t.riverRise} unit="m" value={f.rise_m ?? ""} onChange={(v) => set("rise_m", v)} />
           )}
         </>
       );
@@ -145,30 +380,30 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
       return (
         <>
           <Segmented
-            label="Where the rain comes from"
+            label={t.rainSource}
             value={(f.mode ?? "rain") as "rain" | "radar" | "forecast"}
             onChange={(v) => set("mode", v)}
             options={[
-              { id: "rain", label: "Amount" },
-              { id: "radar", label: "Radar now" },
-              { id: "forecast", label: "Forecast" },
+              { id: "rain", label: t.amount },
+              { id: "radar", label: t.radarNow },
+              { id: "forecast", label: t.forecast },
             ]}
           />
           {(f.mode ?? "rain") === "rain" ? (
             <div className={two}>
-              <NumField label="Rain" unit="mm" value={f.rain_mm ?? ""} onChange={(v) => set("rain_mm", v)} />
-              <NumField label="Over" unit="hours" value={f.duration_h ?? ""} onChange={(v) => set("duration_h", v)} />
+              <NumField label={t.rain} unit="mm" value={f.rain_mm ?? ""} onChange={(v) => set("rain_mm", v)} />
+              <NumField label={t.over} unit={t.hours} value={f.duration_h ?? ""} onChange={(v) => set("duration_h", v)} />
             </div>
           ) : (
-            <p className="hint">{f.mode === "radar" ? "Uses the rain the radar sees now." : "Uses the rain forecast."}</p>
+            <p className="hint">{f.mode === "radar" ? t.radarHint : t.rainForecastHint}</p>
           )}
           <NumField
-            label="High river, optional"
+            label={t.highRiver}
             unit="m"
             value={f.river_rise_m ?? ""}
             onChange={(v) => set("river_rise_m", v)}
-            placeholder="e.g. 3"
-            hint="A high Tiber blocks sewer outfalls. Leave empty to ignore."
+            placeholder={t.eg3}
+            hint={t.highRiverHint}
           />
         </>
       );
@@ -176,26 +411,26 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
       return (
         <>
           <Segmented
-            label="Temperatures"
+            label={t.temperatures}
             value={(f.temperature ?? "forecast") as "forecast" | "manual"}
             onChange={(v) => set("temperature", v)}
             options={[
-              { id: "forecast", label: "Forecast" },
-              { id: "manual", label: "Enter values" },
+              { id: "forecast", label: t.forecast },
+              { id: "manual", label: t.enterValues },
             ]}
           />
           {f.temperature === "manual" ? (
             <div className={two}>
-              <NumField label="Day maximum" unit="°C" value={f.tmax_c ?? ""} onChange={(v) => set("tmax_c", v)} />
-              <NumField label="Night minimum" unit="°C" value={f.tmin_c ?? ""} onChange={(v) => set("tmin_c", v)} />
+              <NumField label={t.dayMax} unit="°C" value={f.tmax_c ?? ""} onChange={(v) => set("tmax_c", v)} />
+              <NumField label={t.nightMin} unit="°C" value={f.tmin_c ?? ""} onChange={(v) => set("tmin_c", v)} />
             </div>
           ) : (
-            <p className="hint">Uses the temperature forecast for the area.</p>
+            <p className="hint">{t.tempForecastHint}</p>
           )}
-          <div className="label pt-1">Changes to test, optional</div>
+          <div className="label pt-1">{t.changesToTest}</div>
           <div className={two}>
-            <NumField label="Tree cover added" unit="%" value={f.trees_pct ?? ""} onChange={(v) => set("trees_pct", v)} placeholder="e.g. 10" />
-            <NumField label="Sealed ground removed" unit="%" value={f.depave_pct ?? ""} onChange={(v) => set("depave_pct", v)} placeholder="e.g. 10" />
+            <NumField label={t.treeCover} unit="%" value={f.trees_pct ?? ""} onChange={(v) => set("trees_pct", v)} placeholder={t.eg10} />
+            <NumField label={t.sealed} unit="%" value={f.depave_pct ?? ""} onChange={(v) => set("depave_pct", v)} placeholder={t.eg10} />
           </div>
         </>
       );
@@ -203,22 +438,22 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
       return (
         <>
           <Segmented
-            label="Where the release happens"
+            label={t.releaseWhere}
             value={(f.place ?? "point") as "point" | "site"}
             onChange={(v) => set("place", v)}
             options={[
-              { id: "point", label: "Point on map" },
-              { id: "site", label: "Named site" },
+              { id: "point", label: t.pointOnMap },
+              { id: "site", label: t.namedSite },
             ]}
           />
           {f.place === "site" ? (
-            <TextField label="Hazardous site" value={f.site ?? ""} onChange={(v) => set("site", v)} hint="Name of a listed hazardous (Seveso) site." />
+            <TextField label={t.hazardousSite} value={f.site ?? ""} onChange={(v) => set("site", v)} hint={t.siteHint} />
           ) : (
-            <PointFields f={f} set={set} what="release point" />
+            <PointFields f={f} set={set} what={tr(T).releasePoint} />
           )}
           <div className={two}>
-            <TextField label="Substance" value={f.substance ?? ""} onChange={(v) => set("substance", v)} list="scenario-substances" />
-            <NumField label="Release rate" unit="kg/s" value={f.release_kg_s ?? ""} onChange={(v) => set("release_kg_s", v)} />
+            <TextField label={t.substance} value={f.substance ?? ""} onChange={(v) => set("substance", v)} list="scenario-substances" />
+            <NumField label={t.releaseRate} unit="kg/s" value={f.release_kg_s ?? ""} onChange={(v) => set("release_kg_s", v)} />
           </div>
           <datalist id="scenario-substances">
             {SCENARIO_SUBSTANCES.map((s) => (
@@ -226,18 +461,18 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
             ))}
           </datalist>
           <Segmented
-            label="Wind"
+            label={t.wind}
             value={(f.wind ?? "forecast") as "forecast" | "manual"}
             onChange={(v) => set("wind", v)}
             options={[
-              { id: "forecast", label: "Wind forecast" },
-              { id: "manual", label: "Enter wind" },
+              { id: "forecast", label: t.windForecast },
+              { id: "manual", label: t.enterWind },
             ]}
           />
           {f.wind === "manual" && (
             <div className={two}>
-              <NumField label="Wind speed" unit="m/s" value={f.wind_speed_ms ?? ""} onChange={(v) => set("wind_speed_ms", v)} />
-              <NumField label="Blowing from" unit="degrees" value={f.wind_from_deg ?? ""} onChange={(v) => set("wind_from_deg", v)} hint="270 = from the west" />
+              <NumField label={t.windSpeed} unit="m/s" value={f.wind_speed_ms ?? ""} onChange={(v) => set("wind_speed_ms", v)} />
+              <NumField label={t.blowingFrom} unit={t.degrees} value={f.wind_from_deg ?? ""} onChange={(v) => set("wind_from_deg", v)} hint={t.windHint} />
             </div>
           )}
         </>
@@ -246,37 +481,37 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
       return (
         <>
           <Segmented
-            label="Kind of change"
+            label={t.kindOfChange}
             value={(f.mode ?? "close") as "close" | "event" | "roadworks"}
             onChange={(v) => set("mode", v)}
             options={[
-              { id: "close", label: "Close a road" },
-              { id: "event", label: "Public event" },
-              { id: "roadworks", label: "Roadworks" },
+              { id: "close", label: t.closeRoad },
+              { id: "event", label: t.publicEvent },
+              { id: "roadworks", label: t.roadworks },
             ]}
           />
-          <TextField label="Street" value={f.street ?? ""} onChange={(v) => set("street", v)} placeholder="e.g. Via del Corso" />
-          {f.mode === "event" && <NumField label="People attending" value={f.attendees ?? ""} onChange={(v) => set("attendees", v)} />}
-          {f.mode === "roadworks" && <NumField label="Lanes closed" value={f.lanes_closed ?? ""} onChange={(v) => set("lanes_closed", v)} />}
+          <TextField label={t.street} value={f.street ?? ""} onChange={(v) => set("street", v)} placeholder={t.egCorso} />
+          {f.mode === "event" && <NumField label={t.attending} value={f.attendees ?? ""} onChange={(v) => set("attendees", v)} />}
+          {f.mode === "roadworks" && <NumField label={t.lanesClosed} value={f.lanes_closed ?? ""} onChange={(v) => set("lanes_closed", v)} />}
         </>
       );
     case "emergency_access":
       return (
         <>
           <Segmented
-            label="Emergency service"
+            label={t.emergencyService}
             value={(f.service ?? "fire") as "fire" | "ambulance" | "police"}
             onChange={(v) => set("service", v)}
             options={SCENARIO_SERVICES.map((s) => ({ id: s.id, label: s.label }))}
           />
-          <TextField label="Street to close" value={f.street ?? ""} onChange={(v) => set("street", v)} placeholder="e.g. Via Ostiense" />
+          <TextField label={t.streetToClose} value={f.street ?? ""} onChange={(v) => set("street", v)} placeholder={t.egOstiense} />
           <NumField
-            label="River flood at the same time, optional"
-            unit="m rise"
+            label={t.floodSameTime}
+            unit={t.mRise}
             value={f.flood_rise_m ?? ""}
             onChange={(v) => set("flood_rise_m", v)}
-            placeholder="e.g. 3"
-            hint="Flooded streets are closed too. Leave empty to ignore."
+            placeholder={t.eg3}
+            hint={t.floodHint}
           />
         </>
       );
@@ -284,10 +519,10 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
     case "population_exposure":
       return (
         <>
-          <PointFields f={f} set={set} what="antenna" />
+          <PointFields f={f} set={set} what={tr(T).antenna} />
           <div className={two}>
-            <NumField label="Height above ground" unit="m" value={f.height_m ?? ""} onChange={(v) => set("height_m", v)} />
-            <Field label="Frequency band">
+            <NumField label={t.height} unit="m" value={f.height_m ?? ""} onChange={(v) => set("height_m", v)} />
+            <Field label={t.band}>
               <select className="input" value={f.band ?? "3500"} onChange={(e) => set("band", e.target.value)}>
                 {SCENARIO_BANDS.map((b) => (
                   <option key={b} value={b}>
@@ -308,7 +543,7 @@ const rangeNote = (q: Quantile) => rangeText(q);
 
 /** One table cell: the middle value, with the range under it. `signed` marks an increase with a plus. */
 function QuantileCell({ q, tone = "", signed = false }: { q: Quantile | null; tone?: string; signed?: boolean }) {
-  if (!q) return <td className="text-muted">n/a</td>;
+  if (!q) return <td className="text-muted">{tr(T).na}</td>;
   const plus = signed && q.p50 > 0 ? "+" : "";
   return (
     <td>
@@ -316,12 +551,13 @@ function QuantileCell({ q, tone = "", signed = false }: { q: Quantile | null; to
         {plus}
         {fmtNumber(q.p50)}
       </span>
-      <span className="block whitespace-nowrap text-2xs text-muted">{q.p5 === q.p95 ? "no spread" : `${fmtNumber(q.p5)}–${fmtNumber(q.p95)}`}</span>
+      <span className="block whitespace-nowrap text-2xs text-muted">{q.p5 === q.p95 ? tr(T).noSpread : `${fmtNumber(q.p5)}–${fmtNumber(q.p95)}`}</span>
     </td>
   );
 }
 
 function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: string }) {
+  const t = tr(T);
   const s = useMemo(() => summariseScenario(env.result), [env]);
   // A nested pair (e.g. residents beyond the target time) carries its own meaning; the top-level one uses `unit`.
   const unit = s.compare?.path ? unitFor(s.compare.path) : (env.result.unit ?? "");
@@ -339,9 +575,9 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
       <div className="animate-rise-in space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-base font-bold">{title}</h2>
-          <KindBadge kind="simulated" text="what-if" />
+          <KindBadge kind="simulated" text={t.whatIf} />
         </div>
-        <p className="hint">Nothing was computed for this run.</p>
+        <p className="hint">{t.nothingComputed}</p>
         <RunMeta env={env} />
       </div>
     );
@@ -352,21 +588,21 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
       <div className="space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-base font-bold">{title}</h2>
-          <KindBadge kind="simulated" text="what-if" />
+          <KindBadge kind="simulated" text={t.whatIf} />
         </div>
-        {(s.compare?.label ?? env.result.metric) && <p className="hint">Measured as: {s.compare?.label ?? env.result.metric}</p>}
+        {(s.compare?.label ?? env.result.metric) && <p className="hint">{t.measuredAs(String(s.compare?.label ?? env.result.metric))}</p>}
       </div>
 
       {s.notAvailable && (
-        <Callout tone="warn" title="Not available for this run">
+        <Callout tone="warn" title={t.notAvailableTitle}>
           {s.notAvailable}
         </Callout>
       )}
 
       {s.compare && (
         <div className="grid grid-cols-2 gap-2">
-          <Stat label="Today (baseline)" value={fmtNumber(s.compare.baseline.p50)} unit={unit} note={rangeNote(s.compare.baseline)} />
-          <Stat label="With the change" value={fmtNumber(s.compare.variant.p50)} unit={unit} note={rangeNote(s.compare.variant)} tone="whatif" />
+          <Stat label={t.todayBaseline} value={fmtNumber(s.compare.baseline.p50)} unit={unit} note={rangeNote(s.compare.baseline)} />
+          <Stat label={t.withChange} value={fmtNumber(s.compare.variant.p50)} unit={unit} note={rangeNote(s.compare.variant)} tone="whatif" />
         </div>
       )}
       {headline.length > 0 && (
@@ -378,15 +614,15 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
       )}
 
       {s.comparisons.length > 0 && (
-        <Section title="Today and with the change">
+        <Section title={t.todayAndChange}>
           <div className="overflow-x-auto rounded border border-line">
             <table className="table text-xs">
               <thead>
                 <tr>
-                  <th scope="col">Measure</th>
-                  <th scope="col">Today</th>
-                  <th scope="col">With the change</th>
-                  <th scope="col">Difference</th>
+                  <th scope="col">{t.measure}</th>
+                  <th scope="col">{t.today}</th>
+                  <th scope="col">{t.withChange}</th>
+                  <th scope="col">{t.difference}</th>
                 </tr>
               </thead>
               <tbody>
@@ -404,20 +640,20 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
               </tbody>
             </table>
           </div>
-          <p className="hint">Middle value, with the 5th to 95th percentile range under it. Estimates, not measurements.</p>
+          <p className="hint">{t.rangeHint}</p>
         </Section>
       )}
 
       {s.compare && s.comparisons.length === 0 && (
-        <Section title={s.compare.label ?? "Baseline and change"}>
-          <RangeBar label="Today (baseline)" e={{ ...s.compare.baseline, calibration: env.result.baseline?.calibration }} unit={unit} max={max} note={false} />
-          <RangeBar label="With the change (variant)" e={s.compare.variant} unit={unit} max={max} tone="whatif" note={false} />
-          <p className="hint">Same scale for both bars. Band = 5th to 95th percentile, line = middle value. Estimates, not measurements.</p>
+        <Section title={s.compare.label ?? t.baselineAndChange}>
+          <RangeBar label={t.todayBaseline} e={{ ...s.compare.baseline, calibration: env.result.baseline?.calibration }} unit={unit} max={max} note={false} />
+          <RangeBar label={t.withChangeVariant} e={s.compare.variant} unit={unit} max={max} tone="whatif" note={false} />
+          <p className="hint">{t.sameScale}</p>
         </Section>
       )}
 
       {rest.length > 0 && (
-        <Section title="Other figures">
+        <Section title={t.otherFigures}>
           {/* A bar only says something when there is a spread; single values go in tiles. */}
           {rest.some((q) => q.value.p5 === q.value.p95) && (
             <div className="grid grid-cols-2 gap-2">
@@ -435,15 +671,15 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
             ))}
         </Section>
       )}
-      {!s.compare && s.quantiles.length > 0 && <p className="hint">Estimates, not measurements: read every figure with its range.</p>}
+      {!s.compare && s.quantiles.length > 0 && <p className="hint">{t.estimatesHint}</p>}
 
-      {s.tables.map((t) => (
-        <Section key={t.path} title={`${t.label} (${t.total})`}>
+      {s.tables.map((tb) => (
+        <Section key={tb.path} title={`${tb.label} (${tb.total})`}>
           <div className="overflow-x-auto rounded border border-line">
             <table className="table text-xs">
               <thead>
                 <tr>
-                  {t.columns.map((c) => (
+                  {tb.columns.map((c) => (
                     <th key={c} scope="col" className="align-bottom">
                       {c}
                     </th>
@@ -451,7 +687,7 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
                 </tr>
               </thead>
               <tbody>
-                {t.rows.map((r, i) => (
+                {tb.rows.map((r, i) => (
                   <tr key={i}>
                     {r.map((c, j) => (
                       <td
@@ -467,12 +703,12 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
               </tbody>
             </table>
           </div>
-          {t.total > MAX_ROWS && <p className="hint">and {t.total - MAX_ROWS} more</p>}
+          {tb.total > MAX_ROWS && <p className="hint">{t.andMore(tb.total - MAX_ROWS)}</p>}
         </Section>
       ))}
 
       {facts.length > 0 && (
-        <Section title="Details">
+        <Section title={t.details}>
           <dl className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-3 gap-y-1.5 text-xs">
             {facts.map((f) => (
               <Fragment key={f.path}>
@@ -484,7 +720,7 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
         </Section>
       )}
 
-      {nothing && !s.notAvailable && <p className="hint">The run returned no figures to show.</p>}
+      {nothing && !s.notAvailable && <p className="hint">{t.noFigures}</p>}
 
       <div className="border-t border-line pt-3">
         <RunMeta env={env} />
@@ -496,6 +732,7 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
 // --- Screen -----------------------------------------------------------------------------------------------
 
 export default function ScenarioLab() {
+  const t = tr(T);
   const { run } = useSession();
   const { palette } = useTheme();
   const [tile, setTile] = useState<ScenarioTile>("river_flood");
@@ -654,39 +891,39 @@ export default function ScenarioLab() {
 
   const panel = (
     <Panel
-      title="Scenario lab"
+      title={t.labTitle}
       icon={FlaskConical}
       width="w-[24rem]"
-      subtitle="Try a change on the city and compare it with today."
+      subtitle={t.labSubtitle}
       footer={
         <div className="space-y-2">
           <button type="button" className="btn w-full" onClick={() => void go()} disabled={busy || !!problem}>
             {busy ? (
               <>
                 <Spinner />
-                Running…
+                {t.running}
               </>
             ) : (
               <>
                 <Play className="h-4 w-4" aria-hidden="true" />
-                Run scenario
+                {t.runScenario}
               </>
             )}
           </button>
           <p className="hint" role={problem ? "status" : undefined}>
-            {problem ?? "Results compare today (baseline) with your change (variant) and always carry a range."}
+            {problem ?? t.footerHint}
           </p>
         </div>
       }
     >
-      <Section title="1 · Scenario">
+      <Section title={t.step1}>
         {/* Groups with one tile share a row, so the whole catalogue fits above the fold. */}
         <div className="grid grid-cols-2 gap-x-1.5 gap-y-2.5">
           {SCENARIO_GROUPS.map((g) => {
             const tiles = SCENARIOS.filter((s) => s.group === g);
             return (
-              <div key={g} className={`space-y-1 ${tiles.length > 1 ? "col-span-2" : ""}`} role="group" aria-label={g}>
-                <div className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">{g}</div>
+              <div key={g} className={`space-y-1 ${tiles.length > 1 ? "col-span-2" : ""}`} role="group" aria-label={groupLabel(g)}>
+                <div className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">{groupLabel(g)}</div>
                 <div className={`grid gap-1.5 ${tiles.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
                   {tiles.map((s) => {
                     const Icon = ICONS[s.id];
@@ -716,22 +953,21 @@ export default function ScenarioLab() {
         </div>
       </Section>
 
-      <Section title="2 · Where">
+      <Section title={t.step2}>
         <AreaPicker area={area} onChange={setArea} drawing={drawing} onDraw={toggleDraw} />
         {heavyWarn && (
-          <Callout tone="warn" title="Pick a smaller area">
-            This is a heavy simulation: it runs on a municipio, an urban zone or a drawn area. The tool will refuse larger areas.
+          <Callout tone="warn" title={t.smallerTitle}>
+            {t.smallerBody}
           </Callout>
         )}
         {smallWarn && (
-          <Callout tone="warn" title="Draw a small area">
-            Traffic is simulated street by street, so it runs on a few blocks only. Use "Draw an area on the map" around the street or the event. The tool
-            refuses a larger area and tells you its limit.
+          <Callout tone="warn" title={t.drawSmallTitle}>
+            {t.drawSmallBody}
           </Callout>
         )}
       </Section>
 
-      <Section title="3 · What changes">
+      <Section title={t.step3}>
         <ChangeForm tile={tile} f={f} set={set} />
       </Section>
     </Panel>
@@ -742,10 +978,10 @@ export default function ScenarioLab() {
       <Panel
         side="right"
         width="w-[24rem]"
-        title="Result"
+        title={t.result}
         subtitle={ran ? `${ran.title} · ${ran.area}` : undefined}
         actions={
-          <button type="button" className="btn-quiet -mr-1 -mt-0.5" aria-label="Close result" onClick={() => setShowResult(false)}>
+          <button type="button" className="btn-quiet -mr-1 -mt-0.5" aria-label={t.closeResult} onClick={() => setShowResult(false)}>
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         }
@@ -754,7 +990,7 @@ export default function ScenarioLab() {
           <div className="space-y-4" aria-live="polite">
             <p className="flex items-center gap-2 text-sm text-muted">
               <Spinner />
-              Running the scenario…
+              {t.runningScenario}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div className="skeleton h-16" />
@@ -764,7 +1000,7 @@ export default function ScenarioLab() {
           </div>
         )}
         {error && (
-          <Callout tone="error" title="The run failed">
+          <Callout tone="error" title={t.runFailed}>
             {error}
           </Callout>
         )}
@@ -789,11 +1025,11 @@ export default function ScenarioLab() {
             <div className="text-xs text-muted">
               {areaLabel(area)}
               {drawing
-                ? " · click the map to add points"
+                ? t.addPoints
                 : spec.usesPoint && !(tile === "chemical_plume" && f.place === "site")
                   ? point
-                    ? " · click the map to move the point"
-                    : " · click the map to place it"
+                    ? t.movePoint
+                    : t.placeIt
                   : ""}
             </div>
           </div>
@@ -803,28 +1039,28 @@ export default function ScenarioLab() {
       {(point || likelyFp.length > 0 || possibleFp.length > 0 || (summary?.points.length ?? 0) > 0) && (
         <MapFloat position="bottom-left" className="w-60">
           <div className="space-y-1.5 text-xs">
-            <div className="label">On the map</div>
+            <div className="label">{t.onMap}</div>
             {point && (
               <LegendRow swatch={<span className="block h-3 w-3 rotate-45 border-2 border-dashed" style={{ borderColor: rgb(palette.whatIf), background: rgb(palette.whatIf, 0.25) }} />}>
-                Your change (what-if)
+                {t.yourChange}
               </LegendRow>
             )}
             {likelyFp.length > 0 && (
               <LegendRow swatch={<span className="block h-3 w-4 rounded-sm border-2" style={{ borderColor: rgb(footColor), background: rgb(footColor, 0.5) }} />}>
-                Likely extent (P50)
+                {t.likelyExtent}
               </LegendRow>
             )}
             {possibleFp.length > 0 && (
               <LegendRow swatch={<span className="block h-3 w-4 rounded-sm border" style={{ borderColor: rgb(footColor, 0.6), background: rgb(footColor, 0.16) }} />}>
-                Possible extent (P95)
+                {t.possibleExtent}
               </LegendRow>
             )}
             {(summary?.points.length ?? 0) > 0 && (
               <LegendRow swatch={<span className="block h-2.5 w-2.5 rounded-full" style={{ background: rgb(palette.point) }} />}>
-                Places listed in the result
+                {t.placesListed}
               </LegendRow>
             )}
-            {summary && (likelyFp.length > 0 || possibleFp.length > 0) && <p className="hint">What-if result: an estimate, not a measured event.</p>}
+            {summary && (likelyFp.length > 0 || possibleFp.length > 0) && <p className="hint">{t.whatIfNote}</p>}
           </div>
         </MapFloat>
       )}
@@ -833,7 +1069,7 @@ export default function ScenarioLab() {
         <div className="absolute right-14 top-3 z-10">
           <button type="button" className="btn-ghost btn-sm shadow-float" onClick={() => setShowResult(true)}>
             <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            Show result
+            {t.showResult}
           </button>
         </div>
       )}
