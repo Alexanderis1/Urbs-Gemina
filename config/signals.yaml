@@ -74,7 +74,8 @@ screening:
   model_role: screen             # model chosen in config/agents.yaml models.screen
   reject_reasons: [inappropriate, offensive, personal_data, off_topic, not_matching_category, likely_false, spam]
   injection_rejects: true        # text matching config/agents.yaml injection patterns is rejected before any model call
-  max_reports_per_hour: 10       # per account, anti-spam (edge function)
+  max_reports_per_hour: 5        # per account, anti-spam (edge function, policy.ts REPORT_LIMITS)
+  max_reports_per_day: 10        # per account per 24 h: limits the damage of one compromised SPID account
   basis: "Alessandro: discard inappropriate or clearly false items; a cheap model per report, the expensive check stays per event"
 
 verify:
