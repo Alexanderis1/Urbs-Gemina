@@ -4,6 +4,7 @@ import { Mic, Square } from "lucide-react";
 import { isSampleMode, proxyFetch } from "@/api/client";
 import { buildClientTools, CITIZEN_AGENT_ID } from "@/lib/voice";
 import { useSession } from "@/lib/runlog";
+import { errorText } from "@/lib/errors";
 
 /** Five bars that move while the assistant speaks and rest while it listens. */
 function Level({ active }: { active: boolean }) {
@@ -44,7 +45,7 @@ export function VoiceButton() {
         await conversation.startSession({ agentId: CITIZEN_AGENT_ID, connectionType: "websocket" });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(errorText(e));
     }
   }
 

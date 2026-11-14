@@ -34,6 +34,7 @@ import { BUILDING_VIEWS, LEGENDS, ROOF_COLORS, type BuildingView } from "@/lib/b
 import { useSession } from "@/lib/runlog";
 import { useTheme } from "@/lib/useTheme";
 import type { Envelope, QueryLayerResult } from "@/api/types";
+import { errorText } from "@/lib/errors";
 
 type LayerGroup = "fields" | "mobility" | "health" | "environment";
 
@@ -150,7 +151,7 @@ export default function CityView() {
     setBusy(true);
     run<QueryLayerResult>("query_layer", { layer, area: areaToArg(area), time, limit: 5000 })
       .then((e) => live && setEnv(e))
-      .catch((e: unknown) => live && setError(String(e)))
+      .catch((e: unknown) => live && setError(errorText(e)))
       .finally(() => live && setBusy(false));
     return () => {
       live = false;

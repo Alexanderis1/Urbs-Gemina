@@ -6,6 +6,7 @@ import { Callout, Page, Segmented, Skeleton, Stat } from "@/components/ui";
 import { useSession } from "@/lib/runlog";
 import { KIND_META, type KindKey } from "@/lib/theme";
 import type { DataKind, DataStatusResult, Envelope } from "@/api/types";
+import { errorText } from "@/lib/errors";
 
 // Order of the legend cards and of the stat tiles.
 const KIND_ORDER: KindKey[] = ["real", "estimated", "simulated", "what_if", "not_available"];
@@ -31,7 +32,7 @@ export default function DataHonesty() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    run<DataStatusResult>("data_status", {}).then(setEnv, (e: unknown) => setError(String(e)));
+    run<DataStatusResult>("data_status", {}).then(setEnv, (e: unknown) => setError(errorText(e)));
   }, [run]);
 
   const layers = useMemo(() => env?.result.layers ?? [], [env]);

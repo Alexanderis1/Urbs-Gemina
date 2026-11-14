@@ -33,6 +33,7 @@ import {
   type WhatIf,
 } from "@/lib/sport";
 import type { Envelope } from "@/api/types";
+import { errorText } from "@/lib/errors";
 
 type Tab = "map" | "deserts";
 const STATUS_COLOR: Record<string, string> = {
@@ -66,14 +67,14 @@ export default function Sport() {
 
   useEffect(() => {
     run<{ features: SportFeature[] }>("sports_facilities", { area: "city", discipline: null }).then(setFacEnv, (e: unknown) =>
-      setError(String(e)),
+      setError(errorText(e)),
     );
   }, [run]);
 
   useEffect(() => {
     if (tab !== "deserts") return;
     setWhatIf(null);
-    run<Coverage>("sport_coverage", { area: "city", discipline: desertDisc }).then(setDesertEnv, (e: unknown) => setError(String(e)));
+    run<Coverage>("sport_coverage", { area: "city", discipline: desertDisc }).then(setDesertEnv, (e: unknown) => setError(errorText(e)));
   }, [tab, desertDisc, run]);
 
   const all = facEnv?.result.features ?? [];
@@ -463,7 +464,7 @@ function FacilityPage({ f, canManage }: { f: SportFeature; canManage: boolean })
       setSaved((s) => [u, ...s]);
       setValue("");
     } catch (e) {
-      setMsg({ ok: false, text: `Not saved: ${e instanceof Error ? e.message : String(e)}` });
+      setMsg({ ok: false, text: `Not saved: ${errorText(e)}` });
     }
   }
 

@@ -40,10 +40,22 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
    visible without opening Admin.
 9. **Interface language stays English** (as built); the voice assistant speaks Italian. Labels use plain words:
    "Operating area", "Check context", "Compare".
-10. **Scenario lab shows all eight scenario kinds.** Kinds the live service does not accept yet show a clear
-    notice instead of failing silently.
+10. **Scenario lab shows all eight scenario kinds**, grouped by theme (water, heat, hazard, mobility, antenna).
+    A kind the service cannot run right now shows a clear notice with the server's reason instead of failing silently.
 11. **Icons: lucide-react** (ISC licence, the Lovable default), 1.8 px stroke, always next to a word or with an
     `aria-label`.
+12. **Results lead with people, then extent, then counts.** A scenario result opens with up to four key figures
+    (residents affected first, then children and elderly, then area or depth, then counts). The full list sits below.
+    When every model run gives the same number the range reads "same in every model run" instead of an empty bar.
+13. **The map frames the result.** After a scenario run the camera fits the footprint that came back, so the
+    officer never has to look for it.
+14. **"Hypothetical" from the engine is shown as WHAT-IF.** One label for the user, whatever the engine calls it.
+15. **Ask has a "Ready-made tasks" panel** on the left, filled from the service's use-case list (`/use_cases`).
+    Each task shows what it will run before it runs. If the service has no list, the panel is hidden and Ask is a
+    plain conversation.
+16. **Answers are formatted, not raw text.** Headings, lists and bold are rendered; every `[run|src|data:…]`
+    reference becomes a small chip, and the full citation list is folded under the answer.
+17. **Map credits start folded** behind the (i) button so they never cover a legend; one click opens them.
 
 ## Tokens
 

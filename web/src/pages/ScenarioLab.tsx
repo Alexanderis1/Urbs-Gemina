@@ -44,6 +44,7 @@ import {
   type ScenarioTile,
 } from "@/lib/scenario";
 import { fmtNumber, keyFigures, MAX_ROWS, rangeText, summariseScenario, unitFor, type Quantile } from "@/lib/scenarioResult";
+import { errorText } from "@/lib/errors";
 
 const ICONS: Record<ScenarioTile, LucideIcon> = {
   river_flood: Waves,
@@ -484,9 +485,7 @@ export default function ScenarioLab() {
       const msg = e instanceof Error ? e.message : String(e);
       // The live service lags the engine: a kind it does not know yet is a notice, not a failure.
       if (isUnknownKindError(msg)) setNotLive(true);
-      else if (/failed to fetch|networkerror|load failed/i.test(msg))
-        setError("The live service did not answer. It may still be starting up, or the run took too long for the connection. Try again: finished runs are kept, so a repeat answers sooner.");
-      else setError(msg);
+      else setError(errorText(e));
     } finally {
       setBusy(false);
     }

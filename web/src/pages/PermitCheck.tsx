@@ -12,6 +12,7 @@ import { useSession } from "@/lib/runlog";
 import { isOk } from "@/api/envelope";
 import { isSampleMode, proxyFetch } from "@/api/client";
 import type { ContextCheckResult, Envelope, EstimateFieldResult, ResolvePlaceResult } from "@/api/types";
+import { errorText } from "@/lib/errors";
 
 const BANDS = [800, 900, 1800, 2100, 3500] as const;
 
@@ -71,7 +72,7 @@ export default function PermitCheck() {
       setCtx(c);
       setField(f);
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e));
     } finally {
       setBusy(false);
     }

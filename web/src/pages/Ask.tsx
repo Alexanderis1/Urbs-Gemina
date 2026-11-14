@@ -11,6 +11,7 @@ import { shortId } from "@/lib/format";
 import { parseAnswerText, type Inline } from "@/lib/answerText";
 import { useSession } from "@/lib/runlog";
 import type { ResolvePlaceResult } from "@/api/types";
+import { errorText } from "@/lib/errors";
 
 interface Turn {
   role: "user" | "assistant" | "error";
@@ -112,7 +113,7 @@ export default function Ask() {
       }
       setTurns((t) => [...t, { role: "assistant", text: answer.text, answer }]);
     } catch (e) {
-      setTurns((t) => [...t, { role: "error", text: `The assistant could not answer: ${e instanceof Error ? e.message : String(e)}` }]);
+      setTurns((t) => [...t, { role: "error", text: `The assistant could not answer. ${errorText(e)}` }]);
     } finally {
       setBusy(false);
       setRunningSteps(null);
