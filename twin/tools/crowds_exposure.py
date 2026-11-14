@@ -9,6 +9,10 @@ the threshold from ``config/thresholds.yaml`` and wrap the answer.
 from __future__ import annotations
 
 import importlib
+import threading
+import time as _clock
+from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
@@ -40,7 +44,7 @@ def _wrap(runtime: ToolRuntime, tool: str, inputs: dict[str, Any], part: Mapping
     if area.source is not None:
         sources.append(area.source)
     return runtime.envelope(tool, inputs, result, dict(part.get("data_kinds", {})), sources,
-                            list(part.get("warnings", [])) + feed_warnings,
+                            list(dict.fromkeys(list(part.get("warnings", [])) + feed_warnings)),
                             synthetic=bool(part.get("synthetic")), status=status,
                             reason=part.get("reason") if status != "ok" else None,
                             extra_hashes={f"{tool}:ws5": str(part.get("snapshot_hash", ""))})
@@ -84,8 +88,39 @@ def threshold_for(runtime: ToolRuntime, layer: str, name: str) -> dict[str, Any]
             "averaging": str(entry.get("averaging", ""))}
 
 
-def _belief(runtime: ToolRuntime, layer: str, area: Area, time: str | None, feed_warnings: list[str]
-            ) -> tuple[Any, datetime, list[str]] | str:
+class _SharedFeeds:
+    """Feeds fetched once per (feed, window) and shared by several layers built at the same time."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._futures: dict[tuple[str, Any, datetime, datetime], Future[list[Any]]] = {}
+
+    def wrap(self, name: str, provider: Any) -> Any:
+        shared = self
+
+        class _Feed:
+            def __getattr__(self, attribute: str) -> Any:
+                return getattr(provider, attribute)
+
+            def fetch(self, bbox: Any, start: datetime, end: datetime) -> list[Any]:
+                key = (name, tuple(bbox), start, end)
+                with shared._lock:
+                    future = shared._futures.get(key)
+                    owner = future is None
+                    if future is None:
+                        future = shared._futures[key] = Future()
+                if owner:
+                    try:
+                        future.set_result(list(provider.fetch(bbox, start, end)))
+                    except BaseException as error:  # noqa: BLE001 - replayed to every waiting layer
+                        future.set_exception(error)
+                return future.result()
+
+        return _Feed()
+
+
+def _belief(runtime: ToolRuntime, layer: str, area: Area, time: str | None, feed_warnings: list[str],
+            shared: _SharedFeeds | None = None) -> tuple[Any, datetime, list[str]] | str:
     """Build a WS5 belief layer on the area's cells from the feeds named in beliefs.yaml, or a reason why not."""
     api, grid, bconfig = [importlib.import_module(f"twin.beliefs.{n}") for n in ("api", "grid", "config")]
     if layer not in api.layer_names():
@@ -93,7 +128,8 @@ def _belief(runtime: ToolRuntime, layer: str, area: Area, time: str | None, feed
     start, at = _window(runtime, time)
     spec = bconfig.load_specs()[layer]
     cells = grid.cells_in_polygon(area.geometry, bconfig.grid_resolution())
-    safe = {name: SafeFeed(name, p, feed_warnings) for name, p in runtime.providers.items()}
+    safe = {name: SafeFeed(name, shared.wrap(name, p) if shared is not None else p, feed_warnings)
+            for name, p in runtime.providers.items()}
     pairs = [(safe[s.layer], s) for s in spec.sources if s.layer in safe]
     prior_field = getattr(spec, "prior_field", None)
     prior = safe.get(prior_field.source) if prior_field is not None else None
@@ -305,8 +341,12 @@ def _sites_ranked(runtime: ToolRuntime, tool: str, function: str, area: Any, top
     layers: dict[str, tuple[Any, float]] = {}
     cells: list[str] = []
     at = None
+    shared = _SharedFeeds()  # the air layers read the same stations and model: fetch each feed once
+    with ThreadPoolExecutor(max_workers=max(1, len(limits))) as pool:
+        futures = {layer: pool.submit(_belief, runtime, layer, resolved, time, feed_warnings, shared)
+                   for layer in limits}
     for layer, limit in limits.items():
-        built = _belief(runtime, layer, resolved, time, feed_warnings)
+        built = futures[layer].result()
         if isinstance(built, str):
             feed_warnings.append(f"{layer}: {built}")
             continue
@@ -337,26 +377,81 @@ def care_sites_check(runtime: ToolRuntime, area: Any = "city", top: int = 10, ti
     return _sites_ranked(runtime, "care_sites_to_check", "care_sites_to_check", area, top, time, with_ages=True)
 
 
-#: (runtime id, time bucket) -> envelope. A whole-city freshness run calls every feed.
-_FRESHNESS_CACHE: dict[tuple[int, int], dict[str, Any]] = {}
+#: runtime id -> (checked at, envelope). A whole-city freshness run calls every feed.
+_FRESHNESS_CACHE: dict[int, tuple[datetime, dict[str, Any]]] = {}
+_FRESHNESS_LOCK = threading.Lock()
+
+
+class _Probed:
+    """A provider whose freshness fetch already ran (in parallel); replays its answer or its error."""
+
+    def __init__(self, provider: Any, future: Future[list[Any]] | None, deadline: float, timeout_s: float) -> None:
+        self._provider, self._future, self._deadline, self._timeout_s = provider, future, deadline, timeout_s
+
+    def __getattr__(self, attribute: str) -> Any:
+        return getattr(self._provider, attribute)
+
+    def fetch(self, bbox: Any, start: datetime, end: datetime) -> list[Any]:
+        if self._future is None:
+            return list(self._provider.fetch(bbox, start, end))
+        try:
+            # One shared deadline: several hung feeds cost one time limit in total, not one each.
+            return self._future.result(timeout=max(0.0, self._deadline - _clock.monotonic()))
+        except FutureTimeout:
+            raise TimeoutError(f"no answer within {self._timeout_s:g} s") from None
+
+
+def _fetch_all(provider: Any, bbox: Any, start: datetime, end: datetime) -> list[Any]:
+    return list(provider.fetch(bbox, start, end))
+
+
+def _probe_in_parallel(freshness: Any, providers: Mapping[str, Any], now: datetime, timeout_s: float
+                       ) -> dict[str, Any]:
+    """Start every live feed's freshness fetch at once, with the arguments feed_freshness will use."""
+    try:
+        limits = freshness._load_section("freshness")["feeds"]
+        slack, bbox = freshness.CLOCK_SLACK, freshness.ROME_BBOX
+    except (AttributeError, KeyError, TypeError):
+        return dict(providers)  # unknown WS5 version: let it probe one by one
+    pool = ThreadPoolExecutor(max_workers=max(1, len(providers)), thread_name_prefix="feed-probe")
+    deadline = _clock.monotonic() + timeout_s
+    wrapped: dict[str, Any] = {}
+    for name, provider in providers.items():
+        future = None
+        if name in limits:
+            start = now - timedelta(minutes=float(limits[name]["down"]))
+            future = pool.submit(_fetch_all, provider, bbox, start, now + slack)
+        wrapped[name] = _Probed(provider, future, deadline, timeout_s)
+    pool.shutdown(wait=False)  # a hung feed must not hold the answer
+    return wrapped
 
 
 def feed_status(runtime: ToolRuntime, refresh: bool = False) -> dict[str, Any]:
-    """Is each live feed live, late or down right now (WS5 feed_freshness), cached for a few minutes."""
+    """Is each live feed live, late or down right now (WS5 feed_freshness), cached for a few minutes.
+
+    All feeds are probed at the same time, each with a time limit, so the answer takes as long as the
+    slowest feed (at most the limit), not the sum of all of them.
+    """
     inputs: dict[str, Any] = {}
     mods = _ws5("freshness")
     if mods is None:
         return _not_wired(runtime, "feed_status", inputs)
     ttl = float(runtime.settings.tool("feed_status", "cache_minutes")) * 60.0
-    now = datetime.now(timezone.utc)
-    key = (id(runtime), int(now.timestamp() // ttl))
-    if not refresh and key in _FRESHNESS_CACHE:
-        return {**_FRESHNESS_CACHE[key], "cached": True}
-    part = mods[0].feed_freshness(runtime.providers, now)
-    sources = [Source(id=str(x["id"]), retrieved_at=str(x.get("retrieved_at") or "")) for x in part.get("sources", [])]
-    env = runtime.envelope("feed_status", {"checked_at": now.isoformat()}, part.get("result"),
-                           dict(part.get("data_kinds", {})), sources, list(part.get("warnings", [])),
-                           synthetic=bool(part.get("synthetic")))
-    _FRESHNESS_CACHE.clear()
-    _FRESHNESS_CACHE[key] = env
-    return env
+    timeout_s = float(runtime.settings.tool("feed_status", "probe_timeout_s"))
+    with _FRESHNESS_LOCK:  # concurrent callers share one probe run
+        now = datetime.now(timezone.utc)
+        key = id(runtime)
+        if not refresh and key in _FRESHNESS_CACHE:
+            checked_at, cached = _FRESHNESS_CACHE[key]
+            if (now - checked_at).total_seconds() < ttl:
+                return {**cached, "cached": True}
+        providers = _probe_in_parallel(mods[0], runtime.providers, now, timeout_s)
+        part = mods[0].feed_freshness(providers, now)
+        sources = [Source(id=str(x["id"]), retrieved_at=str(x.get("retrieved_at") or ""))
+                   for x in part.get("sources", [])]
+        env = runtime.envelope("feed_status", {"checked_at": now.isoformat()}, part.get("result"),
+                               dict(part.get("data_kinds", {})), sources, list(part.get("warnings", [])),
+                               synthetic=bool(part.get("synthetic")))
+        _FRESHNESS_CACHE.clear()
+        _FRESHNESS_CACHE[key] = (now, env)
+        return env

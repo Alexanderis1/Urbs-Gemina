@@ -67,7 +67,8 @@ class CamsOpenMeteoProvider:
         settings = settings or Settings.load()
         self._config = settings.section("open", PROVIDER_ID)
         timeout = number(self._config, "timeout_s", 60.0)
-        self._fetch = fetch_bytes or (lambda url: http.get_bytes(url, timeout_s=timeout))
+        self._fetch = fetch_bytes or http.CachedFetcher(  # shared across requests: the free API rate-limits
+            lambda url: http.get_bytes(url, timeout_s=timeout), ttl_s=number(self._config, "cache_ttl_s", 1800.0))
 
     def describe(self) -> ProviderInfo:
         return ProviderInfo(
