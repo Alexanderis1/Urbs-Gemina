@@ -44,6 +44,10 @@ MAX_GROUPS = 1500
 #: buffer and close to the size of an H3 res-9 cell; on 13 Rome stations it explains r = 0.85 of the
 #: stations' lasting offsets (scripts/fit_air_fusion.py, 14 Nov 2026).
 LUR_RADIUS_M = 100.0
+#: Pollutants that get the road term. Tried on O3 (14 Nov 2026): the slope is negative as expected
+#: (traffic NO consumes ozone, -0.4 ug/m3 per 100 m of road) but the 9 ozone stations' lasting offsets
+#: do not follow road length, and the held-out error got worse (RMSE 12.5 -> 12.9, coverage 87% -> 84%).
+LUR_KEYS = ("no2",)
 SEGMENTS = Path("data/raw/overture/segments.parquet")
 COVARIATE_OUT = Path("/mnt/project-files/model/no2_lur_covariates.csv")  # moments used for the likelihood fit (NO2 has ~7,000 hours; a random sample is enough)
 
@@ -154,8 +158,8 @@ def main() -> None:
         train = [(o, c) for o, c in pairs if o.observed_at < split]
         test = [(o, c) for o, c in pairs if o.observed_at >= split]
         bias = learn.fit_bias([o.values[key] for o, _ in train], [c for _, c in train])
-        # Land-use term (NO2 only): station = a + b * CAMS + g * (road length - mean at stations).
-        lur = covariate if key == "no2" else None
+        # Land-use term (LUR_KEYS): station = a + b * CAMS + g * (road length - mean at stations).
+        lur = covariate if key in LUR_KEYS else None
         center = float(np.mean(list(lur.values()))) if lur else 0.0
 
         def coefs(rows: list[tuple[Observation, float]]) -> Any:

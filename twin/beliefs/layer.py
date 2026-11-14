@@ -87,8 +87,13 @@ def prior_layer(
     at: datetime,
     resolution: int | None = None,
     prior_field: Iterable[Observation] | None = None,
+    field_time: datetime | None = None,
 ) -> BeliefLayer:
     """A layer that has seen no readings.
+
+    ``field_time`` is the moment the map should describe (default ``at``): a forecast map is read at
+    the hour closest to it, so a layer built from a look-back window still shows the forecast for the
+    time asked, not for the start of the window.
 
     Every cell holds the generic prior from the config, except where a real
     gridded map (``prior_field``, e.g. the Cartoradio grid) has values: there
@@ -102,6 +107,9 @@ def prior_layer(
     n = len(cells)
     index = {c: i for i, c in enumerate(cells)}
     base = spec.prior.mean_at(at)
+    # The map's offset is taken against the generic prior at the map's own time, so relaxing to that
+    # time gives back the map value.
+    field_base = spec.prior.mean_at(_utc(field_time)) if field_time is not None else base
     offset = np.zeros(n)
     prior_var = np.full(n, spec.prior.variance)
     sources: set[str] = set()
@@ -114,7 +122,7 @@ def prior_layer(
         points = [o for o in prior_field if o.entity_type in types and key in o.values]
         if points:
             # A forecast delivers many hours: keep the hour closest to the layer time.
-            target = _utc(at)
+            target = _utc(field_time if field_time is not None else at)
             best = min({_utc(o.observed_at) for o in points}, key=lambda t: abs((t - target).total_seconds()))
             points = [o for o in points if _utc(o.observed_at) == best]
         sources.update(o.source_id for o in points)
@@ -128,7 +136,7 @@ def prior_layer(
                 w = 1.0 / np.maximum(d2, 1e-6)
                 w /= w.sum(axis=1, keepdims=True)
                 m = w @ vals
-                offset[lo : lo + CHUNK] = fspec.offset + fspec.scale * m - base
+                offset[lo : lo + CHUNK] = fspec.offset + fspec.scale * m - field_base
                 if fspec.sd is not None:
                     # Learned from real history: the model's error against stations, all included.
                     prior_var[lo : lo + CHUNK] = fspec.sd**2
@@ -137,7 +145,7 @@ def prior_layer(
                     prior_var[lo : lo + CHUNK] = w @ sig2 + w @ (vals**2) - m**2
             prior_var = np.maximum(prior_var, 1e-6 * spec.prior.variance)
             if fspec.covariate_file is not None:
-                land_use_note = _apply_covariate(fspec, cells, offset)
+                land_use_note = _apply_covariate(fspec, cells, offset, _utc(field_time if field_time is not None else at).hour)
                 if land_use_note:
                     warnings.append(land_use_note)
         else:
@@ -149,7 +157,7 @@ def prior_layer(
             for i, cell_vals in acc.items():
                 values = np.array([v for v, _ in cell_vals])
                 sigmas = np.array([sd for _, sd in cell_vals])
-                offset[i] = float(values.mean()) - base
+                offset[i] = float(values.mean()) - field_base
                 prior_var[i] = max(float(np.mean(sigmas**2) + values.var()), 1e-6 * spec.prior.variance)
     if prior_field is not None and spec.prior_field is not None and spec.prior_field.min_sd > 0.0:
         prior_var = np.maximum(prior_var, spec.prior_field.min_sd**2)
@@ -171,7 +179,7 @@ def prior_layer(
     )
 
 
-def _apply_covariate(fspec: FieldSpec, cells: Sequence[str], offset: Array) -> str | None:
+def _apply_covariate(fspec: FieldSpec, cells: Sequence[str], offset: Array, utc_hour: int) -> str | None:
     """Add the land-use term to each cell's starting point; a note when the covariate file is missing."""
     from twin.beliefs.landuse import load_cell_covariate
 
@@ -181,7 +189,8 @@ def _apply_covariate(fspec: FieldSpec, cells: Sequence[str], offset: Array) -> s
         return (f"land-use term off: {fspec.covariate_file} not found (scripts/fit_air_fusion.py --covariates); "
                 "the map starts from the bias-corrected regional model only")
     x = np.array([table.get(c, fspec.covariate_center) for c in cells])
-    offset += fspec.covariate_coef * (x - fspec.covariate_center)
+    weight = 1.0 if fspec.covariate_weight_by_hour is None else fspec.covariate_weight_by_hour[utc_hour]
+    offset += weight * fspec.covariate_coef * (x - fspec.covariate_center)
     return None
 
 

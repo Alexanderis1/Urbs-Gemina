@@ -480,6 +480,15 @@
       "status": "verified (2026-11-14)",
       "what": "ISPRA land consumption monitoring: new sealed soil 2023-2024 (points)",
       "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/sina_consumo_suolo/localizzazione_cambiamenti_2023_2024_v7/MapServer"
+    },
+    "heat_island_night": {
+      "kind": "estimated",
+      "what": "Night-time urban heat island (degC) of every H3 res-9 cell of the city grid, the covariate of the street temperature layer (air_temperature)",
+      "endpoint": "derived from Copernicus HRL Imperviousness Density 2018 and Tree Cover Density 2018 (20 m) with the heatwave scenario's station-fitted night coefficients",
+      "access": "python scripts/build_heat_island.py -> /mnt/project-files/model/heat_island_night.csv",
+      "licence": "Copernicus data policy: free and open, attribution",
+      "redistribution": true,
+      "status": "implemented, run 14 Nov 2026 (24,004 cells; median 0.2, P95 1.4, max 2.5 degC)"
     }
   },
   "snapshots": {

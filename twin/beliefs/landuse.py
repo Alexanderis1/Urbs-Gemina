@@ -5,7 +5,8 @@ traffic is near it. The regional model (CAMS, 10 km) cannot see that; stations c
 regression learns from the stations how much NO2 rises with road length nearby, and the map then
 uses that slope in every cell (ESCAPE project method: Beelen et al. 2013, Atmos. Environ. 72:10).
 
-Covariate here: length (m) of motor roads (Overture Maps transportation, ODbL) within a radius of a
+Covariates here: the night-time heat island of each cell (sealed ground and trees, for the street
+temperature layer; ``scripts/build_heat_island.py`` -> ``heat_island_night.csv``) and the length (m) of motor roads (Overture Maps transportation, ODbL) within a radius of a
 point. Per-cell values for the whole city are precomputed by ``scripts/fit_air_fusion.py --covariates``
 into ``no2_lur_covariates.csv`` (cell, value), looked for in data/model, data/processed (the deployed API) and the shared model folder.
 """
@@ -59,6 +60,19 @@ def road_length_within(lines: Any, lons: Sequence[float], lats: Sequence[float],
     return out
 
 
+def night_heat_island(imp: npt.ArrayLike, imp_nb: npt.ArrayLike, trees: npt.ArrayLike, trees_nb: npt.ArrayLike,
+                      city: float, local: float, tree: float) -> npt.NDArray[np.float64]:
+    """Night-time urban heat island (degC) above a forecast that carries none.
+
+    Same form and coefficients as the heatwave scenario (config/scenarios.yaml heatwave.coefficients.night):
+    ``city`` x sealed share of the 2.2 km district + ``local`` x (cell - district sealing)
+    - ``tree`` x (cell - district tree cover). Shares are 0-1."""
+    i, inb = np.asarray(imp, dtype=np.float64), np.asarray(imp_nb, dtype=np.float64)
+    t, tnb = np.asarray(trees, dtype=np.float64), np.asarray(trees_nb, dtype=np.float64)
+    out: npt.NDArray[np.float64] = city * inb + local * (i - inb) - tree * (t - tnb)
+    return out
+
+
 def covariate_path(name: str) -> Path | None:
     for d in SEARCH_DIRS:
         p = d / name
@@ -77,4 +91,5 @@ def load_cell_covariate(name: str) -> dict[str, float] | None:
         return {row["cell"]: float(row["value"]) for row in csv.DictReader(f)}
 
 
-__all__ = ["MOTOR_CLASSES", "covariate_path", "load_cell_covariate", "project_lines", "road_length_within"]
+__all__ = ["MOTOR_CLASSES", "covariate_path", "load_cell_covariate", "night_heat_island", "project_lines",
+           "road_length_within"]

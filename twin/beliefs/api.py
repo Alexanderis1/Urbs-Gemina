@@ -68,7 +68,7 @@ def build_layer(
     # Slow feeds (daily means published a day late) need a longer look back than "now".
     start = min(start, end - timedelta(hours=spec.history_hours))
     field = list(prior_provider.fetch(bbox, start, end)) if prior_provider is not None else None
-    layer = prior_layer(spec, cells, start, prior_field=field)
+    layer = prior_layer(spec, cells, start, prior_field=field, field_time=end)
     if wind_provider is not None and spec.wind is not None:
         layer = _apply_wind(layer, list(wind_provider.fetch(bbox, start, end)), start)
     readings: list[Observation] = list(observations or [])

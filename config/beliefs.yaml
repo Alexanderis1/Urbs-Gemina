@@ -155,6 +155,37 @@ layers:
     calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 87%, error spread 1.17, RMSE 12.5 ug/m3 (one city-wide value: 14.2; raw CAMS 12.1 but with ranges far too wide, 99%)"}
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 9 EEA stations)"
 
+  air_temperature:
+    # Street-level air temperature: the hourly weather forecast (Open-Meteo, ICON-2I 2.2 km) plus the
+    # night-time urban heat island the forecast does not carry (sealed ground warms, trees cool), with
+    # the heatwave scenario's station-fitted coefficients. No live street thermometers are open, so
+    # this is a model map (estimated); the regional thermometers check it (docs/heat_check_lazio.md).
+    sources: []
+    prior_field:
+      source: weather_forecast
+      entity_types: [WeatherForecast]
+      value_key: temperature_c
+      method: idw
+      covariate:
+        file: heat_island_night.csv
+        coef: {value: 1.0, basis: "the covariate is already in degC (twin/beliefs/landuse.py night_heat_island)"}
+        center: {value: 0.0, basis: "the forecast carries no heat island (ICON-2I gives central Rome only 0.1-0.3 degC more than the Appia Antica park at night, 14 Nov 2026)"}
+        weight_by_utc_hour:
+          value: [1, 1, 1, 1, 1, 0.75, 0.5, 0.25, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1, 1, 1]
+          basis: "the heat island builds after sunset and fades after sunrise; by day no term beats the forecast (17 ASTI stations, scripts/validate_heat.py). C=60 for the ramp hours"
+      min_sd: 1.0
+    unit: "°C"
+    entity_types: [WeatherObserved]
+    value_key: temperature_c
+    prior:
+      mean: 17
+      sd: 8
+      basis: "used only where the forecast is missing: Rome's yearly mean temperature (about 16-17 degC) and its seasonal spread"
+    correlation_length_km: 5.0
+    relax_tau_hours: 1.0
+    calibration: {method: loso, note: "night minimum on 12 Regione Lazio thermometers 2018-2026: error 1.83 degC with the heat-island term against 2.24 without (docs/heat_check_lazio.md); daytime follows the forecast"}
+    basis: "weather forecast + heat island from Copernicus imperviousness and tree cover 2018"
+
   transit_delay:
     sources: [transit]       # GTFS-RT trip updates (real)
     unit: s
