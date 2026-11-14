@@ -1,0 +1,7 @@
+#EventID|Time|Latitude|Longitude|Depth/Km|Author|Catalog|Contributor|ContributorID|MagType|Magnitude|MagAuthor|EventLocationName|EventType
+47912922|2026-11-12T09:59:57.800000|42.3435|13.047|8.1|SURVEY-INGV||||ML|1.9|--|5 km E Concerviano (RI)|earthquake
+47912602|2026-11-12T09:29:06.480000|42.3435|13.0695|9.8|SURVEY-INGV||||ML|2.3|--|5 km N Petrella Salto (RI)|earthquake
+47899602|2026-11-10T23:24:29.310000|42.3483|13.0472|8.1|SURVEY-INGV||||ML|1.5|--|5 km S Castel Sant'Angelo (RI)|earthquake
+47028541|2026-11-08T04:36:56.260000|41.8782|12.744|10.1|SURVEY-INGV||||ML|1.4|--|5 km N Colonna (RM)|earthquake
+47028211|2026-11-07T23:34:59.210000|42.2283|13.0352|10.2|SURVEY-INGV||||ML|1.4|--|1 km W Marcetelli (RI)|earthquake
+47596642|2026-10-22T01:50:14.040000|42.2585|12.7483|9.3|SURVEY-INGV||||ML|1.2|--|Salisano (RI)|earthquake

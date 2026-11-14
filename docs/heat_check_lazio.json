@@ -1,0 +1,140 @@
+{
+  "stations": {
+    "Collegio Romano": {
+      "lon": 12.480444,
+      "lat": 41.898667,
+      "sealing_100m": 0.974,
+      "sealing_2200m": 0.77
+    },
+    "Fosso di Pantanello ad Ostia": {
+      "lon": 12.360833,
+      "lat": 41.717111,
+      "sealing_100m": 0.0,
+      "sealing_2200m": 0.068
+    },
+    "Massimina": {
+      "lon": 12.365583,
+      "lat": 41.885194,
+      "sealing_100m": 0.084,
+      "sealing_2200m": 0.144
+    },
+    "Osteria Nuova": {
+      "lon": 12.299833,
+      "lat": 42.031583,
+      "sealing_100m": 0.052,
+      "sealing_2200m": 0.058
+    },
+    "Roma EUR": {
+      "lon": 12.497306,
+      "lat": 41.828583,
+      "sealing_100m": 0.605,
+      "sealing_2200m": 0.312
+    },
+    "Roma Flaminio": {
+      "lon": 12.468833,
+      "lat": 41.927917,
+      "sealing_100m": 0.883,
+      "sealing_2200m": 0.466
+    },
+    "Roma Macao": {
+      "lon": 12.507194,
+      "lat": 41.904,
+      "sealing_100m": 0.81,
+      "sealing_2200m": 0.801
+    },
+    "Roma Monte Mario": {
+      "lon": 12.435611,
+      "lat": 41.935472,
+      "sealing_100m": 0.376,
+      "sealing_2200m": 0.373
+    },
+    "Roma Sud": {
+      "lon": 12.478916,
+      "lat": 41.863905,
+      "sealing_100m": 0.72,
+      "sealing_2200m": 0.609
+    },
+    "Salone": {
+      "lon": 12.630667,
+      "lat": 41.911778,
+      "sealing_100m": 0.0,
+      "sealing_2200m": 0.123
+    },
+    "Tevere a Castelgiubileo": {
+      "lon": 12.497889,
+      "lat": 41.988778,
+      "sealing_100m": 0.26,
+      "sealing_2200m": 0.259
+    },
+    "Tor Vergata": {
+      "lon": 12.631111,
+      "lat": 41.851056,
+      "sealing_100m": 0.0,
+      "sealing_2200m": 0.327
+    }
+  },
+  "night_minimum/all_summer_days": {
+    "days": 306,
+    "rmse_no_model": 2.239,
+    "rmse_engine_coefficients": 1.826,
+    "rmse_refit_left_out": 1.868,
+    "refit_coefficients": {
+      "impervious_city": 4.89,
+      "impervious": 1.01,
+      "trees": 5.57
+    },
+    "engine_coefficients": {
+      "impervious_city": 2.9,
+      "impervious": 0.6,
+      "trees": 1.2
+    }
+  },
+  "night_minimum/hot_days": {
+    "days": 185,
+    "rmse_no_model": 2.303,
+    "rmse_engine_coefficients": 1.891,
+    "rmse_refit_left_out": 1.934,
+    "refit_coefficients": {
+      "impervious_city": 4.91,
+      "impervious": 1.23,
+      "trees": 5.8
+    },
+    "engine_coefficients": {
+      "impervious_city": 2.9,
+      "impervious": 0.6,
+      "trees": 1.2
+    }
+  },
+  "day_maximum/all_summer_days": {
+    "days": 306,
+    "rmse_no_model": 1.623,
+    "rmse_engine_coefficients": 1.637,
+    "rmse_refit_left_out": 2.045,
+    "refit_coefficients": {
+      "impervious_city": 0.5,
+      "impervious": 1.03,
+      "trees": -6.49
+    },
+    "engine_coefficients": {
+      "impervious_city": 0.0,
+      "impervious": 0.0,
+      "trees": 0.3
+    }
+  },
+  "day_maximum/hot_days": {
+    "days": 185,
+    "rmse_no_model": 1.722,
+    "rmse_engine_coefficients": 1.737,
+    "rmse_refit_left_out": 2.18,
+    "refit_coefficients": {
+      "impervious_city": 0.34,
+      "impervious": 1.59,
+      "trees": -7.73
+    },
+    "engine_coefficients": {
+      "impervious_city": 0.0,
+      "impervious": 0.0,
+      "trees": 0.3
+    }
+  }
+}

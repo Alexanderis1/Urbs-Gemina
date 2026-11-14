@@ -1,0 +1,78 @@
+{
+  "name": "sports_facilities",
+  "description": "Sports facilities (Challenge 04) in an area: merged official, school and web sources. Web-derived fields are labelled \"from the web, unverified\".",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Sports facilities (Challenge 04) in an area: merged official, school and web sources. Web-derived fields are labelled \"from the web, unverified\".",
+    "properties": {
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "discipline": {
+        "anyOf": [
+          {
+            "maxLength": 60,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Discipline"
+      },
+      "type": {
+        "anyOf": [
+          {
+            "enum": [
+              "public",
+              "school",
+              "private"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "private = known only from OpenStreetMap or the web",
+        "title": "Type"
+      },
+      "accessible": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "true keeps only facilities a source states are accessible",
+        "title": "Accessible"
+      }
+    },
+    "title": "SportsFacilitiesIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/sports_facilities"
+  },
+  "owner": "WS10"
+}

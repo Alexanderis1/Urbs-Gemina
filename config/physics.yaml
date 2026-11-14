@@ -1,0 +1,96 @@
+# Building-aware radio propagation (twin/physics). Every number has a basis.
+# Legal thresholds are NOT here: they live in config/thresholds.yaml.
+version: 1
+
+buildings:
+  file:
+    value: buildings_lod1.parquet
+    basis: "WS2 city model (PR #9): 457k footprints, LiDAR-corrected heights with a per-building height_sd_m"
+  search_dirs:
+    value: [data/model, /mnt/project-files/model]
+    basis: "git-ignored local copy first, then the shared project folder (Modal: mount the same file)"
+  terrain:
+    value: flat_local
+    basis: >-
+      Heights are taken above each building's own ground and the terrain is treated as flat inside the
+      study radius (a few hundred metres). Rome's hills change ground level by more than that only at
+      kilometre scale (C=70). The model's ground_m column mixes datums, so it is not used.
+
+antenna_pattern:
+  # 3GPP TR 38.901 v17, Table 7.3-1: single sector element pattern, used for macro sites.
+  horizontal_beamwidth_deg: {value: 65.0, basis: "3GPP TR 38.901 Table 7.3-1 (and typical 3-sector panels)"}
+  vertical_beamwidth_deg: {value: 7.0, basis: "assumption: typical 1.3-2.6 m macro panel at 0.8-2.6 GHz (6-10 deg), C=60"}
+  front_to_back_db: {value: 30.0, basis: "3GPP TR 38.901 Table 7.3-1 (A_max)"}
+  side_lobe_vertical_db: {value: 30.0, basis: "3GPP TR 38.901 Table 7.3-1 (SLA_V)"}
+  sectors_when_unknown: {value: 3, basis: "standard tri-sector macro site; real sector data is in the Modello A form"}
+  tilt_deg_when_unknown:
+    value: [2.0, 10.0]
+    basis: "assumption: urban macro downtilt range (mechanical + electrical); sampled uniformly when not given"
+  azimuth_sd_deg_when_given: {value: 5.0, basis: "assumption: installation tolerance of a declared azimuth"}
+
+frequency_mhz_by_band:
+  value: {"700": 750, "800": 806, "900": 940, "1800": 1840, "2100": 2140, "2600": 2655, "3500": 3600}
+  basis: "centre of the Italian downlink allocations per band (MIMIT national frequency plan)"
+default_frequency_mhz: {value: 1840, basis: "assumption: 1800 MHz LTE is the most common band in Rome"}
+
+diffraction:
+  method: deygout_p526
+  max_edges: {value: 3, basis: "ITU-R P.526-15 sec. 4.5.1: Deygout with a principal edge and one per sub-path"}
+  basis: "ITU-R P.526-15 eq. (31) knife-edge loss J(v); building walls crossed by the path are knife edges at roof height"
+
+multipath:
+  diffuse_loss_db:
+    value: 35.0
+    basis: >-
+      Knife-edge diffraction alone ignores reflections off facades, so deep street-canyon shadows would
+      come out unrealistically weak (60-80 dB below free space). A diffuse multipath component at
+      free space minus this loss is added in power. 35 dB is the COST 231 Walfisch-Ikegami excess loss
+      (L_rts + L_msd) for Rome-like geometry: 1.8 GHz, 300 m, 20 m streets, 22 m roofs, 30 m mast
+      (computed in docs/physics.md). Sionna ray tracing replaces this with explicit reflections. C=55.
+
+building_entry_loss:
+  # ITU-R P.2109-2 Table 1. Rome's housing stock is mostly pre-1990 masonry: "traditional".
+  building_type: {value: traditional, basis: "assumption (C=70): ISTAT 2021 - most Roman dwellings predate 1991 energy rules"}
+  traditional: {r: 12.64, s: 3.72, t: 0.96, u: 9.6, v: 2.0, w: 9.1, x: -3.0, y: 4.5, z: -2.0, C: -3.0}
+  thermally_efficient: {r: 28.19, s: -3.00, t: 8.48, u: 13.5, v: 3.8, w: 27.8, x: 9.4, y: 9.1, z: -2.0, C: -3.0}
+  basis: "ITU-R P.2109-2 (2023) eq. (1)-(5), valid 80 MHz - 100 GHz"
+
+model_error:
+  los_sigma_db:
+    value: 3.0
+    basis: "assumption: site-specific line-of-sight predictions within 2-4 dB (ITU-R P.1411-12 sec. 4.1 comparisons), C=60"
+  nlos_sigma_db:
+    value: 7.0
+    basis: "assumption: over-rooftop diffraction without reflections; ITU-R P.1411-12 reports 6-8 dB for NLOS site-specific models, C=55"
+
+monte_carlo:
+  samples: {value: 256, basis: "P5/P95 of 256 draws are stable to about 0.5 dB; seeded so runs repeat"}
+  seed: {value: 20261113, basis: "fixed seed: the same run id always gives the same numbers"}
+  eirp_sigma_db_new_site:
+    value: 1.5
+    basis: "assumption: a declared EIRP (Modello A) is accurate to about 1-2 dB (cable loss, power setting)"
+
+raytrace:
+  engine: sionna_rt
+  sionna_version: {value: "2.2.0", basis: "NVIDIA Sionna RT, Apache-2.0; pinned so results repeat"}
+  wall_material: {value: brick, basis: "assumption (C=60): Roman buildings are mostly brick and tuff masonry; ITU-R P.2040 'brick'"}
+  wall_thickness_m: {value: 0.4, basis: "assumption: load-bearing masonry walls in central Rome are 0.4-0.8 m"}
+  ground_material: {value: medium_dry_ground, basis: "ITU-R P.527 medium dry ground (asphalt and soil streets)"}
+  cell_size_m: {value: 5.0, basis: "half a typical Roman street width; 120 x 120 cells over a 600 m square"}
+  heights_m:
+    value: [1.5, 10.0, 20.0, 30.0]
+    basis: "street level (head height) and roughly floors 3, 6 and 9, where residents sit in the main beam"
+  samples_per_tx: {value: 2000000, basis: "Sionna default order; radio-map noise under 1 dB in lit cells"}
+  max_depth: {value: 5, basis: "five interactions (reflections / diffractions) capture street-canyon multipath"}
+  yaws_for_unknown_azimuth:
+    value: 12
+    basis: "single-sector maps every 30 deg; any tri-sector orientation offset 0/30/60/90 deg is a sum of three"
+  tilt_deg_when_unknown: {value: 6.0, basis: "middle of the 2-10 deg urban downtilt range in antenna_pattern"}
+  model_error_sigma_db:
+    value: 4.0
+    basis: "IEEE 2026 validation of urban ray tracing: 1.6-3.8 dB median deviation; building heights are not resampled"
+  modal:
+    gpu: {value: L4, basis: "cheapest Modal GPU with enough memory for a 600 m district (24 GB)"}
+    timeout_s: {value: 900, basis: "one district with 12-24 transmitters and 4 heights"}
+    min_containers: {value: 0, basis: "Alessandro's rule: scale to zero, no always-on containers"}
+    scaledown_window_s: {value: 60, basis: "shut the GPU down one minute after the last call"}

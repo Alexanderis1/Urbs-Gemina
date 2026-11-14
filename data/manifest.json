@@ -116,7 +116,7 @@
       "access": "no key",
       "licence": "operator terms",
       "redistribution": "check terms",
-      "status": "verified"
+      "status": "verified 2026-11-13 (about 4,000 vehicles); provider implemented"
     },
     "roma_ckan": {
       "kind": "real",
@@ -147,31 +147,3538 @@
     },
     "sim_loops": {
       "kind": "simulated",
-      "what": "Road loop stations (flow, speed, occupancy)",
+      "what": "Road loop stations (flow, speed, occupancy) at 93 centrally controlled signals on major roads",
       "endpoint": "twin/providers/simulated/loops.py",
       "access": "generated",
       "licence": "none",
       "redistribution": true,
-      "status": "implemented"
+      "status": "implemented",
+      "seed": "twin/providers/simulated/seed_data/loop_stations.geojson (from Roma Capitale DIPMOB:Semafori + DIPPC:grande_viabilita)"
     },
     "sim_register": {
       "kind": "simulated",
       "what": "Antenna installation register seeded from OpenCelliD and OSM",
-      "endpoint": "planned",
+      "endpoint": "twin/providers/simulated/register.py",
       "access": "generated",
       "licence": "inherits CC BY-SA / ODbL from its seeds",
       "redistribution": true,
-      "status": "planned"
+      "status": "removed 2026-11-13 (rule: only road loops are simulated)",
+      "seed": "twin/providers/simulated/seed_data/antenna_sites.geojson (OpenCelliD mirror, clustered)"
     },
     "sim_emf_points": {
       "kind": "simulated",
       "what": "EMF monitoring points",
-      "endpoint": "planned",
+      "endpoint": "twin/providers/simulated/emf_points.py",
       "access": "generated",
       "licence": "none",
       "redistribution": true,
-      "status": "planned"
+      "status": "removed 2026-11-13 (rule: only road loops are simulated)"
+    },
+    "sim_applications": {
+      "kind": "simulated",
+      "what": "Demonstration inbox of new-installation applications",
+      "endpoint": "twin/providers/simulated/applications.py",
+      "access": "generated",
+      "licence": "none",
+      "redistribution": true,
+      "status": "removed 2026-11-13 (rule: only road loops are simulated)"
+    },
+    "roma_gtfs_rt_trip_updates": {
+      "kind": "real",
+      "what": "Bus/tram trip updates (delay at next stop)",
+      "endpoint": "https://romamobilita.it/sites/default/files/rome_rtgtfs_trip_updates_feed.pb",
+      "access": "no key",
+      "licence": "CC BY-SA",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "eea_station_metadata": {
+      "kind": "real",
+      "what": "EEA sampling point and station coordinates (join on station EoI code)",
+      "endpoint": "https://discomap.eea.europa.eu/map/fme/metadata/PanEuropean_metadata.csv",
+      "access": "no key; tab-separated",
+      "licence": "EEA open",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "roma_semafori": {
+      "kind": "real",
+      "what": "Traffic signals with control system (seed for simulated loop positions)",
+      "endpoint": "https://geoportale.comune.roma.it/geoserver/ows (DIPMOB:Semafori, DIPPC:grande_viabilita)",
+      "access": "WFS, no login",
+      "licence": "credit Roma Capitale - GeoPortale (CC BY assumed, C=60); road geometry OSM-derived (ODbL)",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "est_register": {
+      "kind": "estimated",
+      "what": "Antenna sites: OpenCelliD clusters + OSM masts + Cartoradio peaks, effective EIRP fitted to the Cartoradio grid",
+      "endpoint": "twin/providers/estimated/register.py",
+      "access": "computed at runtime",
+      "licence": "derived from CC BY-SA / ODbL / Cartoradio (restricted)",
+      "redistribution": false,
+      "status": "implemented, uncalibrated"
+    },
+    "arpa_points": {
+      "kind": "real",
+      "what": "ARPA Lazio EMF measurements at addresses (art. 14 L. 36/2001)",
+      "endpoint": "https://dati.comune.roma.it (dataset DTS5887, 2013-2017)",
+      "access": "CKAN; portal answered 502 on 2026-11-13",
+      "licence": "Roma Capitale open data, credit ARPA Lazio",
+      "redistribution": true,
+      "status": "provider ready, table not loaded"
+    },
+    "sensor_community": {
+      "kind": "real",
+      "what": "Citizen PM10/PM2.5 sensors (low-cost)",
+      "endpoint": "https://data.sensor.community/airrohr/v1/filter/box=...",
+      "access": "no key; use HTTP/1.1",
+      "licence": "ODbL",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "cams_open_meteo": {
+      "kind": "estimated",
+      "what": "CAMS Europe air-quality model (NO2, PM10, PM2.5)",
+      "endpoint": "https://air-quality-api.open-meteo.com/v1/air-quality",
+      "access": "no key, multi-point",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "roma_wifi": {
+      "kind": "real",
+      "what": "Roma Capitale public Wi-Fi (DigitRoma) anonymised sessions, counted per hotspot and hour",
+      "endpoint": "https://dati.comune.roma.it (CKAN datasets wifi<year>, hotspot maps D.192)",
+      "access": "no key; one CSV per day, about one day behind",
+      "licence": "CC BY 4.0, Roma Capitale",
+      "redistribution": true,
+      "status": "verified 2026-11-13; DOMAIN, LOGINCOUNT, traffic and language dropped at parse"
+    },
+    "mim_school_buildings": {
+      "kind": "real",
+      "what": "School building register (which school buildings have a gym), for the sports add-on",
+      "endpoint": "https://dati.istruzione.it/opendata/opendata/catalogo/elements1/?area=Edilizia%20Scolastica",
+      "access": "CSV download",
+      "licence": "IODL 2.0 (to confirm)",
+      "redistribution": true,
+      "status": "not tested; gym flag unverified (confidence 70)"
+    },
+    "sports_web_enrichment": {
+      "kind": "estimated",
+      "what": "Facility candidates and fields (disciplines, hours, accessibility, organisational contacts) found on the web by the sports scout and enrichment agents (Exa), each with source URL, retrieval date and confidence; labelled 'from the web, unverified'",
+      "endpoint": "agents/sports_scout, agents/sports_enrich",
+      "access": "Exa API (key in environment)",
+      "licence": "facts with source links; page text is not stored beyond a short quote",
+      "redistribution": true,
+      "status": "implemented, not run"
+    },
+    "open_meteo_forecast": {
+      "kind": "estimated",
+      "what": "Hourly rain, 10 m wind and 2 m temperature forecasts (ICON-2I, fallback ICON-EU)",
+      "endpoint": "https://api.open-meteo.com/v1/forecast",
+      "access": "no key; free tier is rate-limited per IP (the shared cloud egress hit the daily limit on 2026-11-13)",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "tested offline with fixtures"
+    },
+    "glofas_flood": {
+      "kind": "estimated",
+      "what": "Daily river discharge, Tiber at Ripetta and Aniene at Lunghezza (GloFAS)",
+      "endpoint": "https://flood-api.open-meteo.com/v1/flood",
+      "access": "no key",
+      "licence": "CC BY 4.0 (Copernicus CEMS)",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "copernicus_hrl_tree_cover": {
+      "kind": "real",
+      "what": "Tree Cover Density 2018, 20 m, 0-100 % (Copernicus HRL), Rome window; heatwave scenario",
+      "endpoint": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_TreeCoverDensity_2018/ImageServer",
+      "access": "exportImage, no key (scripts/fetch_heat_layers.py)",
+      "licence": "Copernicus free and open data policy",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "istat_census_ages": {
+      "kind": "real",
+      "what": "Residents aged 65+ and 75+ per 2021 census section (P27+P28+P29, P29); heatwave scenario",
+      "endpoint": "https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip",
+      "access": "zip download, no key (scripts/fetch_heat_layers.py)",
+      "licence": "CC BY 4.0 (ISTAT)",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "acea_sewer_outfalls": {
+      "kind": "real",
+      "what": "ACEA ATO2 sewer outfall points on the Tiber basin (280); rain flood river backflow",
+      "endpoint": "https://dati-siitevere.cittametropolitanaroma.it/dataset/punti-di-scarico",
+      "access": "GeoJSON download, no key; host blocked from the cloud sandbox, fetched via Modal (scripts/fetch_sewer_layers.py)",
+      "licence": "CC BY 4.0 (ACEA ATO2, SIITevere)",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "roma_sewer_design_rules": {
+      "kind": "real",
+      "what": "Comune di Roma (Dip. XII, 2000) sewer sizing rules and design rain curve, used as parameters in config/scenarios.yaml",
+      "endpoint": "https://www.studiopetrillo.com/files/Progetto%20fogne%20linee%20guida%20DIP-TP%20XII.pdf",
+      "access": "PDF, read once; numbers copied to config with a basis note",
+      "licence": "public administration document",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "asti_network_stations": {
+      "name": "ASTI-Network Rome weather stations, hourly, summers 2019-2020 (Cecilia et al., CNR-ISAC)",
+      "kind": "real",
+      "use": "heatwave calibration and validation (scripts/validate_heat.py); daily max/min per station in processed/asti_stations_daily.csv",
+      "endpoint": "https://zenodo.org/records/19454855/files/ASTI-Network_2019-2020_JJA.zip?download=1",
+      "access": "zip, 19.8 MB, md5 0a038685c086d917ca9e705ba6a7e3af; README (contains the author's contact) not kept",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "istat_census": {
+      "kind": "real",
+      "what": "ISTAT 2021 census sections of Roma Capitale (basi territoriali, Lazio file) joined with residents and age classes per section (census at 31 Dec 2021)",
+      "endpoint": "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip ; https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip",
+      "access": "zip download, no key",
+      "licence": "CC BY 4.0 (C=80)",
+      "redistribution": true,
+      "status": "verified (both downloaded 2026-11-13)"
+    },
+    "derived": {
+      "kind": "real",
+      "what": "Layers built from other processed layers by twin/ingest (e.g. the merged sensitive_sites layer); data_kind is inherited from the inputs",
+      "endpoint": "twin/ingest/sensitive_sites.py",
+      "access": "generated from data/processed",
+      "licence": "inherits the licences of its inputs (CC BY for Roma/ISTAT layers, ODbL for OSM rows)",
+      "redistribution": true,
+      "status": "implemented"
+    },
+    "lazio_open_data": {
+      "kind": "real",
+      "what": "Regione Lazio open data portal (CKAN): accredited private health facilities with coordinates",
+      "endpoint": "https://dati.lazio.it",
+      "access": "CSV download, no key",
+      "licence": "Regione Lazio open data; licence not stated on this dataset (C=60), facility names and positions only are kept",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
+    },
+    "indicepa": {
+      "kind": "real",
+      "what": "IndicePA (IPA), national register of public administrations: head-office addresses, geocoded offline on OSM addr:* tags",
+      "endpoint": "https://indicepa.gov.it/ipa-dati",
+      "access": "CKAN text download, no key",
+      "licence": "CC BY 4.0 (C=80)",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
+    },
+    "ispra_flood": {
+      "kind": "real",
+      "what": "ISPRA national mosaic of flood hazard areas, PGRA scenarios P3/P2/P1 (v5.0, 2020)",
+      "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer",
+      "access": "ArcGIS REST query, no key",
+      "licence": "CC BY-SA 4.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13); the sdi.isprambiente.it WFS resets cloud connections"
+    },
+    "copernicus_hrl": {
+      "kind": "real",
+      "what": "Copernicus HRL Imperviousness Density 2018 (share of sealed soil, 0-100 %)",
+      "endpoint": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer",
+      "access": "ArcGIS ImageServer exportImage, no key",
+      "licence": "Copernicus open data, free reuse with attribution",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
+    },
+    "salute_open_data": {
+      "kind": "real",
+      "endpoint": "https://www.dati.salute.gov.it",
+      "access": "CSV download, no key",
+      "licence": "Italian Open Data Licence v2.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)",
+      "what": "Ministry of Health open data: hospital beds per structure 2023, family health centres 2022, national pharmacy register (daily); addresses geocoded offline on OSM"
+    },
+    "salute_asl": {
+      "kind": "real",
+      "endpoint": "https://www.dati.salute.gov.it",
+      "access": "CSV download, no key",
+      "licence": "Italian Open Data Licence v2.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)",
+      "what": "Ministry of Health open data: ASL-municipio correspondence with residents 2024 and ASL structures/activity 2022, joined to the Roma Capitale municipi"
+    },
+    "gba_lod1": {
+      "kind": "estimated",
+      "what": "GlobalBuildingAtlas LoD1: building polygons with a machine-learning height and its variance (PlanetScope imagery)",
+      "endpoint": "https://data.source.coop/tge-labs/globalbuildingatlas-lod1/e010_n45_e015_n40.parquet",
+      "access": "download (one 5-degree Parquet tile, about 660 MB)",
+      "licence": "CC BY-NC 4.0 (non-commercial; accepted by the project owner on 2026-11-13)",
+      "redistribution": true,
+      "status": "verified, used by the G0 city model (WS2)"
+    },
+    "urban_atlas_building_height": {
+      "kind": "estimated",
+      "what": "Copernicus Urban Atlas Building Height 2012, 10 m, as 10 height classes; core urban area only",
+      "endpoint": "https://copernicus.discomap.eea.europa.eu/arcgis/rest/services/UrbanAtlas/UA_BuildingHeights_2012_10m/ImageServer",
+      "access": "ArcGIS ImageServer exportImage, no login",
+      "licence": "Copernicus data policy: free and open, attribution",
+      "redistribution": true,
+      "status": "verified, used as fallback height and as the independent height check (WS2)"
+    },
+    "copernicus_dem_glo30": {
+      "kind": "real",
+      "what": "Copernicus DEM GLO-30 surface model (30 m), ground level under buildings until TINITALY is wired in",
+      "endpoint": "https://copernicus-dem-30m.s3.amazonaws.com/",
+      "access": "Cloud-optimised GeoTIFF on AWS, no login",
+      "licence": "Copernicus DEM licence: free, attribution ('produced using Copernicus WorldDEM-30 (c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH 2014-2018')",
+      "redistribution": true,
+      "status": "verified (WS2)"
+    },
+    "mase_lidar_download_api": {
+      "kind": "real",
+      "what": "MASE LiDAR DSM First and DTM, 1 m, flown 2008-2011: 1,265 surveyed 1 km tiles over Roma Capitale (far more than the Tiber strip)",
+      "endpoint": "https://sim.mase.gov.it/core/api/esri/api/v1/downloads",
+      "access": "POST a tile list (grid: gis.platform.sim.mase.gov.it Grigliato_lidar layer 2), poll the session, download the ZIP; see scripts/build_lidar.py",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "download tested 13 Nov 2026; tiles align with Overture footprints within 1 m"
+    },
+    "lazio_gauges_daily": {
+      "kind": "real",
+      "what": "Regione Lazio Civil Protection daily rain (37 gauges) and daily min/max temperature (12 thermometers) inside Rome, Sep 2018 onwards; positions from the Roma Capitale Civil Protection plan (2018), Tab. 8",
+      "endpoint": "https://dati.lazio.it datasets serie-storica-dato-pluviometrico and serie-storica-dato-termometrico (monthly CSV)",
+      "access": "open download, no key (scripts/fetch_lazio_gauges.py)",
+      "licence": "CC BY 4.0, Regione Lazio - Agenzia Regionale di Protezione Civile",
+      "redistribution": true,
+      "status": "implemented, run 14 Nov 2026 (some months return an HTML error page on the portal; listed in stations.json). History for model checks, published months late, not a live feed"
+    },
+    "no2_lur_covariates": {
+      "kind": "estimated",
+      "what": "Motor road length within 100 m of every H3 res-9 cell centre of the city grid, the land-use covariate of the NO2 layer",
+      "endpoint": "derived from Overture Maps transportation segments (release 2026-10-21.0)",
+      "access": "python scripts/fit_air_fusion.py --covariates -> /mnt/project-files/model/no2_lur_covariates.csv",
+      "licence": "ODbL (OpenStreetMap-derived)",
+      "redistribution": true,
+      "status": "implemented, run 14 Nov 2026 (24,711 cells)"
+    },
+    "ispra_landslide": {
+      "kind": "real",
+      "access": "ArcGIS REST query, no key",
+      "licence": "CC BY-SA 4.0 (ISPRA)",
+      "redistribution": true,
+      "status": "verified (2026-11-14)",
+      "what": "ISPRA national mosaic of PAI landslide hazard areas (2025)",
+      "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/PAI_Frane/Aree_pericolosita_frana_PAI/MapServer"
+    },
+    "ispra_soil_change": {
+      "kind": "real",
+      "access": "ArcGIS REST query, no key",
+      "licence": "CC BY-SA 4.0 (ISPRA)",
+      "redistribution": true,
+      "status": "verified (2026-11-14)",
+      "what": "ISPRA land consumption monitoring: new sealed soil 2023-2024 (points)",
+      "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/sina_consumo_suolo/localizzazione_cambiamenti_2023_2024_v7/MapServer"
     }
   },
-  "snapshots": {}
+  "snapshots": {
+    "municipi": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "boundaries",
+      "fetched_at": "2026-11-14T04:03:53Z",
+      "type_name": "DIPPC:210_RomaCapitale_Municipi",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A210_RomaCapitale_Municipi&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "56d9519a13502a89cc7f8d365162b31c1081107fd1d3073b38c1dfda10ee0105",
+      "status": "ok",
+      "features": 15,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/municipi.parquet",
+          "sha256": "8ca6901a4390cc41b0cc7bafb2e7c3202a73d0409c2ad3db7c00b485e3e7b590"
+        },
+        "geojson": {
+          "path": "data/processed/municipi.geojson",
+          "sha256": "92f574f560f1752ff35e52fd8957e091ed6bd11d2eae046ef77b918daee572b3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "urban_zones": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "boundaries",
+      "fetched_at": "2026-11-14T04:03:55Z",
+      "type_name": "DIPPC:rc_zone_urbanistiche",
+      "notes": "155 zones; code_zu is the zone code, municipi the municipio",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3Arc_zone_urbanistiche&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "31bf86391c76143ca3d415a69211f8a5b6eec20e806eb3a7b87d854a1e7ff6d1",
+      "status": "ok",
+      "features": 155,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/urban_zones.parquet",
+          "sha256": "b5b9e76d65e2bbc133bbc75097c27f15d25f81505e7bd3232f09514544c875ae"
+        },
+        "geojson": {
+          "path": "data/processed/urban_zones.geojson",
+          "sha256": "c32e2e125b2ddd4f6ef8a4c157e7109d1c9f7357c9a80b0c45ebfe94bba11e4a"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "census_sections": {
+      "source": "istat_census",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "boundaries",
+      "fetched_at": "2026-11-14T04:16:45Z",
+      "notes": "ISTAT 2021 census sections of Roma Capitale with residents and children 0-14 (census at 31 Dec 2021)",
+      "request_url": [
+        "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip",
+        "https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip"
+      ],
+      "raw_sha256": {
+        "shapes": "3cbb574d3d033cf274daef61d5fdc779a81205363a631823e642d0370b172b04",
+        "population": "ff8021ef7708c7cdb1b899521edd133cf96f0e9c0ddb90f7b7889fc1d5ecfb0d"
+      },
+      "status": "ok",
+      "features": 23591,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/census_sections.parquet",
+          "sha256": "4399670316528eefe9b9efbd9b6072e0bb2072bf688e34d7159efab38bad6136"
+        },
+        "geojson": {
+          "path": "data/processed/census_sections.geojson",
+          "sha256": "84c48c47d30b01e07f486c12c35db5bfa321aad0bcd1537df7f8632b83d81d0f"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 5,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "rete_ecologica_poly": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "planning",
+      "fetched_at": "2026-11-14T04:04:13Z",
+      "type_name": "DIPAU:ReteEcologicaPoligono",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAU%3AReteEcologicaPoligono&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "8a071319e5d6e41756654b0d041afcc4150bfd0de899212d35011b2a3371dccc",
+      "status": "ok",
+      "features": 1209,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/rete_ecologica_poly.parquet",
+          "sha256": "fe9e2629d834727faf1c3c827f70cc01e8b819b7bf64444f284b5dbf87e70ad5"
+        },
+        "geojson": {
+          "path": "data/processed/rete_ecologica_poly.geojson",
+          "sha256": "321a99c343af7b27aff6b763681c0287e199e722dc31acc5195f1529378e0990"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 37,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "rete_ecologica_line": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "planning",
+      "fetched_at": "2026-11-14T04:04:16Z",
+      "type_name": "DIPAU:ReteEcologicaLinea",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAU%3AReteEcologicaLinea&outputFormat=application%2Fjson",
+      "raw_sha256": "aae6a6c2e8ec5a1af3b1d576562eb88b22fc7b34c4c9d57f4a4599ea654058f3",
+      "status": "ok",
+      "features": 140,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/rete_ecologica_line.parquet",
+          "sha256": "3701d0fd554b3d96e5ca69d74c6047c6ebf68de5557f00463838419383c4a784"
+        },
+        "geojson": {
+          "path": "data/processed/rete_ecologica_line.geojson",
+          "sha256": "50443b69f5d299b6ee823c05d292047861a448a3770e4855ee6ae34e37710172"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "cpq_morfologie": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "planning",
+      "fetched_at": "2026-11-14T04:04:17Z",
+      "type_name": "DIPAU:CartaPerLaQualita_Morfologie_Poligono",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAU%3ACartaPerLaQualita_Morfologie_Poligono&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "d82d815a83def55cb6c4fd2ab88e869d5f34e9d08f23f268cf6e56f0bfa3a378",
+      "status": "ok",
+      "features": 155,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/cpq_morfologie.parquet",
+          "sha256": "230256e7d1a3043b22dd6f648c2a5c9cc46e21c5eb7a27f0e725442b9cda4b38"
+        },
+        "geojson": {
+          "path": "data/processed/cpq_morfologie.geojson",
+          "sha256": "a0e8f2830795f9c6777723a5cf2a2ffe913e343d81ee071b561d160b373484a3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "RECORD"
+        ]
+      }
+    },
+    "cpq_preesistenze": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:04:19Z",
+      "type_name": "DIPAU:CartaPerLaQualita_Preesistenze_Poligono",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAU%3ACartaPerLaQualita_Preesistenze_Poligono&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "14ae5eb5dff2069370c99405f030068b5a9fa43e8d8c715e002122cda43bb7ab",
+      "status": "ok",
+      "features": 4629,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/cpq_preesistenze.parquet",
+          "sha256": "eaddd13f0b059402b8dbb2320991bfcd7478b570116ab60bc8e5b4947a5d696d"
+        },
+        "geojson": {
+          "path": "data/processed/cpq_preesistenze.geojson",
+          "sha256": "f468866074438d67eb95923d6a7f1ece3be319acf06ba3485952f74efc058ff4"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 5,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "RECORD"
+        ]
+      }
+    },
+    "cpq_spazi_aperti": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:04:21Z",
+      "type_name": "DIPAU:CartaPerLaQualita_Elementi_Spazi_Aperti_Poligono",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAU%3ACartaPerLaQualita_Elementi_Spazi_Aperti_Poligono&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "9513ad1216d417281d6da8820c4820db361fe9210fb650aee41f1cec53d02242",
+      "status": "ok",
+      "features": 1414,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/cpq_spazi_aperti.parquet",
+          "sha256": "0b5e1ac0be1dead5dddd15e0292d26bc58094b90128b1f1ff3fb3a8bb3871387"
+        },
+        "geojson": {
+          "path": "data/processed/cpq_spazi_aperti.geojson",
+          "sha256": "e17b3d1c56e9c60cdbdb4adba261b07f0817f195781ebb6c769d54f5085311d0"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "RECORD",
+          "DENOMINAZIONE"
+        ]
+      }
+    },
+    "cpq_edilizia_speciale": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:04:22Z",
+      "type_name": "DIPAU:CartaPerLaQualita_Edifici_Edilizia_Speciale",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAU%3ACartaPerLaQualita_Edifici_Edilizia_Speciale&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "9283f8bb346a5c942118cbfa6aea2f4907f1fd1af1244215f4278c1f5f27ae86",
+      "status": "ok",
+      "features": 8240,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/cpq_edilizia_speciale.parquet",
+          "sha256": "49a0dc12021c890f3a4e2f413116aef3bf0e1089371d2fbdbafd0d83db7a08d6"
+        },
+        "geojson": {
+          "path": "data/processed/cpq_edilizia_speciale.geojson",
+          "sha256": "57f63361ac5c3d2dc38e83a4e58ec7e517abc54d4780170ad70cc5d9911fda7a"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 3,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "RECORD"
+        ]
+      }
+    },
+    "unesco": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:04:26Z",
+      "type_name": "SOVR:SitoUnescoPoly",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=SOVR%3ASitoUnescoPoly&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "4a0d912fad11e6b43d55a58bc0b1ceeacfbf5ec5c9facbfa34912efe1c1cba88",
+      "status": "ok",
+      "features": 16,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/unesco.parquet",
+          "sha256": "001114eb2070c3f8aa2f7538d1a7c8ba7691e466c1bf4f10476b96734e716c13"
+        },
+        "geojson": {
+          "path": "data/processed/unesco.geojson",
+          "sha256": "605beea8a15a1e190fb3696265b1b1aaa7398c63daedbb1d575ec0b1766a75e3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "unesco_buffer": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:04:26Z",
+      "type_name": "SOVR:buffer_zone",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=SOVR%3Abuffer_zone&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "328c7950577a96b9191444466a3a5ce212e54eaecae1f856db40578f383e4baf",
+      "status": "ok",
+      "features": 4,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/unesco_buffer.parquet",
+          "sha256": "4ca43aeedf11ab635eba5bb6fa5431cc9f51e2bfdad7e9cff75896a6240ba4c7"
+        },
+        "geojson": {
+          "path": "data/processed/unesco_buffer.geojson",
+          "sha256": "7323d6f895869d60714ed4c8ca6d7019e7fa504f40a239c8bb2d834a1f55b1ca"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 1,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "protected_areas": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "environment",
+      "fetched_at": "2026-11-14T04:04:27Z",
+      "type_name": "DIPPC:235_AreeProtette",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A235_AreeProtette&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "7061c38e97172a3bc2df91ad11ecdddc27dfb3a18ac9770ea948715e9117e773",
+      "status": "ok",
+      "features": 21,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/protected_areas.parquet",
+          "sha256": "79f1d2ada5629e1628a7c62c651dc8138e56cdf7f4e180b53a6a6db170c9e892"
+        },
+        "geojson": {
+          "path": "data/processed/protected_areas.geojson",
+          "sha256": "3da6e9fb5aa0e4de1adc3f1aff46251e861b289672f00d0c7089aef32a90b40f"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_paesaggi_roma": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:04:29Z",
+      "type_name": "REGLAZ:tavola_a_paesaggi",
+      "notes": "PTPR Tavola A cascaded from Lazio; the full layer covers the whole region",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=REGLAZ%3Atavola_a_paesaggi&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "93c9342874c17c2adc60390cacf36bfd50130a2b7174ec8decb712649121c290",
+      "status": "ok",
+      "features": 6152,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_paesaggi_roma.parquet",
+          "sha256": "02803cbd40c5eac73ecdeb74a4f1f9d91a163b8e76c8718a6083d75def374733"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_paesaggi_roma.geojson",
+          "sha256": "b7b3bed70fe86674a706156f3bce134755e155cabb4c9351a7859c8e11530ea6"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 57,
+        "dropped_outside_city": 166,
+        "dropped_empty_columns": []
+      }
+    },
+    "acoustic_zoning": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "environment",
+      "fetched_at": "2026-11-14T04:05:04Z",
+      "type_name": "DIPAMB:ZonizzazioneAcustica",
+      "notes": "2002 zoning, not hit-tested before",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAMB%3AZonizzazioneAcustica&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "0cfc4490da99923c2ea02f8ccb228ca69628ff99fea0af0afa1a0fef187d3bf3",
+      "status": "ok",
+      "features": 479,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/acoustic_zoning.parquet",
+          "sha256": "ebe10fd1d60569f7f8cfc17d2afb4b100ab2f73da3b1356bb00848e9fccd5f7a"
+        },
+        "geojson": {
+          "path": "data/processed/acoustic_zoning.geojson",
+          "sha256": "2d3322e90212e5710d375ac7133732419ef27a1adbbaa488bbaf79ff31378443"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 10,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "schools_state": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:05:06Z",
+      "type_name": "DIPSCU:mv_portale_rete_statale",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPSCU%3Amv_portale_rete_statale&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "b8e8538a1c7e22b34b2596a6009b391be6fcac9de07330b46ccd1302c6ce3eb5",
+      "status": "ok",
+      "features": 915,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/schools_state.parquet",
+          "sha256": "5e42a7bcaec8a49a02dda165ff15812c06837454f7190c9445472b7b6e08ea9f"
+        },
+        "geojson": {
+          "path": "data/processed/schools_state.geojson",
+          "sha256": "7f21f4f9abc7ec72d24c6d2fc675116bc872e550a0e9febe864b496289a23e64"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 1,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "nidi": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:05:09Z",
+      "type_name": "DIPSCU:mv_portale_nidi_capitolini",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPSCU%3Amv_portale_nidi_capitolini&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "e68815e056956214942e51429a986b732b19ff0cbe6a6a191bfba51672236da4",
+      "status": "ok",
+      "features": 386,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/nidi.parquet",
+          "sha256": "79cbd4a9ba4dbcfc8b0a91f02b55b992dd3f6966f4886063ee12d66080fe0f34"
+        },
+        "geojson": {
+          "path": "data/processed/nidi.geojson",
+          "sha256": "1fb004dde80def90d1e4f931415d24b0467e816413196eed337c47ee330b5234"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 4,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "infanzia": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:05:10Z",
+      "type_name": "DIPSCU:mv_portale_infanzia_capitolina",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPSCU%3Amv_portale_infanzia_capitolina&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "5aae15206849ecc5ce55778d1ddf413f9c460f0803bc5443dc139cad5fd40dcb",
+      "status": "ok",
+      "features": 331,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/infanzia.parquet",
+          "sha256": "96bd5682429f2c0f958959ce559a48609b28145d6151baff774cc7b51a3a92d9"
+        },
+        "geojson": {
+          "path": "data/processed/infanzia.geojson",
+          "sha256": "8b1108036e16eadd4719e1f42a963d5b627b4a255b46f18d0613f2e04d94366b"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 2,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "hospitals": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:05:11Z",
+      "type_name": "DIPAMB:Ospedali",
+      "notes": "38 features, looks incomplete (C=60)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAMB%3AOspedali&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "fc7c7158bbfb19cb615fb4c180a133a8900f716c063bfbe1896c1ba145b2776e",
+      "status": "ok",
+      "features": 38,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/hospitals.parquet",
+          "sha256": "da000339b1464339d01eadceac6dc86459ec5d25b07c307c181351c1aa36c347"
+        },
+        "geojson": {
+          "path": "data/processed/hospitals.geojson",
+          "sha256": "083fd1cf4b4f1e28486dce2b5b118f916da720ead2b1a104d19c8d95ce79ddd6"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "health_care": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:05:12Z",
+      "type_name": "DIPPC:241_ServiziSanitarieAssistenziali",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A241_ServiziSanitarieAssistenziali&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "a4b6fca0eabbd03d08d40a3bee0a8daf4e188ac9f7918c007e383141f7ed1b84",
+      "status": "ok",
+      "features": 21,
+      "dropped_fields": [
+        "e-mail",
+        "fax",
+        "id_pec",
+        "ref-cell",
+        "ref-nome",
+        "ref-quali",
+        "telefono"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/health_care.parquet",
+          "sha256": "b29b6a3be77b7a5449e535dc4d13215e5bb53e513eff48d9113178a16b7f7cf7"
+        },
+        "geojson": {
+          "path": "data/processed/health_care.geojson",
+          "sha256": "4ffe106cc02ebce3be8691f6f7c360f8cbc7332047c047605daded93c8a05f6f"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "note"
+        ]
+      }
+    },
+    "care_homes_osm": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:05:12Z",
+      "notes": "No official RSA layer exists; OSM is incomplete",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 17,
+      "dropped_fields": [
+        "contact:facebook",
+        "email",
+        "phone"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/care_homes_osm.parquet",
+          "sha256": "2d50be720a30b6e7219ab4cd65f034f58182154f379b34b848ea3e499516174a"
+        },
+        "geojson": {
+          "path": "data/processed/care_homes_osm.geojson",
+          "sha256": "73f679ec0c06eda9e42607fae537b67bbc025f286743d22fffcaf420f7dfe05c"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "playgrounds_osm": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:06:04Z",
+      "notes": "No official playground layer exists; OSM is incomplete",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 592,
+      "dropped_fields": [
+        "contact:facebook",
+        "email",
+        "phone",
+        "phone:mobile"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/playgrounds_osm.parquet",
+          "sha256": "4ebe3eb4c4128bfda62cecdf8587268ed26cc8c6751d61261e352b2eacbcb3e8"
+        },
+        "geojson": {
+          "path": "data/processed/playgrounds_osm.geojson",
+          "sha256": "1effc979f901aa46ab673580787c87f2da8e3773984818a6c2b5e81fafdc2dcc"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "masts_osm": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "antennas",
+      "fetched_at": "2026-11-14T04:06:43Z",
+      "notes": "About 191 mobile masts in Roma Capitale were counted earlier (C=80)",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 333,
+      "dropped_fields": [
+        "communication:mobile_phone",
+        "communication:television"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/masts_osm.parquet",
+          "sha256": "3b43e89a800d157e6178611dfd155170a044a30a776e0968d9a88d4aee9780ea"
+        },
+        "geojson": {
+          "path": "data/processed/masts_osm.geojson",
+          "sha256": "80547ecd49f34b54bbff936857d075ec6513d19b223970c60bffaec594356ed5"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "sports_municipal": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sports",
+      "fetched_at": "2026-11-14T04:07:27Z",
+      "type_name": "DIPPC:243_ServiziSportivi",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A243_ServiziSportivi&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "bac217da67cd67ad7640e3e8e8842de6817ff398cbf1e01388e3fc79139c5aa0",
+      "status": "ok",
+      "features": 270,
+      "dropped_fields": [
+        "email1",
+        "id_pec",
+        "tel1",
+        "tel2",
+        "tel3"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/sports_municipal.parquet",
+          "sha256": "d53e788901322c370325bf44d5437992e4b5e9f06349f9597e1d151df5fb6656"
+        },
+        "geojson": {
+          "path": "data/processed/sports_municipal.geojson",
+          "sha256": "d769b828b205ea39ec12d869f8ef6cbf2fb9e8040884921c14e0942f60c5cb1c"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_a_aree_tutela_dm": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:08:14Z",
+      "type_name": "geonode:ptpr_tavola_a_aree_tutela_dm_57472580c4fa53a68da4d38bd9ee2093",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aptpr_tavola_a_aree_tutela_dm_57472580c4fa53a68da4d38bd9ee2093&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "38bc1ee13460a2a21b69f8ef0a8b933c93c41d67549e23e1a71fe8f8a3b6d397",
+      "status": "ok",
+      "features": 12,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_a_aree_tutela_dm.parquet",
+          "sha256": "354f094bee34d4d33f6c972b02292acbbe12e822d81a259c7aa87841d0f15695"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_a_aree_tutela_dm.geojson",
+          "sha256": "9d02fd6dd5bd4e591c20f49a7bb4f3cf0b3e7dd9a09aeb40ed36b73be4dfac16"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_ex_1497_ab": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:08:16Z",
+      "type_name": "geonode:ex_1497_ab",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aex_1497_ab&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "5c150989fa99fb747a16f268c80693e0d81808e382a2af3840f924561eaf9b03",
+      "status": "ok",
+      "features": 128,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_ex_1497_ab.parquet",
+          "sha256": "ac59c7f47f6f51590a402af7eec697e115fe7b40cee21d1ba2d60845885e366d"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_ex_1497_ab.geojson",
+          "sha256": "fe2f46528e3a36c14ecb7935500d4030b7060b20fc9a96f58a9a2e010a1d6d03"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 1,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_ex_1497_cd": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:08:17Z",
+      "type_name": "geonode:ptpr_tavola_b_ex_1497_cd_468ef73f428b4e868f9cac53332be356",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aptpr_tavola_b_ex_1497_cd_468ef73f428b4e868f9cac53332be356&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "46c8acbb5503a38389063370941a13725a831a66ae3de7c6607ddf9f70acf3f0",
+      "status": "ok",
+      "features": 228,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_ex_1497_cd.parquet",
+          "sha256": "45c5bbfa8fce9360d996eacf687c483ec575ccf34d47ca4250fd93097aded991"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_ex_1497_cd.geojson",
+          "sha256": "3c70e4585a6c77c686690ea7489e541cb5d9f16b41a5a76b8d1acde2dc40b305"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 2,
+        "dropped_outside_city": 4,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_boschi": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:08:20Z",
+      "type_name": "geonode:boschi",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aboschi&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "70338d2fafcc67f54efb24efa73fff48091525ff0b1633ec0577785997706cda",
+      "status": "ok",
+      "features": 3034,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_boschi.parquet",
+          "sha256": "1de62ea920a12d6acaa3c9fe6b8733c8fe845568ea97d78c071eff32293db318"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_boschi.geojson",
+          "sha256": "7d22f15680394b35fc4b437292a9988e96f20cb5400ac9a8677b296c7a950ed3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 10,
+        "dropped_outside_city": 158,
+        "dropped_empty_columns": [
+          "annotazion"
+        ]
+      }
+    },
+    "ptpr_b_acque_pubbliche": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:08:45Z",
+      "type_name": "geonode:acque_pubbliche0",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aacque_pubbliche0&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "91906483947411fd2c2a99a13b04bd17c7eff23e2827c83780ee8d32c2aa4566",
+      "status": "ok",
+      "features": 438,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_acque_pubbliche.parquet",
+          "sha256": "c240462632d3e8f11d06d9861b8098142742ca57e6e622e3fc90219e6b13f66e"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_acque_pubbliche.geojson",
+          "sha256": "79d5c44b3facefeb44a47dbacb364a529c112b39c433d5472b558200736fe5f3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 18,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_aree_archeologiche": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:08:48Z",
+      "type_name": "geonode:aree_archeologiche",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aaree_archeologiche&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "040ee7a1aa88f454cad0c8e757c7fa4c6102e17844ad25c469afec2d93684542",
+      "status": "ok",
+      "features": 1050,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_aree_archeologiche.parquet",
+          "sha256": "c3c9a28ee06f81868adc2b4f6c04c6d10b889de84f05816064e9c0a7239b88b4"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_aree_archeologiche.geojson",
+          "sha256": "1d2b8b8474b38d08d05c7ccdbd6f9d752bcee52410f26afa75e508080fe7359d"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 1,
+        "dropped_outside_city": 10,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_decreti_archeologici": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:08:50Z",
+      "type_name": "geonode:decreti_archeologici",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Adecreti_archeologici&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "8156199c6050c32f23235bcc7fa3cd6a1840182243579a00b76f75ccd11e37a4",
+      "status": "ok",
+      "features": 10,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_decreti_archeologici.parquet",
+          "sha256": "64397c452c39b7fec495b5464e2e1f3f1bd3eebb3d641689ac78135e468fe7ac"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_decreti_archeologici.geojson",
+          "sha256": "32b61249396866c8cfe0a38fc2b703dc9543dd987bb93658799f51ff2d6f77fb"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 1,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "RELAZIONE",
+          "TIPO_OGG",
+          "NOME_AREA",
+          "ATTI"
+        ]
+      }
+    },
+    "ptpr_b_punti_archeologici": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:08:51Z",
+      "type_name": "geonode:punti_archeologici",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Apunti_archeologici&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "ea8e5c6503cc84d1bf6c778164f8441ccb61858cf162a4d58bafbc3784339485",
+      "status": "ok",
+      "features": 2810,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_punti_archeologici.parquet",
+          "sha256": "58ee10c630033e617563c4e8007cf62c4fca8f735c004d1692a0ae76297795fa"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_punti_archeologici.geojson",
+          "sha256": "74cf5fb1fb4daa46dea34b2de1a00e00a6ff061ee76ed67f38ae4df14e085952"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 4,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_centri_storici": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heritage",
+      "fetched_at": "2026-11-14T04:08:53Z",
+      "type_name": "geonode:centri_storici",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Acentri_storici&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "4ac1256ace5aff03532c7c5e1bba829a5890793d19014be54d1945b59720620c",
+      "status": "ok",
+      "features": 65,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_centri_storici.parquet",
+          "sha256": "6d72a720c63bc3f92ce3fa760c4b3ac4877876c48498405f20b364a956288275"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_centri_storici.geojson",
+          "sha256": "d29547f310595e76280c3572783a47dc250a44d9e7c19d5ca8df827ca7de8ce2"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 3,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_aree_naturali_protette": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "environment",
+      "fetched_at": "2026-11-14T04:08:54Z",
+      "type_name": "geonode:aree_naturali_protette1",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aaree_naturali_protette1&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "19eb7bb15cb3526de6d8afb3b0bb89dae1635c056510888325dd426008a805d5",
+      "status": "ok",
+      "features": 37,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_aree_naturali_protette.parquet",
+          "sha256": "51a47359a07fb37b1f2416cb4dac14b03d2832cc457029119187000927e1bdac"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_aree_naturali_protette.geojson",
+          "sha256": "71d652566908e07368df81102036e52baaa458a82e8228fe733eb7f835d3885a"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 1,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "url_pianif"
+        ]
+      }
+    },
+    "ptpr_b_usi_civici": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:08:56Z",
+      "type_name": "geonode:usi_civici",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Ausi_civici&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "b116694d7009f8aafc890a41ca0f96161756cd0df5fa06aebef5fa38efa15cd3",
+      "status": "ok",
+      "features": 19,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_usi_civici.parquet",
+          "sha256": "d98ed020b9706f1a49131eb7b42e6e91601bab03d1033e61fbb7b21ea2cefab4"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_usi_civici.geojson",
+          "sha256": "d8cd9eb62493d800d8791a4b375f0e6430d179e7c0f63721a41ffcc76fa6b73a"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 2,
+        "dropped_empty_columns": [
+          "SEZ_CTR",
+          "NOTE_"
+        ]
+      }
+    },
+    "natura2000": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "environment",
+      "fetched_at": "2026-11-14T04:08:56Z",
+      "type_name": "geonode:rete_natura200000",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Arete_natura200000&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "191bf887752abdc5db78c5f43a051d83fcdfd72627cc84c04476ea8565b774da",
+      "status": "ok",
+      "features": 21,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/natura2000.parquet",
+          "sha256": "a4da2356064a6311a463f50a52b3620ef8070509583f4215398371353104ee00"
+        },
+        "geojson": {
+          "path": "data/processed/natura2000.geojson",
+          "sha256": "1d36dccfb632fc832c4e791e417856983e4f28d1f7562c04bd3c596b09cf8a78"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 1,
+        "dropped_empty_columns": []
+      }
+    },
+    "sitap_art136_cd": {
+      "source": "sitap",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:16:07Z",
+      "type_name": "sitap_ws_clone:LAZIO_art_136_c_d",
+      "status": "not_available",
+      "error": "URLError: <urlopen error [Errno 104] Connection reset by peer>"
+    },
+    "sitap_art136_ab": {
+      "source": "sitap",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:16:17Z",
+      "type_name": "sitap_ws_clone:LAZIO_art_136_a_b",
+      "notes": "type name guessed from the c_d layer; marked not_available if wrong",
+      "status": "not_available",
+      "error": "URLError: <urlopen error [Errno 104] Connection reset by peer>"
+    },
+    "pools_municipal": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sports",
+      "fetched_at": "2026-11-14T04:07:29Z",
+      "type_name": "GABSIN:piscine",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GABSIN%3Apiscine&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "66ab205279af2a9369cdb48fed07fbe517413a375b7bac8900eda8baff58ca2c",
+      "status": "ok",
+      "features": 17,
+      "dropped_fields": [
+        "email",
+        "telefono"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/pools_municipal.parquet",
+          "sha256": "a886e7d18535108fee089d6134b68e9292b6778e96042e6084a648bc58445478"
+        },
+        "geojson": {
+          "path": "data/processed/pools_municipal.geojson",
+          "sha256": "e0263560c7325276acefb132c104deefb97a55ada33c348853f29b975b105ab9"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "osm_sports": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sports",
+      "fetched_at": "2026-11-14T04:07:30Z",
+      "notes": "Private and public sports venues from OSM; also saved as Overpass-style JSON for WS10",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 15781,
+      "dropped_fields": [
+        "contact:facebook",
+        "contact:instagram",
+        "contact:phone",
+        "contact:tiktok",
+        "contact:whatsapp",
+        "contact:youtube",
+        "email",
+        "fax",
+        "phone"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/osm_sports.parquet",
+          "sha256": "ff983bcebe2b8e422340a8f7da395138df5ce6bda8a0fc6957d5e69c0023ce76"
+        },
+        "geojson": {
+          "path": "data/processed/osm_sports.geojson",
+          "sha256": "145d999c3c366d144494c247d39be30e32a5ca42dc227e3a396957853cc9b428"
+        },
+        "overpass_json": {
+          "path": "data/processed/osm_sports.json",
+          "sha256": "a94dab614474203a6bed613001b4f18227c71c5d6539f7283a2c5a7017a02199"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_a_punti_vincoli": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:02Z",
+      "type_name": "geonode:punti_5_vincoli",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Apunti_5_vincoli&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "b41d3d5d9b610b28951aac3ba9e7bf2aad12998a81e476c9c7a57b83afe7c186",
+      "status": "ok",
+      "features": 2,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_a_punti_vincoli.parquet",
+          "sha256": "f287654bbf52ef713a64953302c7cedba4724014d1880c9c6d26f7acc5e6682f"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_a_punti_vincoli.geojson",
+          "sha256": "f51fceeae8cf06838977440064389a4280930f9a66520a97ada6736bea1624ee"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "NOTE_"
+        ]
+      }
+    },
+    "ptpr_a_rispetto_vincoli": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:02Z",
+      "type_name": "geonode:rispetto_5_vincoli",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Arispetto_5_vincoli&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "868fd3fe3df0ffcf32abe6654d31a1f128239325e8c57e4485f440ac36c240f6",
+      "status": "ok",
+      "features": 7,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_a_rispetto_vincoli.parquet",
+          "sha256": "a035c75e16bb5fabd552a0e0c6c0154abe7612a5f021943907f5289a189d89c2"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_a_rispetto_vincoli.geojson",
+          "sha256": "9f26c513b57855212d80397f76f29d2aee885a350c919c3b166e23fd9119827d"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 2,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_a_visuali": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:04Z",
+      "type_name": "geonode:visuali_5_vincoli0",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Avisuali_5_vincoli0&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "8d72e28f47fb7fb6d00bb57e86e7f0d5250fc6c73c306a518c9a7d7f8c98707a",
+      "status": "ok",
+      "features": 40,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_a_visuali.parquet",
+          "sha256": "67fa2e37dd9d976ca02d48739793a48a8a2525268087e18bb5ffde91cfc378cf"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_a_visuali.geojson",
+          "sha256": "8b70ab62e632bf304db0adbab10cdbfd7da9ae2f999a67f7fbeb1b6b3fd49d2c"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "NOTE_"
+        ]
+      }
+    },
+    "ptpr_a_piani_attuativi": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:05Z",
+      "type_name": "geonode:piani_attuativi_valenza_paesistica",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Apiani_attuativi_valenza_paesistica&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "d19e4ccdb82d16397408249f7f11f6eb81919cb64431fd12cc6b14cd5fda6fc4",
+      "status": "ok",
+      "features": 24,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_a_piani_attuativi.parquet",
+          "sha256": "81c0b9900304ed3122a6ad50969f1c3fd19ec51a915379f2cc0294776c89c968"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_a_piani_attuativi.geojson",
+          "sha256": "a700aa98f9b45501fb739ff479783835a6c48792e720a983aeb2f30e799e6b63"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_linee_archeologiche": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:05Z",
+      "type_name": "geonode:linee_archeologiche",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Alinee_archeologiche&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "c33d78bd38ceaddda2ad649fd6db68ff0bf68e463e193343134aab58f4559185",
+      "status": "ok",
+      "features": 1249,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_linee_archeologiche.parquet",
+          "sha256": "fd536d6c9510eaa88b97f913f8601a55e958ecc502f7a69e1d5bc5a3cc6c40e9"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_linee_archeologiche.geojson",
+          "sha256": "b140894e63ceaadcc66ad2e2d4785e19a98e75d005084389e84750f78e6e5707"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 9,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_punti_archeologici_tipizzati": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:07Z",
+      "type_name": "geonode:punti_archeologici_tipizzati3",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Apunti_archeologici_tipizzati3&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "4f1adf467168de6aabff1e0b9e785f9d47a984b7cdf3b1401d079e8ee6eb9d26",
+      "status": "ok",
+      "features": 1380,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_punti_archeologici_tipizzati.parquet",
+          "sha256": "2f6b34279d2acaaa2ab82d43d70c0b82e413bd80e1823e2d208940d274f0ae29"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_punti_archeologici_tipizzati.geojson",
+          "sha256": "eb39427c0fee3e3b7e15c130881272c1452bd4579c533fb86c93c488a3c01291"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 51,
+        "dropped_empty_columns": [
+          "num_ptp",
+          "num_tav",
+          "class_area",
+          "rettifica",
+          "funzionari",
+          "eliminare"
+        ]
+      }
+    },
+    "ptpr_b_rispetto_punti_archeologici": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:08Z",
+      "type_name": "geonode:rispetto_punti_archeologici",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Arispetto_punti_archeologici&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "556e2beb81a1aae55e29f15dc07425a51c34bc43fff5fa9a7925e698a5ba1ee4",
+      "status": "ok",
+      "features": 2082,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_rispetto_punti_archeologici.parquet",
+          "sha256": "20b36d261a2193788561d2997dfb221975fb47e97b8884721b8ced94c0de6b3f"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_rispetto_punti_archeologici.geojson",
+          "sha256": "be8f4c111654c2b044165ad72a75b7058e2c8936e9b8deacf01769b040e2ec02"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 51,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_rispetto_linee_archeologiche": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:12Z",
+      "type_name": "geonode:rispetto_linee_archeologiche",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Arispetto_linee_archeologiche&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "7e92a971a6a380806190203265f01fac6a05f24cfe3b99b2830fa284d8379ec4",
+      "status": "ok",
+      "features": 125,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_rispetto_linee_archeologiche.parquet",
+          "sha256": "ba738fd9e7872912e6f69624ab29c5f45bdefdba6cd73cd02fcd6fca81809de6"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_rispetto_linee_archeologiche.geojson",
+          "sha256": "c6919210b75407f2f2e45df43d61b4ff01ffc5dc31ac38b75d3c862fd7466089"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 1,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_rispetto_punti_archeologici_tipizzati": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:13Z",
+      "type_name": "geonode:rispetto_punti_archeologici_tipizzati",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Arispetto_punti_archeologici_tipizzati&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "ed19292b51a263f7878ad94d349b835a6614b0697d49b9d158e64430392c428b",
+      "status": "ok",
+      "features": 1387,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_rispetto_punti_archeologici_tipizzati.parquet",
+          "sha256": "626f093cbd948b1c918ba4bdcba1f1a005261ccac7d083b13418700bdb10eda2"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_rispetto_punti_archeologici_tipizzati.geojson",
+          "sha256": "2600b04c0bee59b7143c7cb510c4a8666080a524cdef6573ef41cb7ba57ce316"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 58,
+        "dropped_empty_columns": [
+          "NUM_PTP",
+          "NUM_TAV",
+          "CLASS_AREA",
+          "RETTIFICA",
+          "FUNZIONARI",
+          "ELIMINARE"
+        ]
+      }
+    },
+    "ptpr_b_centri_storici_rispetto": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:16Z",
+      "type_name": "geonode:centri_storici_rispetto_150",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Acentri_storici_rispetto_150&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "2197804218596a3f4992c99d603a5c3255e6006291f3e5f10ee7d936dc9fe7ec",
+      "status": "ok",
+      "features": 39,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_centri_storici_rispetto.parquet",
+          "sha256": "4f202dd27195e8e4b2eb5774a34acefd9f9cdcae453a3fc041fb3b9b62ab1d5b"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_centri_storici_rispetto.geojson",
+          "sha256": "4b3c2f15dd6662442c1ae85c17a19f564f37c3ac4aacb814d002cc80f2b90e76"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_zone_umide": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:17Z",
+      "type_name": "geonode:zone_umide",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Azone_umide&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "5d134c4f92bc53664e3cf1400b12a141f9a2ac6c2a985e70b45f4664d1abf414",
+      "status": "ok",
+      "features": 9,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_zone_umide.parquet",
+          "sha256": "5054fb7f1c82c24b5a88e957ab514c6c11174165ecc284b6d7f3c9021c3b3604"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_zone_umide.geojson",
+          "sha256": "cd6e3afbbb10e3e4bbab54a5db564784e548a08bae5d92bed0328f17e5f86ea5"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_geomorfologici": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:18Z",
+      "type_name": "geonode:geomorfologici_tipizzati",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Ageomorfologici_tipizzati&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "5836e466aa9eca2a3095f5f0e7c76ebc5fb379071cce9392b036670d0064cdbb",
+      "status": "ok",
+      "features": 18,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_geomorfologici.parquet",
+          "sha256": "a815d919d5bf2b29884cfac143d51e878e5b95090fbbd0363ab474d775be6f82"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_geomorfologici.geojson",
+          "sha256": "f4d29827fc2bba6d701da7d93a60a1e7943af09031c39c38274f299ed385849d"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "PROPONENTE",
+          "SIC_IN_CUI",
+          "ZPS_IN_CUI"
+        ]
+      }
+    },
+    "ptpr_b_ptp_1512": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:19Z",
+      "type_name": "geonode:ptp_1512",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aptp_1512&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "987a9ef176af4acb103c31b07e81aa5f098b4ff0e6b5dc7ad5cb5df3e0d2eef2",
+      "status": "ok",
+      "features": 1,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_ptp_1512.parquet",
+          "sha256": "594d2c4964f6298ca5b94bcd65510ec641d5a0b6808cbeb0929ac98559303ec4"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_ptp_1512.geojson",
+          "sha256": "25b86523ed89f48a5a26ed628f4fad4cd58790a06a2456beede87483cc4f8614"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_agro_identitario": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:20Z",
+      "type_name": "geonode:agro_identitario",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aagro_identitario&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "c94c7f3d4c2f9f8fc12e8c295fc78bc4da40b0ee00e80dd4d0e2d421ffb20439",
+      "status": "ok",
+      "features": 11,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_agro_identitario.parquet",
+          "sha256": "a55c6c8efcb1745b2ab9f7d30a2a4e2ea78ba71c07306d5b6c930fbf2d698e2c"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_agro_identitario.geojson",
+          "sha256": "caf027c3e267d96208d5ace93cea78ceacb9cd04eea84addf6daae9c2a10ce49"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptpr_b_rurali_identitari": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:21Z",
+      "type_name": "geonode:rurali_identitari",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Arurali_identitari&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "d408e6d11c798a50920cf48f723c3117af61f4ff1a9ebc9217731870f702f03b",
+      "status": "ok",
+      "features": 744,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_rurali_identitari.parquet",
+          "sha256": "9c5bb3dbc7c488e64b0f5999a698f16e361a78c59de9debbbd273f6f702a6cdf"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_rurali_identitari.geojson",
+          "sha256": "2db6123485af13577ecc0061ff101a27f452a43f51728ef50e90aa153535a966"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 3,
+        "dropped_empty_columns": [
+          "NUMERO",
+          "LOCALITA_",
+          "INDIRIZZO",
+          "DESTINAZIO",
+          "USO_ATTUAL",
+          "AMBITO",
+          "VERIFICA"
+        ]
+      }
+    },
+    "ptpr_b_aree_urbanizzate": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:23Z",
+      "type_name": "geonode:aree_urbanizzate",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aaree_urbanizzate&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "7ccc1938e781b9c3c127743f068e19f9f12512597308dad3cc47936ec006be59",
+      "status": "ok",
+      "features": 3485,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptpr_b_aree_urbanizzate.parquet",
+          "sha256": "4d4f86ffcc17d13f86fd80a623b92cb027f06486cb80e6eadd1dc54da4ad3424"
+        },
+        "geojson": {
+          "path": "data/processed/ptpr_b_aree_urbanizzate.geojson",
+          "sha256": "cdf80f67b3a040773c8ae8185cb97aadc015e194990423baa67c3fbfc9488d10"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 22,
+        "dropped_outside_city": 116,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptp_beni_art134_c": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:26Z",
+      "type_name": "geonode:PTP_15_12_beni_articolo_134_co_1_lett_c",
+      "notes": "Beni paesaggistici art. 134 c.1 lett. c (PTP 15/12)",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3APTP_15_12_beni_articolo_134_co_1_lett_c&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "925c13d8e74874bdadd7a2208565cd30af132a0014a0e41b7ec29f60f80ccbc0",
+      "status": "ok",
+      "features": 2,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptp_beni_art134_c.parquet",
+          "sha256": "829fe1aafa4186b3f434b323324fe982a9eba3652f7383f5b20c3c8eec7599ed"
+        },
+        "geojson": {
+          "path": "data/processed/ptp_beni_art134_c.geojson",
+          "sha256": "ff77ed44726ec78c92826a6cf0d8fbaf99dab180c49234c391767959015f1e9b"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "ptp_vincoli_1089": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:26Z",
+      "type_name": "geonode:PTP_15_12_vincoli_1089",
+      "notes": "Archaeological and monumental constraints L. 1089/1939 (PTP 15/12)",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3APTP_15_12_vincoli_1089&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "fcc51a3b0bbcabae6acccfa625e86186a306f8a2aab73c56cb8bc674620400a7",
+      "status": "ok",
+      "features": 43,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptp_vincoli_1089.parquet",
+          "sha256": "2cdd08ce1266f1755477382f63f1dccb2b539a9b7e7dec0979e5c575376a9646"
+        },
+        "geojson": {
+          "path": "data/processed/ptp_vincoli_1089.geojson",
+          "sha256": "a062e777845aa0c88b2d1d85f01331e50979610318fbb4f37a657994e9f908b9"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "FONTI"
+        ]
+      }
+    },
+    "ptp_vincoli_1497_ab": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:28Z",
+      "type_name": "geonode:PTP_15_12_vincoli_ex_1497_39_ab",
+      "notes": "Art. 136 a/b equivalent (PTP 15/12)",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3APTP_15_12_vincoli_ex_1497_39_ab&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "4dc1d69ec6f137467e59553dd77147d49935c8b91b892919dfebe3bd401cc66a",
+      "status": "ok",
+      "features": 2,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptp_vincoli_1497_ab.parquet",
+          "sha256": "1034865db758d4b66b76ea0e37b6af05906b49d57c6fe36aa296164a01f24e3a"
+        },
+        "geojson": {
+          "path": "data/processed/ptp_vincoli_1497_ab.geojson",
+          "sha256": "a71bccd1f224ff029d11e9375c026e1f8f8ce9c4398b02879a9af9647cca86f0"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "GU_BU_NUM",
+          "GU_BU_DATA",
+          "ESE_DATA",
+          "OPERATORE"
+        ]
+      }
+    },
+    "ptp_vincoli_1497_cd": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:29Z",
+      "type_name": "geonode:PTP_15_12_vincoli_ex_1497_39_cd",
+      "notes": "Art. 136 c/d equivalent (PTP 15/12)",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3APTP_15_12_vincoli_ex_1497_39_cd&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "452e8a2f4030c5fed7678de83fbd7f7f4dfb83af737c6a67c4115842df328830",
+      "status": "ok",
+      "features": 8,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptp_vincoli_1497_cd.parquet",
+          "sha256": "d4ee1459d19ef5e4d4a2721e41ec7626b56729aee5c8734a5d60c8c9968a6033"
+        },
+        "geojson": {
+          "path": "data/processed/ptp_vincoli_1497_cd.geojson",
+          "sha256": "2dac4d221cd3590309af0274a3195b91445a262e34e8609125c5cd0c1095df0f"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "DATA_ESE",
+          "ATTI",
+          "NOTE"
+        ]
+      }
+    },
+    "ptp_vincoli_431_m": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape_ptpr",
+      "fetched_at": "2026-11-14T04:09:30Z",
+      "type_name": "geonode:PTP_15_12_vincoli_431_85_lettera_m_con_specif",
+      "notes": "Art. 142 lett. m (archaeological interest) equivalent",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3APTP_15_12_vincoli_431_85_lettera_m_con_specif&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "d63302cd20d319c605e9c35d8181fd2b95cfafcd5ea76a008900762e082b9d0e",
+      "status": "ok",
+      "features": 2,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ptp_vincoli_431_m.parquet",
+          "sha256": "154f99cdacfca314eb08eb155c178137d65d4ab5bfcb023bb22a2031310f3fbf"
+        },
+        "geojson": {
+          "path": "data/processed/ptp_vincoli_431_m.geojson",
+          "sha256": "cb0cc511aea39e2a07929df26ddc95ae3468bc018e9b489bf29070b96a80ae7d"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "DATA_PRO",
+          "RELAZIONE",
+          "ATTI",
+          "TIPO_OGG",
+          "NOME_AREA"
+        ]
+      }
+    },
+    "hazardous_sites": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:31Z",
+      "type_name": "DIPPC:263_StabilimentiImpiantiRilevanti",
+      "notes": "Seveso (D.Lgs. 105/2015) plants, nuclear reactor, landfills, waste storage, car breakers",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A263_StabilimentiImpiantiRilevanti&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "554fc217ca254cc0edec303712c90f97132d85af162e78ca2365dbcfd0684a19",
+      "excluded_rows": 20,
+      "status": "ok",
+      "features": 203,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/hazardous_sites.parquet",
+          "sha256": "68d1a52e5c3698d6f3682ecf3c3a90a569b850056630ff3fd85ed2492a48d4d8"
+        },
+        "geojson": {
+          "path": "data/processed/hazardous_sites.geojson",
+          "sha256": "c05bd9ad1f74ed252b540d95c96a07cde5ca2f26427570a98a7d51514bf0cbac"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "seveso_perimeters": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:32Z",
+      "type_name": "DIPPC:306_RIR_Perimetri_Industrie",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A306_RIR_Perimetri_Industrie&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "43ff9f4ad758e52a0e3bb88c3159ef0df1d41d55659a67bfe71bae785d921d50",
+      "status": "ok",
+      "features": 8,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/seveso_perimeters.parquet",
+          "sha256": "2b8381f67a893e59eabe838c803c5ad0adba34e177d237a5421b1178075643cf"
+        },
+        "geojson": {
+          "path": "data/processed/seveso_perimeters.geojson",
+          "sha256": "8d4e8f1d0d0a1d495ac2322c1c0b4e54ec84e1c2dba0757927651eeff5b88cc9"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "referente"
+        ]
+      }
+    },
+    "seveso_damage_zones": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:32Z",
+      "type_name": "DIPPC:306_RIR_ZoneDanno",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A306_RIR_ZoneDanno&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "789e3539b17490d2f3b0b0a8b1a1633802ff9fd728790e2fb63bcacad2c2ab88",
+      "status": "ok",
+      "features": 20,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/seveso_damage_zones.parquet",
+          "sha256": "8e4c75be6ae795be5d30fa2030c3e3de6e5a27fdbffc12d5761c5a5fddfaa43e"
+        },
+        "geojson": {
+          "path": "data/processed/seveso_damage_zones.geojson",
+          "sha256": "0146dce373c56854273e165cc851357e40502e13c93b8b8a693bbcb4305f0ab7"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "stations_ports_airports": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:33Z",
+      "type_name": "DIPPC:253_StazioniPortiAeroporti",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A253_StazioniPortiAeroporti&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "3db0df06770597cd2b5cb6bef2cc920f3443124c3b804a07322dfa9c25ec7679",
+      "status": "ok",
+      "features": 159,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/stations_ports_airports.parquet",
+          "sha256": "b80e67e04f01b10b0074d5caadf7bbcb68c3dd3eaf287d81f5f5ac6c901590e1"
+        },
+        "geojson": {
+          "path": "data/processed/stations_ports_airports.geojson",
+          "sha256": "24abaa004468e6597f85a047e884e9f8a1b8a5a1fe9f718feb01b16cd4d07fa3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "embassies": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:34Z",
+      "type_name": "DIPPC:ambasciate_consolati",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3Aambasciate_consolati&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "375c7afe5e0ad74662f83c32a084e81d6633af93188afb8266ceb54d50a6c864",
+      "status": "ok",
+      "features": 112,
+      "dropped_fields": [
+        "id_pec",
+        "tel_1",
+        "tel_2"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/embassies.parquet",
+          "sha256": "a92168784ee1cfb2a00ffc7c419529edbcf168de28100492e7c34e7b48bd69d5"
+        },
+        "geojson": {
+          "path": "data/processed/embassies.geojson",
+          "sha256": "a3126d8d3c3a130e7eb73506396de96baf8da4c08623a326c9b6c74fe56abe86"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "police_fire": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:35Z",
+      "type_name": "DIPPC:mappa_roma_notte_forzeordine_vigilifuoco",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3Amappa_roma_notte_forzeordine_vigilifuoco&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "c323cb9b0bfb864c9dd98ba2e53dd0eea38d116d4810417b463c028559e23696",
+      "status": "ok",
+      "features": 194,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/police_fire.parquet",
+          "sha256": "ee7cc1948e6067ee47675cf0250b7575d1288c16b238c89559bad07702c8d401"
+        },
+        "geojson": {
+          "path": "data/processed/police_fire.geojson",
+          "sha256": "c2e786b46b7fb3e0c1cdc642b55549836721d0dca950336619d0e6a24bbf5af9"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "emergency_hospitals": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:36Z",
+      "type_name": "DIPPC:ospedali_prontosoccorso",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3Aospedali_prontosoccorso&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "34fd3243ad070079e21256d20d975aada015ad146c3b4ed6387d68b6d4e30263",
+      "status": "ok",
+      "features": 22,
+      "dropped_fields": [
+        "id_pec",
+        "telefono"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/emergency_hospitals.parquet",
+          "sha256": "7d8be8fc0662652f8a0b5ac490006c9feae2f672a953a5c717d8c33d5d0a9c98"
+        },
+        "geojson": {
+          "path": "data/processed/emergency_hospitals.geojson",
+          "sha256": "528c3e2475a6007dc34eb0af506b962a57e1cd4dc00be62327db88c30a3982c3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "civil_protection_sites": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:37Z",
+      "type_name": "DIPPC:421_SediEdificiProtezioneCivile",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A421_SediEdificiProtezioneCivile&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "1b5e5cbb06d308bb3e9424b51416443493cf7b95791b8c30f5855cea6fe4283e",
+      "status": "ok",
+      "features": 6,
+      "dropped_fields": [
+        "fax",
+        "id_pec",
+        "tel_1",
+        "tel_2"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/civil_protection_sites.parquet",
+          "sha256": "c363382d9b079cb301b17696e28badf8b2ef56678270e589a036fead62d6ae71"
+        },
+        "geojson": {
+          "path": "data/processed/civil_protection_sites.geojson",
+          "sha256": "21bd6e89c92489f2c565712bfaee4074e3df02c28e921f3d92d98bbda7a430f0"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "e-mail",
+          "note",
+          "r_fra",
+          "r_gas",
+          "squadra"
+        ]
+      }
+    },
+    "parks_municipal": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:37Z",
+      "type_name": "GABSIN:parchi",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GABSIN%3Aparchi&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "3f07e93450efff89394e362b1ffcd553b77e3155a31b1e5b25a289f62de673c5",
+      "status": "ok",
+      "features": 453,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/parks_municipal.parquet",
+          "sha256": "491792c11ea67620590e9b3a83449009a25be260fb99316f3671d7dfd255a541"
+        },
+        "geojson": {
+          "path": "data/processed/parks_municipal.geojson",
+          "sha256": "d775ab0a373bfcc58e20156dbb2a1a7c58392487cb129c8a342500a612ae8e4a"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "osm_sensitive_pois": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:09:39Z",
+      "notes": "Gap filler only; official layers win when both describe the same site",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 4407,
+      "dropped_fields": [
+        "alt_phone",
+        "contact:city",
+        "contact:email",
+        "contact:facebook",
+        "contact:fax",
+        "contact:flickr",
+        "contact:housenumber",
+        "contact:instagram",
+        "contact:linkedin",
+        "contact:pec",
+        "contact:phone",
+        "contact:pinterest",
+        "contact:postcode",
+        "contact:street",
+        "contact:twitter",
+        "contact:website",
+        "contact:youtube",
+        "email",
+        "email:pec",
+        "email_1",
+        "emergency:phone",
+        "fax",
+        "phone",
+        "telecom"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/osm_sensitive_pois.parquet",
+          "sha256": "0845bad6108029a58baca8ec746fa51e619c9a7dc9a7a928ff567ea446941b92"
+        },
+        "geojson": {
+          "path": "data/processed/osm_sensitive_pois.geojson",
+          "sha256": "f41f1c66da4871e48115fd102b126ffe2f9e3120c7a646fb2f015b67d97f556f"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "sensitive_sites": {
+      "source": "derived",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:16:05Z",
+      "notes": "Official layers first, OSM fills gaps; each row says its source layer and provenance",
+      "counts_by_category": {
+        "critical_infrastructure": 987,
+        "education": 2014,
+        "government": 1007,
+        "green": 1858,
+        "hazardous_industry": 204,
+        "health": 733
+      },
+      "counts_by_provenance": {
+        "official": 2986,
+        "osm": 3817
+      },
+      "dropped_duplicates": 1870,
+      "dropped_no_geometry": 0,
+      "missing_inputs": [],
+      "status": "ok",
+      "features": 6803,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/sensitive_sites.parquet",
+          "sha256": "e316982e2eca2da0a13a1815eaf509f2ac773427636c5c1da544984a33fca19f"
+        },
+        "geojson": {
+          "path": "data/processed/sensitive_sites.geojson",
+          "sha256": "8c5a068c59c444c63215bd010bb62f84f8dd374429fb04a1f3100f2233003fdd"
+        }
+      },
+      "warnings": [],
+      "dropped_identical": 62
+    },
+    "health_accredited_lazio": {
+      "source": "lazio_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:13:20Z",
+      "notes": "Private health facilities accredited by Regione Lazio (list of 26/11/2014, with coordinates). Old list: some may have closed or moved (C=70).",
+      "request_url": "https://dati.lazio.it/dataset/9c87461b-4e37-4357-b70d-85bdc07146c1/resource/1a59e29a-da23-4fb9-8b14-78289f3333cb/download/struttureprivateaccreditate.csv",
+      "raw_sha256": "1726139749cc8be5e09a0f8bd7ee605e2465cc961f281665d95eeb3b05f64900",
+      "skipped_rows": {
+        "filtered": 364,
+        "no_position": 6
+      },
+      "status": "ok",
+      "features": 434,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/health_accredited_lazio.parquet",
+          "sha256": "84bfd7d0ca71cf65d4de250a919382345c7f46b9c958e4a31ebb86aefa8f4a5d"
+        },
+        "geojson": {
+          "path": "data/processed/health_accredited_lazio.geojson",
+          "sha256": "d537f5c3d44bfa549287d89c4fbd5580e8deaeb94249d2b71a2b6bcaf3f52ed6"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "public_bodies_ipa": {
+      "source": "indicepa",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "sensitive_sites",
+      "fetched_at": "2026-11-14T04:13:21Z",
+      "notes": "Head offices of national and local public bodies in Rome from IndicePA; position from OSM addresses (geocode_quality address = exact house number, street = centre of the street)",
+      "request_url": "https://indicepa.gov.it/ipa-dati/dataset/502ff370-1b2c-4310-94c7-f39ceb7500e3/resource/3ed63523-ff9c-41f6-a6fe-980f3d9e501f/download/amministrazioni.txt",
+      "raw_sha256": "9f82b46d7c0d1d17aa6dbbe89a674fb6306bd8e07eb0c01e419d6b3d62e8e088",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 23686
+      },
+      "geocoding": {
+        "address": 47,
+        "street": 36,
+        "not_found": 3
+      },
+      "status": "ok",
+      "features": 83,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/public_bodies_ipa.parquet",
+          "sha256": "6cb7279f418752b7fd1b4dcad806567d3dd36f672824ab7e45b3d2c4b1b77de9"
+        },
+        "geojson": {
+          "path": "data/processed/public_bodies_ipa.geojson",
+          "sha256": "33e9d431368ef41bc0c0ecef9e87bc08787d024f84dd4b90d1cd866efc3b47f8"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "land_use_2016": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "environment",
+      "fetched_at": "2026-11-14T04:08:58Z",
+      "type_name": "geonode:cus_2016",
+      "notes": "Regione Lazio land use map 1:25,000, 2016 update (Corine-style classes)",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Acus_2016&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "e950b0a300dfc53bbfcd01cd57a8805cfbddeb75782ea16ca2878208996ff921",
+      "status": "ok",
+      "features": 5940,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/land_use_2016.parquet",
+          "sha256": "f23eb30d2e7e3734fa18a9facd6da10920eec186263e686e4bdc6c11ec8e1218"
+        },
+        "geojson": {
+          "path": "data/processed/land_use_2016.geojson",
+          "sha256": "17bacc3770199cbbbb0d105be180d0684c2d93f7995913c83b7c1b9e2963648f"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 6,
+        "dropped_outside_city": 168,
+        "dropped_empty_columns": []
+      }
+    },
+    "monumental_trees": {
+      "source": "lazio_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "landscape",
+      "fetched_at": "2026-11-14T04:09:00Z",
+      "type_name": "geonode:alberi_monumentali",
+      "request_url": "https://geoportale.regione.lazio.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geonode%3Aalberi_monumentali&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=12.234000%2C41.655000%2C12.856000%2C42.141000%2CEPSG%3A4326",
+      "raw_sha256": "f95b33253500f6936e847c89a498e0bf2ead380da13a2f5de3f4a74dd45535fc",
+      "status": "ok",
+      "features": 51,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/monumental_trees.parquet",
+          "sha256": "f1814942cfde64042a737f75653fb1b483949bce78099fad649c8df974fd39d2"
+        },
+        "geojson": {
+          "path": "data/processed/monumental_trees.geojson",
+          "sha256": "034bb79dbd8004e9d42436f70a7cce09cdfc6896d943b1bd9aaece976aaa6a71"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "EVENTUALI",
+          "interv_e_4",
+          "interv_e_8",
+          "interv_e_9"
+        ]
+      }
+    },
+    "flood_hazard_pgra": {
+      "source": "ispra_flood",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-14T04:12:43Z",
+      "notes": "P3 = frequent floods (return period 20-50 years), P2 = 100-200 years, P1 = rare or extreme events. Areas overlap: a P3 area is also inside P2 and P1.",
+      "request_url": "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer/0/query?where=1%3D1&geometry=12.234%2C41.655%2C12.856%2C42.141&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&outSR=4326&returnGeometry=true&resultOffset=0&resultRecordCount=1000&orderByFields=objectid&f=geojson",
+      "raw_sha256": "9281e5d27106707565874f71dcd8d93109008d4b25a253ce8bc98570c8c6ea28",
+      "status": "ok",
+      "features": 1008,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/flood_hazard_pgra.parquet",
+          "sha256": "1345d2b5727b08f0dbc84d4d785d9fc479ee9879ad887e383a580bff93a6e6ce"
+        },
+        "geojson": {
+          "path": "data/processed/flood_hazard_pgra.geojson",
+          "sha256": "9facb261e0c3d6430f3fafe540d5a7e2cdc7b166f33b2ab595f1d10b1ce26ada"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 12,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "imperviousness_2018": {
+      "source": "copernicus_hrl",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-14T04:13:00Z",
+      "notes": "Share of sealed soil per 20 m pixel, 0-100 %, 255 = no data. Native 10 m resampled by the server with nearest neighbour.",
+      "raw_sha256": "622d33ae6fc927577a3aebb4e63867859860ed1b8da6e5d2378b2e986b99792f",
+      "value_range": [
+        0,
+        100
+      ],
+      "units": "percent sealed",
+      "status": "ok",
+      "request_url": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer/exportImage?bbox=4506280.0%2C2064180.0%2C4559760.0%2C2119700.0&bboxSR=3035&imageSR=3035&size=2674%2C2776&format=tiff&pixelType=U8&noData=255&interpolation=RSP_NearestNeighbor&f=image",
+      "width": 2674,
+      "height": 2776,
+      "bounds": [
+        4506280.0,
+        2064180.0,
+        4559760.0,
+        2119700.0
+      ],
+      "crs": "EPSG:3035",
+      "pixel_m": 20.0,
+      "files": {
+        "cog": {
+          "path": "data/processed/imperviousness_2018.tif",
+          "sha256": "a43787fd1552c666db0b8be6849d1d5d4285793d0254e134aea956007073b6bf"
+        }
+      },
+      "warnings": []
+    },
+    "road_underpasses_osm": {
+      "source": "osm",
+      "data_kind": "estimated",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-14T04:11:05Z",
+      "notes": "Road sections below ground level (tunnel or layer < 0) where water collects; OSM mapping is incomplete (C=70)",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 3429,
+      "dropped_fields": [
+        "ref_name"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/road_underpasses_osm.parquet",
+          "sha256": "de24309c5d05de599091530867f40a313e886ac24000ca89e87869beba83c759"
+        },
+        "geojson": {
+          "path": "data/processed/road_underpasses_osm.geojson",
+          "sha256": "3414a9632283803f8deae83388075bfb132c29a1bfde7e0dae50eb82f2cc705a"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "rivers_osm": {
+      "source": "osm",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-14T04:12:03Z",
+      "notes": "River, stream and canal centrelines (relations skipped; their member ways are included)",
+      "request_url": "https://download.openstreetmap.fr/extracts/europe/italy/lazio-latest.osm.pbf",
+      "raw_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "status": "ok",
+      "features": 1301,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/rivers_osm.parquet",
+          "sha256": "8435b48a992498d1f93b349e9b5fe8821e34159c9e366962eedb5bb56f733b71"
+        },
+        "geojson": {
+          "path": "data/processed/rivers_osm.geojson",
+          "sha256": "d287d99017f463fbc5f9a69aa213bdf1c66d13e874ca38f4d41918389aec1f86"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "hospital_beds_2023": {
+      "source": "salute_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-14T04:14:02Z",
+      "notes": "Hospitals and accredited private clinics in Rome with beds on 1 Jan 2023 (acute, rehabilitation, long-term care). Positions geocoded on OSM addresses.",
+      "request_url": "https://www.dati.salute.gov.it/sites/default/files/2025-07/Posti%20letto%20per%20struttura%20ospedaliera_2023.csv",
+      "raw_sha256": "5678641553a0fdaf9b62891634524d61198af20de24211210e9ea87e5398bbce",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 1714
+      },
+      "geocoding": {
+        "address": 34,
+        "street": 26,
+        "not_found": 3
+      },
+      "status": "ok",
+      "features": 60,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/hospital_beds_2023.parquet",
+          "sha256": "abb112d0418804c9d7f0d11e3384facab9b43ecc3d12c38f938b82bc4ef33d12"
+        },
+        "geojson": {
+          "path": "data/processed/hospital_beds_2023.geojson",
+          "sha256": "b3eeb352a753ce65d377bae79d7e067786a575cbd4bd07ec4bef7e41010b6261"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "consultori_roma": {
+      "source": "salute_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-14T04:14:40Z",
+      "notes": "Family health centres (consultori familiari) in Rome, 2022 register",
+      "request_url": "https://www.dati.salute.gov.it/sites/default/files/2024-05/Consultori_familiari.csv",
+      "raw_sha256": "3d65734341c0fb89e2e1e1993cf03df166a53d807b57351cb2c2c5a43919553e",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 2101
+      },
+      "geocoding": {
+        "address": 21,
+        "street": 34,
+        "not_found": 9
+      },
+      "status": "ok",
+      "features": 55,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/consultori_roma.parquet",
+          "sha256": "e1134f4674d066d75fea8c52200e7a3acf0eb78b6e1fe4723c39e1d0dd31cf47"
+        },
+        "geojson": {
+          "path": "data/processed/consultori_roma.geojson",
+          "sha256": "44a8efe2064628a6a149889b9a58990b49a05dbf8ee7eba98c44b626c1af01b3"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "pharmacies_roma": {
+      "source": "salute_open_data",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-14T04:15:19Z",
+      "notes": "Open pharmacies in Rome from the national register (updated daily). The register's own coordinates are often wrong (e.g. Testaccio placed in Tiburtino), so the address is geocoded on OSM instead.",
+      "request_url": "https://www.dati.salute.gov.it/sites/default/files/opendata/FRM_FARMA_5_20261113.csv",
+      "raw_sha256": "32a38b043e25e9c228022ebfc764126dcdc21e2947c22a73c5cec36a32c51673",
+      "address_index_sha256": "0e64ce0eb99ddfe72f9cd444e4d8b801df7766590c2b59e60d56ba5058aefee0",
+      "skipped_rows": {
+        "filtered": 58421
+      },
+      "geocoding": {
+        "address": 265,
+        "street": 491,
+        "not_found": 74
+      },
+      "status": "ok",
+      "features": 756,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/pharmacies_roma.parquet",
+          "sha256": "6c2c10a8ee9848207d5730315856756fcf3d31f2b26d20dffcd781c784f6bf21"
+        },
+        "geojson": {
+          "path": "data/processed/pharmacies_roma.geojson",
+          "sha256": "9ef04e8af9542010627272b3f270a1c9dca2aaf24337ef9c5e466a582fb43235"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "asl_roma": {
+      "source": "salute_asl",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "health_system",
+      "fetched_at": "2026-11-14T04:16:01Z",
+      "notes": "ASL Roma 1, 2, 3 as unions of their municipi, with 2024 residents, 2022 ASL activity figures and facility counts. The Ministry's 2022 table gives ROMA 1 and ROMA 2 identical GP and paediatrician figures (918 / 171): likely a copy error in the source (C=40 for those two values).",
+      "request_url": [
+        "https://www.dati.salute.gov.it/sites/default/files/2026-05/ASL_comuni_popolazione_2024.csv",
+        "https://www.dati.salute.gov.it/sites/default/files/2024-05/Strutture_e_attivit%C3%A0_ASL.csv"
+      ],
+      "raw_sha256": {
+        "mapping": "8c890e8a10ef0733b75049748faf4a311a25186227d7965c97939a2006010327",
+        "indicators": "da832410b394b466e259bb0051a7a9b7cf5ec98343b0f51adc74aa1079b1e26a"
+      },
+      "missing_inputs": [],
+      "status": "ok",
+      "features": 3,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/asl_roma.parquet",
+          "sha256": "3f3306e15f0562e1c2226bfa1a049c82ac1ae71789ff029fd224298f9648253b"
+        },
+        "geojson": {
+          "path": "data/processed/asl_roma.geojson",
+          "sha256": "e7e7b2453cba8b04b61a14354fdea8684d9635f3427ee0d7f8ae5124392dd2fb"
+        }
+      },
+      "warnings": [],
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      }
+    },
+    "landslide_hazard_pai": {
+      "source": "ispra_landslide",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "hazard",
+      "fetched_at": "2026-11-14T04:13:04Z",
+      "notes": "PAI landslide hazard classes as in the ISPRA mosaic: P4 very high, P3 high, P2 medium, P1 moderate, AA attention areas",
+      "request_url": "https://sinacloud.isprambiente.it/arcgisina/rest/services/PAI_Frane/Aree_pericolosita_frana_PAI/MapServer/0/query?where=1%3D1&geometry=12.234%2C41.655%2C12.856%2C42.141&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&outSR=4326&returnGeometry=true&resultOffset=0&resultRecordCount=1000&orderByFields=objectid&f=geojson",
+      "raw_sha256": "a36cc14f8623862f8528b9bd2bf79b5b2b8b6b68646cf03232229e9c7b18f7fb",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 3,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 1799,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/landslide_hazard_pai.parquet",
+          "sha256": "5da51ff56a85b196a7647e034084219b75bbee8197d6788f8d5088601b9fb33e"
+        },
+        "geojson": {
+          "path": "data/processed/landslide_hazard_pai.geojson",
+          "sha256": "64ea0f931a07a5f3e0f11e178976b579b5ef76b9f121e601fc2acd0eeafbe45b"
+        }
+      },
+      "warnings": []
+    },
+    "soil_sealing_change_2024": {
+      "source": "ispra_soil_change",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "environment",
+      "fetched_at": "2026-11-14T04:13:08Z",
+      "notes": "Points where ISPRA found new sealed soil between 2023 and 2024 (area_ha = size of the change); where the city is growing",
+      "request_url": "https://sinacloud.isprambiente.it/arcgisina/rest/services/sina_consumo_suolo/localizzazione_cambiamenti_2023_2024_v7/MapServer/0/query?where=1%3D1&geometry=12.234%2C41.655%2C12.856%2C42.141&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&outSR=4326&returnGeometry=true&resultOffset=0&resultRecordCount=1000&orderByFields=objectid&f=geojson",
+      "raw_sha256": "880c2711fad1775e5df4fbd0cfb16384fe19f3534582482e1db46a745aff1a0b",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 9,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 411,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/soil_sealing_change_2024.parquet",
+          "sha256": "13f628ab66cb6f5c1f9971d9245b425bbe61711f174d5001596496415958ffbc"
+        },
+        "geojson": {
+          "path": "data/processed/soil_sealing_change_2024.geojson",
+          "sha256": "98f5ffdbf8c39f3b2d5cbf3679a62a37e5e31e0d772d76e99968b0b34a463de9"
+        }
+      },
+      "warnings": []
+    },
+    "traffic_sensors": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:09Z",
+      "type_name": "DIPMOB:SensoriTraffico",
+      "notes": "Positions of Roma Mobilita traffic sensors at signalised junctions (APPARATO = controller, SENSORE = detector, PEDONALE = pedestrian detector). Positions only, no counts.",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3ASensoriTraffico&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "ed7cf90493d784866c3d46d21df169db95ef2bf840b19d4adcbc511219c3b262",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 93,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/traffic_sensors.parquet",
+          "sha256": "b9812e683067b4a33e67efc88f800e0349f242e88375913f0f1753ac2084ceb3"
+        },
+        "geojson": {
+          "path": "data/processed/traffic_sensors.geojson",
+          "sha256": "2e52db01d6095d5b42cf993d7bad326c920752087a343905edb0d3d85bf3d86a"
+        }
+      },
+      "warnings": []
+    },
+    "traffic_lights": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:09Z",
+      "type_name": "DIPMOB:Semafori",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3ASemafori&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "403356530e01f5ef992261c8bbdc9896d241cd90e332b10744d9f2a326f6e9a7",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 1541,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/traffic_lights.parquet",
+          "sha256": "5de9e4a2fa7742466558bbe32a48aa7666e42cb564cac65beaf75312be9f376e"
+        },
+        "geojson": {
+          "path": "data/processed/traffic_lights.geojson",
+          "sha256": "16dd996b29fdae15085aba3c5dcf99a5b388bbdf2242a0f234b9d8feb7356305"
+        }
+      },
+      "warnings": []
+    },
+    "ztl_green_belt": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:11Z",
+      "type_name": "DIPMOB:ztl_fascia_verde",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3Aztl_fascia_verde&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "9fd217aed2c40fcb3d0b7aba72ba6364328dad602420761ff27f167da0d62964",
+      "cleaning": {
+        "dropped_no_geometry": 8,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 1,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ztl_green_belt.parquet",
+          "sha256": "6d5d2faa1ed0dd7ccffcb1ca5ee85291d8ede0ed717791ac7664f833b1d1e86d"
+        },
+        "geojson": {
+          "path": "data/processed/ztl_green_belt.geojson",
+          "sha256": "558da8697673d84482e8023b286334f7af79940495bcdd059fe7a4d5eeea0a7b"
+        }
+      },
+      "warnings": []
+    },
+    "ztl_green_belt_gates": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:12Z",
+      "type_name": "DIPMOB:ztl_fascia_verde_varchi",
+      "notes": "Camera gates of the Fascia Verde low-emission zone",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3Aztl_fascia_verde_varchi&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "d1d435e0855d8c573b85f9f1e05156153773ee247ba12a2c365dfd4427bdb69d",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 169,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ztl_green_belt_gates.parquet",
+          "sha256": "16b4602ce8fd114fd99612cc767abfdb42088d2de9e6e368de210733e7409e70"
+        },
+        "geojson": {
+          "path": "data/processed/ztl_green_belt_gates.geojson",
+          "sha256": "0caa828d3c6c9748f5b53dbfe358fb3492e12ed5db431f63eb2924d532f90e44"
+        }
+      },
+      "warnings": []
+    },
+    "ztl_centre": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:12Z",
+      "type_name": "DIPMOB:ZonaTrafficoLimitatoCentroStoricoDiurna",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3AZonaTrafficoLimitatoCentroStoricoDiurna&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "49cbaefa621d9769f56e03b77fe6414c8a2c7a714e2cada29373dc323aca62aa",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": [
+          "aaa"
+        ]
+      },
+      "status": "ok",
+      "features": 1,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ztl_centre.parquet",
+          "sha256": "d1d845823d6948d91e249029735d3c6a2b2aca3c0129621ac0da7aa04083936c"
+        },
+        "geojson": {
+          "path": "data/processed/ztl_centre.geojson",
+          "sha256": "96239e0285c399875babb69a8f0d34464e71bf44ff7429439abedce66be5c6ed"
+        }
+      },
+      "warnings": []
+    },
+    "ztl_centre_gates": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:13Z",
+      "type_name": "DIPMOB:ZonaTrafficoLimitatoVarchiCentroStorico",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3AZonaTrafficoLimitatoVarchiCentroStorico&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "f592d0538b15a86c340c26cce5d1bf5a5a2a0682b91294b8deda38e36f16568c",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 23,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/ztl_centre_gates.parquet",
+          "sha256": "406896f27339e9ee7a9e940c80a6bfef666394a3f89958283b847915f1b3ee49"
+        },
+        "geojson": {
+          "path": "data/processed/ztl_centre_gates.geojson",
+          "sha256": "d4f996a7fddbf0c81c7669819705d0281c4f5090bca907efec4eb78821771eeb"
+        }
+      },
+      "warnings": []
+    },
+    "park_and_ride": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:14Z",
+      "type_name": "DIPMOB:ParcheggiScambio",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3AParcheggiScambio&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "75234b9d1dc6e659f6fe47e4536647636cea865c9d271cc078a3c8cf1aeaca83",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 41,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/park_and_ride.parquet",
+          "sha256": "9de485bf5127b74a3bfe54543a386f3fa019e66a5a6ae3e712e99d9558b64e9b"
+        },
+        "geojson": {
+          "path": "data/processed/park_and_ride.geojson",
+          "sha256": "4eda5007e2c340e1307b01f90394d62809caa9833f22607f09588eef7d3106fd"
+        }
+      },
+      "warnings": []
+    },
+    "metro_lifts": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "mobility",
+      "fetched_at": "2026-11-14T04:13:14Z",
+      "type_name": "DIPMOB:AscensoriStazioniMetro",
+      "notes": "Lifts in metro stations (step-free access)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3AAscensoriStazioniMetro&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "04774b00526cb677da7250f2b31c96318f2311c7b94bc31d78397da784dc50c2",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 95,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/metro_lifts.parquet",
+          "sha256": "bf5e858dbaaa693f225f80c96e234ac26b2a2d859c8cf76223448896cdda5f2b"
+        },
+        "geojson": {
+          "path": "data/processed/metro_lifts.geojson",
+          "sha256": "62aef7900ec1e79042ba7e33c097ecfa7b8c1b681af6b1ca77a0f2fa46c4d8ed"
+        }
+      },
+      "warnings": []
+    },
+    "drinking_fountains": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "heat",
+      "fetched_at": "2026-11-14T04:13:15Z",
+      "type_name": "GABSIN:fontanelle_rifugi_climatici",
+      "notes": "Public drinking fountains (nasoni) published with the climate-shelter map; for heat-wave use cases",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GABSIN%3Afontanelle_rifugi_climatici&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "4994b2ba09e3ca255ba9756919685bf3e157e2fdaea5451c4d9b4523822790ac",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 3294,
+      "dropped_fields": [
+        "googlemaps"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/drinking_fountains.parquet",
+          "sha256": "34ff907a52ae80d47e62ba9ed00c22d43eda19b99965e32fd22588c7864e1fb4"
+        },
+        "geojson": {
+          "path": "data/processed/drinking_fountains.geojson",
+          "sha256": "a5c18551cc957ccaeefcffd536b35feb9a4c731c75d9e0c7c62de5d39dfa55e3"
+        }
+      },
+      "warnings": []
+    },
+    "landslide_areas_roma": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "hazard",
+      "fetched_at": "2026-11-14T04:13:17Z",
+      "type_name": "DIPPC:303_Aree_inFrana",
+      "notes": "Landslide areas mapped by Roma Capitale civil protection",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A303_Aree_inFrana&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "30008be49ef95cd860e49087333e085841c3ed53a37fda70baee5976e4379d2a",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 4,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 29,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/landslide_areas_roma.parquet",
+          "sha256": "48df6f4add6078080a020c55f5a32dfceb7c3606ec32553edc50ae7f9c5bf608"
+        },
+        "geojson": {
+          "path": "data/processed/landslide_areas_roma.geojson",
+          "sha256": "d48c91d57e40f232941973312a11aa88c47d709f9f834082e86fdee5c0cf6029"
+        }
+      },
+      "warnings": []
+    },
+    "street_trees_m8": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "green",
+      "fetched_at": "2026-11-14T04:13:17Z",
+      "type_name": "DIPAMB:AlberatureSpecieMVIII",
+      "notes": "Tree census with species for municipio VIII only (the only municipio published)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPAMB%3AAlberatureSpecieMVIII&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "68b78e9af2eca32091d1198c5dcd1051a06e06bc1e6effa5b0cfdf51818b083b",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 13481,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/street_trees_m8.parquet",
+          "sha256": "a497b523ae809848277fc8f3bdb509ab0e05da708bfed4318df687f870219618"
+        },
+        "geojson": {
+          "path": "data/processed/street_trees_m8.geojson",
+          "sha256": "798c9ae8923b9f9b2a5862e58691c7ddb03066c23eae44df63db65ae423e49a7"
+        }
+      },
+      "warnings": []
+    }
+  }
 }

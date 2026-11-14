@@ -1,0 +1,266 @@
+{
+  "split": "2026-09-01",
+  "window": [
+    "2026-01-01",
+    "2026-11-14 00:54"
+  ],
+  "results": {
+    "air_no2": {
+      "train_readings": 69924,
+      "test_readings": 21052,
+      "stations": 13,
+      "bias": {
+        "offset": 13.61,
+        "scale": 0.624,
+        "residual_sd": 10.37,
+        "mean_obs": 22.76,
+        "mean_cams": 14.61
+      },
+      "covariance": {
+        "sd": 5.7,
+        "length_km": 41.28,
+        "nugget_sd": 7.3,
+        "total_sd": 9.26,
+        "spatial_share": 0.379,
+        "fitted_local_sd_with_measurement": 8.36,
+        "measurement_sd": 4.07,
+        "moments": 1500
+      },
+      "memory": {
+        "tau_hours": 4.9,
+        "lag_correlations": [
+          [
+            1.0,
+            0.844
+          ],
+          [
+            2.0,
+            0.667
+          ],
+          [
+            3.0,
+            0.53
+          ],
+          [
+            6.0,
+            0.291
+          ]
+        ]
+      },
+      "check_old_settings": {
+        "status": "calibrated",
+        "reason": "21051 held-out readings: coverage 96%, error spread 0.80",
+        "n_predictions": 21051,
+        "coverage": 0.9646,
+        "z_mean": 0.0003,
+        "z_sd": 0.8026,
+        "rmse": 11.3599
+      },
+      "check_cams_uncorrected": {
+        "status": "uncalibrated",
+        "reason": "coverage of the 90% range is 73%, outside 80%-97%; spread of standardised errors is 1.46, outside 0.7-1.4",
+        "n_predictions": 21051,
+        "coverage": 0.7335,
+        "z_mean": 0.4009,
+        "z_sd": 1.4645,
+        "rmse": 11.4077
+      },
+      "check_learned": {
+        "status": "calibrated",
+        "reason": "21051 held-out readings: coverage 90%, error spread 0.97",
+        "n_predictions": 21051,
+        "coverage": 0.9044,
+        "z_mean": 0.0511,
+        "z_sd": 0.969,
+        "rmse": 9.3461
+      },
+      "land_use": {
+        "covariate": "motor road length within 100 m",
+        "slope_per_m": 0.01202,
+        "center_m": 607.2,
+        "station_offsets_sd": 6.39,
+        "station_offsets_sd_left_out": 3.7,
+        "stations": {
+          "IT0825A": {
+            "road_m": 1333.8,
+            "offset": 13.24
+          },
+          "IT0828A": {
+            "road_m": 660.2,
+            "offset": 7.04
+          },
+          "IT0952A": {
+            "road_m": 0.0,
+            "offset": -8.16
+          },
+          "IT0953A": {
+            "road_m": 0.0,
+            "offset": -7.48
+          },
+          "IT0956A": {
+            "road_m": 322.2,
+            "offset": -3.27
+          },
+          "IT0957A": {
+            "road_m": 0.0,
+            "offset": -7.61
+          },
+          "IT1176A": {
+            "road_m": 1055.0,
+            "offset": 0.74
+          },
+          "IT1834A": {
+            "road_m": 624.1,
+            "offset": 3.18
+          },
+          "IT1835A": {
+            "road_m": 1059.6,
+            "offset": -0.84
+          },
+          "IT1836A": {
+            "road_m": 690.7,
+            "offset": 1.45
+          },
+          "IT1837A": {
+            "road_m": 1232.0,
+            "offset": 6.36
+          },
+          "IT1906A": {
+            "road_m": 637.6,
+            "offset": 2.61
+          },
+          "IT2012A": {
+            "road_m": 279.0,
+            "offset": -7.38
+          }
+        }
+      }
+    },
+    "air_pm10": {
+      "train_readings": 2950,
+      "test_readings": 869,
+      "stations": 13,
+      "bias": {
+        "offset": 6.98,
+        "scale": 0.807,
+        "residual_sd": 6.49,
+        "mean_obs": 22.11,
+        "mean_cams": 18.74
+      },
+      "covariance": {
+        "sd": 4.69,
+        "length_km": 50.0,
+        "nugget_sd": 0.44,
+        "total_sd": 4.71,
+        "spatial_share": 0.991,
+        "fitted_local_sd_with_measurement": 3.65,
+        "measurement_sd": 3.62,
+        "moments": 238
+      },
+      "memory": {
+        "tau_hours": 43.6,
+        "lag_correlations": [
+          [
+            24.0,
+            0.55
+          ],
+          [
+            48.0,
+            0.341
+          ]
+        ]
+      },
+      "check_old_settings": {
+        "status": "calibrated",
+        "reason": "869 held-out readings: coverage 92%, error spread 0.98",
+        "n_predictions": 869,
+        "coverage": 0.9241,
+        "z_mean": 0.0162,
+        "z_sd": 0.9779,
+        "rmse": 4.053
+      },
+      "check_cams_uncorrected": {
+        "status": "calibrated",
+        "reason": "869 held-out readings: coverage 86%, error spread 1.15",
+        "n_predictions": 869,
+        "coverage": 0.8596,
+        "z_mean": 0.1355,
+        "z_sd": 1.1504,
+        "rmse": 4.0457
+      },
+      "check_learned": {
+        "status": "calibrated",
+        "reason": "869 held-out readings: coverage 83%, error spread 1.27",
+        "n_predictions": 869,
+        "coverage": 0.8331,
+        "z_mean": 0.1182,
+        "z_sd": 1.2742,
+        "rmse": 4.0266
+      },
+      "land_use": null
+    },
+    "air_pm25": {
+      "train_readings": 1805,
+      "test_readings": 532,
+      "stations": 8,
+      "bias": {
+        "offset": 3.66,
+        "scale": 0.602,
+        "residual_sd": 3.69,
+        "mean_obs": 11.12,
+        "mean_cams": 12.38
+      },
+      "covariance": {
+        "sd": 2.8,
+        "length_km": 50.0,
+        "nugget_sd": 0.73,
+        "total_sd": 2.9,
+        "spatial_share": 0.936,
+        "fitted_local_sd_with_measurement": 1.99,
+        "measurement_sd": 1.85,
+        "moments": 237
+      },
+      "memory": {
+        "tau_hours": 40.8,
+        "lag_correlations": [
+          [
+            24.0,
+            0.497
+          ],
+          [
+            48.0,
+            0.326
+          ]
+        ]
+      },
+      "check_old_settings": {
+        "status": "calibrated",
+        "reason": "532 held-out readings: coverage 91%, error spread 0.97",
+        "n_predictions": 532,
+        "coverage": 0.9079,
+        "z_mean": -0.0339,
+        "z_sd": 0.9725,
+        "rmse": 3.015
+      },
+      "check_cams_uncorrected": {
+        "status": "calibrated",
+        "reason": "532 held-out readings: coverage 89%, error spread 1.07",
+        "n_predictions": 532,
+        "coverage": 0.891,
+        "z_mean": 0.0375,
+        "z_sd": 1.0695,
+        "rmse": 2.8462
+      },
+      "check_learned": {
+        "status": "calibrated",
+        "reason": "532 held-out readings: coverage 84%, error spread 1.27",
+        "n_predictions": 532,
+        "coverage": 0.844,
+        "z_mean": 0.0591,
+        "z_sd": 1.2726,
+        "rmse": 2.8774
+      },
+      "land_use": null
+    }
+  }
+}

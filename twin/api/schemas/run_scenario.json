@@ -1,0 +1,48 @@
+{
+  "name": "run_scenario",
+  "description": "Run a what-if scenario on an operating area: baseline vs variant with ranges.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Run a what-if scenario on an operating area: baseline vs variant with ranges.",
+    "properties": {
+      "kind": {
+        "maxLength": 80,
+        "minLength": 1,
+        "title": "Kind",
+        "type": "string"
+      },
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "change": {
+        "additionalProperties": true,
+        "title": "Change",
+        "type": "object"
+      }
+    },
+    "required": [
+      "kind",
+      "area"
+    ],
+    "title": "RunScenarioIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/run_scenario"
+  },
+  "owner": "WS6"
+}

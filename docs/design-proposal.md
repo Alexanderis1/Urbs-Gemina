@@ -16,6 +16,7 @@ Decisions already taken (by you):
 |---|---|
 | Whole city first; districts simplify heavy tasks | Every data layer covers all of Rome. Heavy simulations run on an "operating area" (a municipio, an urban zone or a drawn polygon) |
 | Roma Capitale cannot share loop-sensor data and holds no antenna data | **Simulated sensors behind the same interface as real ones.** The PA later swaps in its own access without code changes |
+| **Only traffic loops may be simulated** (13 Nov 2026, supersedes section 8 for every other simulator) | Antenna sites, EMF values and every other layer come from real existing sources (OpenCelliD, OSM, Cartoradio, the ARPA station, EEA, GTFS-RT, radar...) combined with models and sensor fusion, labelled `estimated` where modelled. No synthetic records outside `sim_loops` |
 | Own solution that also satisfies Challenge 02 | The antenna module is one application of the twin, not the whole product |
 | No Avalanche | Provenance is a local hash manifest plus git history. No blockchain |
 | Target Exa, ElevenLabs and Lovable | Each gets a real job in the core flow (section 11) |
@@ -117,8 +118,8 @@ Why this is the right shape [inf, C=80]:
 |---|---|---|
 | Whole city (Roma Capitale boundary) | Roma GeoServer `DIPPC:210_RomaCapitale_Municipi` (dissolved) | Default extent of every layer |
 | 15 municipi | same layer | Officer scope, briefings, role-based access |
-| 155 urban zones | `DIPDIT:ZoneUrbanistiche` | Default operating area for simulations |
-| Census sections (13,656) | Roma GeoServer / ISTAT 2021 | Population exposure |
+| 155 urban zones | `DIPPC:rc_zone_urbanistiche` (code field `code_zu`) | Default operating area for simulations |
+| Census sections (23,591 in 2021; 2,749,031 residents) | ISTAT 2021 basi territoriali + population | Population exposure |
 | H3 hex grid, resolution 9 city-wide (about 0.1 km² per cell) | computed | Belief layers. Finer grid or raster only inside an operating area |
 
 Every tool takes an `area` argument: `city`, a municipio id, an urban-zone id or a polygon. Heavy tools (micro traffic simulation, ray tracing) refuse `city` and propose a district or a coarser model instead. That refusal is part of the guardrails.
@@ -196,6 +197,8 @@ Personal data: drop the contact fields (`ref-nome`, `ref-cell`, telephone, e-mai
 ---
 
 ## 8. Simulated sensors: specification
+
+> **Superseded on 13 Nov 2026:** only `sim_loops` stays simulated. `sim_register` becomes an *estimated* register built from OpenCelliD + OSM, with EIRP fitted to the Cartoradio grid by sensor fusion (azimuth is not fitted: it cannot be observed reliably from a 100 m grid given OpenCelliD position errors, so it stays unknown and sites are modelled as isotropic; the fit is labelled *uncalibrated*, median error about 9 dB, WS3 PR #10); `sim_emf_points` is replaced by real ARPA Lazio measurement points (needs the DTS5887 table; portal returned 502 on 13 Nov) plus the fused field estimate; `sim_applications` is dropped (the officer enters an application live in the demo). See `docs/decisions.md`.
 
 Each simulator is a provider with a fixed seed and a version, so runs are reproducible.
 
@@ -445,7 +448,11 @@ urbs-gemina/
 
 ---
 
-## 17. Open decisions for you
+## 17. How the build is organised (decided 13 Nov 2026)
+
+No scope is cut for time. The build runs as 10 parallel workstreams, one agent thread each, so every element can be brainstormed, validated and inspected on its own. Briefs, file ownership and the shared interfaces are in `docs/workstreams.md`. Shared interfaces change only through the design hub; final choices from each workstream are recorded in `docs/decisions.md`.
+
+## 17b. Open decisions for you
 
 1. Package A, B or C. All three need no data purchase now that the stereo buy is dropped.
 2. Viewer: MapLibre-first or Cesium-first.

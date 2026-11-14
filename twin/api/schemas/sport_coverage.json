@@ -1,0 +1,113 @@
+{
+  "name": "sport_coverage",
+  "description": "Sport deserts: residents without a facility for a discipline within walking time; optional what-if opening school gyms (simulated).",
+  "input_schema": {
+    "$defs": {
+      "SchoolGym": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "lon": {
+            "maximum": 13.1,
+            "minimum": 12.0,
+            "title": "Lon",
+            "type": "number"
+          },
+          "lat": {
+            "maximum": 42.4,
+            "minimum": 41.4,
+            "title": "Lat",
+            "type": "number"
+          },
+          "disciplines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Disciplines"
+          }
+        },
+        "required": [
+          "name",
+          "lon",
+          "lat"
+        ],
+        "title": "SchoolGym",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Sport deserts: residents without a facility for a discipline within walking time; optional what-if opening school gyms (simulated).",
+    "properties": {
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "discipline": {
+        "maxLength": 60,
+        "minLength": 1,
+        "title": "Discipline",
+        "type": "string"
+      },
+      "max_minutes": {
+        "anyOf": [
+          {
+            "maximum": 60,
+            "minimum": 0,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Walking time; default from config",
+        "title": "Max Minutes"
+      },
+      "open_school_gyms": {
+        "items": {
+          "$ref": "#/$defs/SchoolGym"
+        },
+        "maxItems": 10,
+        "title": "Open School Gyms",
+        "type": "array"
+      }
+    },
+    "required": [
+      "discipline"
+    ],
+    "title": "SportCoverageIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/sport_coverage"
+  },
+  "owner": "WS10"
+}

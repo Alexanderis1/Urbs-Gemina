@@ -6,6 +6,7 @@ Urbs Gemina: open digital twin of Rome for the public administration, built at A
 
 - Open-source code, open-format data, **no personal data**. Drop contact fields at ingest.
 - Every record and layer is `real`, `estimated` or `simulated`. Simulated data carries `synthetic=True` up to the UI.
+- **Only traffic loop sensors may be simulated** (decided 13 Nov 2026). Every other sensor or layer uses real existing sources, filled in with mathematical models and sensor fusion, and is labelled `real` or `estimated`, never `simulated`. Scenario variants (what-ifs) are not sensors and may contain hypothetical inputs.
 - Numbers come from deterministic tools, never from the language model.
 - Legal thresholds live in `config/thresholds.yaml` only.
 - Cartoradio data is read at runtime and never committed (`redistribution: false`).
