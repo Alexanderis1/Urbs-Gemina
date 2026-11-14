@@ -114,7 +114,7 @@ use_cases:
     prompt: site_risk
     params:
       radius_m: {default: 500, basis: "Walking-distance ring around a school or hospital for hazards; not a legal distance."}
-      district_radius_m: {default: 2500, basis: "Road-network district for emergency reach: about 20 km2, under the 40 km2 heavy-run limit in config/areas.yaml."}
+      district_radius_m: {default: 1500, basis: "Road-network district for emergency reach: about 7 km2. 2,500 m (20 km2) made the live event playbook run past 15 minutes on the Modal worker (deploy thread, 14 Nov); stations outside the district are reached with the off-network detour."}
       duration_h: {default: 3, basis: "Same storm window as the civil-protection playbook."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the site is"}
@@ -141,8 +141,8 @@ use_cases:
     params:
       attendees: {default: 20000, basis: "Placeholder crowd size when the officer gives none; the officer should state the real figure."}
       radius_m: {default: 400, basis: "Typical closed perimeter around a large square event in Rome."}
-      district_radius_m: {default: 2500, basis: "Road-network district for emergency reach: about 20 km2, under the 40 km2 heavy-run limit."}
-      traffic_radius_m: {default: 900, basis: "SUMO district around the event: about 2.5 km2, under the 3 km2 traffic cap in config/scenarios.yaml (road_closure.max_area_km2, measured on the Modal worker)."}
+      district_radius_m: {default: 1500, basis: "Road-network district for emergency reach: about 7 km2. 2,500 m (20 km2) made the live event playbook run past 15 minutes on the Modal worker (deploy thread, 14 Nov); stations outside the district are reached with the off-network detour."}
+      traffic_radius_m: {default: 650, basis: "SUMO district of about 1.3 km2: the size measured at 93 s cold and 44 s cached on the Modal worker (config/scenarios.yaml road_closure.max_area_km2 basis); 900 m (2.5 km2) plus the access run did not finish in 15 minutes live."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the event is"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "sensitive sites inside the perimeter"}
@@ -277,8 +277,8 @@ use_cases:
       street: {default: null, type: text, basis: "Optional: the street the works close, exactly as named on the road network (e.g. 'Via Nazionale'). Without it the traffic run is skipped."}
       radius_m: {default: 200, basis: "A block around the worksite: heritage, sensitive sites and ground hazards; not a legal distance."}
       worksite_radius_m: {default: 40, basis: "A typical urban worksite fence closing one junction or one block; the officer's plan gives the real footprint."}
-      district_radius_m: {default: 2500, basis: "Road-network district for emergency reach: about 20 km2, under the 40 km2 heavy-run limit."}
-      traffic_radius_m: {default: 900, basis: "SUMO district around the works: about 2.5 km2, under the 3 km2 traffic cap in config/scenarios.yaml."}
+      district_radius_m: {default: 1500, basis: "Road-network district for emergency reach: about 7 km2. 2,500 m (20 km2) made the live event playbook run past 15 minutes on the Modal worker (deploy thread, 14 Nov); stations outside the district are reached with the off-network detour."}
+      traffic_radius_m: {default: 650, basis: "SUMO district of about 1.3 km2: the size measured at 93 s cold and 44 s cached on the Modal worker (config/scenarios.yaml road_closure.max_area_km2 basis); 900 m (2.5 km2) plus the access run did not finish in 15 minutes live."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the works are"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "heritage and landscape constraints, sensitive sites around the worksite"}

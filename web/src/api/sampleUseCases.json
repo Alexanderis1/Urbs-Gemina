@@ -20,7 +20,7 @@
       "road traffic (simulated loops)",
       "air quality stations",
       "rain forecast, next hours (coarse grid over all of Rome)",
-      "temperature and wind forecast (coarse grid over all of Rome)",
+      "temperature and wind forecast for the next afternoon around 15:00 (coarse grid over all of Rome)",
       "Tiber and Aniene discharge forecast",
       "disruption news (unverified)",
       "which layers are real, estimated or simulated"
@@ -82,7 +82,7 @@
       "cover_added_pct": "number"
     },
     "steps": [
-      "temperature forecast (coarse grid over all of Rome)",
+      "temperature forecast for the next afternoon around 15:00 (coarse grid over all of Rome)",
       "heat by street, residents over 65 above thresholds (forecast, or the officer's what-if temperatures)",
       "what-if: more tree cover across the area",
       "care homes (RSA)",
@@ -109,7 +109,7 @@
     ],
     "params": {
       "radius_m": 500,
-      "district_radius_m": 2500,
+      "district_radius_m": 1500,
       "duration_h": 3
     },
     "param_types": {
@@ -147,8 +147,8 @@
     "params": {
       "attendees": 20000,
       "radius_m": 400,
-      "district_radius_m": 2500,
-      "traffic_radius_m": 900
+      "district_radius_m": 1500,
+      "traffic_radius_m": 650
     },
     "param_types": {
       "attendees": "number",
@@ -351,8 +351,8 @@
       "street": null,
       "radius_m": 200,
       "worksite_radius_m": 40,
-      "district_radius_m": 2500,
-      "traffic_radius_m": 900
+      "district_radius_m": 1500,
+      "traffic_radius_m": 650
     },
     "param_types": {
       "street": "text",
