@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PUBLIC_SCREENS, STAFF_ACCESS_PATH, STAFF_SCREENS, canOpen, experienceOf, resolveTier, screenPath, screenText, screensFor } from "@/lib/tiers";
+import { PUBLIC_NAV, PUBLIC_SCREENS, STAFF_ACCESS_PATH, STAFF_SCREENS, canOpen, experienceOf, resolveTier, screenPath, screenText, screensFor } from "@/lib/tiers";
 import { setLang } from "@/lib/i18n";
 
 describe("role tiers (UI side; the server enforces the same rule)", () => {
@@ -22,7 +22,9 @@ describe("two experiences: a public service and a staff workspace", () => {
   it("the public service opens on the resident's own area and has no office tools", () => {
     expect(PUBLIC_SCREENS[0]).toMatchObject({ id: "home", path: "/" });
     const ids = PUBLIC_SCREENS.map((s) => s.id);
-    expect(ids).toEqual(["home", "city", "sport", "ask", "report", "honesty"]);
+    expect(ids).toEqual(["home", "environment", "transport", "social", "report", "city", "sport", "ask", "honesty"]);
+    // On a phone the bar at the bottom holds the home page and the four macro-areas; the rest is one tap away.
+    expect(PUBLIC_NAV.map((s) => s.id)).toEqual(["home", "environment", "transport", "social", "report"]);
     expect(canOpen("citizen", "scenario")).toBe(false);
     expect(canOpen("citizen", "home")).toBe(true);
   });
@@ -65,9 +67,9 @@ describe("two experiences: a public service and a staff workspace", () => {
         }
     }
     setLang("it");
-    expect(screenText("public", "home").label).toBe("La mia zona");
+    expect(screenText("public", "environment").label).toBe("Ambiente");
     expect(screenText("staff", "scenario").label).toBe("Scenari");
     setLang("en");
-    expect(screenText("public", "home").label).toBe("My area");
+    expect(screenText("public", "environment").label).toBe("Environment");
   });
 });

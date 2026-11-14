@@ -7,7 +7,20 @@ import { texts, tr } from "@/lib/i18n";
 
 export type Tier = "citizen" | "office";
 export type Experience = "public" | "staff";
-export type ScreenId = "home" | "city" | "ask" | "permit" | "scenario" | "honesty" | "sport" | "admin" | "report" | "signals";
+export type ScreenId =
+  | "home"
+  | "environment"
+  | "transport"
+  | "social"
+  | "city"
+  | "ask"
+  | "permit"
+  | "scenario"
+  | "honesty"
+  | "sport"
+  | "admin"
+  | "report"
+  | "signals";
 
 export function experienceOf(tier: Tier): Experience {
   return tier === "office" ? "staff" : "public";
@@ -18,14 +31,22 @@ export interface ScreenInfo {
   path: string;
 }
 
+// The residents' service is organised in macro-areas (Alessandro, 14 Nov 2026): environment, transport,
+// social life and reports. They and the home page are the main navigation; the other screens are one tap away.
 export const PUBLIC_SCREENS: readonly ScreenInfo[] = [
   { id: "home", path: "/" },
+  { id: "environment", path: "/ambiente" },
+  { id: "transport", path: "/trasporti" },
+  { id: "social", path: "/sociale" },
+  { id: "report", path: "/segnala" },
   { id: "city", path: "/map" },
   { id: "sport", path: "/sport" },
   { id: "ask", path: "/ask" },
-  { id: "report", path: "/segnala" },
   { id: "honesty", path: "/data" },
 ];
+
+/** Main navigation of the residents' service: the bar at the bottom of a phone, the tabs on a desk screen. */
+export const PUBLIC_NAV: readonly ScreenInfo[] = PUBLIC_SCREENS.slice(0, 5);
 
 export const STAFF_SCREENS: readonly ScreenInfo[] = [
   { id: "city", path: "/" },
@@ -47,7 +68,10 @@ interface ScreenText {
 const SCREEN_TEXT = texts<Record<Experience, Partial<Record<ScreenId, ScreenText>>>>({
   en: {
     public: {
-      home: { label: "My area", hint: "What is happening around your address" },
+      home: { label: "Home", hint: "What is happening around you, and every service in one place" },
+      environment: { label: "Environment", hint: "The air and the electromagnetic fields where you are, on the map of Rome" },
+      transport: { label: "Transport", hint: "Traffic, roadworks, closures and strikes in Rome now" },
+      social: { label: "Social", hint: "Where to do sport or visit a museum at the day and time you choose" },
       city: { label: "City map", hint: "Air, rain, transport and services on the 3D map of Rome" },
       sport: { label: "Sport", hint: "Sports facilities near you and areas without them" },
       ask: { label: "Ask", hint: "Ask a question and get an answer with its sources" },
@@ -67,7 +91,10 @@ const SCREEN_TEXT = texts<Record<Experience, Partial<Record<ScreenId, ScreenText
   },
   it: {
     public: {
-      home: { label: "La mia zona", hint: "Che cosa succede intorno al tuo indirizzo" },
+      home: { label: "Home", hint: "Che cosa succede intorno a te e tutti i servizi in un posto solo" },
+      environment: { label: "Ambiente", hint: "L'aria e i campi elettromagnetici dove sei, sulla mappa di Roma" },
+      transport: { label: "Trasporti", hint: "Traffico, cantieri, chiusure e scioperi a Roma adesso" },
+      social: { label: "Sociale", hint: "Dove fare sport o visitare un museo nel giorno e all'ora che scegli" },
       city: { label: "Mappa della città", hint: "Aria, pioggia, trasporti e servizi sulla mappa 3D di Roma" },
       sport: { label: "Sport", hint: "Impianti sportivi vicino a te e zone che ne sono prive" },
       ask: { label: "Chiedi", hint: "Fai una domanda e ricevi una risposta con le sue fonti" },

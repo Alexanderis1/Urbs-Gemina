@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { GeoJsonLayer, PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
-import type { Layer } from "@deck.gl/core";
+import type { Layer, PickingInfo } from "@deck.gl/core";
 import {
   Biohazard,
   CloudRain,
@@ -18,6 +18,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { CityMap, type MapFocus } from "@/map/CityMap";
+import { markerLayers, pickedMarker, type Marker } from "@/map/markers";
+import type { Glyph } from "@/map/markerGlyphs";
+import { ResourceDetail, ResourceHover } from "@/components/MarkerCard";
+import type { Resource } from "@/lib/resource";
+import { TWIN_START_ZOOM } from "@/lib/twinOverlay";
 import { boundsOf } from "@/lib/geo";
 import { AreaPicker } from "@/components/AreaPicker";
 import { KindBadge } from "@/components/Badge";
@@ -44,7 +49,7 @@ import {
   SCENARIOS,
   type ScenarioTile,
 } from "@/lib/scenario";
-import { fmtNumber, keyFigures, MAX_ROWS, rangeText, summariseScenario, unitFor, type Quantile } from "@/lib/scenarioResult";
+import { fmtNumber, keyFigures, MAX_ROWS, rangeText, summariseScenario, unitFor, type PlaceItem, type Quantile } from "@/lib/scenarioResult";
 import { errorText } from "@/lib/errors";
 import { texts, tr } from "@/lib/i18n";
 
@@ -162,6 +167,11 @@ const T = texts({
     placesListed: "Places listed in the result",
     whatIfNote: "What-if result: an estimate, not a measured event.",
     showResult: "Show result",
+    placeCategory: "Place in the result",
+    listedIn: "Listed in",
+    position: "Position",
+    yourPoint: "Your point (what-if)",
+    yourPointNote: "The place you chose for the change",
   },
   it: {
     clickMove: (what: string) => `Clicca sulla mappa per spostare ${what}`,
@@ -276,6 +286,11 @@ const T = texts({
     placesListed: "Luoghi elencati nel risultato",
     whatIfNote: "Risultato di un'ipotesi: una stima, non un evento misurato.",
     showResult: "Mostra il risultato",
+    placeCategory: "Luogo nel risultato",
+    listedIn: "Elencato in",
+    position: "Posizione",
+    yourPoint: "Il tuo punto (ipotesi)",
+    yourPointNote: "Il luogo che hai scelto per la modifica",
   },
 });
 
@@ -292,11 +307,43 @@ const ICONS: Record<ScenarioTile, LucideIcon> = {
 
 type Form = Record<string, string>;
 type Rgb = [number, number, number];
-/** Theme surface colour (hex in the palette) as RGB, to outline dots so they read on top of footprints. */
-const hexRgb = (hex: string): Rgb => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb;
 const rgb = (c: Rgb, a = 1) => `rgb(${c.join(" ")} / ${a})`;
 
 const initialForms = () => Object.fromEntries(SCENARIOS.map((s) => [s.id, { ...s.defaults }])) as Record<ScenarioTile, Form>;
+
+/** Badge picture for a place in a result, from the name of the table that lists it (English or Italian). */
+const PLACE_GLYPHS: [RegExp, Glyph][] = [
+  [/hospital|ospedal|emergenc|pronto soccorso/i, "hospital"],
+  [/school|scuol|nursery|nido|infanzia/i, "school"],
+  [/care|cura|riposo|health|sanitar/i, "care"],
+  [/playground|giochi/i, "play"],
+  [/overflow|tracim|sewer|fogn|flood|alluvion|esondaz|allagam|water|acqua/i, "flood"],
+  [/antenna|mast|impianto radio/i, "antenna"],
+  [/road|strad|street|via |edge|traffic|traffico/i, "traffic"],
+  [/bus|tram|stop|fermat/i, "bus"],
+  [/sport|gym|palestr/i, "sport"],
+  [/museum|museo|gallery|galleri/i, "museum"],
+];
+function placeGlyph(table: string): Glyph {
+  return PLACE_GLYPHS.find(([re]) => re.test(table))?.[1] ?? "pin";
+}
+
+function placeResource(p: PlaceItem): Resource {
+  const t = tr(T);
+  return {
+    glyph: placeGlyph(p.table),
+    title: p.label,
+    category: t.placeCategory,
+    readings: [],
+    facts: [
+      { label: t.listedIn, value: p.table },
+      { label: t.position, value: `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}` },
+    ],
+    extra: [],
+    synthetic: false,
+    position: [p.lon, p.lat],
+  };
+}
 
 /** Point placed by the officer, when the kind needs one and the form holds valid coordinates. */
 function placedPoint(tile: ScenarioTile, f: Form): [number, number] | null {
@@ -745,6 +792,12 @@ export default function ScenarioLab() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  /** Zoom in quarter steps: the 3D markers keep their size on screen with it. */
+  const [zoom, setZoom] = useState(TWIN_START_ZOOM);
+  const [hover, setHover] = useState<{ x: number; y: number; id: string; resource: Resource } | null>(null);
+  /** The place of the result whose card is open (after a click or tap). */
+  const [picked, setPicked] = useState<{ id: string; place: PlaceItem } | null>(null);
+  const [camera, setCamera] = useState<MapFocus | null>(null);
 
   const spec = scenarioSpec(tile);
   const f = forms[tile];
@@ -758,6 +811,8 @@ export default function ScenarioLab() {
     setShowResult(true);
     setError(null);
     setEnv(null);
+    setPicked(null);
+    setCamera(null);
     setRan({ title: spec.label, area: areaLabel(area), tile, point });
     try {
       const c = buildScenarioChange(kind, f);
@@ -779,11 +834,25 @@ export default function ScenarioLab() {
 
   const onMapClick = (p: { lon: number; lat: number }) => {
     if (drawing) return setDraft((d) => [...d, [p.lon, p.lat]]);
+    // A click on a marker opens its card; it does not move the point.
+    if (hover) return;
     if (!spec.usesPoint || (tile === "chemical_plume" && f.place === "site")) return;
     setForms((all) => ({ ...all, [tile]: { ...all[tile], lon: p.lon.toFixed(5), lat: p.lat.toFixed(5) } }));
   };
 
   const summary = useMemo(() => (env ? summariseScenario(env.result) : null), [env]);
+  const placeMarkers = useMemo<Marker<PlaceItem>[]>(
+    () =>
+      (summary?.points ?? []).map((p, i) => ({
+        id: `${i}-${p.lon.toFixed(6)},${p.lat.toFixed(6)}`,
+        position: [p.lon, p.lat],
+        color: palette.point,
+        level: null,
+        glyph: placeGlyph(p.table),
+        data: p,
+      })),
+    [summary, palette],
+  );
   const group = ran ? scenarioSpec(ran.tile).group : spec.group;
   const footColor: Rgb = group === "Water" ? palette.accent : group === "Heat" || group === "Hazard" ? palette.bad : palette.whatIf;
 
@@ -830,50 +899,52 @@ export default function ScenarioLab() {
           }),
         );
       });
-      if (summary.points.length) {
-        out.push(
-          new ScatterplotLayer({
-            id: "scenario-places",
-            data: summary.points,
-            getPosition: (p: { lon: number; lat: number }) => [p.lon, p.lat],
-            getFillColor: palette.point,
-            getLineColor: hexRgb(palette.surface),
-            stroked: true,
-            lineWidthMinPixels: 1.5,
-            radiusMinPixels: 4,
-            radiusMaxPixels: 6,
-            updateTriggers: { getFillColor: palette.point, getLineColor: palette.surface },
-          }),
-        );
-      }
+      // Places the result lists: one 3D marker each on the city model, with a badge for the kind of place.
+      out.push(...markerLayers(placeMarkers, { id: "plc", zoom, palette, selectedId: picked?.id ?? null, hoveredId: hover?.id }));
     }
     if (point) {
+      // The officer's what-if point: a marker in the what-if colour.
       out.push(
-        new ScatterplotLayer({
-          id: "scenario-site-halo",
-          data: [point],
-          getPosition: (p: [number, number]) => p,
-          getFillColor: [...palette.whatIf, 45],
-          getLineColor: [...palette.whatIf, 255],
-          stroked: true,
-          lineWidthMinPixels: 1.5,
-          radiusMinPixels: 14,
-          radiusMaxPixels: 14,
-          updateTriggers: { getFillColor: palette.whatIf, getLineColor: palette.whatIf },
-        }),
-        new ScatterplotLayer({
-          id: "scenario-site",
-          data: [point],
-          getPosition: (p: [number, number]) => p,
-          getFillColor: palette.whatIf,
-          radiusMinPixels: 5,
-          radiusMaxPixels: 5,
-          updateTriggers: { getFillColor: palette.whatIf },
+        ...markerLayers([{ id: "point", position: point, color: palette.whatIf, level: null, glyph: "pin", data: point }], {
+          id: "spt",
+          zoom,
+          palette,
+          hoveredId: hover?.id,
         }),
       );
     }
     return out;
-  }, [area, draft, drawing, summary, point, palette, footColor]);
+  }, [area, draft, drawing, summary, placeMarkers, point, palette, footColor, zoom, picked?.id, hover?.id]);
+
+  const onHover = (info: PickingInfo) => {
+    const place = pickedMarker<PlaceItem>(info, "plc");
+    if (place) return setHover({ x: info.x, y: info.y, id: place.id, resource: placeResource(place.data) });
+    const pt = pickedMarker<[number, number]>(info, "spt");
+    if (pt)
+      return setHover({
+        x: info.x,
+        y: info.y,
+        id: pt.id,
+        resource: {
+          glyph: "pin",
+          title: t.yourPoint,
+          category: t.yourPointNote,
+          readings: [],
+          facts: [{ label: t.position, value: `${pt.data[1].toFixed(5)}, ${pt.data[0].toFixed(5)}` }],
+          extra: [],
+          synthetic: false,
+          position: pt.data,
+        },
+      });
+    setHover(null);
+  };
+  const onPick = (info: PickingInfo) => {
+    if (drawing) return;
+    const place = pickedMarker<PlaceItem>(info, "plc");
+    setPicked(place ? { id: place.id, place: place.data } : null);
+    setHover(null);
+  };
+  const detail = picked ? placeResource(picked.place) : null;
 
   // Frame the whole result once it arrives (not on every edit): all footprints, else the placed point.
   const focus = useMemo<MapFocus | null>(() => {
@@ -1010,7 +1081,24 @@ export default function ScenarioLab() {
 
   return (
     <Workspace panel={panel} right={right}>
-      <CityMap layers={layers} initialZoom={12.5} pitch={35} focus={focus} onClick={onMapClick} />
+      <CityMap
+        layers={layers}
+        initialZoom={12.5}
+        pitch={35}
+        focus={camera ?? focus}
+        onZoomStep={setZoom}
+        onHover={onHover}
+        onPick={onPick}
+        onClick={onMapClick}
+      />
+      {hover && <ResourceHover x={hover.x} y={hover.y} resource={hover.resource} />}
+      {detail && (
+        <ResourceDetail
+          resource={detail}
+          onClose={() => setPicked(null)}
+          onZoomTo={() => setCamera({ lon: detail.position![0], lat: detail.position![1], zoom: 16.5, pitch: 60 })}
+        />
+      )}
 
       {!env && !busy && (
         <MapFloat position="top-left" className="max-w-[min(22rem,calc(100%-6rem))]">

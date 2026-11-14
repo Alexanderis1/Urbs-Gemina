@@ -397,7 +397,8 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
     else setHover(null);
   };
   const onPick = (info: PickingInfo) => {
-    if (drawing) return;
+    // While drawing an area every click is a corner of it, also over a cell or a marker.
+    if (drawing) return false;
     const marker = pickedMarker<MapItem>(info, "pts");
     if (marker) setSelected({ item: marker.data, id: marker.id });
     else if (info.object && info.layer?.id === "belief") setSelected({ item: info.object as MapItem });

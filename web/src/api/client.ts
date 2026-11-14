@@ -70,11 +70,17 @@ async function post(path: string, body: unknown): Promise<Response> {
   });
 }
 
+/** Tools made for the residents' services (twin/api, use-cases workstream, 14 Nov 2026). */
+export const CITIZEN_TOOLS = ["air_here", "emf_here", "city_heatmap", "transport_now", "places_open"] as const;
+export type CitizenTool = (typeof CITIZEN_TOOLS)[number];
+
 export async function callTool<R = Record<string, unknown>>(
-  tool: ToolName | SportTool,
+  tool: ToolName | SportTool | CitizenTool,
   inputs: Record<string, unknown>,
 ): Promise<Envelope<R>> {
   if (isSampleMode) {
+    // The sample data has no citizen tools: the screens then fall back to the layer tools, as they do live.
+    if ((CITIZEN_TOOLS as readonly string[]).includes(tool)) throw new Error(`${tool} failed: not in the sample data`);
     const env = (SPORT_TOOLS as readonly string[]).includes(tool)
       ? await mockSportTool(tool as SportTool, inputs)
       : await mockTool(tool as ToolName, inputs);

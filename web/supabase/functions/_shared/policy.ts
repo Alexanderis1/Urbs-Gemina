@@ -36,6 +36,12 @@ const TOOLS = new Set([
   "sport_deserts",
   "signal_events",
   "verify_signal",
+  // Citizen services (14 Nov): what it is like here, the city heatmap, transport events, places open at a time.
+  "air_here",
+  "emf_here",
+  "city_heatmap",
+  "transport_now",
+  "places_open",
 ]);
 
 /** Routes the citizen tier cannot call at all (the permit check is an office workflow). */
