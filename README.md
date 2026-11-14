@@ -2,6 +2,8 @@
 
 *Rome's open digital twin. Every number shows how sure it is.*
 
+**Live app: https://urbs-gemina.lovable.app** (residents) · staff sign-in at https://urbs-gemina.lovable.app/staff
+
 An open digital twin of the whole city of Rome for the public administration, built at AgenticHack Rome (13-14 November 2026).
 It puts a 3D model of every building in Rome, official context layers, live public feeds and physical models behind one interface.
 Residents get plain answers about the place they are in. City staff can watch the city, ask questions, check permits and test "what if" scenarios.
