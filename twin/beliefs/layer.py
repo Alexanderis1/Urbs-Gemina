@@ -159,6 +159,12 @@ def prior_layer(
                 sigmas = np.array([sd for _, sd in cell_vals])
                 offset[i] = float(values.mean()) - field_base
                 prior_var[i] = max(float(np.mean(sigmas**2) + values.var()), 1e-6 * spec.prior.variance)
+    only_covariate = spec.prior_field if spec.prior_field is not None and spec.prior_field.method == "none" else None
+    if only_covariate is not None and only_covariate.covariate_file is not None:
+        # No map, only a per-cell term on the generic prior (e.g. free-flow speed of the cell's roads).
+        note = _apply_covariate(only_covariate, cells, offset, _utc(field_time if field_time is not None else at).hour)
+        if note:
+            warnings.append(note)
     if prior_field is not None and spec.prior_field is not None and spec.prior_field.min_sd > 0.0:
         prior_var = np.maximum(prior_var, spec.prior_field.min_sd**2)
     return BeliefLayer(

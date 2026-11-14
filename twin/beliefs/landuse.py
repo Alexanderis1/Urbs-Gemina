@@ -73,6 +73,13 @@ def night_heat_island(imp: npt.ArrayLike, imp_nb: npt.ArrayLike, trees: npt.Arra
     return out
 
 
+def free_flow_speed(length_by_class: dict[str, float], speed_by_class: dict[str, float]) -> float | None:
+    """Length-weighted free-flow speed (km/h) of the roads near a point; None when there are none."""
+    pairs = [(m, speed_by_class[c]) for c, m in length_by_class.items() if c in speed_by_class and m > 0.0]
+    total = sum(m for m, _ in pairs)
+    return None if total <= 0.0 else sum(m * v for m, v in pairs) / total
+
+
 def covariate_path(name: str) -> Path | None:
     for d in SEARCH_DIRS:
         p = d / name
@@ -91,5 +98,5 @@ def load_cell_covariate(name: str) -> dict[str, float] | None:
         return {row["cell"]: float(row["value"]) for row in csv.DictReader(f)}
 
 
-__all__ = ["MOTOR_CLASSES", "covariate_path", "load_cell_covariate", "night_heat_island", "project_lines",
+__all__ = ["MOTOR_CLASSES", "covariate_path", "free_flow_speed", "load_cell_covariate", "night_heat_island", "project_lines",
            "road_length_within"]

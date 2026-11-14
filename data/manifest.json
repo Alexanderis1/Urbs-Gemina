@@ -489,6 +489,15 @@
       "licence": "Copernicus data policy: free and open, attribution",
       "redistribution": true,
       "status": "implemented, run 14 Nov 2026 (24,004 cells; median 0.2, P95 1.4, max 2.5 degC)"
+    },
+    "road_free_flow_kmh": {
+      "kind": "estimated",
+      "what": "Length-weighted free-flow speed (km/h) of the motor roads within 100 m of every H3 res-9 cell centre, the starting map of the road speed layer",
+      "endpoint": "derived from Overture Maps transportation segments (road class) with per-class speeds in config/beliefs.yaml",
+      "access": "python scripts/build_road_speed_prior.py -> /mnt/project-files/model/road_free_flow_kmh.csv",
+      "licence": "ODbL (OpenStreetMap-derived)",
+      "redistribution": true,
+      "status": "implemented, run 14 Nov 2026 (11,510 cells with motor roads; median 35, P95 55 km/h)"
     }
   },
   "snapshots": {

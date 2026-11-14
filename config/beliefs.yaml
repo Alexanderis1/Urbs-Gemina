@@ -25,12 +25,30 @@ layers:
         extra_sd: 10            # assumption (C=40): a bus's instant speed is a rough proxy for car speed (bus lanes, stops)
         drop_below: 3           # a bus standing at a stop says nothing about traffic
     allow_simulated: true   # the only simulated input allowed: Roma Mobilita loop data is not public
+    # Starting map: the city's hourly profile below, scaled by the free-flow speed of the roads in each
+    # cell (real Overture road classes): start = profile(h) x free_flow(cell) / 45. Written as a
+    # covariate term: profile(h) + weight(h) x (free_flow - 45) with weight(h) = profile(h) / 45.
+    prior_field:
+      source: none
+      entity_types: []
+      value_key: averageVehicleSpeed
+      method: none
+      covariate:
+        file: road_free_flow_kmh.csv     # scripts/build_road_speed_prior.py
+        coef: {value: 1.0, basis: "free-flow speed is already in km/h"}
+        center: {value: 45, basis: "the night-time (free-flowing) value of the city profile: an arterial at night"}
+        weight_by_utc_hour:
+          value: [0.978, 1.0, 1.0, 0.978, 0.889, 0.733, 0.578, 0.489, 0.556, 0.644, 0.667, 0.644, 0.644, 0.667, 0.644, 0.6, 0.533, 0.489, 0.533, 0.644, 0.756, 0.844, 0.889, 0.933]
+          basis: "mean_by_hour / 45, shifted to UTC for winter time (UTC+1); in summer time the profile runs one hour early"
+        free_flow_kmh_by_class:
+          value: {motorway: 90, trunk: 70, primary: 50, secondary: 45, tertiary: 40, unclassified: 35, residential: 30, living_street: 15}
+          basis: "assumption (C=50): legal limits (Codice della Strada art. 142: 50 km/h in town, up to 70 on main urban roads, GRA motorway 130) reduced to typical free-flow driving; residential streets near Rome's 30 km/h zones"
+        radius_m: {value: 100, basis: "roads within 100 m of the cell centre, about one H3 res-9 cell"}
     unit: km/h
     entity_types: [TrafficFlowObserved]
     value_key: averageVehicleSpeed
     prior:
-      # City-wide average speed by hour; to be replaced by free-flow speed per road class
-      # once the road graph is ingested.
+      # City-wide average speed by hour (local time); prior_field scales it by each cell's road class.
       mean_by_hour: [42, 44, 45, 45, 44, 40, 33, 26, 22, 25, 29, 30,
                      29, 29, 30, 29, 27, 24, 22, 24, 29, 34, 38, 40]
       sd: 12

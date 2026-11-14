@@ -48,6 +48,7 @@ class FieldSpec:
     value_key: str
     #: "bin" = average the map values inside each cell (fine maps like Cartoradio);
     #: "idw" = inverse-distance interpolation to every cell (coarse maps like the CAMS lattice).
+    #: "none" = no map at all, only the covariate term on the generic prior.
     method: str = "bin"
     #: Bias correction learned from real stations (idw maps): start = offset + scale * map.
     offset: float = 0.0
