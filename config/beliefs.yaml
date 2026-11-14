@@ -179,6 +179,34 @@ layers:
       - "only cells with a City hotspot carry data (about 580 sites; 94 had sessions on 12 Nov 2026)"
     basis: "real counts at fixed sites; no spreading to cells without a hotspot"
 
+  transit_supply:
+    # Expected public-transport supply: buses and trams the timetable says are in each cell right now.
+    sources: [transit_schedule]   # roma_gtfs_schedule: ScheduledVehicle, one item per running trip, interpolated between stops
+    aggregate: count
+    aggregate_window_minutes: 5
+    unit: vehicles/cell
+    entity_types: [ScheduledVehicle]
+    value_key: scheduledVehicles
+    prior:
+      mean: 0
+      sd: 2
+      basis: "assumption: about 1,100 vehicles at 08:30 over thousands of cells, most cells have none"
+    correlation_length_km: 0
+    relax_tau_hours: 0.5
+    min_value: 0
+    calibration: {method: none, note: "timetable, not observed: shows planned supply, not what actually runs"}
+    caveats:
+      - "transit supply is the timetable (planned), not live positions; the live bus feed is used where it works"
+    basis: "planned positions from the official GTFS timetable"
+
+crowds:
+  # Signals shown side by side in the crowds view; a cell is 'busy' when at least min_agree
+  # of them are above their own city-wide percentile (among cells where that signal has data).
+  signals: [wifi_sessions, activity, transit_supply]
+  busy_percentile: 75
+  min_agree: 2
+  basis: "assumption (C=60): agreement of independent signals is more trustworthy than any single proxy"
+
 calibration_rules:
   interval: 0.90            # we check the 90% range
   coverage_ok: [0.80, 0.97] # share of held-out readings inside that range for the layer to count as calibrated
