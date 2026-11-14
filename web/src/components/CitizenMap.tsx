@@ -1,8 +1,7 @@
 // Shared pieces of the residents' map screens (Ambiente, Trasporti, Sociale). Mobile first: the map on top,
 // a sheet with the answer under it; on a desk screen the sheet becomes the left panel.
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import { ScatterplotLayer } from "@deck.gl/layers";
+import { PathLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { LocateFixed, MapPin, X } from "lucide-react";
 import type { DataKind } from "@/api/types";
@@ -13,6 +12,9 @@ import { Callout, Skeleton, Spinner } from "@/components/ui";
 import { rampColor } from "@/lib/colors";
 import { cellSpacingM, inRome, shareBelow, type CityHeatmap, type HeatCell, type HereAnswer, type HereReading, type LegendBand } from "@/lib/here";
 import { texts, tr } from "@/lib/i18n";
+import { heatRaster } from "@/lib/heatRaster";
+import { heatLayer, rasterCanvas } from "@/map/heatLayer";
+import { fieldOnCells, loadRoads, roadPieces, roadWidthPx, type RoadNet, type RoadPiece } from "@/lib/roads";
 import { formatValue } from "@/lib/layers";
 import type { Loaded } from "@/lib/useCitizenData";
 import { locate, setPosition, usePosition, type LocateStatus } from "@/lib/usePosition";
@@ -50,15 +52,15 @@ const T = texts({
   },
   it: {
     useMine: "Usa la mia posizione",
-    locating: "Ti sto cercando…",
+    locating: "Cerco la tua posizione…",
     orTap: "oppure tocca la mappa per scegliere un punto",
     gps: "La tua posizione",
     chosen: "Punto scelto sulla mappa",
-    change: "Togli",
+    change: "Rimuovi",
     status: {
       denied: "La posizione non è stata condivisa. Tocca la mappa per scegliere un punto.",
       outside: "Sei fuori Roma: tocca la mappa per scegliere un punto in città.",
-      unavailable: "Questo dispositivo non ha dato una posizione. Tocca la mappa per scegliere un punto.",
+      unavailable: "Il dispositivo non ha fornito la posizione. Tocca la mappa per scegliere un punto.",
     } as Record<Exclude<LocateStatus, "idle" | "locating">, string>,
     here: "Qui",
     range: (lo: string, hi: string) => `probabilmente tra ${lo} e ${hi}`,
@@ -66,7 +68,7 @@ const T = texts({
     lowerThan: (n: number) => `Più basso che nel ${n}% della città in questo momento.`,
     references: "Valori di riferimento",
     others: "Sempre qui",
-    notHere: "Il gemello non ha ancora una stima per questo punto.",
+    notHere: "Non abbiamo ancora una stima per questo punto.",
     noAnswer: "Al momento non è stato possibile caricarlo.",
     loadingMap: "Carico la mappa della città…",
     noMap: "La mappa della città per questo valore non è disponibile adesso.",
@@ -79,19 +81,26 @@ const T = texts({
 type Rgb = [number, number, number];
 
 /** Colour of one legend band: the same pale-to-dark-red scale as every other map, in steps. */
-export function bandColor(index: number, bands: LegendBand[]): Rgb {
+export type Ramp = (t: number) => Rgb;
+
+/** Where a band sits on the colour scale: 0 = the first (best) band, 1 = the last (worst). */
+const bandShare = (index: number, bands: LegendBand[]): number => {
   const ids = bands.map((b) => b.index);
   const lo = Math.min(...ids, index);
   const hi = Math.max(...ids, index);
-  return rampColor(hi > lo ? (index - lo) / (hi - lo) : 0);
+  return hi > lo ? (index - lo) / (hi - lo) : 0;
+};
+
+export function bandColor(index: number, bands: LegendBand[], ramp: Ramp = rampColor): Rgb {
+  return ramp(bandShare(index, bands));
 }
 
 /** Black or white text, whichever reads better on a band colour. */
 const inkOn = ([r, g, b]: Rgb): string => (0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#17324d" : "#ffffff");
 
 /** The round coloured chip that names a level in words ("Good", "Slow"). */
-export function LevelPill({ index, label, bands }: { index: number; label: string; bands: LegendBand[] }) {
-  const c = bandColor(index, bands);
+export function LevelPill({ index, label, bands, ramp }: { index: number; label: string; bands: LegendBand[]; ramp?: Ramp }) {
+  const c = bandColor(index, bands, ramp);
   return (
     <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: `rgb(${c.join(" ")})`, color: inkOn(c) }}>
       {label}
@@ -287,13 +296,13 @@ function OtherReading({ r, bands, onClick }: { r: HereReading; bands: LegendBand
 }
 
 /** What the colours of the heatmap mean: the tool's own bands in words, or a low-to-high scale. */
-export function HeatLegend({ heat, unit, invert = false }: { heat: CityHeatmap; unit: string; invert?: boolean }) {
+export function HeatLegend({ heat, unit, invert = false, ramp = rampColor }: { heat: CityHeatmap; unit: string; invert?: boolean; ramp?: Ramp }) {
   const t = tr(T);
   if (heat.legend.length) {
     return (
       <div className="flex flex-wrap gap-1">
         {heat.legend.map((b) => (
-          <LevelPill key={b.index} index={b.index} label={b.label} bands={heat.legend} />
+          <LevelPill key={b.index} index={b.index} label={b.label} bands={heat.legend} ramp={ramp} />
         ))}
       </div>
     );
@@ -301,16 +310,16 @@ export function HeatLegend({ heat, unit, invert = false }: { heat: CityHeatmap; 
   const values = heat.cells.map((c) => c.value);
   const lo = Math.min(...values);
   const hi = Math.max(...values);
-  const stops = [0, 0.25, 0.5, 0.75, 1].map((s) => `rgb(${rampColor(invert ? 1 - s : s).join(" ")})`);
+  const stops = [0, 0.25, 0.5, 0.75, 1].map((s) => `rgb(${ramp(s).join(" ")})`);
   return (
     <div>
       <div className="h-2 rounded-sm border border-line" style={{ background: `linear-gradient(90deg, ${stops.join(", ")})` }} />
       <div className="num mt-1 flex justify-between text-2xs text-muted">
         <span>
-          {formatValue(lo)} {unit}
+          {formatValue(invert ? hi : lo)} {unit}
         </span>
         <span>
-          {formatValue(hi)} {unit}
+          {formatValue(invert ? lo : hi)} {unit}
         </span>
       </div>
       <p className="hint mt-1">{t.relative}</p>
@@ -332,6 +341,8 @@ export function CitizenMap<T>({
   heatLabel,
   unit,
   invert = false,
+  onRoads = false,
+  ramp = rampColor,
   markers = [],
   selectedId,
   onPickMarker,
@@ -344,6 +355,10 @@ export function CitizenMap<T>({
   unit: string;
   /** True when a low value is the bad one (road speed). Only used without the tool's own bands. */
   invert?: boolean;
+  /** Paint the layer along the main roads, with smooth colour changes, instead of as patches (traffic, bus delays). */
+  onRoads?: boolean;
+  /** Colour scale of the layer (default: the pale-to-dark-red scale of every map). */
+  ramp?: Ramp;
   markers?: Marker<T>[];
   selectedId?: string | null;
   onPickMarker?: (m: Marker<T> | null) => void;
@@ -370,45 +385,77 @@ export function CitizenMap<T>({
 
   const cells = heat.status === "ok" ? heat.data.cells : null;
   const bands = heat.status === "ok" ? heat.data.legend : [];
+
+  // The road network, fetched once when a screen first paints a layer on the roads. undefined = on its way, null = not there.
+  const [roads, setRoads] = useState<RoadNet | null | undefined>(undefined);
+  useEffect(() => {
+    if (!onRoads) return;
+    let live = true;
+    void loadRoads().then((net) => live && setRoads(net));
+    return () => {
+      live = false;
+    };
+  }, [onRoads]);
+
+  /** Where each cell sits on the colour scale (0 = best, 1 = worst). */
+  const score = useMemo(() => {
+    const values = (cells ?? []).map((c) => c.value);
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    const norm = (v: number) => (hi > lo ? (v - lo) / (hi - lo) : 0.5);
+    return (c: HeatCell): number => (c.level !== undefined && bands.length ? bandShare(c.level, bands) : invert ? 1 - norm(c.value) : norm(c.value));
+  }, [cells, bands, invert]);
+
+  // Streets cut in short pieces, each with the blended value of the cells around it: the colour flows along the road.
+  const pieces = useMemo<RoadPiece[] | null>(() => {
+    if (!onRoads || !roads || !cells?.length || !cells.every((c) => c.h3)) return null;
+    return roadPieces(roads, fieldOnCells(cells, score));
+  }, [onRoads, roads, cells, score]);
+  // While the road file is on its way nothing is drawn (no flash of colour); without it, the smooth heatmap is.
+  const waitingForRoads = onRoads && roads === undefined;
+  const smooth = useMemo(() => {
+    if (!cells?.length || pieces?.length) return null;
+    const raster = heatRaster(
+      // Good places are a light wash and bad ones stand out: the city stays readable under a mostly good layer.
+      cells.map((c) => ({ lon: c.lon, lat: c.lat, t: score(c), a: 0.4 + 0.6 * score(c), data: c })),
+      { ramp, spacingM: cellSpacingM(cells) ?? 800, alpha: 175 },
+    );
+    return { raster, canvas: rasterCanvas(raster) };
+  }, [cells, pieces, score, ramp]);
+
   const layers = useMemo(() => {
     const out: Layer[] = [];
-    if (cells?.length) {
-      const spacing = cellSpacingM(cells) ?? 1500;
-      const values = cells.map((c) => c.value);
-      const lo = Math.min(...values);
-      const hi = Math.max(...values);
-      const norm = (v: number) => (hi > lo ? (v - lo) / (hi - lo) : 0.5);
-      const colour = (c: HeatCell): Rgb => (c.level !== undefined && bands.length ? bandColor(c.level, bands) : rampColor(invert ? 1 - norm(c.value) : norm(c.value)));
-      const tiles = cells.every((c) => c.h3);
+    if (pieces?.length) {
       out.push(
-        tiles
-          ? // The twin's own hexagons: clean tiles that cover the city without gaps or overlaps.
-            new H3HexagonLayer<HeatCell>({
-              id: "heat",
-              data: cells,
-              getHexagon: (c) => c.h3!,
-              extruded: false,
-              getFillColor: (c) => [...colour(c), 135],
-              stroked: true,
-              getLineColor: [255, 255, 255, 70],
-              lineWidthUnits: "pixels",
-              getLineWidth: 1,
-              pickable: true,
-              updateTriggers: { getFillColor: [lo, hi, bands, invert] },
-            })
-          : // Any other grid: round patches that just touch.
-            new ScatterplotLayer<HeatCell>({
-              id: "heat",
-              data: cells,
-              getPosition: (c) => [c.lon, c.lat],
-              getRadius: spacing * 0.5,
-              radiusUnits: "meters",
-              getFillColor: (c) => [...colour(c), 135],
-              stroked: false,
-              pickable: true,
-              updateTriggers: { getFillColor: [lo, hi, bands, invert] },
-            }),
+        // A soft dark edge under the colour, so pale stretches still read as streets on a light map.
+        new PathLayer<RoadPiece>({
+          id: "heat-casing",
+          data: pieces,
+          getPath: (p) => p.path,
+          getWidth: (p) => roadWidthPx(p.cls, zoom) + 1.6,
+          widthUnits: "pixels",
+          getColor: [23, 50, 77, 70],
+          jointRounded: true,
+          capRounded: true,
+          updateTriggers: { getWidth: [zoom] },
+        }),
+        new PathLayer<RoadPiece>({
+          id: "heat",
+          data: pieces,
+          getPath: (p) => p.path,
+          getWidth: (p) => roadWidthPx(p.cls, zoom),
+          widthUnits: "pixels",
+          getColor: (p) => [...ramp(p.t), 255],
+          jointRounded: true,
+          capRounded: true,
+          pickable: true,
+          updateTriggers: { getWidth: [zoom], getColor: [ramp] },
+        }),
       );
+    } else if (smooth && !waitingForRoads) {
+      // One smooth picture of the whole layer: colours flow from place to place, no tiles.
+      const heatmap = heatLayer("heat", smooth.raster, smooth.canvas);
+      if (heatmap) out.push(heatmap);
     }
     out.push(...markerLayers(markers, { id: "mk", zoom, palette, selectedId, hoveredId: hoverId }));
     if (position) {
@@ -416,7 +463,7 @@ export function CitizenMap<T>({
       out.push(...markerLayers([me], { id: "me", zoom, palette, selectedId: "me" }));
     }
     return out;
-  }, [cells, bands, invert, markers, zoom, palette, selectedId, hoverId, position]);
+  }, [pieces, smooth, waitingForRoads, ramp, markers, zoom, palette, selectedId, hoverId, position]);
 
   const onHover = (info: PickingInfo) => {
     const id = info.layer?.id ?? "";
@@ -424,8 +471,13 @@ export function CitizenMap<T>({
       const m = info.object as Marker<T>;
       setHoverId(m.id);
       setHover({ x: info.x, y: info.y, ...(describeMarker?.(m) ?? { title: m.text ?? "" }) });
-    } else if (info.object && id === "heat") {
-      const c = info.object as HeatCell;
+    } else if (id === "heat" && (info.object || (smooth && info.coordinate))) {
+      // A stretch of street carries the cell it runs through; on the smooth heatmap, the nearest cell under the pointer.
+      const c = info.object ? (info.object as RoadPiece).cell : smooth!.raster.nearest(info.coordinate![0]!, info.coordinate![1]!)?.data;
+      if (!c) {
+        setHover(null);
+        return;
+      }
       setHoverId(null);
       setHover({
         x: info.x,
@@ -458,6 +510,7 @@ export function CitizenMap<T>({
         layers={layers}
         initialZoom={CITY_ZOOM}
         pitch={35}
+        zoomHint={false}
         focus={camera}
         onHover={onHover}
         onPick={onPick}
@@ -483,7 +536,7 @@ export function CitizenMap<T>({
           {hover.line && <div className="text-muted">{hover.line}</div>}
           {band && (
             <div className="mt-1">
-              <LevelPill index={band.index} label={band.label} bands={bands} />
+              <LevelPill index={band.index} label={band.label} bands={bands} ramp={ramp} />
             </div>
           )}
         </div>

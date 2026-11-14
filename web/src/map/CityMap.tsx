@@ -153,6 +153,7 @@ export function CityMap({
   onZoomStep,
   onHover,
   onPick,
+  zoomHint = true,
 }: {
   layers: Layer[];
   /**
@@ -173,6 +174,8 @@ export function CityMap({
   onZoom?: (zoom: number) => void;
   initialZoom?: number;
   pitch?: number;
+  /** False on maps that are meant to show the whole city: no "zoom in to see the buildings" offer. */
+  zoomHint?: boolean;
 }) {
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -318,7 +321,7 @@ export function CityMap({
   return (
     <div className="relative h-full w-full">
       <div ref={el} className="h-full w-full" />
-      {G0_PMTILES && !twinShown && (
+      {G0_PMTILES && zoomHint && !twinShown && (
         <button
           type="button"
           className="map-float absolute bottom-20 right-3 z-10 flex animate-fade-in items-center gap-2 px-3 py-2 text-xs font-semibold text-link hover:underline"

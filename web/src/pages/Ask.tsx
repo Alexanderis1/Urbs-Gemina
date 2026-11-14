@@ -58,7 +58,7 @@ const COPY = texts<Record<Experience, Copy>>({
       title: "Chiedi al gemello",
       lead: "Le risposte vengono da esecuzioni di strumenti e fonti citate. Controlla la traccia sotto ogni risposta.",
       opening:
-        "Sono un assistente AI per Roma Capitale. Rispondo a partire da esecuzioni di strumenti e fonti citate, e aiuto a decidere senza decidere al posto tuo.",
+        "Sono un assistente AI per Roma Capitale. Rispondo a partire da esecuzioni di strumenti e fonti citate, e aiuto a decidere senza decidere al posto del personale.",
       placeholder: "Chiedi di un luogo, di un livello o di uno scenario…",
       tasks: "Compiti pronti",
       tasksLead: "Elenchi fissi di esecuzioni di strumenti. L'assistente scrive la nota; ogni cifra è controllata.",
@@ -66,7 +66,7 @@ const COPY = texts<Record<Experience, Copy>>({
         "Cosa c'è entro 300 m da Via Nazionale 194?",
         "Com'è la qualità dell'aria nel Municipio I adesso?",
         "Quali ospedali ci sono nel Municipio II?",
-        "Dove sono i deserti sportivi per il calcio?",
+        "Dove mancano impianti sportivi per il calcio?",
       ],
     },
     public: {

@@ -1,9 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session as AuthSession } from "@supabase/supabase-js";
 import { callTool, type CitizenTool } from "@/api/client";
 import type { Envelope, ToolName } from "@/api/types";
 import type { SportTool } from "@/api/mockSport";
 import { supabase } from "@/integrations/supabase/client";
+import { layerStore } from "./layerStore";
 import { resolveTier, TIER_STORAGE_KEY, type Tier } from "./tiers";
 
 export interface LoggedRun {
@@ -44,6 +45,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // Not remembered; the choice still holds for this visit.
     }
   }, []);
+  // Answers saved for instant layers (lib/layerStore.ts) are wiped when someone leaves the staff workspace on this browser.
+  const lastTier = useRef(tier);
+  useEffect(() => {
+    if (lastTier.current === "office" && tier !== "office") void layerStore.clear();
+    lastTier.current = tier;
+  }, [tier]);
   const [auth, setAuth] = useState<AuthSession | null>(null);
   const [runs, setRuns] = useState<LoggedRun[]>([]);
 

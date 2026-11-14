@@ -517,6 +517,15 @@
       "redistribution": true,
       "status": "implemented, run 14 Nov 2026 (11,510 cells with motor roads; median 35, P95 55 km/h)"
     },
+    "web_main_roads": {
+      "kind": "real",
+      "what": "Main roads of Rome (motorway, trunk, primary, secondary, tertiary) as one small file for the web app, so traffic and bus delays are drawn along the streets",
+      "endpoint": "derived from Overture Maps transportation segments (release in config/model.yaml), simplified to 4 m",
+      "access": "python scripts/build_web_roads.py -> web/public/roads-rome.json",
+      "licence": "ODbL (OpenStreetMap-derived)",
+      "redistribution": true,
+      "status": "implemented, run 14 Nov 2026 (28,470 roads, 1.6 MB)"
+    },
     "roma_geoserver_csv": {
       "kind": "real",
       "what": "Roma GeoServer WFS, CSV output (fire hydrants)",

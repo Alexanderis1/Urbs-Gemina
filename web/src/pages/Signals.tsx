@@ -19,11 +19,11 @@ import { loadStaffReports, photoUrls, planMaintenance, runSignalEvents, setRepor
 const T = texts({
   it: {
     title: "Segnalazioni",
-    subtitle: "Segnalazioni dei cittadini unite per luogo, ora e tipo in possibili eventi in corso. Ultime 48 ore.",
+    subtitle: "Segnalazioni dei cittadini raggruppate per luogo, ora e tipo in possibili eventi in corso. Ultime 48 ore.",
     refresh: "Aggiorna",
     none: "Nessuna segnalazione nelle ultime 48 ore",
     noneText: "Quando i cittadini inviano una segnalazione con foto e GPS, compare qui come evento.",
-    sample: "Dati di esempio: segnalazioni inventate per la dimostrazione, eventi calcolati dal vero strumento.",
+    sample: "Dati di esempio: segnalazioni inventate, eventi calcolati dallo strumento reale.",
     level: { likely: "Probabile evento", probable: "Possibile evento", unconfirmed: "Da verificare", not_scored: "Evento pubblico segnalato" } as Record<Level, string>,
     reports: (n: number, r: number) => `${n} segnalazion${n === 1 ? "e" : "i"} da ${r} person${r === 1 ? "a" : "e"}`,
     since: (t: string) => `dalle ${t}`,
@@ -45,7 +45,7 @@ const T = texts({
     factor: (f: string) =>
       ({ prior: "Partenza (evento raro)", reporters: "Persone diverse che segnalano", photos: "Foto allegate", photo_check: "Controllo foto (Claude)", news_check: "Notizie (Exa)" })[f] ??
       (f.startsWith("twin:") ? `Gemello digitale: ${f.slice(5)}` : f),
-    honesty: "Le segnalazioni non sono verificate finché un operatore non le conferma. La fiducia è un modello, non un fatto.",
+    honesty: "Le segnalazioni non sono verificate finché un operatore non le conferma. Il grado di fiducia è una stima, non un fatto.",
     noIdentity: "Chi ha segnalato non è visibile: ogni account conta una volta sola.",
     legend: "Fiducia",
     tabs: { events: "Eventi", plan: "Piano squadre" },

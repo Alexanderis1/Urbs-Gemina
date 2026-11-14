@@ -16,8 +16,8 @@ type Filter = "all" | DataKind;
 const T = texts({
   en: {
     all: "All",
-    title: "Data honesty",
-    lead: "Every layer says where it comes from and how far to trust it.",
+    title: "Data and sources",
+    lead: "For every layer: where it comes from, its licence, how often it updates and how reliable it is.",
     loadError: "Could not load the data status",
     layers: "Layers",
     filterLabel: "Filter by kind",
@@ -34,8 +34,8 @@ const T = texts({
   },
   it: {
     all: "Tutti",
-    title: "Onestà dei dati",
-    lead: "Ogni livello dice da dove arriva e quanto fidarsi.",
+    title: "Dati e sorgenti",
+    lead: "Per ogni livello: da dove arriva, con quale licenza, ogni quanto si aggiorna e quanto è affidabile.",
     loadError: "Non è stato possibile caricare lo stato dei dati",
     layers: "Livelli",
     filterLabel: "Filtra per tipo",

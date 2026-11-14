@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { setLang } from "@/lib/i18n";
 import { macroAreas } from "@/lib/services";
-import { PUBLIC_NAV, screenPath } from "@/lib/tiers";
+import { PUBLIC_NAV, PUBLIC_SCREENS, screenPath } from "@/lib/tiers";
 
 describe("the residents' services, grouped in macro-areas", () => {
   it("has the four macro-areas in the order of the navigation bar", () => {
@@ -9,12 +9,19 @@ describe("the residents' services, grouped in macro-areas", () => {
     expect(PUBLIC_NAV.slice(1).map((s) => s.id)).toEqual(macroAreas().map((a) => a.screen));
   });
 
-  it("every service opens inside its own macro-area screen", () => {
+  it("every service opens inside its own macro-area screen, or on another screen of the residents' service", () => {
+    const screens = PUBLIC_SCREENS.map((s) => s.path);
     for (const area of macroAreas()) {
       const base = screenPath("public", area.screen)!;
       expect(area.services.length).toBeGreaterThan(0);
-      for (const s of area.services) expect(s.to.startsWith(base)).toBe(true);
+      for (const s of area.services) expect(s.to.startsWith(base) || screens.includes(s.to)).toBe(true);
     }
+  });
+
+  it("keeps the planning of a new sports facility within reach of residents, under Sociale", () => {
+    const social = macroAreas().find((a) => a.screen === "social")!;
+    expect(social.services.map((s) => s.id)).toEqual(["sport", "museums", "plan"]);
+    expect(social.services[2]!.to).toBe(screenPath("public", "sport"));
   });
 
   it("offers the five kinds of report, each opening the report page on that kind", () => {

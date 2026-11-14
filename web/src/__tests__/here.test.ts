@@ -12,6 +12,7 @@ import {
   parsePlacesOpen,
   parseTransportNow,
   placesFromFacilities,
+  referenceLabel,
   shareBelow,
 } from "@/lib/here";
 
@@ -86,6 +87,41 @@ describe("the whole city as a heatmap", () => {
     expect(h.legend).toEqual([{ index: 2, label: "Fair", from: 20, to: 40 }]);
     expect(h.unit).toBe("µg/m³");
   });
+
+  it("keeps the twin's own cell of each patch and takes the unit from the legend", () => {
+    const id = latLngToCell(41.9, 12.48, 8);
+    const h = parseCityHeatmap({
+      cells: [{ cell: id, lon: 12.48, lat: 41.9, value: 31, low: 25, high: 40, level: 3 }],
+      legend: [{ index: 3, label_it: "Moderata", from: 25, to: 60, unit: "µg/m³" }],
+    });
+    expect(h.cells[0]!.h3).toBe(id);
+    expect(h.unit).toBe("µg/m³");
+  });
+
+  it("orders the traffic bands from free flowing to blocked, like every other scale (higher = worse)", () => {
+    const h = parseCityHeatmap({
+      layer: "road_speed",
+      cells: [{ lon: 12.48, lat: 41.9, value: 12, level: 1 }],
+      legend: [
+        { index: 1, label_it: "Bloccato", from: 0, to: 0.4, unit: "velocità / velocità libera" },
+        { index: 2, label_it: "Congestionato", from: 0.4, to: 0.6 },
+        { index: 3, label_it: "Rallentato", from: 0.6, to: 0.8 },
+        { index: 4, label_it: "Scorrevole", from: 0.8, to: null },
+      ],
+    });
+    expect(h.legend.map((b) => [b.index, b.label])).toEqual([[1, "Scorrevole"], [2, "Rallentato"], [3, "Congestionato"], [4, "Bloccato"]]);
+    expect(h.cells[0]!.level).toBe(4);
+    // The bands are shares of the free-flow speed: that is not the unit of the speed values.
+    expect(h.unit).toBe("");
+  });
+
+  it("names a reference value in plain words", () => {
+    expect(referenceLabel("no2_hourly_limit")).toBe("Hourly limit");
+    expect(referenceLabel("pm25_annual_limit")).toBe("Yearly limit");
+    expect(referenceLabel("o3_target_8h")).toBe("Target value (8 hours)");
+    expect(referenceLabel("attention_value")).toBe("Attention value");
+    expect(referenceLabel("Limite annuale")).toBe("Limite annuale");
+  });
 });
 
 describe("answers of the citizen tools", () => {
@@ -133,6 +169,13 @@ describe("answers of the citizen tools", () => {
     expect(t.feeds[0]).toMatchObject({ id: "gtfs_rt", stale: true });
   });
 
+  it("reads the street and the category in words of a transport notice", () => {
+    const t = parseTransportNow({
+      events: [{ id: "alert-7", title: "Corteo in centro", category: "evento", category_label: "Evento", street: "Via Cavour", lines: [], lon: 12.49, lat: 41.89 }],
+    });
+    expect(t.events[0]).toMatchObject({ id: "alert-7", category: "evento", categoryLabel: "Evento", street: "Via Cavour" });
+  });
+
   it("reads places_open: open, closed or hours unknown", () => {
     const p = parsePlacesOpen({
       places: [
@@ -146,6 +189,17 @@ describe("answers of the citizen tools", () => {
     expect(p.places[0]).toMatchObject({ name: "Musei Capitolini", open: true, hours: "09:30-19:30", position: [12.48, 41.89] });
     expect(p.places[1]!.open).toBeNull();
     expect(p.coverage).toEqual({ withHours: 1, total: 2 });
+  });
+
+  it("reads the extras of a place: distance, ticket, step-free access, web site, sports", () => {
+    const p = parsePlacesOpen({
+      places: [
+        { name: "MAXXI", open_at: null, distance_m: 812, fee: "yes", wheelchair: "limited", website: "https://www.maxxi.art", lon: 12.46, lat: 41.93 },
+        { name: "Piscina", open_at: true, disciplines: ["swimming"], hours_note: "dichiarati dal gestore", lon: 12.5, lat: 41.9 },
+      ],
+    });
+    expect(p.places[0]).toMatchObject({ distanceM: 812, fee: "yes", wheelchair: "limited", website: "https://www.maxxi.art" });
+    expect(p.places[1]).toMatchObject({ disciplines: ["swimming"], hoursNote: "dichiarati dal gestore" });
   });
 });
 

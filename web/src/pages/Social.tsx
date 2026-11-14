@@ -42,12 +42,22 @@ const T = texts({
     missingSport: "The list of places open at a chosen time is not connected yet.",
     missingMuseum: "The list of museums and galleries is not connected yet.",
     sportMap: "Open the map of sports facilities",
+    planTitle: "Where is a new facility needed?",
+    planText: "Areas with no sport nearby, and what changes if one opens (a simulation).",
     error: "The places could not be loaded right now.",
     address: "Address",
     hours: "Opening hours",
     type: "Type",
     source: "Source",
     state: "At the time you chose",
+    distance: "Distance",
+    away: (m: number) => (m < 950 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(1)} km`),
+    ticket: "Ticket",
+    fee: { yes: "Paid entry", no: "Free entry" } as Record<string, string>,
+    access: "Step-free access",
+    wheelchair: { yes: "Yes", limited: "In part", no: "No" } as Record<string, string>,
+    website: "Website",
+    sports: "Sports",
   },
   it: {
     choose: "Che cosa cerchi",
@@ -68,12 +78,22 @@ const T = texts({
     missingSport: "L'elenco dei luoghi aperti a un orario scelto non è ancora collegato.",
     missingMuseum: "L'elenco di musei e gallerie non è ancora collegato.",
     sportMap: "Apri la mappa degli impianti sportivi",
+    planTitle: "Dove serve un nuovo impianto?",
+    planText: "Le zone senza impianti vicini e che cosa cambia se ne apre uno (simulazione).",
     error: "Al momento non è stato possibile caricare i luoghi.",
     address: "Indirizzo",
     hours: "Orari",
     type: "Tipo",
     source: "Fonte",
     state: "All'ora che hai scelto",
+    distance: "Distanza",
+    away: (m: number) => (m < 950 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`),
+    ticket: "Biglietto",
+    fee: { yes: "A pagamento", no: "Ingresso gratuito" } as Record<string, string>,
+    access: "Accesso senza gradini",
+    wheelchair: { yes: "Sì", limited: "In parte", no: "No" } as Record<string, string>,
+    website: "Sito web",
+    sports: "Sport",
   },
 });
 
@@ -97,7 +117,12 @@ function placeResource(p: OpenPlace, kind: Kind): Resource {
     facts: [
       { label: t.state, value: stateText(p.open) },
       ...(p.address ? [{ label: t.address, value: p.address }] : []),
-      ...(p.hours ? [{ label: t.hours, value: p.hours }] : []),
+      ...(p.distanceM !== undefined ? [{ label: t.distance, value: t.away(p.distanceM) }] : []),
+      ...(p.hours ? [{ label: t.hours, value: p.hoursNote ? `${p.hours} (${p.hoursNote})` : p.hours }] : []),
+      ...(p.disciplines?.length ? [{ label: t.sports, value: p.disciplines.join(", ") }] : []),
+      ...(p.fee && t.fee[p.fee] ? [{ label: t.ticket, value: t.fee[p.fee]! }] : []),
+      ...(p.wheelchair && t.wheelchair[p.wheelchair] ? [{ label: t.access, value: t.wheelchair[p.wheelchair]! }] : []),
+      ...(p.website ? [{ label: t.website, value: p.website.replace(/^https?:\/\//, "").replace(/\/$/, ""), href: /^https?:\/\//.test(p.website) ? p.website : `https://${p.website}` }] : []),
       ...(p.source ? [{ label: t.source, value: p.source }] : []),
     ],
     extra: [],
@@ -196,6 +221,22 @@ export default function Social() {
           {position && <p className="hint">{t.nearHint}</p>}
         </section>
 
+        {kind === "sport" && (
+          <Link
+            to={screenPath("public", "sport") ?? "/"}
+            className="group flex items-center gap-2.5 rounded border border-line px-3 py-2 transition-colors duration-150 hover:border-link"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-whatif/10 text-whatif">
+              <GlyphIcon glyph="pin" className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-link">{t.planTitle}</span>
+              <span className="block text-xs text-muted">{t.planText}</span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-link transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
+        )}
+
         {res.status === "loading" && <Skeleton lines={4} />}
         {res.status === "missing" && (
           <Callout tone="warn">
@@ -246,7 +287,7 @@ export default function Social() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold leading-snug text-ink">{p.name}</span>
-                      <span className="block truncate text-xs text-muted">{[p.address, p.hours].filter(Boolean).join(" · ")}</span>
+                      <span className="block truncate text-xs text-muted">{[p.distanceM !== undefined ? t.away(p.distanceM) : null, p.address, p.hours].filter(Boolean).join(" · ")}</span>
                     </span>
                     <StateChip open={p.open} />
                   </button>

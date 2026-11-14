@@ -39,3 +39,24 @@ export const AREA_ALPHA = 120;
 export function areaAlpha(alpha: number): number {
   return Math.round((alpha * AREA_ALPHA) / 200);
 }
+
+/** Traffic colours as on navigation maps: green when it flows, then yellow, orange, red, dark red when blocked. */
+const TRAFFIC: [number, number, number][] = [
+  [38, 153, 92],
+  [222, 190, 48],
+  [238, 132, 38],
+  [205, 44, 44],
+  [122, 14, 24],
+];
+
+function along(stops: [number, number, number][], t: number): [number, number, number] {
+  const x = Math.max(0, Math.min(0.9999, t)) * (stops.length - 1);
+  const i = Math.floor(x);
+  const f = x - i;
+  const a = stops[i]!;
+  const b = stops[i + 1]!;
+  return [0, 1, 2].map((k) => Math.round(a[k]! + (b[k]! - a[k]!) * f)) as [number, number, number];
+}
+
+/** 0 = free flowing, 1 = blocked. Used only where a layer is traffic drawn on the roads. */
+export const trafficColor = (t: number): [number, number, number] => along(TRAFFIC, t);

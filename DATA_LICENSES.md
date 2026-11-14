@@ -4,7 +4,7 @@ The code is MIT. Data is not: each source keeps its own licence. The full list i
 
 | Source | Licence | What it means here |
 |---|---|---|
-| OpenStreetMap, Overture buildings | ODbL | Share-alike: publish derived databases under ODbL, with credit |
+| OpenStreetMap, Overture buildings and roads (`web/public/roads-rome.json`) | ODbL | Share-alike: publish derived databases under ODbL, with credit |
 | Roma Mobilita GTFS / GTFS-RT, OpenCelliD, Mapillary | CC BY-SA | Share-alike with credit |
 | Roma Capitale open data (CKAN) | mostly CC BY | Credit. Do not use the 11 non-commercial datasets |
 | Roma Capitale GeoServer | not stated | Credit "Roma Capitale - GeoPortale"; check its legal notes |

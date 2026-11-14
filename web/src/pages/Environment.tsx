@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { KindBadge } from "@/components/Badge";
 import { Chips, CitizenMap, HeatLegend, HereCard, MapScreen, PositionBar } from "@/components/CitizenMap";
 import { GlyphIcon } from "@/components/MarkerCard";
+import { LiveBadge } from "@/components/LiveBadge";
 import { texts, tr } from "@/lib/i18n";
 import { metricInfo } from "@/lib/layers";
 import { useHeatmap, useHereAnswer } from "@/lib/useCitizenData";
@@ -50,7 +51,7 @@ const T = texts({
       emf: "Campo elettrico delle antenne di radio, TV e telefonia mobile.",
     } as Record<LensId, string>,
     cityNow: "Tutta la città adesso",
-    estimateNote: "Stima del gemello digitale della città da centraline e modelli. Solo a scopo informativo.",
+    estimateNote: "Stima calcolata da centraline e modelli. Solo a scopo informativo.",
   },
 });
 
@@ -102,6 +103,7 @@ export default function Environment() {
               {heat.kind && <KindBadge kind={heat.kind} />}
             </div>
             <HeatLegend heat={heat.data} unit={unit} />
+            {heat.live && <LiveBadge live={heat.live} />}
             <p className="hint">{t.estimateNote}</p>
           </section>
         )}

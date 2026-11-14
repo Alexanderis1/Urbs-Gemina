@@ -111,6 +111,40 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     (`src/lib/useCitizenData.ts`, `src/lib/here.ts`).
 
 
+32. **A layer opens at once from its saved copy, then goes LIVE** (Alessandro, 14 Nov). The last answer of
+    each layer is kept in the browser (IndexedDB, `src/lib/layerStore.ts`) and shown immediately, with the
+    time of its data and "Caricamento dati live…". When the fresh answer arrives the green round **LIVE**
+    badge appears with "Aggiornato alle hh:mm". Each layer has a life (`src/lib/liveLayer.ts`: 5 min for bus
+    and traffic feeds, 10 for rain, 30 for air and fields, 12 h for registers, each with its basis); when it
+    ends the badge goes and the layer is asked again. A copy still within its life is LIVE without a new
+    request, and nothing is asked while the page is not on screen: the service is not woken for nobody.
+    LIVE is about freshness only, the kind badge (REAL / ESTIMATED / SIMULATED) stays next to it. Never
+    saved: refusals, the Cartoradio grid, the antenna register and single field measurements (sources that
+    may not be passed on); the key holds the access tier and leaving the staff workspace wipes the copies.
+    Used by the City view and by the city heatmap of Ambiente and Trasporti.
+
+33. **Traffic is drawn on the roads, not as patches** (Alessandro, 14 Nov: "applied on the streets, even,
+    with gradients, no dots"). On Trasporti the layer is painted along the main roads of Rome (28,470 roads
+    from Overture Maps, ODbL, `public/roads-rome.json`, built by `scripts/build_web_roads.py`). Each street is
+    cut in pieces of about 120 m; each piece takes the value of the twin's cells blended between the cell it
+    is in and the six around it (`src/lib/roads.ts`), so the colour flows along the road. Width follows the
+    road class and grows with the zoom. Traffic uses the colours people know from navigation maps (green,
+    yellow, orange, red, dark red: `trafficColor`); bus delays keep the scale of every other map. The legend
+    says in words that the colour is the average of the area the road crosses, not a reading on that road.
+    Notices (roadworks, closures, strikes) stand on the map only in their own section, so the roads stay
+    readable. If the road file cannot be read the cells are drawn as before. The "zoom in to see the 3D
+    buildings" offer is off on whole-city maps.
+
+34. **Smooth heatmaps, no hexagons** (Alessandro, 14 Nov: "a normal heatmap, not divided in hexagons").
+    Area layers (air, field, heat, rain, crowds) are one picture laid on the city (`src/lib/heatRaster.ts`,
+    drawn with a BitmapLayer in `src/map/heatLayer.ts`): every pixel blends the twin's cells around it with
+    a soft bell under half a cell wide, so a single high cell keeps its peak and colours flow from place to
+    place; the data fades out at its edge instead of ending in a line. It is the value field, not a density
+    (a crowded area is not hotter because it has more cells). Less certain places are more see-through on the
+    staff map; on the citizen maps good places are a light wash so the city stays readable. Hover and click
+    still give the value of the cell under the pointer; the chosen place is a ring. The sport map's
+    zoomed-out view is a smooth density picture of facilities.
+
 ## Two experiences
 
 One twin, two front doors (decided 14 Nov 2026, on Alessandro's request for a clear division between public
