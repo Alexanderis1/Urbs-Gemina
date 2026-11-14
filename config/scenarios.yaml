@@ -351,10 +351,18 @@ emergency_access:
   heavy: true
   facilities:
     value:
-      ambulance: {file: emergency_hospitals.geojson, field: denominazione, filter: {}}
+      ambulance:
+        - {file: ares118_posts.geojson, field: name, filter: {}}
+        - {file: emergency_hospitals.geojson, field: denominazione, filter: {}}
       fire: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: Vigili del Fuoco}}
       police: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: [Carabinieri, Polizia di Stato, Polizia Locale]}}
-    basis: "WS1 layers; ambulances are taken to start from emergency hospitals (118 posts are not in an open layer)"
+    basis: "WS1 layers. Ambulances: the 26 ARES 118 posts inside Rome from ARES 118's public list of posts, placed with the city's street-number service (scripts/fetch_ares118_posts.py); emergency hospitals when that layer is missing. The first layer found is used"
+  pre_travel_min:
+    value:
+      ambulance: {median: 4.5, sigma_ln: 0.3, basis: "NUE 112 transfer about 1 min, 118 call handling and dispatch about 2.4 min (Lecce 118 2021: 2 min 26 s, target 2-3 min; Citerio 2006, Lombardy: 2.3 min), crew departure about 1 min (assumption)"}
+      fire: {median: 3.0, sigma_ln: 0.4, basis: "assumption (C=35): NUE 112 transfer plus Vigili del Fuoco call handling and departure"}
+      police: {median: 3.0, sigma_ln: 0.4, basis: "assumption (C=30): NUE 112 call handling and dispatch of a patrol"}
+    basis: "minutes from the call to the vehicle leaving; median and log-normal spread of its typical value. Legal 118 targets (DPR 27/3/1992) and the LEA indicator run from the call, so the model adds this time unless count_from is 'departure'"
   speed_factor:
     value: 0.7
     basis: "assumption (C=45): emergency vehicles average about 70% of the road speed limit in city traffic"
@@ -373,7 +381,7 @@ emergency_access:
       source: "Ministero della Salute, NSG 2023, indicator D09Z (alarm-to-target time of the first 118 vehicle, 75th percentile, red and yellow codes), Lazio region"
     basis: "official reference for scripts/validate_access.py; it includes call handling, dispatch and ambulance availability, which the model leaves out"
   calibration:
-    value: "checked against the official Lazio 118 alarm-to-target time: the model gives road reach from the nearest hospital with an ambulance ready, about 12 minutes faster than real responses at the 75th percentile (eval/scenarios/access_validation.json)"
+    value: "checked against the official Lazio 118 alarm-to-target time (20 min at the 75th percentile): from the 26 real 118 posts, with call handling and dispatch, the model gives 10.8 min, a best case with a free ambulance at the nearest post; the real figure is matched if the nearest post is busy about 3 times in 4 (eval/scenarios/access_validation.json)"
     basis: "shown with every result so users know how far the numbers were checked"
   members:
     value: 30
