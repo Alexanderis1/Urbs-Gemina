@@ -76,9 +76,317 @@ road_closure:
   rerouting_period_s:
     value: 60
     basis: "assumption: drivers update their route each minute (navigation apps)"
+  auto_network:
+    value: true
+    basis: "build the district network from OpenStreetMap (Overpass) on first use and cache it"
+  overpass_url:
+    value: https://overpass-api.de/api/interpreter
+    basis: "public Overpass API (ODbL data)"
+  network_cache_dir:
+    value: data/cache/networks
+    basis: "git-ignored; a volume in the Modal worker"
+  osm_highways:
+    value: "motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street"
+    basis: "roads cars use; service roads and tracks are left out to keep the district network small"
+  event_car_share:
+    value: 0.35
+    basis: "assumption (C=40): share of event attendees arriving by car in Rome; replace with the organiser's mobility plan"
+  event_car_occupancy:
+    value: 1.8
+    basis: "assumption (C=50): people per car for events"
+  event_radius_m:
+    value: 400
+    basis: "assumption: event car trips end on roads within 400 m of the venue (parking and drop-off)"
   top_changed_roads:
     value: 10
     basis: "how many roads with the largest traffic change are listed"
   demand_scale_bounds:
     value: [0.2, 5.0]
     basis: "assumption: loop counts may rescale the synthetic demand at most 5x either way, to stop one bad station dominating"
+
+# ---------------------------------------------------------------------------
+# Physical scenarios (v2). The twin's terrain, live sensors and static layers
+# are read at run time; every parameter below is a source or an assumption.
+
+terrain:
+  cell_m:
+    value: 30
+    basis: "native resolution of Copernicus GLO-30; finer cells add no information"
+  search_dirs:
+    value: [data/processed, data/model, /mnt/project-files/data/processed, /mnt/project-files/model]
+    basis: "WS1 / WS2 output folders, local or on the shared project folder"
+  files:
+    # first file found wins
+    - id: dtm_glo30_ground
+      file: dtm_glo30_ground.tif
+      kind: estimated
+      vertical_sigma_m: 2.4
+      is_surface_model: false
+      basis: "WS2 build: GLO-30 with buildings removed (10th percentile over 150 m, then 150 m mean). LE90 < 4 m in open ground -> sigma about 4 / 1.645 = 2.4 m; worse in dense blocks"
+  fallback:
+    id: copernicus_glo30_dsm
+    kind: estimated
+    url: https://copernicus-dem-30m.s3.amazonaws.com
+    tiles:
+      - /vsicurl/https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N41_00_E012_00_DEM/Copernicus_DSM_COG_10_N41_00_E012_00_DEM.tif
+      - /vsicurl/https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N42_00_E012_00_DEM/Copernicus_DSM_COG_10_N42_00_E012_00_DEM.tif
+    vertical_sigma_m: 3.0
+    basis: "raw GLO-30 surface model (includes buildings and trees), read by byte range; only when no ground DTM is available"
+
+river_flood:
+  heavy: false
+  rivers_file:
+    value: rivers_osm.geojson
+    basis: "WS1 OSM waterway lines (fields name, waterway)"
+  river_names:
+    value: {tevere: ["Tevere", "Fiume Tevere"], aniene: ["Aniene", "Fiume Aniene"]}
+    basis: "OSM names of the two rivers that cross Rome"
+  derived_rivers:
+    value:
+      tevere: {min_km2: 800, max_km2: 1.0e9, gauge: tevere_ripetta}
+      aniene: {min_km2: 150, max_km2: 800, gauge: aniene_lunghezza}
+    basis: "without the rivers layer, the river is the terrain channel draining min..max km2 inside the city window that passes its gauge (Tiber about 1,300 km2, Aniene about 375 km2 on the 30 m DTM)"
+  max_distance_from_river_m:
+    value: 5000
+    basis: "assumption: the floodplain model is not applied further than 5 km from the river"
+  gauges:
+    # Ids match config/thresholds.yaml river_gauges.stations (alert levels) and the glofas_flood points.
+    # normal_level_m: ordinary level on the gauge, so 'rise' = level - normal.
+    # rating: discharge (m3/s) -> level (m) points, interpolated linearly.
+    tevere_ripetta:
+      river: tevere
+      lon: 12.4757
+      lat: 41.9058
+      normal_level_m: 6.5
+      rating_power: {h0: 5.89, a: 198.76, b: 1.1475, sigma_m: 0.5}
+      basis: "power-law curve h = h0 + (Q/a)^(1/b) fitted to 7 observed peaks after the walls (eval/scenarios/tiber_ripetta_peaks.json: 2014 base flow, 2004, 2008, 2012, 1937, 1915, 1900); fit error 0.50 m, leave-one-out 1.19 m; sigma_m adds the fit scatter to every level. Validated: T200 (3,360 m3/s, Calenda 2017) gives 17.6 m, below the 18.45 m walls, consistent with flooding starting near T175-T300 (Fiori et al. 2023). The earlier straight-line extension put T200 at 19.3 m. Ordinary level 6.5 m (C=60). Not the official rating (Annali Idrologici Parte II, not online)"
+    aniene_lunghezza:
+      river: aniene
+      lon: 12.6467
+      lat: 41.9214
+      normal_level_m: 1.5
+      rating: [[20, 1.5], [100, 2.5], [200, 3.5], [300, 4.5], [500, 6.0]]
+      basis: "assumption (C=30): rough curve placed between the alert levels (3 / 4.5 / 5 m); replace with the official rating curve"
+  stage_sigma_m:
+    value: 0.3
+    basis: "assumption: uncertainty of a hypothetical or forecast level; measured levels use the gauge's own sigma"
+  sea_taper:
+    value: {tevere: {gauge: tevere_ripetta, mouth: [12.2343, 41.7404]}}
+    basis: "towards the mouth (Fiumara Grande) the flood surface falls to sea level along a straight line in distance along the river. Validation against the PGRA maps (eval/scenarios) replaced the earlier rule (rise in proportion to the bed's height above the sea), which missed 94% of the official hazard area downstream of Magliana"
+  defences:
+    value:
+      tevere_muraglioni:
+        river: tevere
+        gauge: tevere_ripetta
+        crest_level_m: 18.45
+        reach_bbox: [12.440, 41.850, 12.500, 41.935]
+    basis: "Canevari design crest 18.45 m on the Ripetta zero, 1.20 m above the 1870 flood (WS1 tiber_hydraulics.json, C=75; benchmarks 18.5-19.9 m a.s.l.). The crest is not level along the reach; the LiDAR crest (WS2) will replace this single value. The walls are thinner than a 30 m cell, so they enter the model as this rule, not as terrain"
+  crests_file:
+    value: tiber_wall_crests.geojson
+    basis: "WS2: wall crests measured on the MASE LiDAR DTM every 200 m per bank (crest_m, water_m, sigma 0.3 m, real)"
+  crest_search_m:
+    value: 250
+    basis: "a river cell takes the lowest crest measured within 250 m (the weaker bank decides)"
+  hazard_file:
+    value: flood_hazard_pgra.geojson
+    basis: "WS1: official PGRA hazard polygons, field 'hazard' = P1 | P2 | P3"
+  walls_note:
+    value: "The Tiber embankment walls (muraglioni) are thinner than a 30 m cell and are not in the terrain: inside the walls the model overstates flooding."
+    basis: "known limit of a 30 m terrain model in central Rome"
+
+rain_flood:
+  heavy: false
+  members:
+    value: 40
+    basis: "ensemble size: enough for a stable P5 / P95 of hotspot depth"
+  seed:
+    value: 7
+    basis: "fixed so the same run id gives the same numbers"
+  rain_relative_sigma:
+    value: 0.5
+    basis: "radar rainfall error, same as the dpc_radar provider (relative_sigma); applied to hypothetical totals too"
+  sewer_design_rain:
+    value:
+      short: {a: 111.6, n: 0.73, max_h: 0.807}
+      long: {a: 102.0, n: 0.31}
+      areal: {a1: -0.052, a2: 0.002, n1: 0.0175}
+      min_tc_h: 0.25
+      inlet_time_h: 0.05
+      pipe_speed_m_s: 1.0
+    basis: "Comune di Roma, Dip. XII, 'Criteri per il dimensionamento dei condotti fognari della citta' di Roma' (2000): H = a t^n mm (t in h); a' = a(1 + a1 A + a2 A^2), n' = n + n1 A with A in km2; concentration time = length / 1 m/s + 0.05 h, at least 0.25 h. Basins under 10 km2 only (larger ones are streams here)"
+  sewer_flow_length:
+    value: {coefficient_km: 1.5, exponent: 0.6}
+    basis: "assumption (C=50): longest flow path L = 1.5 A^0.6 km (Hack's law), used for the concentration time because the pipe layout is not open"
+  sewer_efficiency:
+    value: 0.3
+    sigma_ln: 0.4
+    basis: "assumption (C=35): share of the design capacity that works in a real storm (clogged street drains, sediment, pre-1960 pipes sized before the rules). It puts drainage at about 50 mm/h on small streets and 30-35 mm/h at valley collectors; Rome reports street flooding from about 30-40 mm/h. To be calibrated against reported flood events"
+  sewer_min_runoff_coefficient:
+    value: 0.2
+    basis: "assumption: lowest design runoff coefficient of a sewered basin (Fruhling scale, green districts)"
+  outfalls_file:
+    value: sewer_outfalls.geojson
+    basis: "ACEA ATO2 outfall points, SIITevere open data (scripts/fetch_sewer_layers.py)"
+  outfall_rivers:
+    value: {tevere: ["F. Tevere"], aniene: ["F. Aniene"]}
+    basis: "receiving-water names in the ACEA layer for outfalls directly on each river"
+  outfall_reach_m:
+    value: 500
+    basis: "assumption: sewer flow reaching the river within this distance of an outfall leaves through it"
+  outfall_height_m:
+    value: 2.0
+    sigma_ln: 0.5
+    basis: "assumption (C=35): outfall mouths sit about 2 m above the ordinary river level; their real levels are not published"
+  blocked_outfall_residual:
+    value: 0.3
+    basis: "assumption (C=35): share of capacity left when the outfall is under water (flap gates shut; interceptor sewers and pumps still take part of the flow)"
+  infiltration_mm_h:
+    value: 10
+    sigma_ln: 0.5
+    basis: "assumption (C=40): typical infiltration of urban green and soil under heavy rain"
+  impervious_file:
+    value: imperviousness_2018.tif
+    basis: "WS1: Copernicus HRL Imperviousness Density 2018, 0-100 %"
+  impervious_fallback:
+    value: {urban: 0.75, other: 0.15}
+    basis: "assumption: sealed share inside the PTPR 'aree urbanizzate' polygons and outside them, used until the HRL raster is loaded"
+  urban_file:
+    value: ptpr_b_aree_urbanizzate.geojson
+    basis: "WS1 PTPR Tavola B urbanised areas"
+  min_depth_m:
+    value: 0.1
+    basis: "assumption: depressions shallower than 10 cm are terrain noise at 30 m"
+  deep_hollow_m:
+    value: 2.0
+    basis: "assumption: a hollow deeper than 2 m on a 30 m terrain is usually a railway cutting, quarry, excavation or terrain error; it is flagged for a check"
+  channel_min_area_km2:
+    value: 2
+    basis: "assumption: hollows on a stream draining 2 km2 or more are river or stream beds, not street flooding; they are left to the river scenario"
+  min_capacity_m3:
+    value: 500
+    basis: "assumption: smaller hollows are below what a 30 m model resolves"
+  hotspots_listed:
+    value: 25
+    basis: "how many hotspots are listed; totals cover all"
+  underpasses_file:
+    value: road_underpasses_osm.geojson
+    basis: "WS1 OSM tunnels and underpasses, used to point out underpasses inside flooded hollows"
+
+impacts:
+  sensitive_sites_file:
+    value: sensitive_sites.geojson
+    basis: "WS1 merged sensitive sites (schools, hospitals, care homes...), 6,414 places"
+
+chemical_plume:
+  heavy: false
+  model: gaussian_plume_briggs_urban
+  relative_density:
+    value: {ammonia: 0.59, chlorine: 2.49, hydrogen_sulfide: 1.19}
+    basis: "gas density relative to air (standard physical data). Above about 1.1 the gas slumps and spreads along low ground: a Gaussian plume (passive gas) is then only a first look; ALOHA / DEGADIS heavy-gas models are the reference"
+  expected_accuracy:
+    value: "factor of 2 for about half of the places (FAC2 about 0.5)"
+    basis: "Gaussian models with Briggs urban curves against urban field tracer trials (Hanna and Chang 2012, Joint Urban 2003 Oklahoma City; acceptance FAC2 >= 0.3 for urban areas)"
+  members:
+    value: 60
+    basis: "ensemble size for stable P5 / P95 footprints"
+  seed:
+    value: 13
+    basis: "fixed so the same run id gives the same numbers"
+  cell_m:
+    value: 50
+    basis: "assumption: fine enough for footprints of a few hundred metres to kilometres"
+  max_distance_m:
+    value: 12000
+    basis: "Gaussian plume is not credible much beyond 10 km"
+  release_height_m:
+    value: 2
+    basis: "assumption: ground-level leak from a tank or pipe"
+  default_release_kg_s:
+    value: 5.0
+    basis: "assumption (C=30): order of magnitude of a large pipe rupture; the officer should enter the operator's safety-report scenario"
+  release_sigma_ln:
+    value: 0.7
+    basis: "assumption: the size of an accidental release is uncertain within about a factor 2"
+  wind_direction_sigma_deg:
+    value: 20
+    basis: "assumption: forecast or measured wind direction error plus meander over an hour"
+  wind_speed_sigma_ln:
+    value: 0.3
+    basis: "assumption: forecast wind speed error"
+  min_wind_ms:
+    value: 1.0
+    basis: "Gaussian plume breaks down in calm air; slower winds are raised to 1 m/s and flagged"
+  stability_weights:
+    value: {C: 0.25, D: 0.5, E: 0.25}
+    basis: "assumption: neutral conditions most likely; unstable and stable equally likely when the hour and cloud cover are unknown"
+  sites_files:
+    value: [seveso_perimeters.geojson, hazardous_sites.geojson]
+    basis: "WS1: Seveso plant perimeters (field nome) and hazardous sites (field denominaz)"
+  damage_zones_file:
+    value: seveso_damage_zones.geojson
+    basis: "WS1: official damage zones from the plants' safety reports (field origine, zona)"
+
+emergency_access:
+  heavy: true
+  facilities:
+    value:
+      ambulance: {file: emergency_hospitals.geojson, field: denominazione, filter: {}}
+      fire: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: Vigili del Fuoco}}
+      police: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: [Carabinieri, Polizia di Stato, Polizia Locale]}}
+    basis: "WS1 layers; ambulances are taken to start from emergency hospitals (118 posts are not in an open layer)"
+  speed_factor:
+    value: 0.7
+    basis: "assumption (C=45): emergency vehicles average about 70% of the road speed limit in city traffic"
+  urban_speed_cap_kmh:
+    value: 50
+    basis: "Codice della Strada art. 142: 50 km/h inside built-up areas. SUMO's OSM defaults give 100 km/h to secondary roads without a maxspeed tag, so road speeds are capped here before the emergency factor"
+  speed_sigma_ln:
+    value: 0.2
+    basis: "assumption: spread of traffic conditions"
+  off_network_detour:
+    value: 1.3
+    basis: "assumption (C=55): road distance is about 1.3 times the straight-line distance in Rome; used for the approach from stations outside the district network and the last stretch to each section"
+  members:
+    value: 30
+    basis: "ensemble size"
+  seed:
+    value: 17
+    basis: "fixed"
+
+heatwave:
+  heavy: false
+  cell_m:
+    value: 100
+    basis: "map cell; Copernicus rasters are 20 m and are averaged into it"
+  impervious_file:
+    value: imperviousness_2018.tif
+    basis: "Copernicus HRL Imperviousness Density 2018, 0-100 %"
+  tree_cover_file:
+    value: tree_cover_2018.tif
+    basis: "Copernicus HRL Tree Cover Density 2018, 0-100 % (scripts/fetch_heat_layers.py)"
+  ages_file:
+    value: census_ages.csv
+    basis: "ISTAT 2021 residents aged 65+ and 75+ per census section (scripts/fetch_heat_layers.py)"
+  forecast_scale_m:
+    value: 2200
+    basis: "ICON-2I grid spacing: the forecast is read as the average of this neighbourhood, and local differences are added around it"
+  coefficients:
+    value:
+      day: {impervious: [2.0, 0.8], trees: [4.0, 1.5]}
+      night: {impervious: [4.0, 1.5], trees: [1.5, 0.7]}
+    basis: "assumption (C=40): °C change for going from 0 to 100 % sealed ground or tree cover, relative to the neighbourhood average; [mean, sigma]. Order of magnitude from Rome urban heat island studies (night UHI 3-4 °C) and European tree-cooling studies (about 1 °C less air temperature per 16 % more tree cover)"
+  forecast_sigma_c:
+    value: 1.5
+    basis: "assumption: day-ahead error of daily max and min 2 m temperature when the provider gives none"
+  crown_area_m2:
+    value: 163
+    basis: "WS2 tree layer: median crown radius 7.2 m, used to turn added tree cover into a number of trees"
+  hot_probability:
+    value: 0.5
+    basis: "a cell is on the hot map when at least half of the ensemble members pass the threshold"
+  members:
+    value: 40
+    basis: "ensemble size"
+  seed:
+    value: 23
+    basis: "fixed"
