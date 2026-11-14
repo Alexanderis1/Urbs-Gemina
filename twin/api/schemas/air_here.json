@@ -1,0 +1,46 @@
+{
+  "name": "air_here",
+  "description": "Citizen: air quality at a point now (NO2, PM10, PM2.5, O3) with the EEA index level and the legal reference values.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Citizen: air quality at a point now (NO2, PM10, PM2.5, O3) with the EEA index level and the legal reference values.",
+    "properties": {
+      "point": {
+        "description": "[lon, lat] WGS84",
+        "items": {
+          "type": "number"
+        },
+        "maxItems": 2,
+        "minItems": 2,
+        "title": "Point",
+        "type": "array"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      }
+    },
+    "required": [
+      "point"
+    ],
+    "title": "AirHereIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/air_here"
+  },
+  "owner": "citizen-services"
+}

@@ -1,0 +1,46 @@
+{
+  "name": "emf_here",
+  "description": "Citizen: estimated radio-frequency electric field at a point, with its level and the legal values.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Citizen: estimated radio-frequency electric field at a point, with its level and the legal values.",
+    "properties": {
+      "point": {
+        "description": "[lon, lat] WGS84",
+        "items": {
+          "type": "number"
+        },
+        "maxItems": 2,
+        "minItems": 2,
+        "title": "Point",
+        "type": "array"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      }
+    },
+    "required": [
+      "point"
+    ],
+    "title": "EmfHereIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/emf_here"
+  },
+  "owner": "citizen-services"
+}

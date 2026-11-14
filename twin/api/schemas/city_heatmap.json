@@ -1,0 +1,63 @@
+{
+  "name": "city_heatmap",
+  "description": "Citizen: whole-city heat map of one layer on a coarse grid (value, range and level per cell, plus a legend). road_speed at a future time = predicted congestion.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Citizen: whole-city heat map of one layer on a coarse grid (value, range and level per cell, plus a legend). road_speed at a future time = predicted congestion.",
+    "properties": {
+      "layer": {
+        "enum": [
+          "air_no2",
+          "air_pm10",
+          "air_pm25",
+          "air_o3",
+          "emf",
+          "road_speed"
+        ],
+        "title": "Layer",
+        "type": "string"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      },
+      "resolution": {
+        "anyOf": [
+          {
+            "maximum": 9,
+            "minimum": 6,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "H3 resolution; default from config",
+        "title": "Resolution"
+      }
+    },
+    "required": [
+      "layer"
+    ],
+    "title": "CityHeatmapIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/city_heatmap"
+  },
+  "owner": "citizen-services"
+}
