@@ -78,6 +78,16 @@ def default_cache_dir() -> Path:
     return config.ROOT / str(config.load("scenarios.yaml")["cache"]["dir"])
 
 
+#: kinds that share another kind's config section
+AREA_SECTION = {"traffic_event": "road_closure"}
+
+
+def _area_limit(kind: str) -> float | None:
+    """Per-kind area limit (``max_area_km2`` in config/scenarios.yaml), when tighter than the heavy-tool one."""
+    section = config.load("scenarios.yaml").get(AREA_SECTION.get(kind, kind)) or {}
+    return float(config.value(section, "max_area_km2")) if "max_area_km2" in section else None
+
+
 def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData | None = None,
         cache_dir: Path | None = None, use_cache: bool = True, isolate: bool = True) -> dict[str, Any]:
     if kind not in KINDS:
@@ -98,6 +108,14 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
         if hit is not None:
             return {**hit, "cached": True}
 
+    if spec.heavy:  # refuse oversize areas here, before a worker is woken up for nothing
+        try:
+            check_heavy(resolve_area(area, lookup=data.area_lookup or layers.default_area_lookup), _area_limit(kind))
+        except AreaTooLarge as exc:
+            return _not_ok(inputs, snapshots, "refused", str(exc))
+        except AreaNotAvailable:
+            pass  # the worker may have the boundary layer; it answers for itself
+
     if isolate and spec.isolate and remote.enabled():
         try:
             out = remote.call(kind, area, change, data)
@@ -109,7 +127,7 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
     try:
         resolved = resolve_area(area, lookup=data.area_lookup or layers.default_area_lookup)
         if spec.heavy:
-            check_heavy(resolved)
+            check_heavy(resolved, _area_limit(kind))
     except AreaTooLarge as exc:
         return _not_ok(inputs, snapshots, "refused", str(exc))
     except AreaNotAvailable as exc:

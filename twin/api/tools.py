@@ -14,7 +14,7 @@ from twin.modules.antennas.report import build_permit_report
 from twin.tools.area import AreaTooLarge, resolve_area
 from twin.tools.layers import LayerSnapshot
 from twin.tools.data_status import data_status
-from twin.tools.envelope import ToolError, make_envelope
+from twin.tools.envelope import ToolError, make_envelope, utc_now
 from twin.tools.estimate_field import estimate_field
 from twin.tools.permit_context import run_context_check
 from twin.tools.query_layer import query_layer
@@ -128,6 +128,20 @@ def _run_scenario(rt: ToolRuntime, req: m.RunScenarioIn, role: str) -> dict[str,
     except ValueError as error:  # the engine rejects the 'change' shape: tell the caller what it needs
         return make_envelope("run_scenario", inputs, None, {}, status="refused", reason=str(error),
                              config_hashes=rt.settings.config_hashes())
+    # WS6 cites static files and forecasts as {"id", "file"} or {"id", "day"}: the envelope contract needs a
+    # retrieval time, so the read time of this run is added (otherwise the response fails validation).
+    read_at = utc_now()
+    out["sources"] = [{**s, "retrieved_at": str(s.get("retrieved_at") or read_at)} for s in out.get("sources", [])
+                      if isinstance(s, Mapping)]
+    # WS6 marks what-if inputs typed by the officer as 'hypothetical'. The envelope contract has four kinds
+    # (real / estimated / simulated / not_available), so the layer is shown as 'estimated' and a warning
+    # names it as the officer's hypothetical value (never as a forecast or a measurement).
+    kinds = out.get("data_kinds") or {}
+    hypothetical = [k for k, v in kinds.items() if v == "hypothetical"]
+    if hypothetical:
+        out["data_kinds"] = {k: ("estimated" if v == "hypothetical" else v) for k, v in kinds.items()}
+        out["warnings"] = list(out.get("warnings", [])) + [
+            f"'{k}' is a hypothetical what-if value given in the request, not a forecast or a measurement." for k in hypothetical]
     result = out.get("result") or {}
     if "status" not in out:
         out["status"] = result.get("status", "ok") if isinstance(result, dict) else "ok"
@@ -194,6 +208,15 @@ def _population(rt: ToolRuntime) -> list[Any]:
     return points
 
 
+def discipline_for_api(value: str | None, config: Any) -> str | None:
+    """Accept Italian or English discipline names ('calcio' -> 'football'); unknown words pass through
+    unchanged so the sports tool reports them with the list of known ids."""
+    if value is None:
+        return None
+    found = importlib.import_module("twin.modules.sports.disciplines").discipline_id(value, config)
+    return str(found) if found else value
+
+
 def _sports_facilities(rt: ToolRuntime, req: m.SportsFacilitiesIn, role: str) -> dict[str, Any]:
     inputs = req.model_dump(exclude_none=True)
     try:
@@ -205,7 +228,8 @@ def _sports_facilities(rt: ToolRuntime, req: m.SportsFacilitiesIn, role: str) ->
         return make_envelope("sports_facilities", inputs, None, {"sports_facilities": "not_available"},
                              status="not_available", reason=f"Facility layer not built yet ({error}). "
                              "Run: python -m twin.modules.sports.pipeline build")
-    out: dict[str, Any] = tools_mod.sports_facilities(_sports_area(rt, _dump(req.area)), req.discipline,
+    out: dict[str, Any] = tools_mod.sports_facilities(_sports_area(rt, _dump(req.area)),
+                                                      discipline_for_api(req.discipline, config),
                                                       facilities, config, type=req.type,
                                                       accessible=req.accessible)
     return out
@@ -224,7 +248,8 @@ def _sport_coverage(rt: ToolRuntime, req: m.SportCoverageIn, role: str) -> dict[
                              status="not_available", reason=f"Facility layer not built yet ({error}). "
                              "Run: python -m twin.modules.sports.pipeline build")
     gyms = [deserts.school_gym_facility(g.name, g.lon, g.lat, config, g.disciplines) for g in req.open_school_gyms]
-    out: dict[str, Any] = tools_mod.sport_coverage(_sports_area(rt, _dump(req.area)), req.discipline, facilities,
+    out: dict[str, Any] = tools_mod.sport_coverage(_sports_area(rt, _dump(req.area)),
+                                                   str(discipline_for_api(req.discipline, config)), facilities,
                                                    _population(rt), config, max_minutes=req.max_minutes,
                                                    open_facilities=gyms)
     return out

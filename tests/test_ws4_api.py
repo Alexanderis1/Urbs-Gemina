@@ -266,6 +266,8 @@ def test_ask_serialises_citations(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
         mode: str = "question"
         conversation_id: Any = None
         channel: str = "chat"
+        use_case: Any = None
+        params: Any = None
 
     @dataclass(frozen=True)
     class TwinAnswer:
@@ -308,3 +310,97 @@ def test_envelope_accepts_file_sources_without_retrieval_time() -> None:
                       sources=[{"id": "copernicus_hrl_tree_cover", "file": "tree_cover_2018.tif"}],
                       synthetic=False, warnings=[])
     assert env.sources[0].retrieved_at is None
+
+
+def test_scenario_sources_without_retrieval_time_still_validate(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """WS6 cites static files as {"id", "file"}: the API adds the read time instead of failing with HTTP 500."""
+    import sys
+    import types
+
+    engine = types.ModuleType("twin.scenarios.engine")
+    engine.kinds = lambda: {"heatwave": "x"}  # type: ignore[attr-defined]
+
+    def run(kind: str, area: Any, change: Any, data: Any = None) -> Any:
+        return {"run_id": "a" * 64, "tool": "run_scenario", "inputs": {}, "result": {"status": "ok"},
+                "data_kinds": {"tree_cover": "real"}, "sources": [{"id": "copernicus_hrl_tree_cover", "file": "tree_cover_2018.tif"}],
+                "synthetic": False, "warnings": [], "status": "ok", "cached": False}
+
+    engine.run = run  # type: ignore[attr-defined]
+    area_mod = types.ModuleType("twin.scenarios.area")
+    area_mod.AreaTooLarge = type("AreaTooLarge", (Exception,), {})  # type: ignore[attr-defined]
+    area_mod.AreaNotAvailable = type("AreaNotAvailable", (Exception,), {})  # type: ignore[attr-defined]
+    data_mod = types.ModuleType("twin.scenarios.data")
+    data_mod.ScenarioData = lambda **kw: kw  # type: ignore[attr-defined]
+    data_mod.FieldSample = lambda v, s: (v, s)  # type: ignore[attr-defined]
+    for mod in (engine, area_mod, data_mod):
+        monkeypatch.setitem(sys.modules, mod.__name__, mod)
+    r = client.post("/tools/run_scenario", json={"kind": "heatwave", "area": "municipio:1", "change": {}})
+    assert r.status_code == 200, r.text
+    src = r.json()["sources"][0]
+    assert src["id"] == "copernicus_hrl_tree_cover" and src["retrieved_at"]
+
+
+def test_use_cases_are_listed_per_tier(client: TestClient) -> None:
+    office = client.get("/use_cases", headers=OFFICE).json()
+    citizen = client.get("/use_cases").json()
+    ids = {u["id"] for u in office}
+    assert {"heat_plan_elderly", "civil_protection_alert", "site_risk_check"} <= ids
+    assert {u["id"] for u in citizen} < ids and "event_planning" not in {u["id"] for u in citizen}
+    heat = next(u for u in office if u["id"] == "heat_plan_elderly")
+    assert heat["needs"] == ["area"] and heat["title"]["it"] and "cover_added_pct" in heat["params"]
+
+
+def test_ask_passes_use_case_and_params(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> None:
+    from agents.contract import TwinAnswer
+    from twin.api import app as app_mod
+
+    seen: list[Any] = []
+
+    class FakeOrchestrator:
+        def __init__(self, runtime: Any) -> None:
+            pass
+
+        def ask(self, question: Any) -> TwinAnswer:
+            seen.append(question)
+            return TwinAnswer("ok", True, (), (), {}, False)
+
+    monkeypatch.setattr(app_mod, "TierOrchestrator", FakeOrchestrator)
+    from twin.tools.runtime import ToolRuntime
+    from twin.tools.settings import Settings
+    from twin.tools.layers import LayerStore
+
+    rt = ToolRuntime(settings=Settings.load(), store=LayerStore(raw_dir=Path("/nonexistent")))
+    c = TestClient(create_app(rt, api_keys={"office-key": "office"}))
+    r = c.post("/ask", headers=OFFICE, json={"question": "Circo Massimo", "use_case": "event_planning",
+                                             "params": {"attendees": 60000}})
+    assert r.status_code == 200, r.text
+    assert seen[0].use_case == "event_planning" and seen[0].params == {"attendees": 60000}
+
+
+def test_hypothetical_scenario_inputs_are_labelled_not_rejected(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A what-if input from the officer (WS6 kind 'hypothetical') must not crash the response model."""
+    import sys
+    import types
+
+    engine = types.ModuleType("twin.scenarios.engine")
+    engine.kinds = lambda: {"heatwave": "x"}  # type: ignore[attr-defined]
+
+    def run(kind: str, area: Any, change: Any, data: Any = None) -> Any:
+        return {"run_id": "b" * 64, "tool": "run_scenario", "inputs": {}, "result": {"status": "ok"},
+                "data_kinds": {"temperature": "hypothetical", "census": "real"}, "sources": [],
+                "synthetic": False, "warnings": [], "status": "ok", "cached": False}
+
+    engine.run = run  # type: ignore[attr-defined]
+    area_mod = types.ModuleType("twin.scenarios.area")
+    area_mod.AreaTooLarge = type("AreaTooLarge", (Exception,), {})  # type: ignore[attr-defined]
+    area_mod.AreaNotAvailable = type("AreaNotAvailable", (Exception,), {})  # type: ignore[attr-defined]
+    data_mod = types.ModuleType("twin.scenarios.data")
+    data_mod.ScenarioData = lambda **kw: kw  # type: ignore[attr-defined]
+    data_mod.FieldSample = lambda v, s: (v, s)  # type: ignore[attr-defined]
+    for mod in (engine, area_mod, data_mod):
+        monkeypatch.setitem(sys.modules, mod.__name__, mod)
+    r = client.post("/tools/run_scenario", json={"kind": "heatwave", "area": "municipio:1", "change": {"tmax_c": 38}})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["data_kinds"] == {"temperature": "estimated", "census": "real"}
+    assert any("temperature" in w and "hypothetical" in w for w in body["warnings"])

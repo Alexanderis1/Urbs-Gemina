@@ -56,6 +56,9 @@ population_exposure:
 
 road_closure:
   heavy: true                 # SUMO micro-simulation: refuses areas above heavy_tools_max_area_km2
+  max_area_km2:
+    value: 3
+    basis: "measured on the Modal worker (14 Nov 2026): 1.3 km2 around Via Nazionale took 93 s cold (OSM download, netconvert, SUMO) and 44 s with the network cached; all of municipio I passed the API's 300 s limit. 3 km2 keeps a cold run under that limit (C=50); larger areas need an asynchronous worker. Also applies to traffic_event"
   engine: sumo
   demand: synthetic
   replicates:

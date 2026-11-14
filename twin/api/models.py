@@ -138,6 +138,8 @@ class AskIn(Strict):
     area: str | None = Field(default=None, max_length=200)
     mode: Literal["question", "briefing"] = "question"
     conversation_id: str | None = Field(default=None, max_length=200)
+    use_case: str | None = Field(default=None, max_length=60, description="Playbook id from GET /use_cases")
+    params: dict[str, Any] = Field(default_factory=dict, description="Playbook inputs, e.g. {\"place\": \"Circo Massimo\"}")
 
 
 class SourceOut(BaseModel):
