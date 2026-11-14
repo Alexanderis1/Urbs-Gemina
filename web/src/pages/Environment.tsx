@@ -51,7 +51,7 @@ const T = texts({
       emf: "Campo elettrico delle antenne di radio, TV e telefonia mobile.",
     } as Record<LensId, string>,
     cityNow: "Tutta la città adesso",
-    estimateNote: "Stima del gemello digitale della città da centraline e modelli. Solo a scopo informativo.",
+    estimateNote: "Stima calcolata da centraline e modelli. Solo a scopo informativo.",
   },
 });
 

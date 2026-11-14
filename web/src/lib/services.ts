@@ -53,7 +53,7 @@ const T = texts({
     events: ["Cantieri, chiusure e scioperi", "Che cosa cambia oggi per strade e trasporto pubblico"],
     sport: ["Dove posso fare sport?", "Impianti per lo sport, il giorno e l'ora che scegli"],
     museums: ["Musei e gallerie", "Quali sono aperti nel giorno e all'ora che scegli"],
-    plan: ["Dove serve un nuovo impianto sportivo?", "Le zone senza sport vicino e che cosa cambia se ne apre uno (simulazione)"],
+    plan: ["Dove serve un nuovo impianto sportivo?", "Le zone senza impianti vicini e che cosa cambia se ne apre uno (simulazione)"],
     flood: ["Allagamento o problema di fogna", "Acqua in strada, un tombino ostruito"],
     pothole: ["Una buca in strada", "Strada o marciapiede danneggiati"],
     trafficReport: ["Incidente, traffico o problema dei mezzi", "Un incidente, un ingorgo, un guasto di bus o metro"],

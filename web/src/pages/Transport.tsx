@@ -76,7 +76,7 @@ const T = texts({
     tabs: { traffic: "Traffico", events: "Eventi" },
     tabsLabel: "Sezione",
     whatTraffic: "Velocità media sulle strade di ogni parte della città. Più lento vuol dire più traffico.",
-    whatForecast: "Una previsione del modello di traffico del gemello, non una misura.",
+    whatForecast: "Una previsione del modello di traffico, non una misura.",
     whatBus: "Quanto sono in ritardo autobus e tram, dai dati in tempo reale dell'azienda di trasporto.",
     hereSpeed: "Intorno al tuo punto",
     cityNow: "Tutta la città",

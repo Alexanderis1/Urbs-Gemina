@@ -79,7 +79,7 @@ const T = texts({
     missingMuseum: "L'elenco di musei e gallerie non è ancora collegato.",
     sportMap: "Apri la mappa degli impianti sportivi",
     planTitle: "Dove serve un nuovo impianto?",
-    planText: "Le zone senza sport vicino e che cosa cambia se ne apre uno (simulazione).",
+    planText: "Le zone senza impianti vicini e che cosa cambia se ne apre uno (simulazione).",
     error: "Al momento non è stato possibile caricare i luoghi.",
     address: "Indirizzo",
     hours: "Orari",

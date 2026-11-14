@@ -45,7 +45,7 @@ const T = texts({
     lead: "Profilo del personale. Fonti dei dati, soglie di legge e registro delle esecuzioni di questa sessione.",
     notConnected: "Non ancora collegato",
     providers: "Fonti dei dati",
-    providersNote: "Serve un endpoint di amministrazione sull'API degli strumenti; è stato chiesto al gruppo degli strumenti.",
+    providersNote: "Non ancora disponibile: serve un endpoint di amministrazione sull'API degli strumenti.",
     providersBody: (
       <>
         Passa un livello dalla sua fonte simulata ai dati propri dell'amministrazione (per esempio da <code>sim_register</code> a <code>pa</code>).
@@ -53,10 +53,10 @@ const T = texts({
       </>
     ),
     thresholds: "Soglie di legge",
-    thresholdsNote: "Serve un endpoint di lettura sull'API degli strumenti; è stato chiesto al gruppo degli strumenti.",
+    thresholdsNote: "Non ancora disponibile: serve un endpoint di lettura sull'API degli strumenti.",
     thresholdsBody: (
       <>
-        Le soglie stanno solo in <code>config/thresholds.yaml</code>, ognuna con la sua fonte di legge e una data "alla data del". Questa
+        Le soglie stanno solo in <code>config/thresholds.yaml</code>, ognuna con la sua fonte di legge e la data di riferimento. Questa
         schermata le mostrerà in sola lettura dall'API degli strumenti.
       </>
     ),

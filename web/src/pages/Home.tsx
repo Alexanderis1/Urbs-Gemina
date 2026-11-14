@@ -82,7 +82,7 @@ const T = texts({
     explore: "Esplora la città",
     exploreText: {
       city: "Guarda aria, pioggia, ritardi dei bus, ospedali e scuole sulla mappa 3D di Roma.",
-      sport: "Trova un impianto vicino a te, guarda le zone che ne sono prive e prova dove ne servirebbe uno nuovo.",
+      sport: "Trova un impianto vicino a te, guarda le aree senza impianti e prova dove ne servirebbe uno nuovo.",
       ask: "Fai una domanda con parole tue e ricevi una risposta con le sue fonti.",
       honesty: "Scopri da dove viene ogni informazione e quanto è affidabile.",
     } as Partial<Record<ScreenId, string>>,

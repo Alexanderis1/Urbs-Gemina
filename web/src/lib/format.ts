@@ -10,7 +10,7 @@ const T = texts({
   it: {
     range: (lo: string, hi: string) => `intervallo da ${lo} a ${hi}`,
     calibrated: "Calibrato sulle misure",
-    uncalibrated: "Non calibrato: considera l'intervallo indicativo",
+    uncalibrated: "Non calibrato: l'intervallo è indicativo",
   },
 });
 
