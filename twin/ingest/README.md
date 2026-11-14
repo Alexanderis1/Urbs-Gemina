@@ -49,6 +49,10 @@ A layer whose server announces the wrong CRS sets `options.true_crs`; the native
 are then read in that CRS (Roma's `DIPAU:ReteEcologicaLinea` says EPSG:6708 but holds
 EPSG:3004 coordinates).
 
+Some Roma GeoServer views fail on WFS 1.0.0 and set `options.wfs_version: "2.0.0"`. The fire
+hydrant view breaks its GeoJSON mid-stream (a server exception after 1,952 of 1,963
+features), so `fire_hydrants` reads the same WFS as CSV (`roma_geoserver_csv`, lat/lon columns).
+
 `python -m twin.ingest.quality [layer ...]` checks the processed files again and writes
 `data/processed/quality_report.json`. Exact duplicate positions that remain are expected
 (several schools in one building, geocoded places on the same street, nested flood scenarios).

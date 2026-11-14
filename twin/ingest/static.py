@@ -41,12 +41,12 @@ Entry = dict[str, Any]
 
 # --- Download -----------------------------------------------------------------
 
-def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None, native: bool = False,
-            version: str = "1.0.0") -> str:
-    """WFS GetFeature as GeoJSON, in EPSG:4326 (lon, lat order) unless ``native`` keeps the stored CRS.
+def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None, version: str = "1.0.0",
+            native: bool = False) -> str:
+    """WFS GetFeature in EPSG:4326 (lon, lat order) as GeoJSON; 1.0.0 unless the layer asks for 2.0.0.
 
-    1.0.0 unless the layer asks for 2.0.0 (some Roma GeoServer views fail on 1.0.0). GeoServer keeps lon, lat
-    order for the short "EPSG:4326" name in 2.0.0 too (checked on the Roma server).
+    GeoServer keeps lon, lat order for the short "EPSG:4326" name in 2.0.0 too (checked on the Roma
+    server). ``native`` keeps the stored CRS (see ``options.true_crs``).
     """
     params = {
         "service": "WFS",
@@ -124,7 +124,8 @@ def _download(layer: LayerSpec, catalog: Catalog, fetch: Fetch) -> tuple[bytes, 
         assert layer.type_name is not None
         bbox = catalog.city_bbox if layer.clip_to_city else None
         url = wfs_url(source.urls[0], layer.type_name, None if layer.options.get("true_crs") else bbox,
-                      native=bool(layer.options.get("true_crs")), version=str(layer.options.get("wfs_version", "1.0.0")))
+                      version=str(layer.options.get("wfs_version", "1.0.0")),
+                      native=bool(layer.options.get("true_crs")))
         return fetch(HttpRequest(url)), url
     if source.protocol == "overpass":
         tiles = split_bbox(catalog.city_bbox, int(layer.options.get("tiles", 1)))
@@ -296,6 +297,15 @@ def clean_geometries(frame: Any, bbox: BBox, keep: list[str]) -> tuple[Any, dict
 
 # --- One layer ----------------------------------------------------------------
 
+def _has_features(parquet: Path) -> bool:
+    """True when an earlier run left a non-empty GeoParquet file."""
+    if not parquet.exists():
+        return False
+    import pyarrow.parquet as pq  # type: ignore[import-untyped,import-not-found,unused-ignore]
+
+    return bool(pq.ParquetFile(parquet).metadata.num_rows > 0)
+
+
 def _now_iso(now: datetime) -> str:
     return now.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -370,6 +380,10 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
         out_dir.mkdir(parents=True, exist_ok=True)
         parquet = out_dir / f"{layer.key}.parquet"
         geojson = out_dir / f"{layer.key}.geojson"
+        if len(frame) == 0 and _has_features(parquet):
+            # Usually missing inputs or a broken server: other threads read these files.
+            raise ValueError("0 features; kept the previous file "
+                             f"(missing inputs: {entry.get('missing_inputs') or 'none listed'})")
         frame.to_parquet(parquet, index=False)
         geojson.write_text(frame.to_json(drop_id=True, ensure_ascii=False), encoding="utf-8")
         extra_files: dict[str, Path] = {}

@@ -67,3 +67,13 @@ def test_layers_that_need_wfs_2_say_so_in_the_catalogue() -> None:
     catalog = load_catalog(Path("config/ingest.yaml"))
     for key in ("civil_protection_areas", "wildfire_interface"):
         assert catalog.layers[key].options.get("wfs_version") == "2.0.0"
+
+
+def test_fire_hydrants_come_from_the_csv_output() -> None:
+    """The hydrant GeoJSON breaks after 1,952 of 1,963 features (server exception mid-stream);
+    the CSV output of the same WFS is complete and carries lat/lon columns."""
+    catalog = load_catalog(Path("config/ingest.yaml"))
+    layer = catalog.layers["fire_hydrants"]
+    assert catalog.sources[layer.source].protocol == "csv_points"
+    assert "outputFormat=csv" in layer.options["url"]
+    assert layer.options["lat_column"] == "lat" and layer.options["lon_column"] == "lon"

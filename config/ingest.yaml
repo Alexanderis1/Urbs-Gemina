@@ -50,6 +50,10 @@ sources:
     # Regione Lazio CKAN portal; tables that already carry latitude/longitude.
     protocol: csv_points
     url: "https://dati.lazio.it"
+  roma_geoserver_csv:
+    # Same Roma GeoServer, CSV output: used where the GeoJSON output breaks mid-stream.
+    protocol: csv_points
+    url: "https://geoportale.comune.roma.it/geoserver/ows"
   indicepa:
     # IndicePA (IPA), the national register of public bodies; addresses only, geocoded
     # offline on the OSM extract's addr:* tags (no outside geocoder sees the data).
@@ -339,11 +343,27 @@ layers:
   ztl_green_belt_gates:  {source: roma_geoserver, type_name: "DIPMOB:ztl_fascia_verde_varchi", data_kind: real, theme: mobility, notes: "Camera gates of the Fascia Verde low-emission zone"}
   ztl_centre:            {source: roma_geoserver, type_name: "DIPMOB:ZonaTrafficoLimitatoCentroStoricoDiurna", data_kind: real, theme: mobility}
   ztl_centre_gates:      {source: roma_geoserver, type_name: "DIPMOB:ZonaTrafficoLimitatoVarchiCentroStorico", data_kind: real, theme: mobility}
-  park_and_ride:         {source: roma_geoserver, type_name: "DIPMOB:ParcheggiScambio", data_kind: real, theme: mobility}
   metro_lifts:           {source: roma_geoserver, type_name: "DIPMOB:AscensoriStazioniMetro", data_kind: real, theme: mobility, notes: "Lifts in metro stations (step-free access)"}
-  drinking_fountains:    {source: roma_geoserver, type_name: "GABSIN:fontanelle_rifugi_climatici", data_kind: real, theme: heat, drop_fields: [googlemaps], notes: "Public drinking fountains (nasoni) published with the climate-shelter map; for heat-wave use cases"}
-  landslide_areas:       {source: roma_geoserver, type_name: "DIPPC:303_Aree_inFrana", data_kind: real, theme: hazard, notes: "Landslide areas mapped by Roma Capitale civil protection"}
   street_trees_m8:       {source: roma_geoserver, type_name: "DIPAMB:AlberatureSpecieMVIII", data_kind: real, theme: green, notes: "Tree census with species for municipio VIII only (the only municipio published)"}
+
+  # --- Civil protection layers of Roma Capitale (quality round) ----------------------
+  fire_hydrants:
+    source: roma_geoserver_csv
+    data_kind: real
+    theme: civil_protection
+    notes: "Roma Capitale fire hydrants 2026 (type, UNI size, working). The GeoJSON output breaks mid-stream, so the CSV output is used."
+    options:
+      url: "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A430_Idranti_2026&outputFormat=csv&propertyName=id,lat,lon,municipio,tipo,uni,funzionant"
+      delimiter: ","
+      encoding: utf-8
+      lat_column: lat
+      lon_column: lon
+      columns: {hydrant_id: id, municipio: municipio, hydrant_type: tipo, uni_mm: uni, working: funzionant}
+  flood_hazard_roma_2023: {source: roma_geoserver, type_name: "DIPPC:302_00_PericoloIdraulico_2023_", data_kind: real, theme: flood, notes: "Roma Capitale civil protection flood hazard map 2023 (local, finer than the ISPRA mosaic)"}
+  tsunami_advisory:      {source: roma_geoserver, type_name: "DIPPC:308_07_Maremoto_ADVISORY", data_kind: real, theme: hazard, notes: "Coastal area to evacuate on a tsunami advisory (Ostia)"}
+  gas_emissions:         {source: roma_geoserver, type_name: "DIPPC:308_02_Emissioni_GAS", data_kind: real, theme: hazard, notes: "Areas with natural gas (CO2, H2S) emissions from the ground"}
+  event_plan_sites:      {source: roma_geoserver, type_name: "DIPPC:308_3_Eventi_0_Siti", data_kind: real, theme: civil_protection, notes: "Sites covered by civil protection plans for large events"}
+  event_plan_areas:      {source: roma_geoserver, type_name: "DIPPC:308_3_Eventi_1_Aree", data_kind: real, theme: civil_protection}
 
   # --- Official registers (tables) for sensitive sites --------------------------
   # Only the columns under "columns" are kept, so owners' names, VAT numbers, managers'
@@ -585,6 +605,8 @@ layers:
   civil_protection_areas:  {source: roma_geoserver, type_name: "DIPPC:422_AreePC_2026", data_kind: real, theme: civil_protection,
                             options: {wfs_version: "2.0.0"},  # 1.0.0 fails: "variable not found in subplan target list"
                             notes: "Emergency plan areas: A waiting (primary/secondary), B reception, C shelters, D staging (1018 areas)"}
+  landslide_areas:         {source: roma_geoserver, type_name: "DIPPC:303_Aree_inFrana", data_kind: real, theme: civil_protection,
+                            notes: "Landslide areas with risk class R (PAI)"}
   wildfire_interface:      {source: roma_geoserver, type_name: "DIPPC:305_AreeInterfaccia_R3-R4_xMunicipio", data_kind: real, theme: civil_protection,
                             options: {wfs_version: "2.0.0"},
                             notes: "Urban-vegetation interface areas at fire risk R3-R4, per municipio"}
@@ -603,9 +625,12 @@ layers:
   climate_refuges_indoor:  {source: roma_geoserver, type_name: "GABSIN:al_chiuso", data_kind: real, theme: climate,
                             options: {keep_columns: [tipo, nome, indirizzo, municipio, orari, chiusura_e, accessibil, aria_cond]},
                             notes: "Indoor cool places (libraries, civic centres) of the Roma climate-refuge map; contacts dropped"}
+  drinking_fountains:      {source: roma_geoserver, type_name: "GABSIN:fontanelle_rifugi_climatici", data_kind: real, theme: climate,
+                            options: {keep_columns: [idgis, d_tipo]}}
   cold_plan_shelters:      {source: roma_geoserver, type_name: "DIPPC:accoglienza_piano_freddo", data_kind: real, theme: civil_protection,
                             notes: "Piano Freddo reception points for people without a home (sites, not people)"}
   movida_zones:            {source: roma_geoserver, type_name: "DIPPC:mappa_roma_notte_zonemovida", data_kind: real, theme: night}
+  park_and_ride:           {source: roma_geoserver, type_name: "DIPMOB:ParcheggiScambio", data_kind: real, theme: mobility}
 
 # Live public feeds. Each pull stores the raw bytes under data/snapshots/<feed>/
 # with its SHA-256 in data/snapshots/<feed>/index.jsonl. Parsing is done by the
