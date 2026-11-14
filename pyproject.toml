@@ -34,7 +34,8 @@ pythonpath = ["."]
 strict = true
 files = ["twin", "scripts", "agents", "eval", "voice"]
 
-# WS2 city model: geospatial libraries ship without type stubs.
+
+# WS2 city model: its geospatial libraries (geopandas, rasterio, pyarrow, PIL...) ship without type stubs.
 [[tool.mypy.overrides]]
-module = ["geopandas.*", "shapely.*", "rasterio.*", "pyproj.*", "pyarrow.*", "scipy.*", "pandas.*"]
-ignore_missing_imports = true
+module = ["twin.model.*", "scripts.build_city_model", "scripts.build_construction_period", "scripts.build_ground_motion", "scripts.build_lidar", "scripts.build_ortho_facts", "scripts.build_trees", "build_city_model", "build_construction_period", "build_ground_motion", "build_lidar", "build_ortho_facts", "build_trees"]
+disable_error_code = ["import-untyped", "import-not-found"]

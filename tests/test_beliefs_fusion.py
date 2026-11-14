@@ -177,7 +177,9 @@ def test_starting_map_uses_the_forecast_hour_closest_to_the_layer_time() -> None
     lattice = [reading("AirQualityForecast", "no2", v, 5.0, "cams_open_meteo", lon=12.48, lat=41.9, at=T0 + timedelta(hours=h))
                for h, v in ((0, 20.0), (5, 90.0))]
     layer = prior_layer(spec, cells, T0, prior_field=lattice)
-    assert layer.belief(cell_of(*HERE, 9)).mean == pytest.approx(20.0)
+    # The map is bias-corrected (offset, scale, road term), so compare with the 20 ug/m3 hour alone.
+    only_now = prior_layer(spec, cells, T0, prior_field=lattice[:1])
+    assert layer.belief(cell_of(*HERE, 9)).mean == pytest.approx(only_now.belief(cell_of(*HERE, 9)).mean)
 
 
 def test_rain_starts_from_the_forecast_map() -> None:
