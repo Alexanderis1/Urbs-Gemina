@@ -19,13 +19,21 @@
           "title": "Url"
         },
         "retrieved_at": {
-          "title": "Retrieved At",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When a live source was read; static files have none",
+          "title": "Retrieved At"
         }
       },
       "required": [
-        "id",
-        "retrieved_at"
+        "id"
       ],
       "title": "SourceOut",
       "type": "object"

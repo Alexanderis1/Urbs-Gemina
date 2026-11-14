@@ -298,3 +298,13 @@ def test_envelope_accepts_hypothetical_scenario_inputs() -> None:
                       data_kinds={"river_level": "hypothetical", "terrain": "estimated"},
                       sources=[], synthetic=False, warnings=[])
     assert env.data_kinds["river_level"] == "hypothetical"
+
+
+def test_envelope_accepts_file_sources_without_retrieval_time() -> None:
+    """Static scenario inputs (e.g. the Copernicus tree-cover file) cite a file, not a fetch time."""
+    from twin.api.models import EnvelopeOut
+
+    env = EnvelopeOut(run_id="x", tool="run_scenario", status="ok", inputs={}, result={}, data_kinds={},
+                      sources=[{"id": "copernicus_hrl_tree_cover", "file": "tree_cover_2018.tif"}],
+                      synthetic=False, warnings=[])
+    assert env.sources[0].retrieved_at is None

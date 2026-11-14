@@ -143,7 +143,7 @@ class AskIn(Strict):
 class SourceOut(BaseModel):
     id: str
     url: str | None = None
-    retrieved_at: str
+    retrieved_at: str | None = Field(default=None, description="When a live source was read; static files have none")
 
 
 class EnvelopeOut(BaseModel):
