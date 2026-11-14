@@ -13,6 +13,13 @@ export interface MapItem {
   synthetic?: boolean;
   p5?: number;
   p95?: number;
+  /** Identifier the tool gave (a sensor URN, a feature id). */
+  id?: string;
+  /** Everything the tool returned for this item, for the detail card (see lib/resource.ts). */
+  props?: Record<string, unknown>;
+  values?: Record<string, number>;
+  sigmas?: Record<string, number>;
+  observedAt?: string;
 }
 
 export interface MapData {
@@ -30,6 +37,9 @@ export interface MapData {
 
 /** Which value to colour by, per observation type. First match wins; otherwise the first numeric value. */
 const MAIN_VALUE = ["intensity", "electricField", "precipitation", "pm10", "pm25", "pm2_5", "no2", "delay", "availableVehicles"];
+
+/** Fields that hold the name of a place, as the open registers of Roma Capitale and OpenStreetMap write them. */
+export const NAME_KEYS = ["denominazione", "DESCRIZION", "name", "nome", "NOME", "DENOMINAZIONE"];
 
 /** Numeric fields that are flags for the tools, not readings to map. */
 const FLAG_VALUES = new Set(["at_cap"]);
@@ -207,6 +217,13 @@ export function metricInfo(metric: string): MetricInfo {
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 
+/** The numeric entries of an object (readings or their sigmas), without the tools' flags. */
+function numbers(v: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (isObj(v)) for (const [k, x] of Object.entries(v)) if (num(x) !== undefined && !FLAG_VALUES.has(k)) out[k] = x as number;
+  return out;
+}
+
 /** Every numeric value the observations of a layer carry, the usual one first. Empty for other result types. */
 export function availableMetrics(result: unknown): string[] {
   const r = isObj(result) ? result : {};
@@ -261,6 +278,10 @@ export function normalizeLayer(result: unknown, prefer?: string): MapData {
           uncertainty: num(isObj(o.sigma) ? o.sigma[metric] : undefined) ?? 0,
           synthetic: o.synthetic === true,
           label: typeof o.id === "string" ? o.id.split(":").pop() : undefined,
+          id: typeof o.id === "string" ? o.id : undefined,
+          values: numbers(o.values),
+          sigmas: numbers(o.sigma),
+          observedAt: typeof o.observed_at === "string" ? o.observed_at : undefined,
         })),
     };
   }
@@ -281,8 +302,8 @@ export function normalizeLayer(result: unknown, prefer?: string): MapData {
       if (g?.type !== "Point" || !Array.isArray(g.coordinates)) continue;
       const [lon, lat] = g.coordinates as number[];
       const p = isObj(f.properties) ? f.properties : {};
-      const label = [p.denominazione, p.name, p.nome].find((x) => typeof x === "string") as string | undefined;
-      items.push({ position: [lon!, lat!], value: 1, uncertainty: 0, label });
+      const label = NAME_KEYS.map((k) => p[k]).find((x) => typeof x === "string" && x.trim() !== "") as string | undefined;
+      items.push({ position: [lon!, lat!], value: 1, uncertainty: 0, label, id: typeof f.id === "string" ? f.id : undefined, props: p });
     }
     return { kind: "points", metric: "site", unit: "", items, count: num(r.count) };
   }
