@@ -21,3 +21,21 @@ export function buildClientTools(dispatch: (raw: unknown) => boolean = dispatchM
     ]),
   );
 }
+
+/**
+ * Callbacks for useConversation. @elevenlabs/react 0.4.5 forwards every callback to the client,
+ * even when we leave it out, so a missing one becomes `undefined` and overrides the client's default.
+ * The client then crashes with "this.options.onConnect is not a function". Always pass all of them.
+ */
+export function conversationCallbacks(onError: (message: string) => void) {
+  const noop = () => {};
+  return {
+    onConnect: noop,
+    onDisconnect: noop,
+    onMessage: noop,
+    onAudio: noop,
+    onDebug: noop,
+    onUnhandledClientToolCall: noop,
+    onError: (message: unknown) => onError(String(message)),
+  };
+}
