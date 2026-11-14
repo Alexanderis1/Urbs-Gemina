@@ -66,6 +66,14 @@ def ask_twin_tool(webhook_url: str, secret_id: str, languages: list[str]) -> dic
                         "enum": ["question", "briefing"],
                         "description": "'briefing' only when the officer asks for the morning briefing",
                     },
+                    "use_case": {
+                        "type": "string",
+                        "description": "Optional ready-made check, only when the request clearly matches one listed in the prompt",
+                    },
+                    "place": {
+                        "type": "string",
+                        "description": "Optional address or place name in Rome, for use cases that need a place",
+                    },
                 },
                 "required": ["question"],
             },

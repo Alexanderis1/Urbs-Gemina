@@ -92,3 +92,26 @@ def flatten_runs(envs: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, Any]]
             if isinstance(inner, list):
                 stack.extend(i for i in inner if isinstance(i, Mapping))
     return out
+
+
+_GEOMETRY_TYPES = frozenset({"Polygon", "MultiPolygon", "LineString", "MultiLineString", "MultiPoint", "GeometryCollection"})
+
+
+def compact_for_model(value: Any, max_items: int = 25) -> Any:
+    """Copy of a tool output small enough for the model (``config/agents.yaml`` model_view).
+
+    Polygons and lines become a short placeholder (the map gets them from the run, the model only
+    needs the facts); lists longer than ``max_items`` keep their first items (tools list the most
+    important first) and say how many were left out. Counts and totals are kept, so the model never
+    has to count. The stored run, which the verifier and the map read, is not changed.
+    """
+    if isinstance(value, Mapping):
+        if value.get("type") in _GEOMETRY_TYPES and ("coordinates" in value or "geometries" in value):
+            return {"type": value["type"], "omitted": "geometry (shown on the map)"}
+        return {k: compact_for_model(v, max_items) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        items = [compact_for_model(v, max_items) for v in value[:max_items]]
+        if len(value) > max_items:
+            items.append(f"... {len(value) - max_items} more items omitted (the full list is in run output)")
+        return items
+    return value

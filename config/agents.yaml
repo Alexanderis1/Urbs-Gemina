@@ -16,6 +16,13 @@ loop:
   verifier_retries: 1       # one rewrite attempt after the verifier rejects a draft
   basis: "Permit flow needs 4 tool calls; 8 leaves room for clarifying lookups without letting a loop run away."
 
+model_view:
+  # What the model sees of a tool output. Polygons and lines are replaced by a placeholder and long lists keep
+  # their first items (tools list the most important first; totals stay). The stored run is unchanged, so the
+  # verifier and the map still see everything.
+  max_list_items: 25
+  basis: "Dry run 14 Nov 2026: one PGRA flood query returned 15 MB and a parks query 175 KB, far beyond what an answer needs; 25 rows cover every list the prompts ask for."
+
 claude_api:
   api_key_envs: [CLAUDE_API_KEY, ANTHROPIC_API_KEY]   # first one set wins; values never committed
   base_url: https://api.anthropic.com
@@ -50,7 +57,9 @@ exa:
     - mase.gov.it
     - regione.lazio.it
     - eur-lex.europa.eu
-  legal_basis: "Design proposal section 11 list, plus the Consiglio di Stato site (distance-ban ruling), the two ministries that issue EMF decrees, Regione Lazio and EUR-Lex (AI Act)."
+    - salute.gov.it
+    - protezionecivile.gov.it
+  legal_basis: "Heat plan and civil-protection playbooks (14 Nov 2026) add the Ministry of Health (heat-wave plan and city bulletins) and the Department of Civil Protection (alert codes). Design proposal section 11 list, plus the Consiglio di Stato site (distance-ban ruling), the two ministries that issue EMF decrees, Regione Lazio and EUR-Lex (AI Act)."
   dataset_domains:
     - dati.gov.it
     - dati.comune.roma.it
@@ -75,7 +84,9 @@ exa:
     - romatoday.it
     - ansa.it
     - roma.repubblica.it
-  news_basis: "Municipal and transport-agency notices first; two regional news outlets for strikes and demonstrations. News is a 'text sensor': unverified until an officer confirms."
+    - protezionecivile.gov.it
+    - regione.lazio.it
+  news_basis: "Civil-protection playbook (14 Nov 2026): official alert bulletins (Department of Civil Protection, Regione Lazio Centro Funzionale). Municipal and transport-agency notices first; two regional news outlets for strikes and demonstrations. News is a 'text sensor': unverified until an officer confirms."
 
 monitors:
   - id: roadworks
@@ -113,6 +124,11 @@ verifier:
     - '\b(zona urbana|zona|urban zone|zone)\s+[0-9]+[A-Za-z]?\b'
     - '\bNatura 2000\b'
     - '\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*[0-9])[0-9a-f]{8,64}\b'   # run ids and hashes written in prose
+    - '\b(NUE|numero unico( di emergenza)?|emergency number|call|chiama(re)?|chiamate)\s+112\b'   # the EU emergency number, not a figure
+    - '\b(anno|year|del|dal|nel|of|from|since|in|censimento|census|Copernicus|ISTAT|HRL|PGRA|edizione|edition)\s+(19|20)[0-9]{2}\b'   # data vintage years ("Copernicus 2018", "censimento 2021")
+    - '\b[0-2]?[0-9][:.][0-5][0-9](\s*(UTC|CET|CEST))?\b(?!\s*(m|km|V/m|%|°))'   # clock times copied from feed timestamps ("18:27 UTC")
+    - '\b[0-3]?[0-9]/[01]?[0-9]/(19|20)[0-9]{2}\b'   # dates written dd/mm/yyyy
+    - '\b(19|20)[0-9]{2}-[01][0-9]-[0-3][0-9](T[0-9:+.Z-]+)?\b'   # ISO dates and timestamps
   # Abbreviations after which a full stop does not end the sentence (legal Italian and English).
   abbreviations: [art, artt, n, nn, co, comma, lett, cfr, es, ecc, sez, pag, pp, p, d.lgs, d.p.r, d.m, l, no, nr, vs, approx, ca]
   # Words too common in place names to identify a record ("Liceo", "Via"...). Used to check that a

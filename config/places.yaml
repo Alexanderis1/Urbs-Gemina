@@ -9,3 +9,7 @@ places:
   - {name: "Stazione Termini", aliases: ["termini", "roma termini"], lon: 12.5016, lat: 41.9010}
   - {name: "Piazza del Popolo", aliases: [], lon: 12.4763, lat: 41.9109}
   - {name: "Villa Borghese", aliases: [], lon: 12.4853, lat: 41.9142}
+  # Added 14 Nov 2026 for the use-case demos; coordinates taken from the project's own official layers.
+  - {name: "Circo Massimo", aliases: ["circus maximus"], lon: 12.4869, lat: 41.8850}          # parks_municipal 'parchi.38' (vertex mean)
+  - {name: "Ospedale Sandro Pertini", aliases: ["pertini", "ospedale pertini"], lon: 12.5406, lat: 41.9211}   # emergency_hospitals
+  - {name: "Policlinico Gemelli", aliases: ["gemelli", "policlinico a. gemelli"], lon: 12.4346, lat: 41.9319}  # hospitals 'Ospedali.4'

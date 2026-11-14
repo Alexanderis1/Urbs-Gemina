@@ -9,6 +9,9 @@ Sets (eval/sets/*.jsonl):
 * refusal     - questions the twin must not answer with a figure or a decision.
 * injection   - web results carrying instructions; no state change may follow, text stays quoted.
 * tool_accuracy - tool outputs vs manual GIS checks (values filled in after measuring).
+* use_cases   - playbooks (config/use_cases.yaml) on fixture tools: the right tools run, a bad narrative is
+                blocked, labels are added, web text cannot change the answer. In --live mode Claude writes
+                the narrative (one call per case, plus one rewrite at most).
 """
 from __future__ import annotations
 
@@ -135,14 +138,76 @@ def _check_agent(case: Mapping[str, Any], llm: LLM | None) -> list[str]:
     return errors
 
 
-def run_offline(directory: Path = SETS, llm: LLM | None = None) -> dict[str, Any]:
+class UseCaseFixtureGateway(FixtureGateway):
+    """Fixtures by tool name; ``query_layer:<layer>`` wins for a given layer. Status/reason are kept."""
+
+    def call(self, name: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
+        self.executed.append(name)
+        key = f"{name}:{arguments.get('layer')}" if name == "query_layer" else name
+        fx = self.fixtures.get(key) or self.fixtures.get(name) or {"result": {"error": "no fixture"}}
+        env = make_envelope(tool=name, inputs=dict(arguments), result=fx.get("result", {}), data_kinds=fx.get("data_kinds", {}),
+                            sources=fx.get("sources", []), synthetic=bool(fx.get("synthetic", False)),
+                            status=str(fx.get("status", "ok")), reason=fx.get("reason"))
+        self.last_run[name] = env["run_id"]
+        return env
+
+
+class NarrativeScript:
+    """Scripted narrative for a playbook: ``{run:<step id>}`` becomes that step's run citation."""
+
+    def __init__(self, texts: list[str]) -> None:
+        self.texts = list(texts)
+
+    def step(self, system: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> LLMTurn:
+        prompt = str(messages[0]["content"])
+        steps = dict(re.findall(r"^step: ([a-z_]+) .*\nrun_id: ([0-9a-f]+)", prompt, flags=re.M))
+        text = self.texts.pop(0) if self.texts else ""
+        text = PLACEHOLDER.sub(lambda m: "[run:" + steps.get(m.group(1), "missing")[:12] + "]", text)
+        return LLMTurn(text, [], [{"type": "text", "text": text}], "end_turn")
+
+
+def _check_use_case(case: Mapping[str, Any], llm: LLM | None) -> list[str]:
+    from agents.use_cases import run_use_case
+
+    gw = UseCaseFixtureGateway(case.get("fixtures", {}))
+    for n in ("sports_facilities", "sport_coverage"):
+        gw._specs.setdefault(n, ToolSpec(n, n, {"type": "object"}))
+    live = llm is not None
+    rep = run_use_case(str(case["use_case"]), llm=llm or NarrativeScript(case.get("script", [])), gateway=gw,
+                       area=case.get("area"), place=case.get("place"), params=case.get("params"),
+                       language=str(case.get("language", "en")), tier=str(case.get("tier", "office")))
+    errors = []
+    if "expect_tools" in case and gw.executed != list(case["expect_tools"]):
+        errors.append(f"tools {gw.executed}, expected {case['expect_tools']}")
+    if not live and "expect_verified" in case and rep.verified != bool(case["expect_verified"]):
+        errors.append(f"verified={rep.verified}, expected {case['expect_verified']}: {[p.code for p in rep.problems]}")
+    low = rep.text.lower()
+    for s in case.get("must_not_contain", []):
+        if s.lower() in low:
+            errors.append(f"answer contains '{s}'")
+    for s in case.get("must_contain", []) if not live else case.get("live_must_contain", []):
+        if s.lower() not in low:
+            errors.append(f"answer lacks '{s}'")
+    if live:
+        errors = [e + f" | verified={rep.verified} | answer: {rep.text[:400]!r}" for e in errors]
+    return errors
+
+
+def run_offline(directory: Path = SETS, llm: LLM | None = None, only: str | None = None) -> dict[str, Any]:
     passed, failed, pending = 0, [], []
     for case in load_cases(directory):
         kind = case["set"]
+        if only and kind != only:
+            continue
         if kind == "tool_accuracy":
             pending.append(case["id"])
             continue
-        errors = _check_grounding(case) if kind == "grounding" else _check_agent(case, llm)
+        if kind == "grounding":
+            errors = _check_grounding(case)
+        elif kind == "use_cases":
+            errors = _check_use_case(case, llm)
+        else:
+            errors = _check_agent(case, llm)
         if errors:
             failed.append({"id": case["id"], "errors": errors})
         else:
@@ -172,6 +237,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--live", action="store_true", help="use the real model (costs API credit)")
     ap.add_argument("--tools", action="store_true", help="tool accuracy against the live tool API")
+    ap.add_argument("--set", help="run only this set (e.g. use_cases), to keep live runs small")
     args = ap.parse_args(argv)
     if args.tools:
         print(json.dumps(run_tool_accuracy(), indent=2, default=str))
@@ -181,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
         from agents.llm import AnthropicLLM
 
         llm = AnthropicLLM()
-    summary = run_offline(SETS, llm)
+    summary = run_offline(SETS, llm, only=args.set)
     print(json.dumps(summary, indent=2))
     return 1 if summary["failed"] else 0
 

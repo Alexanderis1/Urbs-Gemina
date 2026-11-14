@@ -157,10 +157,23 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
         """Chat entry point (shared interface 7). The tier comes from the API key, never from the body."""
         contract = importlib.import_module("agents.contract")
         question = contract.TwinQuestion(question=body.question, tier=role, language=body.language, area=body.area,
-                                         mode=body.mode, conversation_id=body.conversation_id, channel="chat")
+                                         mode=body.mode, conversation_id=body.conversation_id, channel="chat",
+                                         use_case=body.use_case, params=dict(body.params))
         answer = get_orchestrator().ask(question)
         out: dict[str, Any] = dataclasses.asdict(answer)
         return out
+
+    @app.get("/use_cases")
+    def use_cases(role: str = Depends(get_role)) -> list[dict[str, Any]]:
+        """Ready-made playbooks this caller's tier may run (send the id as ``use_case`` to POST /ask)."""
+        try:
+            uc_mod = importlib.import_module("agents.use_cases")
+        except ImportError as error:
+            raise HTTPException(status_code=501, detail=f"use cases (WS7 agents) not installed: {error}")
+        return [{"id": uc.id, "title": dict(uc.title), "summary": dict(uc.summary), "needs": list(uc.needs),
+                 "params": {k: v.get("default") for k, v in uc.params.items()},
+                 "steps": [s.label for s in uc.steps]}
+                for uc in uc_mod.load_use_cases().values() if role in uc.tiers]
 
     @app.post("/voice/ask_twin")
     async def voice_ask_twin(request: Request) -> JSONResponse:
