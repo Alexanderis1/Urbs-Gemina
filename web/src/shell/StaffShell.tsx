@@ -1,5 +1,5 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
-import { Database, FlaskConical, LogOut, Map as MapIcon, MessagesSquare, Moon, RadioTower, Settings2, ShieldCheck, Sun, Trophy, type LucideIcon } from "lucide-react";
+import { Database, FlaskConical, Megaphone, LogOut, Map as MapIcon, MessagesSquare, Moon, RadioTower, Settings2, ShieldCheck, Sun, Trophy, type LucideIcon } from "lucide-react";
 import { AiDisclosure, SampleModeBanner, StatusBar, WakingBanner } from "@/components/Banners";
 import { ScreenRouter } from "@/components/ScreenRouter";
 import { VoiceButton } from "@/components/VoiceButton";
@@ -16,6 +16,7 @@ import ScenarioLab from "@/pages/ScenarioLab";
 import DataHonesty from "@/pages/DataHonesty";
 import Admin from "@/pages/Admin";
 import Sport from "@/pages/Sport";
+import Signals from "@/pages/Signals";
 import { Brand, LangSwitch, SkipLink } from "./Brand";
 
 const T = texts({
@@ -47,6 +48,7 @@ const T = texts({
 
 const VIEW: Partial<Record<ScreenId, { icon: LucideIcon; el: JSX.Element }>> = {
   city: { icon: MapIcon, el: <CityView audience="staff" /> },
+  signals: { icon: Megaphone, el: <Signals /> },
   ask: { icon: MessagesSquare, el: <Ask audience="staff" /> },
   permit: { icon: RadioTower, el: <PermitCheck /> },
   scenario: { icon: FlaskConical, el: <ScenarioLab /> },

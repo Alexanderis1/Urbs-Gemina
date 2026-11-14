@@ -1,0 +1,120 @@
+{
+  "name": "verify_signal",
+  "description": "Office only, costs one Claude call and one Exa search: check one event's photos and look for news about it.",
+  "input_schema": {
+    "$defs": {
+      "SignalEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "congestion",
+              "flood",
+              "fire",
+              "emergency",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "category_label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category Label"
+          },
+          "lon": {
+            "maximum": 13.1,
+            "minimum": 12.0,
+            "title": "Lon",
+            "type": "number"
+          },
+          "lat": {
+            "maximum": 42.4,
+            "minimum": 41.4,
+            "title": "Lat",
+            "type": "number"
+          },
+          "first_seen": {
+            "maxLength": 40,
+            "title": "First Seen",
+            "type": "string"
+          },
+          "texts": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Texts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "lon",
+          "lat",
+          "first_seen"
+        ],
+        "title": "SignalEvent",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Office only, costs one Claude call and one Exa search: check one event's photos and look for news about it.",
+    "properties": {
+      "event": {
+        "$ref": "#/$defs/SignalEvent"
+      },
+      "place": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "street or area name for the news search",
+        "title": "Place"
+      },
+      "photo_urls": {
+        "description": "short-lived signed URLs from Lovable Cloud storage",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 6,
+        "title": "Photo Urls",
+        "type": "array"
+      }
+    },
+    "required": [
+      "event"
+    ],
+    "title": "VerifySignalIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/verify_signal"
+  },
+  "owner": "citizen-reports"
+}

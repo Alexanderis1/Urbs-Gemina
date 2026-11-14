@@ -21,7 +21,7 @@ import yaml
 
 #: Config files whose content changes tool results.
 CONFIG_FILES = ("thresholds.yaml", "emf_params.yaml", "areas.yaml", "scenarios.yaml", "beliefs.yaml",
-                "providers.yaml", "tools.yaml", "context_layers.yaml", "places.yaml")
+                "providers.yaml", "tools.yaml", "context_layers.yaml", "places.yaml", "signals.yaml")
 
 
 def _root() -> Path:

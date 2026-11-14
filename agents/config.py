@@ -93,7 +93,7 @@ def load_agent_config(config_dir: Path = CONFIG_DIR) -> AgentConfig:
     exa = raw["exa"]
     v = raw["verifier"]
     return AgentConfig(
-        models={k: str(m[k]) for k in ("orchestrator", "permit", "scenario", "voice")},
+        models={k: str(m[k]) for k in ("orchestrator", "permit", "scenario", "voice", "signals") if k in m},
         effort=str(m["effort"]),
         max_tokens=int(m["max_tokens"]),
         max_tool_rounds=int(raw["loop"]["max_tool_rounds"]),

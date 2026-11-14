@@ -34,6 +34,8 @@ const TOOLS = new Set([
   "sports_facilities",
   "sport_coverage",
   "sport_deserts",
+  "signal_events",
+  "verify_signal",
 ]);
 
 /** Routes the citizen tier cannot call at all (the permit check is an office workflow). */
@@ -43,6 +45,9 @@ const OFFICE_ONLY = new Set([
   "/reports/permit.md",
   "/sports/manager_update",
   "/voice/signed_url",
+  // Citizen reports: only the operations room sees merged events; the check costs a Claude + Exa call.
+  "/tools/signal_events",
+  "/tools/verify_signal",
 ]);
 
 const EDITABLE = new Set(["disciplines", "hours", "accessibility", "contact", "name"]);

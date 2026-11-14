@@ -195,6 +195,55 @@ class SportCoverageIn(Strict):
     open_school_gyms: list[SchoolGym] = Field(default_factory=list, max_length=10)
 
 
+class CitizenReport(Strict):
+    """One citizen report, anonymised: 'reporter' is an opaque key (one per account), never a name."""
+
+    id: str = Field(min_length=1, max_length=80)
+    category: Literal["congestion", "flood", "fire", "emergency", "other"]
+    lon: float = Field(ge=12.0, le=13.1)
+    lat: float = Field(ge=41.4, le=42.4)
+    time: str = Field(min_length=10, max_length=40, description="ISO 8601")
+    reporter: str = Field(min_length=1, max_length=80)
+    has_photo: bool = False
+    text: str = Field(default="", max_length=280)
+    photo_ref: str | None = Field(default=None, max_length=300, description="storage path of the photo, if any")
+    photo_gps_distance_m: float | None = Field(default=None, ge=0, description="photo EXIF GPS to device GPS distance")
+    photo_age_min: float | None = Field(default=None, description="minutes from the photo EXIF time to sending")
+
+
+class SignalCheck(Strict):
+    photo: Literal["consistent", "inconsistent", "unclear", "no_photo"] | None = None
+    news: Literal["confirms", "no_match"] | None = None
+
+
+class SignalEventsIn(Strict):
+    """Office only. Merge citizen reports into candidate live events, each with a confidence and its reasons."""
+
+    reports: list[CitizenReport] = Field(max_length=2000)
+    check_twin: bool = Field(default=True, description="read twin layers (rain, road speed...) around each event")
+    checks: dict[str, SignalCheck] | None = Field(default=None, description="verdicts of verify_signal by event id")
+    now: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class SignalEvent(Strict):
+    id: str = Field(min_length=1, max_length=40)
+    category: Literal["congestion", "flood", "fire", "emergency", "other"]
+    category_label: str | None = Field(default=None, max_length=80)
+    lon: float = Field(ge=12.0, le=13.1)
+    lat: float = Field(ge=41.4, le=42.4)
+    first_seen: str = Field(max_length=40)
+    texts: list[str] = Field(default_factory=list, max_length=20)
+
+
+class VerifySignalIn(Strict):
+    """Office only, costs one Claude call and one Exa search: check one event's photos and look for news about it."""
+
+    event: SignalEvent
+    place: str | None = Field(default=None, max_length=200, description="street or area name for the news search")
+    photo_urls: list[str] = Field(default_factory=list, max_length=6,
+                                  description="short-lived signed URLs from Lovable Cloud storage")
+
+
 class AskIn(Strict):
     """A question for the orchestrator (chat). The tier is set by the server from the API key."""
 
