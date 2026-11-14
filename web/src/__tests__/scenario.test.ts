@@ -55,10 +55,13 @@ describe("scenario catalogue", () => {
     expect(isHeavy("antenna")).toBe(false);
   });
 
-  it("recognises the live service's unknown-kind error", async () => {
-    const { isUnknownKindError } = await import("@/lib/scenario");
-    expect(isUnknownKindError("Error: run_scenario failed: unknown scenario kind 'heatwave'")).toBe(true);
-    expect(isUnknownKindError("run_scenario failed: HTTP 500")).toBe(false);
+  it("knows which kinds only run on a few blocks", async () => {
+    const { needsSmallArea } = await import("@/lib/scenario");
+    expect(needsSmallArea("road_closure")).toBe(true);
+    expect(needsSmallArea("traffic_event")).toBe(true);
+    // Emergency access runs on a whole municipio.
+    expect(needsSmallArea("emergency_access")).toBe(false);
+    expect(needsSmallArea("heatwave")).toBe(false);
   });
 });
 

@@ -200,4 +200,52 @@ describe("sample results", () => {
     const other = summariseScenario({ sewer: { efficiency: { p5: 0.1, p50: 0.2, p95: 0.3 } } });
     expect(keyFigures(other).map((f) => f.path)).toEqual(["sewer.efficiency"]);
   });
+
+  it("draws only places whose coordinates are in Rome", () => {
+    // The traffic engine can return network metres in lon/lat; those must never be drawn.
+    const s = summariseScenario({
+      congestion_points: [
+        { name: "Via Tomacelli", extra_vehicle_hours_lost: 5.4, lon: 184.32, lat: 893.17 },
+        { name: "Largo Chigi", extra_vehicle_hours_lost: 2.1, lon: 12.4801, lat: 41.9012 },
+      ],
+    });
+    expect(s.points).toEqual([expect.objectContaining({ label: "Largo Chigi", lon: 12.4801, lat: 41.9012 })]);
+    expect(s.tables[0]!.total).toBe(2);
+  });
+
+  it("traffic runs: one today / with the change / difference row per measure", () => {
+    const q = (p5: number, p50: number, p95: number) => ({ p5, p50, p95 });
+    const s = summariseScenario({
+      engine: "sumo",
+      replicates: 5,
+      baseline: { completed: q(364, 378, 390), mean_travel_time_s: q(122.58, 130.78, 133.37), vehicle_hours_lost: q(2.1, 2.34, 2.45) },
+      variant: { completed: q(364, 378, 390), mean_travel_time_s: q(361.52, 468.9, 505.23), vehicle_hours_lost: q(29.68, 42.53, 47.7) },
+      difference: { completed: q(0, 0, 0), mean_travel_time_s: q(231.3, 346.32, 374.09), vehicle_hours_lost: q(27.51, 40.43, 45.25) },
+    });
+    // Travel time leads, trips completed comes last.
+    expect(s.comparisons.map((c) => c.path)).toEqual(["mean_travel_time_s", "vehicle_hours_lost", "completed"]);
+    expect(s.comparisons[0]).toMatchObject({
+      label: "Average trip time",
+      unit: "s",
+      baseline: q(122.58, 130.78, 133.37),
+      variant: q(361.52, 468.9, 505.23),
+      difference: q(231.3, 346.32, 374.09),
+    });
+    expect(s.comparisons[2]!.label).toBe("Trips completed");
+    // The headline pair is the first row, and nothing from the three blocks is listed again below.
+    expect(s.compare).toMatchObject({ label: "Average trip time", path: "mean_travel_time_s", baseline: q(122.58, 130.78, 133.37) });
+    expect(s.quantiles).toEqual([]);
+    expect(s.facts.map((f) => f.path)).toEqual(["engine", "replicates"]);
+  });
+
+  it("other results have no comparison rows", () => {
+    expect(summariseScenario({ baseline: { p5: 1, p50: 2, p95: 3 }, variant: { p5: 2, p50: 3, p95: 4 } }).comparisons).toEqual([]);
+  });
+
+  it("hides internal road ids when every row has a street name", () => {
+    const named = summariseScenario({ changed_roads: [{ edge: "131235412", name: "Largo Chigi", vehicles_change_per_run: -109.4 }] });
+    expect(named.tables[0]!.columns).toEqual(["Name", "Vehicles change per run"]);
+    const unnamed = summariseScenario({ changed_roads: [{ edge: "131235412", vehicles_change_per_run: -109.4 }] });
+    expect(unnamed.tables[0]!.columns[0]).toBe("Edge");
+  });
 });

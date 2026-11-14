@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEnvelope, envelopeBadge, layerBadges, badgeText } from "@/api/envelope";
+import { parseEnvelope, envelopeBadge, layerBadges, badgeText, extraWarnings } from "@/api/envelope";
 
 const good = {
   run_id: "a".repeat(64),
@@ -76,5 +76,12 @@ describe("badge wording", () => {
   it("accepts a source without a retrieval time", () => {
     expect(parseEnvelope({ ...good, sources: [{ id: "copernicus_dem" }] }).sources[0]!.retrieved_at).toBeUndefined();
     expect(() => parseEnvelope({ ...good, sources: [{ id: "x", retrieved_at: 5 }] })).toThrow(/source/);
+  });
+
+  it("does not repeat the refusal reason among the warnings", () => {
+    const reason = "This simulation runs on at most 3 km2; area 'municipio:1' is 20.0 km2.";
+    const env = parseEnvelope({ ...good, status: "refused", reason, warnings: [reason, "Buses are not in the simulation yet."] });
+    expect(extraWarnings(env)).toEqual(["Buses are not in the simulation yet."]);
+    expect(extraWarnings(parseEnvelope({ ...good, warnings: ["a", "a", "b"] }))).toEqual(["a", "b"]);
   });
 });

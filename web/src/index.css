@@ -105,7 +105,7 @@
   /* Tables */
   .table { @apply w-full border-collapse text-left text-sm; }
   .table thead th { @apply sticky top-0 z-10 border-b border-line-strong bg-sunken px-3 py-2 text-2xs font-bold uppercase tracking-[0.08em] text-muted; }
-  .table tbody td { @apply border-b border-line px-3 py-2 align-top; }
+  .table tbody td, .table tbody th { @apply border-b border-line px-3 py-2 align-top; }
   .table tbody tr { @apply transition-colors duration-100 hover:bg-sunken; }
 
   /* Loading placeholder */

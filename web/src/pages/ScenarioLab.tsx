@@ -32,7 +32,7 @@ import {
   buildScenarioChange,
   changeProblem,
   isHeavy,
-  isUnknownKindError,
+  needsSmallArea,
   resolveKind,
   scenarioSpec,
   SCENARIO_BANDS,
@@ -306,6 +306,21 @@ function ChangeForm({ tile, f, set }: { tile: ScenarioTile; f: Form; set: (k: st
 
 const rangeNote = (q: Quantile) => rangeText(q);
 
+/** One table cell: the middle value, with the range under it. `signed` marks an increase with a plus. */
+function QuantileCell({ q, tone = "", signed = false }: { q: Quantile | null; tone?: string; signed?: boolean }) {
+  if (!q) return <td className="text-muted">n/a</td>;
+  const plus = signed && q.p50 > 0 ? "+" : "";
+  return (
+    <td>
+      <span className={`num font-semibold ${tone}`}>
+        {plus}
+        {fmtNumber(q.p50)}
+      </span>
+      <span className="block whitespace-nowrap text-2xs text-muted">{q.p5 === q.p95 ? "no spread" : `${fmtNumber(q.p5)}–${fmtNumber(q.p95)}`}</span>
+    </td>
+  );
+}
+
 function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: string }) {
   const s = useMemo(() => summariseScenario(env.result), [env]);
   // A nested pair (e.g. residents beyond the target time) carries its own meaning; the top-level one uses `unit`.
@@ -362,7 +377,38 @@ function ResultView({ env, title }: { env: Envelope<ScenarioResult>; title: stri
         </div>
       )}
 
-      {s.compare && (
+      {s.comparisons.length > 0 && (
+        <Section title="Today and with the change">
+          <div className="overflow-x-auto rounded border border-line">
+            <table className="table text-xs">
+              <thead>
+                <tr>
+                  <th scope="col">Measure</th>
+                  <th scope="col">Today</th>
+                  <th scope="col">With the change</th>
+                  <th scope="col">Difference</th>
+                </tr>
+              </thead>
+              <tbody>
+                {s.comparisons.map((c) => (
+                  <tr key={c.path}>
+                    <th scope="row" className="text-left font-semibold">
+                      {c.label}
+                      {c.unit && <span className="font-normal text-muted"> ({c.unit})</span>}
+                    </th>
+                    <QuantileCell q={c.baseline} />
+                    <QuantileCell q={c.variant} tone="text-whatif" />
+                    <QuantileCell q={c.difference} signed />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="hint">Middle value, with the 5th to 95th percentile range under it. Estimates, not measurements.</p>
+        </Section>
+      )}
+
+      {s.compare && s.comparisons.length === 0 && (
         <Section title={s.compare.label ?? "Baseline and change"}>
           <RangeBar label="Today (baseline)" e={{ ...s.compare.baseline, calibration: env.result.baseline?.calibration }} unit={unit} max={max} note={false} />
           <RangeBar label="With the change (variant)" e={s.compare.variant} unit={unit} max={max} tone="whatif" note={false} />
@@ -461,7 +507,6 @@ export default function ScenarioLab() {
   const [ran, setRan] = useState<{ title: string; area: string; tile: ScenarioTile; point: [number, number] | null } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notLive, setNotLive] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
   const spec = scenarioSpec(tile);
@@ -475,17 +520,13 @@ export default function ScenarioLab() {
     setBusy(true);
     setShowResult(true);
     setError(null);
-    setNotLive(false);
     setEnv(null);
     setRan({ title: spec.label, area: areaLabel(area), tile, point });
     try {
       const c = buildScenarioChange(kind, f);
       setEnv(await run<ScenarioResult>("run_scenario", { kind, area: areaToArg(area), change: c }));
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      // The live service lags the engine: a kind it does not know yet is a notice, not a failure.
-      if (isUnknownKindError(msg)) setNotLive(true);
-      else setError(errorText(e));
+      setError(errorText(e));
     } finally {
       setBusy(false);
     }
@@ -605,7 +646,9 @@ export default function ScenarioLab() {
     return p ? { lon: p[0], lat: p[1], zoom: 15 } : null;
   }, [summary, ran]);
 
-  const heavyWarn = isHeavy(kind) && area.type === "city";
+  const smallOnly = needsSmallArea(kind);
+  const heavyWarn = !smallOnly && isHeavy(kind) && area.type === "city";
+  const smallWarn = smallOnly && area.type !== "polygon";
   const likelyFp = summary?.footprints.filter((x) => x.level === "likely") ?? [];
   const possibleFp = summary?.footprints.filter((x) => x.level === "possible") ?? [];
 
@@ -680,6 +723,12 @@ export default function ScenarioLab() {
             This is a heavy simulation: it runs on a municipio, an urban zone or a drawn area. The tool will refuse larger areas.
           </Callout>
         )}
+        {smallWarn && (
+          <Callout tone="warn" title="Draw a small area">
+            Traffic is simulated street by street, so it runs on a few blocks only. Use "Draw an area on the map" around the street or the event. The tool
+            refuses a larger area and tells you its limit.
+          </Callout>
+        )}
       </Section>
 
       <Section title="3 · What changes">
@@ -689,7 +738,7 @@ export default function ScenarioLab() {
   );
 
   const right =
-    showResult && (busy || env || error || notLive) ? (
+    showResult && (busy || env || error) ? (
       <Panel
         side="right"
         width="w-[24rem]"
@@ -713,11 +762,6 @@ export default function ScenarioLab() {
             </div>
             <Skeleton lines={6} />
           </div>
-        )}
-        {notLive && (
-          <Callout tone="warn" title="Not on the live service yet">
-            This scenario is built and tested in the engine, but the public service has not been updated to run it, so nothing was computed.
-          </Callout>
         )}
         {error && (
           <Callout tone="error" title="The run failed">

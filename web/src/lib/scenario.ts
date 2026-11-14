@@ -123,9 +123,9 @@ export function isHeavy(kind: ScenarioKind): boolean {
   return kind === "road_closure" || kind === "traffic_event" || kind === "emergency_access";
 }
 
-/** The live service answers unsupported kinds with this phrase in the error. */
-export function isUnknownKindError(message: string): boolean {
-  return /unknown scenario kind/i.test(message);
+/** Traffic simulations only run on a few blocks; the tool refuses a larger area and says its limit. */
+export function needsSmallArea(kind: ScenarioKind): boolean {
+  return kind === "road_closure" || kind === "traffic_event";
 }
 
 const n = (v: string | undefined) => Number(v);

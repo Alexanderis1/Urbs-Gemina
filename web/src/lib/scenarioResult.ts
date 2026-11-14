@@ -1,6 +1,8 @@
 // Reads any run_scenario result generically: the eight kinds return different fields, so the screen is driven by
 // what is present. Numbers are passed through (rounded for display only); nothing is computed here.
 
+import { inRome } from "@/lib/mapActions";
+
 export interface Quantile {
   p5: number;
   p50: number;
@@ -58,9 +60,21 @@ export interface PlaceItem {
   table: string;
 }
 
+/** One measure of a run that reports today, the change and their difference side by side (traffic). */
+export interface ComparisonRow {
+  path: string;
+  label: string;
+  unit: string;
+  baseline: Quantile;
+  variant: Quantile;
+  difference: Quantile | null;
+}
+
 export interface ScenarioSummary {
   /** Today vs the change: the top-level pair, or the first nested {baseline, variant} pair (then `label` names it). */
   compare: { baseline: Quantile; variant: Quantile; label?: string; path?: string } | null;
+  /** Filled when baseline and variant each hold several measures; `compare` is then the first row. */
+  comparisons: ComparisonRow[];
   quantiles: QuantileItem[];
   facts: FactItem[];
   tables: TableItem[];
@@ -77,7 +91,14 @@ const TOP_SKIP = new Set(["kind", "metric", "unit", "status", "reason"]);
 /** Path segments that add nothing to a label. */
 const LABEL_SKIP = new Set(["zones", "sites", "rows", "items"]);
 
+/** Row order for runs with several measures: what a driver feels first, bookkeeping last. */
+const COMPARISON_ORDER = ["mean_travel_time_s", "mean_time_loss_s", "vehicle_hours_lost"];
+
 const DICT: Record<string, string> = {
+  mean_travel_time_s: "Average trip time",
+  mean_time_loss_s: "Average delay per trip",
+  vehicle_hours_lost: "Hours lost by all vehicles",
+  completed: "Trips completed",
   area: "Operating area",
   km2: "Area",
   baseline: "Today",
@@ -331,7 +352,11 @@ function tableFrom(path: string, raw: Obj[], points: PlaceItem[]): TableItem {
       if (isObj(v) && !isQuantile(v)) continue;
       keys.push(k);
     }
-  const cols = ordered(keys.filter((k) => rows.some((r) => r[k] !== null && r[k] !== undefined)).map((k) => [k, k] as [string, string])).map(([k]) => k);
+  // An internal road id says nothing to a reader once every row has its street name.
+  const named = rows.every((r) => typeof r.name === "string" && r.name !== "");
+  const cols = ordered(
+    keys.filter((k) => !(named && k === "edge") && rows.some((r) => r[k] !== null && r[k] !== undefined)).map((k) => [k, k] as [string, string]),
+  ).map(([k]) => k);
   const columns = cols.map((k) => {
     if (k === ROW_KEY) return "";
     const last = k.split(".").pop() ?? k;
@@ -347,7 +372,8 @@ function tableFrom(path: string, raw: Obj[], points: PlaceItem[]): TableItem {
   };
   for (const r of rows) {
     if (points.length >= MAX_POINTS) break;
-    if (typeof r.lon === "number" && typeof r.lat === "number") {
+    // Only real coordinates are drawn: an engine may put its own network metres in lon/lat.
+    if (typeof r.lon === "number" && typeof r.lat === "number" && inRome(r.lon, r.lat)) {
       const name = r.name ?? r.sez_id ?? r.edge;
       points.push({ lon: r.lon, lat: r.lat, label: typeof name === "string" && name ? name : label, table: label });
     }
@@ -377,7 +403,7 @@ const AFFECTED: Record<string, string> = {
 };
 
 export function summariseScenario(input: unknown): ScenarioSummary {
-  const out: ScenarioSummary = { compare: null, quantiles: [], facts: [], tables: [], footprints: [], points: [], notAvailable: null };
+  const out: ScenarioSummary = { compare: null, comparisons: [], quantiles: [], facts: [], tables: [], footprints: [], points: [], notAvailable: null };
   if (!isObj(input)) return out;
   const result: Obj = { ...input };
   if (result.status === "not_available" || result.status === "refused") out.notAvailable = typeof result.reason === "string" ? result.reason : "Not available.";
@@ -386,6 +412,28 @@ export function summariseScenario(input: unknown): ScenarioSummary {
   if (isQuantile(result.baseline) && isQuantile(result.variant)) {
     out.compare = { baseline: pick(result.baseline), variant: pick(result.variant) };
     skip.add("baseline").add("variant");
+  } else if (isObj(result.baseline) && isObj(result.variant)) {
+    // Several measures, each for today and with the change (traffic): one row per measure, plain ones first.
+    const b = result.baseline;
+    const v = result.variant;
+    const d = isObj(result.difference) ? result.difference : {};
+    for (const k of Object.keys(b)) {
+      const bk = b[k];
+      const vk = v[k];
+      const dk = d[k];
+      if (isQuantile(bk) && isQuantile(vk))
+        out.comparisons.push({ path: k, label: labelFor(k), unit: unitFor(k), baseline: pick(bk), variant: pick(vk), difference: isQuantile(dk) ? pick(dk) : null });
+    }
+    const rank = (c: ComparisonRow) => {
+      const i = COMPARISON_ORDER.indexOf(c.path);
+      return i < 0 ? COMPARISON_ORDER.length : i;
+    };
+    out.comparisons.sort((x, y) => rank(x) - rank(y));
+    const first = out.comparisons[0];
+    if (first) {
+      out.compare = { baseline: first.baseline, variant: first.variant, label: first.label, path: first.path };
+      skip.add("baseline").add("variant").add("difference");
+    }
   } else {
     // No top-level pair: use the first nested one (e.g. residents_beyond_target in emergency access).
     const hit = Object.entries(result).find(([, v]) => isObj(v) && isQuantile(v.baseline) && isQuantile(v.variant));

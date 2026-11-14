@@ -1,5 +1,5 @@
 import { AlertTriangle, ExternalLink } from "lucide-react";
-import { badgeText, envelopeBadge, layerBadges } from "@/api/envelope";
+import { badgeText, envelopeBadge, layerBadges, extraWarnings } from "@/api/envelope";
 import { isSampleMode } from "@/api/client";
 import type { Envelope } from "@/api/types";
 import { shortId } from "@/lib/format";
@@ -51,7 +51,7 @@ export function RunMeta({ env, compact = false }: { env: Envelope; compact?: boo
           </ul>
         </details>
       )}
-      {env.warnings.map((w) => (
+      {extraWarnings(env).map((w) => (
         <p key={w} className="flex gap-1.5 text-estimated">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span className="break-words">{w}</span>

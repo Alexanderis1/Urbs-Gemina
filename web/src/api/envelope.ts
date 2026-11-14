@@ -55,3 +55,8 @@ export function badgeText(env: Envelope): string {
   if (env.data_kinds.what_if === "simulated" || Object.values(env.data_kinds).includes("hypothetical")) return "what-if";
   return envelopeBadge(env).replace("_", " ");
 }
+
+/** Warnings worth listing: no repeats, and not the refusal reason that is already shown on its own. */
+export function extraWarnings(env: Envelope): string[] {
+  return [...new Set(env.warnings)].filter((w) => w !== env.reason);
+}

@@ -55,7 +55,12 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     plain conversation.
 16. **Answers are formatted, not raw text.** Headings, lists and bold are rendered; every `[run|src|data:…]`
     reference becomes a small chip, and the full citation list is folded under the answer.
-17. **Map credits start folded** behind the (i) button so they never cover a legend; one click opens them.
+17. **Traffic runs show one table: today, with the change, difference.** One row per measure (trip time, delay,
+    hours lost, trips completed), middle value with its range under it. Traffic is simulated on a few blocks only,
+    so the form asks for a drawn area; if the area is too large the server's own message is shown, once.
+18. **Places are drawn only when their coordinates are in Rome**, and internal road ids are hidden when a street
+    name is present.
+19. **Map credits start folded** behind the (i) button so they never cover a legend; one click opens them.
 
 ## Tokens
 
