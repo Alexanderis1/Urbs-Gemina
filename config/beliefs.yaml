@@ -367,3 +367,20 @@ calibration_rules:
   z_sd_ok: [0.7, 1.4]       # spread of the standardised errors (1.0 = perfectly honest uncertainty)
   min_stations: 5
   basis: "assumption: loose bands because Rome has only about 13 air-quality stations, so the check is noisy"
+
+freshness:
+  # How old the newest reading of each feed may be, in minutes, before it counts as late / down.
+  # Static feeds (maps, registers, timetables) are listed so they are reported, not aged.
+  feeds:
+    traffic_flow: {late: 15, down: 60}
+    transit: {late: 10, down: 60}
+    air_quality: {late: 180, down: 720}           # EEA hourly values arrive 1-2 h late
+    air_quality_citizen: {late: 30, down: 180}
+    air_quality_model: {late: 1440, down: 2880}   # CAMS forecast, one run a day
+    weather_forecast: {late: 360, down: 1440}
+    rain_forecast: {late: 360, down: 1440}
+    rain: {late: 30, down: 180}                   # radar every 5-15 min
+    micromobility: {late: 30, down: 180}
+    activity_wifi: {late: 2880, down: 4320}       # published one day behind
+  static: [emf_baseline, emf_measurements, transit_schedule]
+  basis: "assumption (C=70): each feed's own publishing rhythm plus a margin; 'down' is several missed updates in a row"

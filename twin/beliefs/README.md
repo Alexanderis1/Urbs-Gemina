@@ -88,3 +88,8 @@ These live in `config/beliefs.yaml`, so a provider with different names needs on
 | Values at sensitive sites | any layer read at each school, hospital, care site...: P5/P50/P95 and chance above a threshold, sorted by risk | `sites.site_values` |
 | Schools to check | NO2 / PM10 / PM2.5 at every school (`sites.site_values`), worst pollutant first: chance above its limit (if 5%+), then P50 as a share of the limit; children 0-14 in the cell | `schools.schools_to_check` |
 | Street-level heat | forecast temperature shifted by Copernicus 2018 tree cover (-0.04 degC per point) and imperviousness (+0.03 degC per point) vs the area mean, +0.7 degC sd (C=45). Checked: Termini 0% trees / 97% sealed, Villa Pamphili 43% / 3% | `microclimate.apply_microclimate`, `raster_mean_per_cell` |
+| Care sites to check | same ranking as schools at hospitals, clinics, emergency departments, care homes and accredited facilities; residents 65+ in the cell. Checked 14 Nov: 241 care sites in the centre, worst PM10 at about 30% of the limit | `schools.care_sites_to_check` |
+
+## Data freshness
+
+`freshness.feed_freshness(providers, now)` asks every feed behind the layers for its newest reading and says `live`, `late`, `down`, `needs_access`, `not_connected` or `static` (maps and timetables), with the age in minutes and the layers that use it. Limits per feed are in the `freshness` block of `config/beliefs.yaml`. Snapshot feeds are aged by their own upstream clock (`last_feed_time`), so a frozen bus feed shows as down even if its file is still served. First real run (14 Nov, 08:55 UTC): 6 live, air stations late (224 min), buses down (frozen 856 min), wind forecast down (Open-Meteo rate limit), ARPA EMF points not connected.
