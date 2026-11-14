@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -203,7 +204,8 @@ def _simulate(net: Path, trips: Path, seed: int, work: Path, tag: str, cfg: Mapp
           "--duration-log.disable", "true", "--no-warnings", "true",
           "--time-to-teleport", str(cfg["time_to_teleport_s"]),
           "--device.rerouting.probability", "1", "--device.rerouting.period", str(cfg["rerouting_period_s"]),
-          "--end", str(int(cfg["duration_s"]) * 4)])
+          "--end", str(int(cfg["duration_s"]) + int(cfg["end_overrun_s"]))]
+         + (["--mesosim", "true", "--meso-junction-control", "true"] if cfg.get("mesoscopic") else []))
     durations, losses = [], []
     for trip in ET.parse(tripinfo).getroot().iter("tripinfo"):
         durations.append(float(trip.get("duration", 0)))
@@ -422,20 +424,32 @@ def run_traffic_event(area: Area, change: Mapping[str, Any], data: ScenarioData)
             event_info = {"vehicles": vehicles, "destination_edges": len(destinations), "car_share": share,
                           "occupancy": occupancy, "arrival_window_s": list(window)}
 
-        runs: dict[str, list[dict[str, Any]]] = {"baseline": [], "variant": []}
-        dropped = 0
-        for r in range(int(cfg["replicates"])):
+        large = cfg["large_event"]
+        run_cfg = dict(cfg)
+        if event_info is not None and int(event_info["vehicles"]) >= int(large["min_vehicles"]):
+            run_cfg.update(mesoscopic=True, replicates=int(large["replicates"]),
+                           rerouting_period_s=int(large["rerouting_period_s"]))
+
+        def replicate(r: int) -> tuple[int, dict[str, Any], dict[str, Any]]:
             seed = int(cfg["seed"]) + r
-            raw, trips = work / f"raw{r}.trips.xml", work / f"trips{r}.xml"
-            _random_trips(home, net, raw, seed, density, cfg, env, work)
-            dropped = _filter_trips(raw, trips, set(closed))
+            rep = work / f"r{r}"
+            rep.mkdir()
+            raw, trips = rep / "raw.trips.xml", rep / "trips.xml"
+            _random_trips(home, net, raw, seed, density, cfg, env, rep)
+            left_out = _filter_trips(raw, trips, set(closed))
             variant_trips = trips
             if event_info is not None:
-                variant_trips = work / f"event{r}.xml"
+                variant_trips = rep / "event.xml"
                 _add_event_trips(trips, variant_trips, origins, destinations, int(event_info["vehicles"]),
                                  (window[0], window[1]), seed)
-            runs["baseline"].append(_simulate(net, trips, seed, work, f"b{r}", cfg))
-            runs["variant"].append(_simulate(variant_net, variant_trips, seed, work, f"v{r}", cfg))
+            return (left_out, _simulate(net, trips, seed, rep, "b", run_cfg),
+                    _simulate(variant_net, variant_trips, seed, rep, "v", run_cfg))
+
+        n_runs = int(run_cfg["replicates"])
+        with ThreadPoolExecutor(max_workers=max(1, min(n_runs, int(cfg["parallel_runs"])))) as pool:
+            done = list(pool.map(replicate, range(n_runs)))  # each run is a separate SUMO process
+        runs: dict[str, list[dict[str, Any]]] = {"baseline": [d[1] for d in done], "variant": [d[2] for d in done]}
+        dropped = done[-1][0]
 
     indicators = ("mean_travel_time_s", "mean_time_loss_s", "vehicle_hours_lost", "completed")
     sides = {side: {k: _percentiles([run[k] for run in rs]) for k in indicators} for side, rs in runs.items()}
@@ -504,11 +518,19 @@ def run_traffic_event(area: Area, change: Mapping[str, Any], data: ScenarioData)
     if event_info is not None:
         warnings.append(f"Event traffic: {event_info['vehicles']} cars from {event_info['car_share']:.0%} of attendees "
                         f"arriving by car, {event_info['occupancy']} per car (assumptions unless given).")
+    mode = "mesoscopic" if run_cfg.get("mesoscopic") else "microscopic"
+    if mode == "mesoscopic":
+        warnings.append(f"Very large event ({event_info['vehicles'] if event_info else 0} cars): run with SUMO's "
+                        f"mesoscopic (queue) model, {n} demand seeds and re-routing every "
+                        f"{run_cfg['rerouting_period_s']} s, so it answers in about a minute. Queues and delays are "
+                        "coarser than in the detailed model; read it as how bad the gridlock gets, not car by car.")
     return {
         "result": {
             "status": "ok", "engine": "sumo", "calibration": "uncalibrated",
             "closed_edges": closed, "roadworks": works, "event": event_info,
             "replicates": n, "trips_left_out": dropped, "congestion_points": congestion,
+            "simulation": {"mode": mode, "simulated_s": int(cfg["duration_s"]) + int(cfg["end_overrun_s"]),
+                           "rerouting_period_s": int(run_cfg["rerouting_period_s"])},
             "baseline": sides["baseline"], "variant": sides["variant"], "difference": sides["difference"],
             "changed_roads": changed,
             "closed_streets": {"type": "MultiLineString",

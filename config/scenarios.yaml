@@ -85,6 +85,15 @@ road_closure:
   rerouting_period_s:
     value: 60
     basis: "assumption: drivers update their route each minute (navigation apps)"
+  end_overrun_s:
+    value: 1800
+    basis: "the simulation stops 30 minutes after the last departure; cars still on the road then count as not completed (gridlock shows as fewer completed trips). It was 3 hours, which made gridlocked runs slow"
+  parallel_runs:
+    value: 4
+    basis: "demand seeds run as parallel SUMO processes; the Modal scenarios worker has 4 CPUs (deploy/scenarios_worker.py)"
+  large_event:
+    value: {min_vehicles: 3000, replicates: 3, rerouting_period_s: 300}
+    basis: "measured 14 Nov 2026 on a 2.25 km2 grid: 60,000 attendees (11,700 cars) gridlock the district and one detailed (microscopic) run took 440 s, 5 runs over 30 minutes. SUMO's mesoscopic queue model with junction control took 101 s, and 33-50 s with re-routing every 5-10 minutes (re-routing thousands of stuck cars is the main cost), with time loss of the same order as the detailed run (600-1200 s per car against 800-1450 s). Above 3,000 event cars the run uses it, with 3 demand seeds in parallel"
   auto_network:
     value: true
     basis: "build the district network from OpenStreetMap (Overpass) on first use and cache it"

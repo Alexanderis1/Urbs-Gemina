@@ -199,6 +199,26 @@ def test_big_event_adds_traffic_and_congestion_points(grid_net: Path) -> None:
     assert r["variant"]["completed"]["p50"] > r["baseline"]["completed"]["p50"]
     assert r["congestion_points"] and r["congestion_points"][0]["extra_vehicle_hours_lost"] > 0
     assert any("event traffic" in w.lower() for w in out["warnings"])
+    assert r["simulation"]["mode"] == "microscopic" and r["replicates"] == 5  # small events keep the detailed model
+
+
+@needs_sumo
+def test_a_very_large_event_switches_to_the_fast_queue_model(grid_net: Path) -> None:
+    """60,000 people at one venue lock the district: the detailed model took minutes per run, so the run
+    switches to SUMO's mesoscopic (queue) model, fewer replicates and a capped simulated period."""
+    import time
+
+    change = {"event": {"edges": ["C2C3", "C3C2"], "attendees": 60000}}
+    start = time.monotonic()
+    out = engine.run("traffic_event", DISTRICT, change, data=ScenarioData(road_network=grid_net), use_cache=False)
+    elapsed = time.monotonic() - start
+    r = out["result"]
+    assert out["status"] == "ok"
+    assert r["simulation"]["mode"] == "mesoscopic"
+    assert r["replicates"] == 3
+    assert r["difference"]["mean_time_loss_s"]["p50"] > 0  # the event still causes delay
+    assert any("mesoscopic" in w.lower() for w in out["warnings"])
+    assert elapsed < 120
 
 
 def test_traffic_change_needs_something_to_do() -> None:
