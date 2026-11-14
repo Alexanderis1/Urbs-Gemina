@@ -235,6 +235,9 @@ def _random_trips(home: Path, net: Path, out: Path, seed: int, density: float, c
           "--insertion-density", f"{density:.4f}",
           "--min-distance", str(cfg["min_trip_distance_m"]), "--fringe-factor", str(cfg["fringe_factor"]),
           "--validate"], env=env, cwd=work)
+    if not out.exists():
+        raise RuntimeError("randomTrips wrote no trips: duarouter did not run. In a container, SUMO needs the "
+                           "system libraries libX11, libXext, libXrender and libGL (see deploy/scenarios_worker.py).")
 
 
 def _median(values: Sequence[float]) -> float:

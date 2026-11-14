@@ -1,14 +1,17 @@
 """Antenna what-if: add or move a site and compare the field with the baseline.
 
-Model: free-space, isotropic worst case (main beam assumed towards every point).
+Model: the building-aware field of twin/physics (3GPP sector pattern, rooftop diffraction on the city
+model, ray-traced maps where a site was traced) for points near the changed sites, when that package
+is installed; otherwise, and beyond its reach, free-space isotropic (a worst case).
 Baseline: the Cartoradio grid (official estimate) read at runtime.
 Totals combine as power sums of log-normal sources (Fenton-Wilkinson).
 """
 from __future__ import annotations
 
+import importlib
 import math
-from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from dataclasses import dataclass, field
+from typing import Any, Callable, Mapping, Sequence
 
 from twin.scenarios import config
 from twin.scenarios.area import Area
@@ -19,12 +22,38 @@ from twin.tools.emf import Z95, exceedance_probability, field_range, free_space_
 DB_TO_LN = math.log(10.0) / 10.0  # sigma of a power (or field) in dB -> sigma of ln(power)
 
 
+#: (site, points, receptor height) -> per point (median V/m, sigma dB), and the engine's model name
+FieldFn = Callable[[Mapping[str, Any], Sequence[tuple[float, float]], float],
+                   tuple[list[tuple[float, float]], str]]
+PHYSICS_KEYS = ("lon", "lat", "height_m", "eirp_w", "band", "frequency_mhz", "sectors", "eirp_sigma_db")
+
+
+def default_physics_engine() -> FieldFn | None:
+    """The building-aware engine of twin/physics (PR #13), or None when that package is not installed."""
+    try:  # imported by name: twin/physics comes from the physics branch and may be absent
+        api: Any = importlib.import_module("twin.physics.api")
+    except ImportError:
+        return None
+
+    def run(site: Mapping[str, Any], points: Sequence[tuple[float, float]],
+            receptor_h: float) -> tuple[list[tuple[float, float]], str]:
+        result = api.field_samples(site, list(points), receptor_h=receptor_h)
+        return [api.lognormal_summary(result.samples[k]) for k in range(len(points))], str(result.model)
+
+    return run
+
+
+#: Replaced in tests; the default looks for twin/physics at call time.
+physics_engine: Callable[[], FieldFn | None] = default_physics_engine
+
+
 @dataclass(frozen=True)
 class Site:
     lon: float
     lat: float
     height_m: float
     eirp_w: float
+    physics: Mapping[str, Any] = field(default_factory=dict)  # what twin/physics needs: band, sectors, ...
 
 
 def combine_lognormal(sources: Sequence[tuple[float, float]]) -> tuple[float, float]:
@@ -65,7 +94,9 @@ def _parse_site(raw: Mapping[str, Any], fallback: Mapping[str, Any], warnings: l
         raise ValueError("A site needs eirp_w (watts) or a band listed in config/emf_params.yaml")
     if float(eirp) < 0:
         raise ValueError("EIRP cannot be negative")
-    return Site(lon, lat, height, float(eirp))
+    physics = {k: raw.get(k, fallback.get(k)) for k in PHYSICS_KEYS if raw.get(k, fallback.get(k)) is not None}
+    physics.update({"lon": lon, "lat": lat, "height_m": height, "eirp_w": float(eirp)})
+    return Site(lon, lat, height, float(eirp), physics)
 
 
 def _grid(centres: Sequence[Site], radius_m: float, step_m: float) -> list[tuple[float, float]]:
@@ -128,6 +159,51 @@ class FieldModel:
     existing_sigma_db: float
     default_baseline_sigma_db: float
     receptor_m: float
+    physics_reach_m: float = 0.0
+    traced_reach_m: float = 0.0
+    engine: FieldFn | None = None
+    #: per site ("new" / "old"): (lon, lat) -> (median V/m, sigma dB) from the physics engine
+    computed: dict[str, dict[tuple[float, float], tuple[float, float]]] = field(default_factory=dict)
+    state: dict[str, Any] = field(default_factory=lambda: {"model": "free_space_isotropic", "warnings": []})
+
+    @property
+    def model_name(self) -> str:
+        return str(self.state["model"])
+
+    def prepare(self, points: Sequence[tuple[float, float]]) -> None:
+        """Run the physics engine once for every point within its reach of each changed site."""
+        if self.engine is None:
+            return
+        names: set[str] = set()
+        for key, site in (("new", self.new), ("old", self.old)):
+            if site is None:
+                continue
+            dist = [(p, _distance_3d(site, p[0], p[1], self.receptor_m)[0]) for p in points]
+            inner = [p for p, d in dist if d <= self.traced_reach_m]
+            outer = [p for p, d in dist if self.traced_reach_m < d <= self.physics_reach_m]
+            self.computed[key] = {}
+            for batch in (inner, outer):  # ray-traced maps only cover the inner disc, so it goes on its own
+                if not batch:
+                    continue
+                try:
+                    values, name = self.engine(site.physics, batch, self.receptor_m)
+                except Exception as exc:  # noqa: BLE001 - city model or engine unavailable: keep the worst case
+                    self.computed.clear()
+                    self.state["model"] = "free_space_isotropic"
+                    self.state["warnings"].append(
+                        f"Building-aware field model failed ({exc}); fell back to free space.")
+                    return
+                self.computed[key].update(zip(batch, values))
+                names.add(name)
+        if names:
+            self.state["model"] = "+".join(sorted(names))
+
+    def _site_field(self, key: str, site: Site, lon: float, lat: float) -> tuple[float, float]:
+        hit = self.computed.get(key, {}).get((lon, lat))
+        if hit is not None:
+            return hit
+        _, d = _distance_3d(site, lon, lat, self.receptor_m)
+        return free_space_field(site.eirp_w, d), self.model_sigma_db
 
     def baseline(self, lon: float, lat: float) -> FieldSample:
         if self.data.baseline_field is None:
@@ -156,12 +232,10 @@ class FieldModel:
         base = self.baseline(lon, lat)
         residual = base
         if self.old is not None:
-            _, d_old = _distance_3d(self.old, lon, lat, self.receptor_m)
-            residual = self._residual(base, free_space_field(self.old.eirp_w, d_old))
-        _, d_new = _distance_3d(self.new, lon, lat, self.receptor_m)
-        new_field = free_space_field(self.new.eirp_w, d_new)
+            residual = self._residual(base, self._site_field("old", self.old, lon, lat)[0])
+        new_field, new_sigma = self._site_field("new", self.new, lon, lat)
         median, sigma = combine_lognormal([(residual.median_v_per_m, residual.sigma_db),
-                                           (new_field, self.model_sigma_db)])
+                                           (new_field, new_sigma)])
         return base, FieldSample(median, sigma)
 
 
@@ -184,7 +258,22 @@ def build_model(change: Mapping[str, Any], data: ScenarioData, warnings: list[st
         existing_sigma_db=float(config.value(scen, "existing_site_sigma_db")),
         default_baseline_sigma_db=float(config.value(scen, "baseline_sigma_db")),
         receptor_m=float(config.value(scen, "receptor_height_m")),
+        physics_reach_m=float(config.value(scen, "physics_reach_m")),
+        traced_reach_m=float(config.value(scen, "traced_reach_m")),
+        engine=physics_engine(),
     )
+
+
+def field_model_notes(model: FieldModel) -> list[str]:
+    notes = list(model.state["warnings"])
+    if model.model_name == "free_space_isotropic":
+        notes.append("Free-space isotropic model: buildings and antenna patterns are ignored, "
+                     "so values near the mast are a worst case. Ray tracing (Sionna RT) refines a district.")
+    else:
+        notes.append(f"Field from the {model.model_name.replace('_', ' ')} engine (twin/physics): 3GPP sector "
+                     "pattern, diffraction over the city model's buildings and entry loss for indoor points, "
+                     f"within {model.physics_reach_m:.0f} m of the changed sites; free space (worst case) beyond.")
+    return notes
 
 
 def _summary(rows: list[dict[str, Any]], side: str, flag_p: float) -> dict[str, Any]:
@@ -210,10 +299,10 @@ def run_antenna(area: Area, change: Mapping[str, Any], data: ScenarioData) -> di
     limits = thresholds()
 
     centres = [model.new] + ([model.old] if model.old else [])
+    grid = [(lon, lat) for lon, lat in _grid(centres, radius, step) if area.contains(lon, lat)]
+    model.prepare(grid)
     rows: list[dict[str, Any]] = []
-    for lon, lat in _grid(centres, radius, step):
-        if not area.contains(lon, lat):
-            continue
+    for lon, lat in grid:
         base, variant = model.at(lon, lat)
         horizontal, _ = _distance_3d(model.new, lon, lat, model.receptor_m)
         rows.append({
@@ -224,8 +313,7 @@ def run_antenna(area: Area, change: Mapping[str, Any], data: ScenarioData) -> di
     for r in rows:
         r["delta_p50"] = round(r["variant"]["p50"] - r["baseline"]["p50"], 4)
 
-    warnings.append("Free-space isotropic model: buildings and antenna patterns are ignored, "
-                    "so values near the mast are a worst case. Ray tracing (Sionna RT) refines a district.")
+    warnings += field_model_notes(model)
     if data.baseline_field is None:
         warnings.append("EMF baseline (Cartoradio) not available: the variant shows the changed antenna alone.")
     if model.old is not None:
@@ -237,12 +325,12 @@ def run_antenna(area: Area, change: Mapping[str, Any], data: ScenarioData) -> di
         warnings.append("No grid point of the antenna neighbourhood falls inside the area.")
 
     kinds = {"emf_baseline": data.baseline_kind if data.baseline_field is not None else "not_available",
-             "new_site": "estimated"}
+             "new_site": "estimated", "field_model": "estimated"}
     if model.old is not None:
         kinds["existing_site"] = "estimated"
     return {
         "result": {
-            "model": "free_space_isotropic",
+            "model": model.model_name,
             "calibration": "uncalibrated",
             "grid": {"radius_m": radius, "step_m": step, "receptor_height_m": model.receptor_m},
             "thresholds": limits,

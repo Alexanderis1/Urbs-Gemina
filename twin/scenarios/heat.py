@@ -181,6 +181,7 @@ def run_heatwave(area: Area, change: Mapping[str, Any], data: ScenarioData) -> d
     has_night = not bool(np.isnan(tmin_fc).all())
     d_imp, d_trees = imp - imp_nb, trees - trees_nb
     d_imp2, d_trees2 = imp2 - imp_nb, trees2 - trees_nb
+    imp_nb2 = uniform_filter(imp2, size=k, mode="nearest")  # de-paving also lowers the district's sealing
 
     # census sections inside the area
     feats = [f for f in census.get("features", []) if f.get("geometry")]
@@ -194,9 +195,9 @@ def run_heatwave(area: Area, change: Mapping[str, Any], data: ScenarioData) -> d
     index = rasterize_index(grid, [f["geometry"] for f in feats])
     rr, cc = grid.rowcol([c[0] for c in cents], [c[1] for c in cents])
     fallback = list(zip(rr.tolist(), cc.tolist()))
-    fields = [tmax_fc, tmin_fc, sigma, d_imp, d_trees, d_imp2, d_trees2, imp, trees]
-    s_tmax, s_tmin, s_sig, s_dimp, s_dtree, s_dimp2, s_dtree2, s_imp, s_trees = _section_means(
-        index, n, fields, fallback)
+    fields = [tmax_fc, tmin_fc, sigma, d_imp, d_trees, d_imp2, d_trees2, imp, trees, imp_nb, imp_nb2]
+    (s_tmax, s_tmin, s_sig, s_dimp, s_dtree, s_dimp2, s_dtree2, s_imp, s_trees, s_city,
+     s_city2) = _section_means(index, n, fields, fallback)
     props = [f.get("properties") or {} for f in feats]
     residents = np.asarray([float(p.get("residents") or 0) for p in props])
     children = np.asarray([float(p.get("children_0_14") or 0) for p in props])
@@ -214,8 +215,12 @@ def run_heatwave(area: Area, change: Mapping[str, Any], data: ScenarioData) -> d
         out: FloatArray = np.maximum(rng.normal(float(pair[0]), float(pair[1]), members), 0.0)
         return out
 
+    no_term = [0.0, 0.0]
     a_d, b_d = draw(coef["day"]["impervious"]), draw(coef["day"]["trees"])
     a_n, b_n = draw(coef["night"]["impervious"]), draw(coef["night"]["trees"])
+    # district term: the forecast carries no heat island, so the sealing of the forecast cell is added
+    c_d = draw(coef["day"].get("impervious_city", no_term))
+    c_n = draw(coef["night"].get("impervious_city", no_term))
     eps = rng.normal(0.0, 1.0, members)
 
     groups = {"residents": residents, "children_0_14": children}
@@ -234,31 +239,32 @@ def run_heatwave(area: Area, change: Mapping[str, Any], data: ScenarioData) -> d
     p_hot = np.zeros(grid.shape)
     planted = what_if.get("planted_mask")
     for m in range(members):
-        tx = s_tmax + eps[m] * s_sig + a_d[m] * s_dimp - b_d[m] * s_dtree
+        tx = s_tmax + eps[m] * s_sig + c_d[m] * s_city + a_d[m] * s_dimp - b_d[m] * s_dtree
         sec_tmax[:, m] = tx
         hot = tx >= hot_c
         for g, counts in groups.items():
             hot_counts[g].append(float(counts[hot].sum()))
         if has_night:
-            tn = s_tmin + eps[m] * s_sig + a_n[m] * s_dimp - b_n[m] * s_dtree
+            tn = s_tmin + eps[m] * s_sig + c_n[m] * s_city + a_n[m] * s_dimp - b_n[m] * s_dtree
             sec_tmin[:, m] = tn
             for g, counts in groups.items():
                 night_counts[g].append(float(counts[tn >= night_c].sum()))
-        grid_tx = tmax_fc + eps[m] * sigma + a_d[m] * d_imp - b_d[m] * d_trees
+        grid_tx = tmax_fc + eps[m] * sigma + c_d[m] * imp_nb + a_d[m] * d_imp - b_d[m] * d_trees
         p_hot += grid_tx >= hot_c
         if has_what_if:
-            tx2 = s_tmax + eps[m] * s_sig + a_d[m] * s_dimp2 - b_d[m] * s_dtree2
+            tx2 = s_tmax + eps[m] * s_sig + c_d[m] * s_city2 + a_d[m] * s_dimp2 - b_d[m] * s_dtree2
             hot_2 = tx2 >= hot_c
             hot2.append(float(residents[hot_2].sum()))
             relieved.append(float(residents[hot & ~hot_2].sum()))
-            delta = (a_d[m] * (d_imp - d_imp2) - b_d[m] * (d_trees - d_trees2))
+            delta = (c_d[m] * (imp_nb - imp_nb2) + a_d[m] * (d_imp - d_imp2) - b_d[m] * (d_trees - d_trees2))
             cooling.append(float(delta[planted].mean()) if planted is not None and planted.any() else 0.0)
             if has_night:
-                tn2 = s_tmin + eps[m] * s_sig + a_n[m] * s_dimp2 - b_n[m] * s_dtree2
+                tn2 = s_tmin + eps[m] * s_sig + c_n[m] * s_city2 + a_n[m] * s_dimp2 - b_n[m] * s_dtree2
                 trop_2 = tn2 >= night_c
                 night2.append(float(residents[trop_2].sum()))
                 relieved_night.append(float(residents[(sec_tmin[:, m] >= night_c) & ~trop_2].sum()))
-                delta_n = (a_n[m] * (d_imp - d_imp2) - b_n[m] * (d_trees - d_trees2))
+                delta_n = (c_n[m] * (imp_nb - imp_nb2) + a_n[m] * (d_imp - d_imp2)
+                           - b_n[m] * (d_trees - d_trees2))
                 cooling_night.append(float(delta_n[planted].mean())
                                      if planted is not None and planted.any() else 0.0)
     p_hot /= members

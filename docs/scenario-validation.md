@@ -11,7 +11,7 @@ user sees this status in the app.
 |---|---|---|---|
 | River flood (Tiber) | 7 historic floods at Ripetta; official PGRA flood-hazard maps | Water level error 0.5 m (1.2 m on floods left out of the fit). Flood map finds 80 % of the official T200 zone (CSI 0.53). | 60 |
 | Rain flood + sewers | Reported flooded streets in the 3 Sep 2024 and 19 Sep 2011 cloudbursts | 14 of 19 reported places flooded in the model, against 33-52 % for random streets. Sewer efficiency set to 0.3 from a sweep. | 50 |
-| Heatwave | Published Rome measurements: 17 stations (2019-2020) and bus-mounted sensors | Coefficients changed to match: nights +3.5 °C on fully sealed ground, small day contrasts. Not yet re-fitted on the raw station files. | 60 |
+| Heatwave | 17 Rome weather stations, 184 summer days 2019-2020 (raw hourly data) | Night minimum: error 0.50 °C on stations left out of the fit, against 0.69 °C with no model. Daytime differences between places are not predicted better than the forecast alone. | 65 (nights), 40 (place-to-place by day) |
 | Chemical plume | Briggs urban formulas (Hanna 1982); mass conservation; literature accuracy | Formulas match; mass is conserved. Typical Gaussian accuracy: within a factor of 2 about half the time. Heavy gases (chlorine) flagged for ALOHA. | 55 |
 | Emergency access | Official Lazio 118 alarm-to-target time (NSG 2023, indicator D09Z) | The model is about 12 minutes faster than real responses at the 75th percentile, because it leaves out call handling and ambulance availability. Use it for before/after changes, not absolute times. | 40 (absolute), 55 (changes) |
 | Traffic (SUMO) | Not checked here: needs the real traffic loops from the providers thread | |
@@ -62,22 +62,37 @@ user sees this status in the app.
 
 ## Heatwave
 
-- **References.** Cecilia et al. 2022 (Urban Climate 47:101355) used 17 Rome stations in summers 2019-2020.
-  Temperature rises linearly with Copernicus imperviousness. The night heat island is 3.4 °C, and the
-  correlation is 0.81 with the daily minimum but only 0.17 with the maximum. Cecilia et al. 2026 (Urban
-  Climate 102832) used bus-mounted sensors over 53 summer days. The night difference between fully
-  sealed and natural ground is 3.6 °C. The sea breeze removes daytime contrasts. Tree cover cools only in
-  the early morning, up to 0.5 °C for 40 % cover.
-- **Changes.** The old coefficients made days too contrasted (+2 °C for sealed ground, -4 °C for full tree
-  cover). They are now:
-  - night: sealed ground +3.5 ± 0.5 °C, trees -1.2 ± 0.6 °C;
-  - day: +0.5 ± 0.5 °C and -0.5 ± 0.5 °C.
+- **Data.** ASTI-Network, 17 rooftop weather stations across Rome, hourly, June to August 2019 and 2020
+  (Cecilia et al., CNR-ISAC; Zenodo 19454855, CC BY 4.0). Downloaded with Alessandro's approval on
+  14 Nov 2026. Daily maximum and minimum per station are in the shared
+  `processed/asti_stations_daily.csv`. Script: `scripts/validate_heat.py`, results in
+  `eval/scenarios/heat_validation.json`.
+- **Method.** On each of 184 days (75 hot days, with a station average above 32 °C), every station's
+  daily maximum and minimum is compared with the average of all stations. Each model reading is fitted,
+  then scored on each station left out in turn. "No model" means every station equals the average.
+- **Main finding: Rome's warm nights come from the sealing of the whole district, not of the block.**
 
-  Tree-planting what-ifs now also report night cooling and the residents who no longer have tropical
-  nights, because that is where trees and de-paving matter in Rome.
-- **Still to do.** The raw hourly data of the 17 stations is open on Zenodo (record 19454855). This session
-  could not download it (approval needed), so the coefficients are not yet re-fitted on it. Sensor.Community
-  has only 2 Rome temperature sensors; the ARPA Lazio and Meteostat archives are not reachable from here.
+  | Night minimum, error on unseen stations | All days | Hot days |
+  |---|---|---|
+  | No model | 0.69 °C | 0.73 °C |
+  | Old model (local differences only) | 1.01 °C | 1.03 °C |
+  | Sealing at the 100 m cell only | 0.59 °C | 0.63 °C |
+  | **New model (district + local)** | **0.50 °C** | **0.55 °C** |
+
+  The district term is about 2.9 °C for a fully sealed 2.2 km area, close to the 3.4 °C published from
+  the same stations. The extra effect of the block itself is only about 0.6 °C.
+- **The forecast carries no heat island.** On 14 Nov 2026 the ICON-2I forecast put Porta Maggiore
+  (80 % sealed) only 0.1-0.3 °C warmer at night than the Appia Antica park. The stations show about 2 °C in
+  summer. So the model now adds the district term on top of the forecast. If a future forecast includes
+  the city's heat island, this term must be switched off to avoid counting it twice.
+- **Daytime.** No reading beats "every station equals the average" (0.56 °C). The sea breeze evens
+  out the afternoon, as the 2026 bus-sensor study also found. Day terms are now near zero, so the hot-day
+  map follows the forecast, and its place-to-place detail should not be trusted.
+- **Trees.** Rooftop stations cannot see street-level shade. The tree term keeps the street-level value
+  from the bus-sensor study: about 0.5 °C cooler at dawn for 40 % canopy, 1.2 °C at full cover. A
+  tree-planting what-if now reports night cooling and the residents who no longer have tropical nights.
+- **Limits.** All 17 stations are on rooftops; street level is usually warmer by day. There are two
+  summers, and the stations were also used to choose the coefficients. The left-out score is the honest one.
 
 ## Chemical plume
 
@@ -112,10 +127,28 @@ user sees this status in the app.
 Not checked in this pass. Calibrating SUMO needs the real traffic loop counts, which the providers thread
 supplies (traffic loops are the only simulated sensors allowed).
 
+## Physics from the physics thread (PR #13)
+
+- **Antenna and population exposure.** Near the changed sites (600 m), the field now comes from
+  `twin/physics`:
+  - the 3GPP sector pattern;
+  - diffraction over the LiDAR-height city model;
+  - building entry loss indoors;
+  - Sionna ray-traced maps where a site has been traced (within 290 m).
+
+  Beyond that, and whenever `twin/physics` is not installed, the model falls back to free space, which
+  is a worst case. At the traced test site (1800 MHz, 30 m) the highest street-level value went from
+  8.6 V/m (free space) to 1.0 V/m. The physics thread measured the CPU engine within +1.5 dB (median) of
+  ray tracing.
+- **Floods** already read the physics thread's bare-earth terrain (`dtm_glo30_ground.tif`) and the LiDAR
+  wall crests (130 points, Ponte Milvio to Ponte Marconi).
+- **Heatwave.** PR #13 has no heat physics. The heat model now rests on the station fit above.
+
 ## How to rerun
 
 ```
 PYTHONPATH=. python scripts/validate_rain.py --efficiency 0.15 0.3 0.5 0.8
 PYTHONPATH=. python scripts/validate_access.py
+PYTHONPATH=. python scripts/validate_heat.py ASTI_DIR   # unzipped Zenodo 19454855
 python -m pytest tests/test_scenarios_validation.py
 ```

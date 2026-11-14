@@ -308,6 +308,16 @@
       "licence": "public administration document",
       "redistribution": true,
       "status": "verified"
+    },
+    "asti_network_stations": {
+      "name": "ASTI-Network Rome weather stations, hourly, summers 2019-2020 (Cecilia et al., CNR-ISAC)",
+      "kind": "real",
+      "use": "heatwave calibration and validation (scripts/validate_heat.py); daily max/min per station in processed/asti_stations_daily.csv",
+      "endpoint": "https://zenodo.org/records/19454855/files/ASTI-Network_2019-2020_JJA.zip?download=1",
+      "access": "zip, 19.8 MB, md5 0a038685c086d917ca9e705ba6a7e3af; README (contains the author's contact) not kept",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "verified"
     }
   },
   "snapshots": {}

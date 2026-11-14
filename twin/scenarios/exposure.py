@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from twin.scenarios import config, layers
-from twin.scenarios.antenna import _side, build_model, thresholds
+from twin.scenarios.antenna import _side, build_model, field_model_notes, thresholds
 from twin.scenarios.area import Area
 from twin.scenarios.data import ScenarioData
 from twin.scenarios.geometry import centroid
@@ -44,7 +44,7 @@ def run_population_exposure(area: Area, change: Mapping[str, Any], data: Scenari
     model = build_model(change, data, warnings)
     census = load_census(data)
     kinds = {"emf_baseline": data.baseline_kind if data.baseline_field is not None else "not_available",
-             "new_site": "estimated", "census": "real" if census is not None else "not_available"}
+             "new_site": "estimated", "field_model": "estimated", "census": "real" if census is not None else "not_available"}
     if model.old is not None:
         kinds["existing_site"] = "estimated"
     synthetic = False
@@ -60,14 +60,16 @@ def run_population_exposure(area: Area, change: Mapping[str, Any], data: Scenari
               for side in ("baseline", "variant")}
     rows: list[dict[str, Any]] = []
     residents_total = 0
+    inside: list[tuple[Mapping[str, Any], tuple[float, float]]] = []
     for feature in census.get("features", []):
         geometry = feature.get("geometry")
-        props = feature.get("properties") or {}
         if not geometry:
             continue
         lon, lat = centroid(geometry)
-        if not area.contains(lon, lat):
-            continue
+        if area.contains(lon, lat):
+            inside.append((feature.get("properties") or {}, (lon, lat)))
+    model.prepare([p for _, p in inside])
+    for props, (lon, lat) in inside:
         counts = {c: int(props.get(c) or 0) for c in COUNTS}
         residents_total += counts["residents"]
         base, variant = model.at(lon, lat)
@@ -89,11 +91,13 @@ def run_population_exposure(area: Area, change: Mapping[str, Any], data: Scenari
     sections_total = len(rows)
     rows = affected[: int(config.value(cfg, "sections_listed"))]
     warnings.append("Field taken at each section's centroid; residents are assumed spread evenly in a section.")
+    warnings += field_model_notes(model)
     if data.baseline_field is None:
         warnings.append("EMF baseline (Cartoradio) not available: the variant shows the changed antenna alone.")
 
     return {
         "result": {
+            "model": model.model_name,
             "calibration": "uncalibrated",
             "thresholds": limits,
             "flag_probability": flag_p,
