@@ -125,9 +125,16 @@ user sees this status in the app.
 - **Daytime.** No reading beats "every station equals the average" (0.56 °C). The sea breeze evens
   out the afternoon, as the 2026 bus-sensor study also found. Day terms are now near zero, so the hot-day
   map follows the forecast, and its place-to-place detail should not be trusted.
-- **Trees.** Rooftop stations cannot see street-level shade. The tree term keeps the street-level value
-  from the bus-sensor study: about 0.5 °C cooler at dawn for 40 % canopy, 1.2 °C at full cover. A
-  tree-planting what-if now reports night cooling and the residents who no longer have tropical nights.
+- **Trees.** Rooftop stations cannot see street-level shade, so the tree terms come from street-level
+  studies. At night the Rome bus-sensor study gives about 0.5 °C cooler at dawn for 40 % canopy and 1.2 °C
+  at full cover. By day (changed on 14 Nov after a check from the use-cases thread) the term is 1.8 °C
+  from bare to full canopy around the cell. This comes from bicycle transects at city-block scale:
+  Ziter et al. 2019 found more than 1.5 °C at 60-90 m, plus 0.2-0.6 °C on days above 30 °C, and Locke et
+  al. 2024 found 1.62 °C at midday within 90 m. Before, the day term was 0.3 °C, so 10 more points of
+  canopy cooled the day by only 0.03 °C and read as "trees do nothing". Now it is about 0.18 °C, a few
+  tenths, as published. The term is linear, so it understates the extra cooling above about 40 % canopy.
+  A tree-planting what-if reports day and night cooling and the residents who leave the hot-day and
+  tropical-night counts.
 - **Limits.** All 17 stations are on rooftops; street level is usually warmer by day. There are two
   summers, and the stations were also used to choose the coefficients. The left-out score is the honest one.
 
