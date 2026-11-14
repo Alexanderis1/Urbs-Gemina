@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { availableMetrics, describeItem, dotRadiusPx, formatValue, metricInfo, normalizeLayer, pointStyle, showValueLabels, valueExtent } from "@/lib/layers";
+import {
+  areaBounds,
+  areaForLayer,
+  availableMetrics,
+  describeItem,
+  dotRadiusPx,
+  firstSentence,
+  formatValue,
+  metricInfo,
+  normalizeLayer,
+  pointStyle,
+  prettyUnit,
+  showValueLabels,
+  valueExtent,
+} from "@/lib/layers";
 
 describe("formatValue", () => {
   it("keeps at most three significant digits", () => {
@@ -117,5 +131,67 @@ describe("several values per sensor", () => {
     expect(picked.items[0]!.uncertainty).toBe(3.1);
     // A value the layer does not have is ignored.
     expect(normalizeLayer(result, "intensity").metric).toBe("pm10");
+  });
+});
+
+describe("live estimates (sensor fusion)", () => {
+  const belief = {
+    type: "belief",
+    layer: "air_no2",
+    unit: "ug/m3",
+    calibration: "uncalibrated",
+    count: 24711,
+    truncated: true,
+    area: { id: "municipio:1", kind: "municipio", name: "Municipio I", bbox: [12.43985, 41.87076, 12.5189, 41.93509], area_km2: 19.994 },
+    cells: [{ cell: "891e805a8cfffff", mean: 31.2, sd: 4.1, p5: 24.5, p50: 31.2, p95: 38 }],
+  };
+
+  it("writes units the way people read them", () => {
+    expect(prettyUnit("ug/m3")).toBe("µg/m³");
+    expect(prettyUnit("degC")).toBe("°C");
+    expect(prettyUnit("vehicles/cell")).toBe("per cell");
+    expect(prettyUnit("V/m")).toBe("V/m");
+    expect(prettyUnit("")).toBe("");
+  });
+
+  it("names each fused layer in plain words", () => {
+    expect(metricInfo("air_no2").label).toBe("NO₂");
+    expect(metricInfo("air_o3").label).toBe("Ozone");
+    expect(metricInfo("road_speed").label).toBe("Road speed");
+    expect(metricInfo("emf").label).toBe("Electric field");
+    expect(metricInfo("transit_delay").label).toBe("Bus delay");
+    expect(metricInfo("temperature").label).toBe("Air temperature");
+    expect(metricInfo("air_temperature").label).toBe("Air temperature");
+  });
+
+  it("keeps the server's unit, tidied, and says when the cells are incomplete", () => {
+    const d = normalizeLayer(belief);
+    expect(d.kind).toBe("hex");
+    expect(d.unit).toBe("µg/m³");
+    expect(d.truncated).toBe(true);
+    expect(d.count).toBe(24711);
+    expect(describeItem(d.items[0]!, d).lines[0]).toBe("NO₂: 31.2 µg/m³");
+  });
+
+  it("frames the area the tool answered for, but not the whole city", () => {
+    expect(areaBounds(belief)).toEqual([
+      [12.43985, 41.87076],
+      [12.5189, 41.93509],
+    ]);
+    expect(areaBounds({ ...belief, area: { ...belief.area, kind: "city" } })).toBeNull();
+    expect(areaBounds({ type: "belief" })).toBeNull();
+    expect(areaBounds({ area: { kind: "zone", bbox: [1, 2, "x", 4] } })).toBeNull();
+  });
+
+  it("moves a fused layer from the whole city to one municipio, and leaves other choices alone", () => {
+    expect(areaForLayer(true, { type: "city" })).toEqual({ type: "municipio", id: "1" });
+    expect(areaForLayer(false, { type: "city" })).toEqual({ type: "city" });
+    expect(areaForLayer(true, { type: "municipio", id: "7" })).toEqual({ type: "municipio", id: "7" });
+  });
+
+  it("keeps only the first sentence of a long refusal", () => {
+    expect(firstSentence("Layer 'air_o3' is not available. Known layer names: a, b, c")).toBe("Layer 'air_o3' is not available.");
+    expect(firstSentence("Area is 12.4 km2: draw a smaller one")).toBe("Area is 12.4 km2: draw a smaller one");
+    expect(firstSentence("")).toBe("");
   });
 });

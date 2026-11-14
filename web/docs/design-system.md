@@ -66,9 +66,21 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     readable (`AREA_ALPHA` in `src/lib/colors.ts`). Whole-city screens open at the widest zoom that still shows
     the buildings; further out, a small button brings them back.
 20. **A sleeping service is not a failure.** The live service stops when idle and takes two to three minutes to
-    wake. A missing answer is retried automatically and a blue strip says what is happening. Simulations are
-    never started more than twice (`src/lib/retry.ts`).
+    wake. After a missing answer the screen waits for it and asks once more, and a blue strip says what is
+    happening (`src/lib/retry.ts`, see 26).
 21. **Map credits start folded** behind the (i) button so they never cover a legend; one click opens them.
+22. **Sensor dots carry their value.** With 40 sensors or fewer each dot shows its number next to it; dots have a
+    dark (light theme) or light (dark theme) edge so they stand out from the buildings. Values get plain names
+    and units ("NO₂ (µg/m³)", not "no2"); a layer with several values per sensor gets a "Value shown" chooser.
+23. **The City view opens on the twin's own estimates.** The first group of layers is "Live estimates (sensor
+    fusion)": air, road speed, bus delay, rain, temperature, electric field, street activity, one value and its
+    range per 170 m cell. A fused layer picked on "Whole city" opens on Municipio I (the whole city is about
+    25,000 cells, more than one answer carries) and the camera frames the chosen area.
+24. **One value everywhere is said in words**, not drawn as a colour scale from x to x.
+25. **A layer the service does not carry is NOT AVAILABLE**, with the service's own first sentence as the reason.
+    An incomplete answer says how many items arrived out of how many.
+26. **No call is started more than twice.** After a missing answer the service is woken with a light request and
+    the call runs once more; a request the service cannot serve is not repeated (every start costs money).
 
 ## Tokens
 

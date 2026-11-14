@@ -1,5 +1,6 @@
 // Turns any query_layer result (belief, observations, aggregate, features) into one map-ready shape.
 // Shapes follow the live tool API (twin/api, 13 Nov 2026).
+import type { Area } from "@/lib/area";
 
 export interface MapItem {
   h3?: string;
@@ -58,7 +59,54 @@ const METRICS: Record<string, MetricInfo> = {
   availableVehicles: { label: "Vehicles available", unit: "", each: "vehicle" },
   rangeKm: { label: "Range left", unit: "km" },
   count: { label: "Count", unit: "" },
+  // Fused layers (config/beliefs.yaml). Their unit comes with the answer, so none is written here.
+  air_no2: { label: "NO₂", unit: "" },
+  air_pm10: { label: "PM10", unit: "" },
+  air_pm25: { label: "PM2.5", unit: "" },
+  air_o3: { label: "Ozone", unit: "" },
+  road_speed: { label: "Road speed", unit: "" },
+  emf: { label: "Electric field", unit: "" },
+  rain: { label: "Rain", unit: "" },
+  temperature: { label: "Air temperature", unit: "" },
+  air_temperature: { label: "Air temperature", unit: "" },
+  activity: { label: "Shared scooters parked", unit: "" },
+  transit_delay: { label: "Bus delay", unit: "" },
+  transit_supply: { label: "Buses and trams planned", unit: "" },
+  wifi_sessions: { label: "Wi-Fi sessions", unit: "" },
 };
+
+/** Units as the tools write them (plain ASCII), shown the way people read them. */
+const UNITS: Record<string, string> = { "ug/m3": "µg/m³", degC: "°C", "vehicles/cell": "per cell", "sessions/hour": "per hour" };
+
+export function prettyUnit(unit: string): string {
+  return UNITS[unit] ?? unit;
+}
+
+/** The box of the area a tool answered for, to frame the map. Null for the whole city (the map already shows it). */
+export function areaBounds(result: unknown): [[number, number], [number, number]] | null {
+  const area = isObj(result) && isObj(result.area) ? result.area : null;
+  if (!area || area.kind === "city" || !Array.isArray(area.bbox) || area.bbox.length !== 4) return null;
+  const [w, s, e, n] = area.bbox.map(num);
+  if (w === undefined || s === undefined || e === undefined || n === undefined) return null;
+  return [
+    [w, s],
+    [e, n],
+  ];
+}
+
+/**
+ * Fused layers have one value for every 170 m cell, about 25,000 over Rome: too many for one answer.
+ * Picked on the whole city they open on the centre (Municipio I); any other area is kept.
+ */
+export function areaForLayer(fused: boolean, area: Area): Area {
+  return fused && area.type === "city" ? { type: "municipio", id: "1" } : area;
+}
+
+/** A refusal can carry a long list after its first sentence (every known layer name): keep the sentence. */
+export function firstSentence(text: string): string {
+  const end = text.indexOf(". ");
+  return end < 0 ? text : text.slice(0, end + 1);
+}
 
 export function metricInfo(metric: string): MetricInfo {
   const known = METRICS[metric];
@@ -95,7 +143,9 @@ export function normalizeLayer(result: unknown, prefer?: string): MapData {
     return {
       kind: "hex",
       metric: String(r.layer ?? "value"),
-      unit: String(r.unit ?? ""),
+      unit: prettyUnit(String(r.unit ?? "")),
+      truncated: r.truncated === true,
+      count: num(r.count),
       calibration: typeof r.calibration === "string" ? r.calibration : undefined,
       method: typeof r.method === "string" ? r.method : undefined,
       items: r.cells.filter(isObj).map((c) => ({

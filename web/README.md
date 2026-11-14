@@ -35,7 +35,7 @@ New screens are assembled from `src/components/ui.tsx`; colours come from the to
 
 ## Screens
 
-City view (whole-Rome 3D map, belief layers as H3 cells, area picker incl. drawing, time slider, uncertainty toggle) ·
+City view (3D map of Rome, live sensor-fusion layers as cells and sensor layers as dots drawn on the buildings, area picker incl. drawing, time slider, uncertainty toggle) ·
 Ask (ready-made tasks from `/use_cases`, orchestrator chat with run ids, sources, data kinds and map buttons) ·
 Permit check (address → 300 m circle → context list → field range → downloadable cited report) ·
 Scenario lab (river flood, heavy rain and sewers, heatwave, chemical plume, emergency access, road closure,

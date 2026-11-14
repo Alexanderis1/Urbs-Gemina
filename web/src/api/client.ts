@@ -4,7 +4,7 @@ import { mockSportTool, SPORT_TOOLS, type SportTool } from "./mockSport";
 import type { Envelope, ToolName } from "./types";
 import { SUPABASE_URL, supabase } from "@/integrations/supabase/client";
 import { callWithWakeUp } from "@/lib/retry";
-import { setServiceStatus } from "@/lib/serviceStatus";
+import { getServiceStatus, setServiceStatus } from "@/lib/serviceStatus";
 
 // The browser never talks to the tool API directly: it calls the "tools" edge function (Lovable Cloud),
 // which holds the keys, reads the user's tier from the session, and forwards to POST /tools/<name>.
@@ -53,15 +53,20 @@ export async function callTool<R = Record<string, unknown>>(
       : await mockTool(tool as ToolName, inputs);
     return env as Envelope<R>;
   }
-  // The service sleeps when idle: a missing answer is retried while it wakes up (see lib/retry.ts).
-  const env = await callWithWakeUp(
-    tool,
-    () => postTool<R>(tool, inputs),
-    async () => void (await postTool("data_status", {})),
-    { onWait: () => setServiceStatus("waking") },
-  );
-  setServiceStatus("ready");
-  return env;
+  // The service sleeps when idle: after a missing answer it is woken, then asked once more (see lib/retry.ts).
+  try {
+    const env = await callWithWakeUp(
+      () => postTool<R>(tool, inputs),
+      async () => void (await postTool("data_status", {})),
+      { onWait: () => setServiceStatus("waking") },
+    );
+    setServiceStatus("ready");
+    return env;
+  } catch (e) {
+    // The call failed for good: stop saying "waking up", the screen shows the failure itself.
+    if (getServiceStatus() === "waking") setServiceStatus("unknown");
+    throw e;
+  }
 }
 
 async function postTool<R>(tool: string, inputs: Record<string, unknown>): Promise<Envelope<R>> {

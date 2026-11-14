@@ -3,22 +3,26 @@ import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import {
+  Activity,
   AlertTriangle,
   Bike,
   Building2,
   Bus,
   Car,
   CloudRain,
+  Gauge,
   Hospital,
   Layers as LayersIcon,
   Map as MapIcon,
   RadioTower,
   School,
+  Thermometer,
+  Timer,
   Wind,
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { CityMap } from "@/map/CityMap";
+import { CityMap, type MapFocus } from "@/map/CityMap";
 import { AreaPicker } from "@/components/AreaPicker";
 import { RunMeta } from "@/components/RunMeta";
 import { KindBadge } from "@/components/Badge";
@@ -29,9 +33,12 @@ import { onMapAction, registerCityView } from "@/lib/mapbus";
 import { areaFromId } from "@/lib/mapActions";
 import { isOk } from "@/api/envelope";
 import {
+  areaBounds,
+  areaForLayer,
   availableMetrics,
   describeItem,
   dotRadiusPx,
+  firstSentence,
   formatValue,
   metricInfo,
   normalizeLayer,
@@ -48,23 +55,34 @@ import { useTheme } from "@/lib/useTheme";
 import type { Envelope, QueryLayerResult } from "@/api/types";
 import { errorText } from "@/lib/errors";
 
-type LayerGroup = "fields" | "mobility" | "health" | "environment";
+type LayerGroup = "fused" | "fields" | "mobility" | "health" | "environment";
 
 // Layer ids as the live query_layer knows them (twin/api). Labels are for people; caveats go in `hint`.
+// "fused" layers are the twin's own estimate for every 170 m cell (config/beliefs.yaml): sensors + a starting map.
 export const MAP_LAYERS: { id: string; label: string; hint?: string; group: LayerGroup; icon: LucideIcon }[] = [
+  { id: "air_no2", label: "Air: NO₂", hint: "Stations + European model", group: "fused", icon: Wind },
+  { id: "air_pm10", label: "Air: PM10", group: "fused", icon: Wind },
+  { id: "air_pm25", label: "Air: PM2.5", group: "fused", icon: Wind },
+  { id: "air_o3", label: "Air: ozone", group: "fused", icon: Wind },
+  { id: "road_speed", label: "Road speed", hint: "Simulated loops + real buses", group: "fused", icon: Gauge },
+  { id: "transit_delay", label: "Bus delay", hint: "Live bus feed", group: "fused", icon: Timer },
+  { id: "rain", label: "Rain", hint: "Radar + forecast", group: "fused", icon: CloudRain },
+  { id: "air_temperature", label: "Air temperature", hint: "Forecast + night heat island", group: "fused", icon: Thermometer },
+  { id: "emf", label: "Electric field", hint: "Cartoradio map + measurements", group: "fused", icon: Zap },
+  { id: "activity", label: "Street activity", hint: "Parked shared scooters, a weak proxy", group: "fused", icon: Activity },
   { id: "antenna_register", label: "Antenna sites", hint: "Count per 500 m cell", group: "fields", icon: RadioTower },
-  { id: "emf_baseline", label: "EMF field", hint: "Cartoradio grid", group: "fields", icon: Zap },
+  { id: "emf_baseline", label: "EMF model points", hint: "Cartoradio grid", group: "fields", icon: Zap },
   { id: "traffic_flow", label: "Traffic loops", group: "mobility", icon: Car },
   { id: "micromobility", label: "Shared scooters and bikes", group: "mobility", icon: Bike },
   { id: "hospitals", label: "Hospitals", group: "health", icon: Hospital },
   { id: "schools_state", label: "State schools", group: "health", icon: School },
-  { id: "rain", label: "Rain", hint: "Fused, with range. Slow: pick a municipio", group: "environment", icon: CloudRain },
   { id: "air_quality", label: "Air quality stations", group: "environment", icon: Wind },
   { id: "air_quality_model", label: "Air quality model", group: "environment", icon: LayersIcon },
   { id: "transit", label: "Transit", hint: "Live buses", group: "mobility", icon: Bus },
 ];
 
-const GROUPS: { id: LayerGroup; label: string }[] = [
+const GROUPS: { id: LayerGroup; label: string; hint?: string }[] = [
+  { id: "fused", label: "Live estimates (sensor fusion)", hint: "One value and its range for every 170 m cell." },
   { id: "fields", label: "Antennas and fields" },
   { id: "mobility", label: "Mobility" },
   { id: "health", label: "Health and schools" },
@@ -72,6 +90,7 @@ const GROUPS: { id: LayerGroup; label: string }[] = [
 ];
 
 const layerLabel = (id: string | null) => MAP_LAYERS.find((l) => l.id === id)?.label ?? "Buildings only";
+const isFused = (id: string | null) => MAP_LAYERS.some((l) => l.id === id && l.group === "fused");
 
 /** One selectable row. A real radio input (visually hidden) keeps arrow keys and screen readers working. */
 function LayerRow({
@@ -111,6 +130,7 @@ const hexRgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => p
 
 /** Legend title from the data itself: the value's plain name, cell size and unit. */
 function legendTitle(d: MapData): string {
+  if (d.kind === "hex") return `${metricInfo(d.metric).label}${d.unit ? ` (${d.unit})` : ""}`;
   const cell = d.metric === "count" && d.cellM ? ` per ${formatValue(d.cellM)} m cell` : "";
   return `${metricInfo(d.metric).label}${cell}${d.unit ? ` (${d.unit})` : ""}`;
 }
@@ -118,8 +138,9 @@ function legendTitle(d: MapData): string {
 export default function CityView() {
   const { run } = useSession();
   const { theme, palette } = useTheme();
-  const [layer, setLayer] = useState<string | null>("antenna_register");
-  const [area, setArea] = useState<Area>({ type: "city" });
+  // Opens on a fused layer over the centre: it answers fast and shows the twin doing its job.
+  const [layer, setLayer] = useState<string | null>("air_no2");
+  const [area, setArea] = useState<Area>(() => areaForLayer(true, { type: "city" }));
   const [hoursAgo, setHoursAgo] = useState(0);
   const [showUncertainty, setShowUncertainty] = useState(true);
   const [buildingView, setBuildingView] = useState<BuildingView>("plain");
@@ -135,9 +156,19 @@ export default function CityView() {
   const [metric, setMetric] = useState<string | null>(null);
   useEffect(() => setMetric(null), [layer]);
 
+  /** A fused layer picked on the whole city opens on the centre: see areaForLayer. */
+  const pickLayer = (id: string | null) => {
+    setLayer(id);
+    setArea((a) => areaForLayer(isFused(id), a));
+  };
+
   useEffect(() => {
     const off = onMapAction((a) => {
-      if (a.tool === "show_layer") setLayer(a.args.visible ? a.args.layer : null);
+      if (a.tool === "show_layer") {
+        const id = a.args.visible ? a.args.layer : null;
+        setLayer(id);
+        setArea((prev) => areaForLayer(isFused(id), prev));
+      }
       else if (a.tool === "show_area") {
         const next = areaFromId(a.args.area);
         if (next) setArea(next);
@@ -174,6 +205,12 @@ export default function CityView() {
   // Sensors that report several values (NO₂, PM10, PM2.5): the operator picks which one is shown.
   const metrics = useMemo(() => (env && isOk(env) ? availableMetrics(env.result) : []), [env]);
   const data = useMemo(() => (env && isOk(env) ? normalizeLayer(env.result, metric ?? undefined) : null), [env, metric]);
+  // The camera frames the municipio, zone or drawn area the answer is for. Keyed on the box, so a reload does not move it again.
+  const boundsKey = env && isOk(env) ? JSON.stringify(areaBounds(env.result)) : "null";
+  const focus = useMemo<MapFocus | null>(() => {
+    const bounds = JSON.parse(boundsKey) as ReturnType<typeof areaBounds>;
+    return bounds ? { bounds, pitch: 45 } : null;
+  }, [boundsKey]);
   const extent = useMemo(() => (data ? valueExtent(data.items) : null), [data]);
   // Fading only means something when the tool returned an uncertainty for at least one item.
   const hasUncertainty = useMemo(() => !!data?.items.some((i) => i.uncertainty > 0), [data]);
@@ -316,6 +353,9 @@ export default function CityView() {
 
   const kind = layer && env ? env.data_kinds[layer] : undefined;
   const empty = data && !busy && data.items.length === 0;
+  // The tool answered, but not with data (a layer the live service does not carry yet): say so in its own words.
+  const refusal = env && !isOk(env) ? firstSentence(env.reason ?? "The twin has no data for this layer yet.") : null;
+  const things = data?.kind === "hex" ? "cells" : "points";
   const unit = data?.unit ? ` ${data.unit}` : "";
   const hovered = hover && data ? describeItem(hover.item, data) : null;
 
@@ -326,6 +366,7 @@ export default function CityView() {
           {GROUPS.map((g) => (
             <div key={g.id} className="space-y-0.5">
               <div className="px-1 text-2xs font-semibold text-muted">{g.label}</div>
+              {g.hint && <p className="hint px-1 pb-0.5">{g.hint}</p>}
               {MAP_LAYERS.filter((l) => l.group === g.id).map((l) => (
                 <LayerRow
                   key={l.id}
@@ -333,13 +374,13 @@ export default function CityView() {
                   hint={l.hint}
                   icon={l.icon}
                   checked={layer === l.id}
-                  onSelect={() => setLayer(l.id)}
+                  onSelect={() => pickLayer(l.id)}
                   badge={layer === l.id && kind ? <KindBadge kind={kind} /> : undefined}
                 />
               ))}
             </div>
           ))}
-          <LayerRow label="None (buildings only)" icon={Building2} checked={layer === null} onSelect={() => setLayer(null)} />
+          <LayerRow label="None (buildings only)" icon={Building2} checked={layer === null} onSelect={() => pickLayer(null)} />
         </div>
       </Section>
 
@@ -429,6 +470,7 @@ export default function CityView() {
         layers={layers}
         buildingView={buildingView}
         showTrees={showTrees}
+        focus={focus}
         onHover={onHover}
         onClick={drawing ? (p) => setDraft((d) => [...d, [p.lon, p.lat]]) : undefined}
       />
@@ -449,6 +491,11 @@ export default function CityView() {
               </span>
             ) : error ? (
               <span className="text-danger">Could not load this layer. See Evidence.</span>
+            ) : refusal ? (
+              <span className="inline-flex items-start gap-1.5">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-estimated" aria-hidden="true" />
+                {refusal}
+              </span>
             ) : empty ? (
               <span className="inline-flex items-center gap-1.5 text-estimated">
                 <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
@@ -456,7 +503,7 @@ export default function CityView() {
               </span>
             ) : data ? (
               <span>
-                <span className="num text-ink">{data.items.length.toLocaleString("en-GB")}</span> {data.kind === "hex" ? "cells" : "points"} ·{" "}
+                <span className="num text-ink">{data.items.length.toLocaleString("en-GB")}</span> {things} ·{" "}
                 {areaLabel(area)}
               </span>
             ) : null}
@@ -465,7 +512,7 @@ export default function CityView() {
             <p className="flex gap-1.5 text-xs text-estimated">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>
-                Incomplete: only the first {data.items.length.toLocaleString("en-GB")} of {data.count.toLocaleString("en-GB")} points arrived. Pick a
+                Incomplete: only the first {data.items.length.toLocaleString("en-GB")} of {data.count.toLocaleString("en-GB")} {things} arrived. Pick a
                 municipio, an urban zone or draw an area to see them all.
               </span>
             </p>
@@ -498,11 +545,22 @@ export default function CityView() {
                 </Field>
               )}
               <div className="text-xs font-semibold text-ink">{legendTitle(data)}</div>
-              <LegendRamp
-                gradient={rampGradient()}
-                low={`${formatValue(extent.min)}${unit}`}
-                high={`${formatValue(extent.max)}${unit}`}
-              />
+              {formatValue(extent.min) === formatValue(extent.max) ? (
+                // One value everywhere (a calm night, a dry hour): a colour scale from x to x would say nothing.
+                <p className="text-xs">
+                  Same value everywhere:{" "}
+                  <span className="num font-semibold text-ink">
+                    {formatValue(extent.min)}
+                    {unit}
+                  </span>
+                </p>
+              ) : (
+                <LegendRamp
+                  gradient={rampGradient()}
+                  low={`${formatValue(extent.min)}${unit}`}
+                  high={`${formatValue(extent.max)}${unit}`}
+                />
+              )}
               {data.metric === "count" && <p className="hint">Bigger dot = more sites.</p>}
               {showUncertainty && hasUncertainty && <p className="hint">Faded = less certain</p>}
               {data.calibration && (data.calibration === "calibrated" || data.calibration === "uncalibrated") && (
