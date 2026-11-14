@@ -66,13 +66,13 @@ describe("scenario catalogue", () => {
 });
 
 describe("change objects for the new kinds", () => {
-  it("river flood: the 200-year flood scenario is the default", async () => {
+  it("river flood: the 500-year flood scenario is the default", async () => {
     const { SCENARIOS } = await import("@/lib/scenario");
     const spec = SCENARIOS.find((x) => x.id === "river_flood")!;
-    expect(buildScenarioChange("river_flood", { ...spec.defaults })).toEqual({ gauge: "tevere_ripetta", return_period_years: 200 });
-    expect(buildScenarioChange("river_flood", { mode: "return", return_period: "500" })).toEqual({
+    expect(buildScenarioChange("river_flood", { ...spec.defaults })).toEqual({ gauge: "tevere_ripetta", return_period_years: 500 });
+    expect(buildScenarioChange("river_flood", { mode: "return", return_period: "200" })).toEqual({
       gauge: "tevere_ripetta",
-      return_period_years: 500,
+      return_period_years: 200,
     });
   });
 

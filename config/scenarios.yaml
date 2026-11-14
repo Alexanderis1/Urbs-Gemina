@@ -197,7 +197,7 @@ river_flood:
       discharge_m3s:
         tevere_ripetta: {50: 2810, 100: 3090, 200: 3360, 500: 3730}
       source: "Calenda et al., ISPRA 2017"
-    basis: "Tiber flood quantiles at Ripetta from Calenda et al., 'Gestione del rischio d'inondazione a Roma', ISPRA, 28 Jun 2017 (truncated Gumbel on 1400-2000 peaks; eval/scenarios/tiber_ripetta_peaks.json). T200 is the official PGRA medium-hazard (P2) flood, so it is the Scenario Lab default: it shows the walls nearly overtopped and the first streets wet, while today's river floods nothing. Hypothetical, labelled 'scenario'"
+    basis: "Tiber flood quantiles at Ripetta from Calenda et al., 'Gestione del rischio d'inondazione a Roma', ISPRA, 28 Jun 2017 (truncated Gumbel on 1400-2000 peaks; eval/scenarios/tiber_ripetta_peaks.json). T500 is the official PGRA rare-flood (P1) map and the Scenario Lab default: at T200 the walls nearly hold, so the middle estimate in the centre can be zero; at T500 the walls spill (P50 level 18.9 m vs 18.45 m crest). Hypothetical, labelled 'scenario'"
   sea_taper:
     value: {tevere: {gauge: tevere_ripetta, mouth: [12.2343, 41.7404]}}
     basis: "towards the mouth (Fiumara Grande) the flood surface falls to sea level along a straight line in distance along the river. Validation against the PGRA maps (eval/scenarios) replaced the earlier rule (rise in proportion to the bed's height above the sea), which missed 94% of the official hazard area downstream of Magliana"
