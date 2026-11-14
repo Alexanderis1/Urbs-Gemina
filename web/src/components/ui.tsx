@@ -18,7 +18,11 @@ export function Workspace({ panel, children, right }: { panel: ReactNode; childr
   );
 }
 
-/** "w-[22rem]" -> "md:w-[22rem]": the panel's width applies from a tablet up; on a phone it takes the full width. */
+/**
+ * Width from a tablet up, written in full at the call site ("md:w-[24rem]"): Tailwind only builds classes it finds
+ * written in the source, so a class put together at run time ("md:" + "w-[24rem]") would have no CSS and the panel
+ * would cover the map on a desk screen. A plain "w-..." is still read as "from a tablet up" for safety.
+ */
 const widthFrom = (width: string) => width.split(/\s+/).map((c) => (c.startsWith("w-") ? `md:${c}` : c)).join(" ");
 
 /** Docked side panel: fixed header, scrolling body, optional fixed footer. On a phone it sits under the map. */
@@ -29,7 +33,7 @@ export function Panel({
   actions,
   footer,
   side = "left",
-  width = "w-[22rem]",
+  width = "md:w-[22rem]",
   children,
 }: {
   title: string;

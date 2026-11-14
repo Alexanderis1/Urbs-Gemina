@@ -117,7 +117,7 @@ export function UseCasePanel({
   const [values, setValues] = useState<Record<string, string>>({});
 
   return (
-    <Panel title={title} icon={ListChecks} subtitle={subtitle} width="w-[23rem]">
+    <Panel title={title} icon={ListChecks} subtitle={subtitle} width="md:w-[23rem]">
       <ul className="space-y-1.5">
         {useCases.map((uc) => {
           const Icon = USE_CASE_ICON[uc.id] ?? ListChecks;
