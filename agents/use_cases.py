@@ -186,6 +186,8 @@ def fill(template: Any, ctx: Mapping[str, Any]) -> Any:
 
 def _skip_reason(missing: str) -> str:
     head = missing.partition(".")[0]
+    if head == "params":
+        return f"skipped: needs {missing.partition('.')[2]}, which was not given"
     if head == "place" or "." in missing:
         return f"skipped: needs {missing}, but the place was not found in Rome"
     return f"skipped: needs {missing}"

@@ -8,16 +8,21 @@ in `config/use_cases.yaml`, the note templates in `agents/prompts/use_cases/`, t
 | Id | For | Needs | What runs |
 |---|---|---|---|
 | `municipio_briefing` | Officer, every morning | area | transit, traffic (simulated loops), air, rain and temperature forecast, river forecast, disruption news, data status |
-| `civil_protection_alert` | Civil protection | area | rain and river forecasts, rain flood with sewers, Tiber at forecast peak, underpasses, PGRA hazard, ambulance reach with flooded roads, official alerts |
-| `heat_plan_elderly` | Social services, health | area (+ optional `tmax_c`, `tmin_c`) | heatwave by street with over-65s, tree-planting what-if, care homes, emergency hospitals, pharmacies, parks, official heat plan |
-| `site_risk_check` | Schools, hospitals | place | sensitive sites and constraints, PGRA, Seveso zones, underpasses, air, ambulance reach in the district |
+| `civil_protection_alert` | Civil protection | area | rain and river forecasts, rain flood with sewers, Tiber at forecast peak, underpasses, PGRA hazard, landslide areas, emergency plan areas (waiting, reception, shelters), ambulance reach with flooded roads, official alerts |
+| `heat_plan_elderly` | Social services, health | area (+ optional `tmax_c`, `tmin_c`) | heatwave by street with over-65s, tree-planting what-if, care homes, emergency hospitals, pharmacies, parks, indoor climate refuges, drinking fountains, official heat plan |
+| `site_risk_check` | Schools, hospitals | place | sensitive sites and constraints, PGRA, Seveso zones, underpasses, landslide areas, underground cavities, past civil-protection interventions, emergency plan areas, air, ambulance reach in the district |
 | `event_planning` | Events office, police | place (+ `attendees`) | sensitive sites in the perimeter, usual crowd (Wi-Fi), transit, SUMO traffic, ambulance reach with the perimeter closed, hospitals |
 | `antenna_permit` | Challenge 02 | place (+ `band`, `height_m`) | context within 300 m, field estimate, residents above thresholds before and after, attention value in the law |
 | `sport_deserts` | Challenge 04 | area (+ `discipline`) | facilities and coverage |
 | `citizen_area_info` | Residents (public tier) | place | air, forecast, transit, pharmacies, emergency hospitals |
 | `industrial_accident` | Civil protection, prefecture | place = plant name (+ `area`, `substance`, `release_kg_s`) | wind forecast, toxic plume with AEGL/IDLH zones, official plan damage zones, hospitals, news, plan rules |
 | `air_quality_episode` | Environment, mobility | area | official stations, citizen PM sensors, CAMS model, wind, schools and nurseries, legal limits, traffic-ban notices |
-| `strike_day_mobility` | Mobility | area | live transit, transit delay map, road speed map (simulated loops), e-scooters, Wi-Fi crowd proxy, strike notices |
+| `strike_day_mobility` | Mobility | area | live transit, transit delay map, road speed map (simulated loops), e-scooters, Wi-Fi crowd proxy, park-and-ride car parks, strike notices |
+| `roadworks_check` | Public works, mobility | place (+ `street`) | heritage constraints and sensitive sites, underground cavities, past civil-protection interventions, SUMO traffic with the street closed (only with `street`), ambulance reach with the worksite fenced, transit, announced works, road-code rules |
+| `cold_weather_plan` | Social services, civil protection | area | temperature forecast, Piano Freddo reception points, indoor public places, emergency hospitals, civil-protection structures, notices |
+| `wildfire_risk` | Civil protection | area | weather forecast, official R3-R4 interface areas, protected areas, parks, emergency plan areas, fire news, season rules |
+| `nightlife_check` | Municipio, local police | place | official movida zones, acoustic class and limits, Wi-Fi crowd, sensitive sites, transit, ordinances, national noise limits (no noise sensor: limits only) |
+| `citizen_emergency_info` | Residents (public tier) | place | civil-protection waiting areas within walking distance, flood, landslide and Seveso zones at the address, hospitals, alerts |
 
 ## How to call
 

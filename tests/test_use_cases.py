@@ -78,7 +78,8 @@ def test_every_playbook_is_well_formed() -> None:
     cases = load_use_cases()
     assert {"municipio_briefing", "civil_protection_alert", "heat_plan_elderly", "site_risk_check",
             "event_planning", "antenna_permit", "sport_deserts", "citizen_area_info", "industrial_accident",
-            "air_quality_episode", "strike_day_mobility"} <= set(cases)
+            "air_quality_episode", "strike_day_mobility", "roadworks_check", "cold_weather_plan",
+            "wildfire_risk", "nightlife_check", "citizen_emergency_info"} <= set(cases)
     known = set(load_tool_specs()[0]) | {"sports_facilities", "sport_coverage"}
     for uc in cases.values():
         assert uc.title["it"] and uc.title["en"] and uc.basis
@@ -307,3 +308,29 @@ def test_decision_language_still_blocks_everything() -> None:
     llm = CitingLLM(text="- The antenna is prohibited here.\n- Nothing else.")
     rep = run_use_case("antenna_permit", llm=llm, gateway=FakeGateway(), place="Via del Corso 1")
     assert not rep.verified and "prohibited" not in rep.text
+
+
+def test_every_queried_layer_is_a_known_layer() -> None:
+    """A typo in a layer name would only show up as 'not available' at run time."""
+    providers = set(yaml.safe_load(Path("config/providers.yaml").read_text(encoding="utf-8")))
+    beliefs = set(yaml.safe_load(Path("config/beliefs.yaml").read_text(encoding="utf-8"))["layers"])
+    static = set(yaml.safe_load(Path("config/ingest.yaml").read_text(encoding="utf-8"))["layers"])
+    for uc in load_use_cases().values():
+        for step in uc.steps:
+            if step.tool == "query_layer":
+                assert step.args["layer"] in providers | beliefs | static, (uc.id, step.id, step.args["layer"])
+
+
+def test_a_step_needing_an_option_the_officer_did_not_give_says_so() -> None:
+    gw = FakeGateway()
+    runs, skipped = run_steps(load_use_cases()["roadworks_check"], gateway=gw, place="Via Nazionale")
+    traffic = [s for s in skipped if s["step"] == "traffic"]
+    assert traffic and "street" in traffic[0]["reason"] and "place was not found" not in traffic[0]["reason"]
+    assert all(s["step"] != "access" for s in skipped)  # the worksite closure needs no street
+
+
+def test_roadworks_closes_the_named_street_in_the_traffic_run() -> None:
+    gw = FakeGateway()
+    run_steps(load_use_cases()["roadworks_check"], gateway=gw, place="Via Nazionale", params={"street": "Via Nazionale"})
+    traffic = [a for n, a in gw.calls if n == "run_scenario" and a["kind"] == "traffic_event"]
+    assert traffic and traffic[0]["change"] == {"close": {"street": "Via Nazionale"}}

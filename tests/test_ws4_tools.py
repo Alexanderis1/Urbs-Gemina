@@ -288,6 +288,15 @@ def test_query_static_layer_in_area(runtime: ToolRuntime) -> None:
     assert env["data_kinds"] == {"schools_state": "real"}
 
 
+def test_query_static_layer_finds_a_polygon_that_covers_the_whole_area(runtime: ToolRuntime) -> None:
+    """A small area deep inside a big flood zone has no zone vertex inside it: the zone must still be found."""
+    runtime.store.add("flood_hazard_pgra", fc(feat(square(5000), PERICOLOSITA="P3"),
+                                              feat(square(100, cx=4000, cy=4000), PERICOLOSITA="P1")), sha256="f1")
+    env = query_layer(runtime, "flood_hazard_pgra", area=square(300))
+    assert env["result"]["count"] == 1
+    assert env["result"]["features"]["features"][0]["properties"]["PERICOLOSITA"] == "P3"
+
+
 def test_query_simulated_provider_layer_is_flagged(runtime: ToolRuntime) -> None:
     env = query_layer(runtime, "traffic_flow", area="city", time="2026-11-13T08:00:00Z")
     assert env["synthetic"] is True
@@ -503,3 +512,21 @@ def test_runtime_warm_preloads_slow_providers_and_ignores_failures(runtime: Tool
     runtime.providers = {"antenna_register": Slow(), "other": Broken()}  # type: ignore[dict-item]
     assert runtime.warm() == {"antenna_register": "ok", "other": "failed: RuntimeError"}
     assert calls == ["sites"]
+
+
+def test_fast_point_in_area_agrees_with_the_exact_test() -> None:
+    """query_layer's banded point-in-polygon index must give the same answer as Area.contains."""
+    import random
+
+    from twin.tools.query_layer import _AreaIndex
+
+    outer = square(3000)["coordinates"][0]
+    hole = list(reversed(square(800, cx=1000, cy=-500)["coordinates"][0]))
+    island = square(400, cx=6000, cy=6000)["coordinates"][0]
+    geometry = {"type": "MultiPolygon", "coordinates": [[outer, hole], [island]]}
+    area = resolve_area(geometry)
+    index = _AreaIndex(area)
+    rng = random.Random(7)
+    for _ in range(3000):
+        lon, lat = at(rng.uniform(-4000, 7000), rng.uniform(-4000, 7000))
+        assert index.contains(lon, lat) == area.contains(lon, lat), (lon, lat)
