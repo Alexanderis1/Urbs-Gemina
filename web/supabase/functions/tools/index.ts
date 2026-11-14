@@ -6,7 +6,7 @@
 // ELEVENLABS_OFFICE_AGENT_ID (default below).
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by the platform.
 import { createClient } from "npm:@supabase/supabase-js@2.46.1";
-import { planForward, type Env, type Tier } from "../_shared/policy.ts";
+import { planForward, reportLimit, type Env, type Tier } from "../_shared/policy.ts";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -68,9 +68,12 @@ Deno.serve(async (req) => {
     // Citizen report: rate limit, screen with Claude (tool screen_report), then store. Rejected reports are kept
     // for audit with status 'rejected' and never shown on the staff map; their photo is deleted.
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const since = new Date(Date.now() - 3600_000).toISOString();
-    const { count } = await admin.from("citizen_reports").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", since);
-    if ((count ?? 0) >= 10) return json(429, { detail: "too many reports in the last hour" });
+    // Rejected reports count too, so a stolen or abusive account cannot keep trying.
+    const sent = async (ms: number) =>
+      (await admin.from("citizen_reports").select("id", { count: "exact", head: true }).eq("user_id", userId)
+        .gte("created_at", new Date(Date.now() - ms).toISOString())).count ?? 0;
+    const limited = reportLimit(await sent(3600_000), await sent(86_400_000));
+    if (limited) return json(limited.status, { detail: limited.detail });
     let photoUrl: string | null = null;
     if (plan.submit.photo_path) {
       const { data } = await admin.storage.from("report-photos").createSignedUrl(plan.submit.photo_path, 300);

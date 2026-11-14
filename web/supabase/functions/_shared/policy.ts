@@ -51,13 +51,43 @@ export interface ReportRow {
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
 /** Checks a report sent by a signed-in resident. `userId` must own the photo's folder. */
+/** Per-account report limits (config/signals.yaml screening). Stop spam and limit the damage of one stolen account. */
+export const REPORT_LIMITS = { perHour: 5, perDay: 10 } as const;
+
+/** null = the account may send another report; otherwise the HTTP answer, in Italian (the citizen app is Italian first). */
+export function reportLimit(lastHour: number, lastDay: number): { status: 429; detail: string } | null {
+  if (lastDay >= REPORT_LIMITS.perDay)
+    return { status: 429, detail: `Hai già inviato ${REPORT_LIMITS.perDay} segnalazioni oggi: è il massimo per un account. Riprova domani.` };
+  if (lastHour >= REPORT_LIMITS.perHour)
+    return { status: 429, detail: `Hai già inviato ${REPORT_LIMITS.perHour} segnalazioni nell'ultima ora. Riprova più tardi.` };
+  return null;
+}
+
+const REMOVED = "[dato rimosso]";
+// Personal data a citizen may type: e-mail, Italian IBAN, tax code, number plate, phone number.
+const PERSONAL: RegExp[] = [
+  /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g,
+  /\bIT\s?\d{2}(?:\s?[A-Z0-9]){23}\b/gi,
+  /\b[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]\b/gi,
+  /\b[A-Z]{2}\s?\d{3}\s?[A-Z]{2}\b/gi,
+];
+const PHONE = /(?:\+|\b00)?\d[\d\s.\-]{5,}\d/g;
+
+/** Remove personal data from report text before it is screened by Claude, stored, or shown to staff. */
+export function redactPersonalData(text: string): string {
+  let out = text;
+  for (const re of PERSONAL) out = out.replace(re, REMOVED);
+  // A phone number has at least 8 digits; house numbers, times and bus lines have fewer.
+  return out.replace(PHONE, (m) => (m.replace(/\D/g, "").length >= 8 ? REMOVED : m));
+}
+
 export function validateReport(body: Record<string, unknown>, userId: string | null): { ok: true; row: ReportRow } | { ok: false; status: number; reason: string } {
   if (!userId) return { ok: false, status: 401, reason: "sign in first" };
   const type = REPORT_TYPES[String(body.category)];
   if (!type) return { ok: false, status: 422, reason: "unknown report type" };
   const subtype = typeof body.subtype === "string" && type.subtypes.includes(body.subtype) ? body.subtype : null;
   if (type.subtypes.length && !subtype) return { ok: false, status: 422, reason: "choose what kind of problem it is" };
-  const description = typeof body.description === "string" ? body.description.trim() : "";
+  const description = typeof body.description === "string" ? redactPersonalData(body.description.trim()) : "";
   if (description.length < 3 || description.length > 280) return { ok: false, status: 422, reason: "description must be 3 to 280 characters" };
   const lon = num(body.lon);
   const lat = num(body.lat);
