@@ -191,3 +191,57 @@ use_cases:
       - {id: pharmacies, tool: query_layer, args: {layer: pharmacies_roma, area: "{place.circle}", limit: 30}, label: "pharmacies nearby"}
       - {id: health, tool: query_layer, args: {layer: emergency_hospitals, area: "{place.municipio}", limit: 30}, label: "emergency hospitals"}
     basis: "Coordinator brief (14 Nov): citizen Q&A. Aggregated, public layers only; the API applies the citizen tier itself."
+
+  industrial_accident:
+    title: {it: "Incidente in uno stabilimento a rischio (Seveso)", en: "Accident at a high-risk (Seveso) plant"}
+    summary: {it: "Nube tossica con il vento previsto: zone sopra le soglie sanitarie, residenti e siti sensibili, zone ufficiali del piano, ospedali.",
+              en: "Toxic cloud with the forecast wind: areas above health thresholds, residents and sensitive sites, official plan zones, hospitals."}
+    tiers: [office]
+    needs: [place]
+    prompt: industrial_accident
+    params:
+      substance: {default: ammonia, basis: "Substances with AEGL/IDLH values in config/scenarios.yaml (ammonia, chlorine, hydrogen_sulfide); ammonia is the most common refrigerant and fertiliser gas."}
+      release_kg_s: {default: null, basis: "Optional; without it the engine uses its own default release rate (config/scenarios.yaml)."}
+    steps:
+      - {id: wind, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "wind and temperature forecast (coarse grid over all of Rome)"}
+      - {id: plume, tool: run_scenario, args: {kind: chemical_plume, area: "{area}", change: {site: "{place}", substance: "{params.substance}", release_kg_s: "{?params.release_kg_s}", wind: forecast}},
+         label: "toxic cloud with the forecast wind (Gaussian plume ensemble)"}
+      - {id: zones, tool: query_layer, args: {layer: seveso_damage_zones, area: "{area}", limit: 30}, label: "official damage zones of the external emergency plans"}
+      - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{area}", limit: 30}, label: "emergency hospitals"}
+      - {id: news, tool: news_search, args: {query: "incidente stabilimento {place} Roma"}, label: "news about the plant (unverified)"}
+      - {id: law, tool: legal_lookup, args: {question: "piano di emergenza esterna stabilimenti a rischio incidente rilevante D.Lgs. 105/2015 Prefettura di Roma"}, label: "external emergency plan rules"}
+    basis: "Quality round (14 Nov): the chemical_plume engine (WS6) and the Seveso layers had no use case. The place is the plant name as in seveso_perimeters (e.g. 'Energas')."
+
+  air_quality_episode:
+    title: {it: "Episodio di inquinamento dell'aria", en: "Air pollution episode"}
+    summary: {it: "Stazioni ufficiali, sensori dei cittadini e modello CAMS, vento previsto, scuole e nidi dell'area, norme sui limiti.",
+              en: "Official stations, citizen sensors and the CAMS model, forecast wind, schools and nurseries in the area, legal limits."}
+    tiers: [office]
+    needs: [area]
+    prompt: air_episode
+    steps:
+      - {id: stations, tool: query_layer, args: {layer: air_quality, area: "{area}"}, label: "official stations (EEA, ARPA Lazio)"}
+      - {id: citizens, tool: query_layer, args: {layer: air_quality_citizen, area: "{area}"}, label: "citizen PM sensors (noisier)"}
+      - {id: model, tool: query_layer, args: {layer: air_quality_model, area: city}, label: "CAMS model background (coarse grid over all of Rome)"}
+      - {id: wind, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "wind forecast (coarse grid over all of Rome)"}
+      - {id: schools, tool: query_layer, args: {layer: schools_state, area: "{area}", limit: 30}, label: "state schools"}
+      - {id: nurseries, tool: query_layer, args: {layer: nidi, area: "{area}", limit: 30}, label: "municipal nurseries"}
+      - {id: law, tool: legal_lookup, args: {question: "valori limite PM10 NO2 D.Lgs. 155/2010 superamenti giornalieri"}, label: "legal limits"}
+      - {id: news, tool: news_search, args: {query: "smog blocco traffico Roma {area_label}"}, label: "traffic bans and notices (unverified)"}
+    basis: "Quality round (14 Nov): three air sources already fused in the providers had no use case."
+
+  strike_day_mobility:
+    title: {it: "Giornata di sciopero dei trasporti", en: "Public transport strike day"}
+    summary: {it: "Ritardi dei mezzi, velocità stradali, monopattini disponibili, affollamento e notizie sullo sciopero.",
+              en: "Transit delays, road speeds, shared e-scooters available, crowding and news about the strike."}
+    tiers: [office]
+    needs: [area]
+    prompt: strike_day
+    steps:
+      - {id: transit, tool: query_layer, args: {layer: transit, area: "{area}"}, label: "public transport delays (GTFS-RT)"}
+      - {id: transit_belief, tool: query_layer, args: {layer: transit_delay, area: "{area}"}, label: "transit delay map with uncertainty"}
+      - {id: roads, tool: query_layer, args: {layer: road_speed, area: "{area}"}, label: "road speed map (simulated loops fused)"}
+      - {id: scooters, tool: query_layer, args: {layer: micromobility, area: "{area}"}, label: "shared e-scooters available"}
+      - {id: crowd, tool: query_layer, args: {layer: wifi_sessions, area: "{area}"}, label: "public Wi-Fi activity (crowd proxy)"}
+      - {id: news, tool: news_search, args: {query: "sciopero trasporti Roma ATAC fasce di garanzia"}, label: "strike notices (unverified)"}
+    basis: "Quality round (14 Nov): strikes are in the data steward's monitors; this joins them with the live mobility layers."

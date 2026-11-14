@@ -77,7 +77,8 @@ class CitingLLM:
 def test_every_playbook_is_well_formed() -> None:
     cases = load_use_cases()
     assert {"municipio_briefing", "civil_protection_alert", "heat_plan_elderly", "site_risk_check",
-            "event_planning", "antenna_permit", "sport_deserts", "citizen_area_info"} <= set(cases)
+            "event_planning", "antenna_permit", "sport_deserts", "citizen_area_info", "industrial_accident",
+            "air_quality_episode", "strike_day_mobility"} <= set(cases)
     known = set(load_tool_specs()[0]) | {"sports_facilities", "sport_coverage"}
     for uc in cases.values():
         assert uc.title["it"] and uc.title["en"] and uc.basis

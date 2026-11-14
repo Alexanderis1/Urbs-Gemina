@@ -15,6 +15,9 @@ in `config/use_cases.yaml`, the note templates in `agents/prompts/use_cases/`, t
 | `antenna_permit` | Challenge 02 | place (+ `band`, `height_m`) | context within 300 m, field estimate, residents above thresholds before and after, attention value in the law |
 | `sport_deserts` | Challenge 04 | area (+ `discipline`) | facilities and coverage |
 | `citizen_area_info` | Residents (public tier) | place | air, forecast, transit, pharmacies, emergency hospitals |
+| `industrial_accident` | Civil protection, prefecture | place = plant name (+ `area`, `substance`, `release_kg_s`) | wind forecast, toxic plume with AEGL/IDLH zones, official plan damage zones, hospitals, news, plan rules |
+| `air_quality_episode` | Environment, mobility | area | official stations, citizen PM sensors, CAMS model, wind, schools and nurseries, legal limits, traffic-ban notices |
+| `strike_day_mobility` | Mobility | area | live transit, transit delay map, road speed map (simulated loops), e-scooters, Wi-Fi crowd proxy, strike notices |
 
 ## How to call
 
@@ -27,6 +30,7 @@ in `config/use_cases.yaml`, the note templates in `agents/prompts/use_cases/`, t
 ## Rules kept
 
 - Facts only from tools; a step that cannot run is reported with its reason, never filled in.
+- If a figure still cannot be traced after one rewrite, only that line is withheld and the officer is told how many lines were withheld; decision wording blocks the whole note.
 - Web text (news, law) stays inside the quote fence; only official domains.
 - Agents never approve or decide; "distance is context, not a prohibition".
 - Traffic is the only simulated input; officer what-ifs are labelled as hypothetical.

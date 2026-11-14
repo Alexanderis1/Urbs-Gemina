@@ -208,8 +208,8 @@ def run_steps(uc: UseCase, *, gateway: ToolGateway, area: Any = None, place: str
     """Run the playbook's tool steps. Returns (envelopes, skipped steps with reasons)."""
     if "place" in uc.needs and not (place and place.strip()):
         raise UseCaseError(f"use case '{uc.id}' needs a place (address or place name)")
-    if "area" in uc.needs and area in (None, ""):
-        area = default_area()
+    if area in (None, ""):
+        area = default_area()  # whole city by default (CLAUDE.md); heavy kinds refuse it and say so
     merged = {**uc.defaults(), **{k: v for k, v in (params or {}).items() if k in uc.params}}
     radius = float(merged.get("radius_m") or 500)
     # Every '<name>_radius_m' param gives a polygon '{<place step>.<name>}' (e.g. district, traffic).

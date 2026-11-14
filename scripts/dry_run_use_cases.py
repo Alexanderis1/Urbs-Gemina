@@ -31,6 +31,9 @@ EXAMPLES: dict[str, dict[str, Any]] = {
     "antenna_permit": {"place": "Piazza Venezia"},
     "sport_deserts": {"area": "municipio:7"},
     "citizen_area_info": {"place": "Colosseo"},
+    "industrial_accident": {"place": "Energas", "area": "municipio:12"},
+    "air_quality_episode": {"area": "municipio:2"},
+    "strike_day_mobility": {"area": "municipio:1"},
 }
 
 
