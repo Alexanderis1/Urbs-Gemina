@@ -1,5 +1,5 @@
 import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
-import { Database, Home as HomeIcon, LogIn, Map as MapIcon, MessagesSquare, Trophy, type LucideIcon } from "lucide-react";
+import { Database, Home as HomeIcon, Megaphone, LogIn, Map as MapIcon, MessagesSquare, Trophy, type LucideIcon } from "lucide-react";
 import { AiDisclosure, SampleModeBanner, WakingBanner } from "@/components/Banners";
 import { ScreenRouter } from "@/components/ScreenRouter";
 import { VoiceButton } from "@/components/VoiceButton";
@@ -9,6 +9,7 @@ import CityView from "@/pages/CityView";
 import Ask from "@/pages/Ask";
 import DataHonesty from "@/pages/DataHonesty";
 import Home from "@/pages/Home";
+import Report from "@/pages/Report";
 import Sport from "@/pages/Sport";
 import StaffAccess from "@/pages/StaffAccess";
 import { Brand, LangSwitch, SkipLink } from "./Brand";
@@ -37,6 +38,7 @@ const VIEW: Partial<Record<ScreenId, { icon: LucideIcon; el: JSX.Element }>> = {
   city: { icon: MapIcon, el: <CityView audience="public" /> },
   sport: { icon: Trophy, el: <Sport /> },
   ask: { icon: MessagesSquare, el: <Ask audience="public" /> },
+  report: { icon: Megaphone, el: <Report /> },
   honesty: { icon: Database, el: <DataHonesty /> },
 };
 

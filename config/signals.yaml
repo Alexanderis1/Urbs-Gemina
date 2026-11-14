@@ -44,8 +44,8 @@ confidence:
       no_match: 1.0              # minutes after an event the news is often silent: absence is not evidence against
   levels:                        # probability bands shown to staff
     likely: 0.75
-    probable: 0.40
-  basis: "assumption (C=50): one citizen report alone stays 'unconfirmed' (35%); two independent reporters or one report plus a twin layer that agrees reach 'probable'; three reporters, or reports plus twin plus a photo check, reach 'likely'"
+    probable: 0.45
+  basis: "assumption (C=50): one citizen report alone stays 'unconfirmed' (35%, 41% with a photo whose GPS matches); two independent reporters or one report plus a twin layer that agrees reach 'probable'; three reporters, or reports plus twin plus a photo check, reach 'likely'"
 
 twin_checks:
   # Twin layers read around the event (a square of half-size max(event radius, area_half_m)).

@@ -22,14 +22,14 @@ describe("two experiences: a public service and a staff workspace", () => {
   it("the public service opens on the resident's own area and has no office tools", () => {
     expect(PUBLIC_SCREENS[0]).toMatchObject({ id: "home", path: "/" });
     const ids = PUBLIC_SCREENS.map((s) => s.id);
-    expect(ids).toEqual(["home", "city", "sport", "ask", "honesty"]);
+    expect(ids).toEqual(["home", "city", "sport", "ask", "report", "honesty"]);
     expect(canOpen("citizen", "scenario")).toBe(false);
     expect(canOpen("citizen", "home")).toBe(true);
   });
 
   it("the staff workspace opens on the city and has every tool, but not the residents' home page", () => {
     expect(STAFF_SCREENS[0]).toMatchObject({ id: "city", path: "/" });
-    expect(STAFF_SCREENS.map((s) => s.id)).toEqual(["city", "ask", "permit", "scenario", "sport", "honesty", "admin"]);
+    expect(STAFF_SCREENS.map((s) => s.id)).toEqual(["city", "ask", "signals", "permit", "scenario", "sport", "honesty", "admin"]);
     expect(canOpen("office", "home")).toBe(false);
   });
 

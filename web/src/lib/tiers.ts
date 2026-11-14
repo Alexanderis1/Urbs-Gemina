@@ -7,7 +7,7 @@ import { texts, tr } from "@/lib/i18n";
 
 export type Tier = "citizen" | "office";
 export type Experience = "public" | "staff";
-export type ScreenId = "home" | "city" | "ask" | "permit" | "scenario" | "honesty" | "sport" | "admin";
+export type ScreenId = "home" | "city" | "ask" | "permit" | "scenario" | "honesty" | "sport" | "admin" | "report" | "signals";
 
 export function experienceOf(tier: Tier): Experience {
   return tier === "office" ? "staff" : "public";
@@ -23,12 +23,14 @@ export const PUBLIC_SCREENS: readonly ScreenInfo[] = [
   { id: "city", path: "/map" },
   { id: "sport", path: "/sport" },
   { id: "ask", path: "/ask" },
+  { id: "report", path: "/segnala" },
   { id: "honesty", path: "/data" },
 ];
 
 export const STAFF_SCREENS: readonly ScreenInfo[] = [
   { id: "city", path: "/" },
   { id: "ask", path: "/ask" },
+  { id: "signals", path: "/segnalazioni" },
   { id: "permit", path: "/permit" },
   { id: "scenario", path: "/scenarios" },
   { id: "sport", path: "/sport" },
@@ -49,10 +51,12 @@ const SCREEN_TEXT = texts<Record<Experience, Partial<Record<ScreenId, ScreenText
       city: { label: "City map", hint: "Air, rain, transport and services on the 3D map of Rome" },
       sport: { label: "Sport", hint: "Sports facilities near you and areas without them" },
       ask: { label: "Ask", hint: "Ask a question and get an answer with its sources" },
+      report: { label: "Report", hint: "Tell the city about something happening near you, with a photo" },
       honesty: { label: "About the data", hint: "Where the information comes from and how far to trust it" },
     },
     staff: {
       city: { label: "City", hint: "Watch the city: 3D model and live layers" },
+      signals: { label: "Reports", hint: "Citizen reports merged into live events, with how sure we are" },
       ask: { label: "Ask", hint: "Ask a question and get a cited answer" },
       permit: { label: "Permit", hint: "Check the context of a new antenna application" },
       scenario: { label: "Scenarios", hint: "Test a what-if: floods, heat, closures, antennas" },
@@ -67,10 +71,12 @@ const SCREEN_TEXT = texts<Record<Experience, Partial<Record<ScreenId, ScreenText
       city: { label: "Mappa della città", hint: "Aria, pioggia, trasporti e servizi sulla mappa 3D di Roma" },
       sport: { label: "Sport", hint: "Impianti sportivi vicino a te e zone che ne sono prive" },
       ask: { label: "Chiedi", hint: "Fai una domanda e ricevi una risposta con le sue fonti" },
+      report: { label: "Segnala", hint: "Segnala alla città un evento vicino a te, con una foto" },
       honesty: { label: "I dati", hint: "Da dove vengono le informazioni e quanto fidarsi" },
     },
     staff: {
       city: { label: "Città", hint: "Osserva la città: modello 3D e livelli in tempo reale" },
+      signals: { label: "Segnalazioni", hint: "Segnalazioni dei cittadini unite in eventi in corso, con il grado di fiducia" },
       ask: { label: "Chiedi", hint: "Fai una domanda e ricevi una risposta con le fonti" },
       permit: { label: "Istanze", hint: "Verifica il contesto di una nuova istanza per un'antenna" },
       scenario: { label: "Scenari", hint: "Prova un'ipotesi: alluvioni, caldo, chiusure, antenne" },

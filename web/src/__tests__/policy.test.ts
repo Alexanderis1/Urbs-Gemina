@@ -90,3 +90,13 @@ describe("live API routes", () => {
     expect(planForward("/use_cases", "citizen", {}, env)).toMatchObject({ ok: true, key: "", method: "GET" });
   });
 });
+
+describe("citizen report tools", () => {
+  const env = { TOOL_API_URL: "https://api.example", TOOL_API_OFFICE_KEY: "o", TOOL_API_CITIZEN_KEY: "", ORCHESTRATOR_URL: "" };
+  it("are office only", () => {
+    for (const tool of ["signal_events", "verify_signal"]) {
+      expect(planForward(`/tools/${tool}`, "citizen", {}, env)).toMatchObject({ ok: false, status: 403 });
+      expect(planForward(`/tools/${tool}`, "office", { reports: [] }, env)).toMatchObject({ ok: true, key: "o" });
+    }
+  });
+});
