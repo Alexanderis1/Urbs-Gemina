@@ -17,7 +17,7 @@ from twin.providers.base import BBox, Observation, ProviderInfo
 from twin.providers.settings import Settings, number
 
 PROVIDER_ID = "cams_open_meteo"
-VARIABLES = {"nitrogen_dioxide": "no2", "pm10": "pm10", "pm2_5": "pm25"}
+VARIABLES = {"nitrogen_dioxide": "no2", "pm10": "pm10", "pm2_5": "pm25", "ozone": "o3"}
 
 
 def lattice(bbox: BBox, step_deg: float) -> list[tuple[float, float]]:

@@ -326,3 +326,11 @@ def test_gbfs_snapshot_answers_a_now_window_despite_clock_skew() -> None:
     assert len(list(provider.fetch(ROME_BBOX, T0, T0))) == 1  # feed clock 30 s ahead of ours
     assert len(list(provider.fetch(ROME_BBOX, T0 + timedelta(minutes=5), T0 + timedelta(minutes=5)))) == 1
     assert list(provider.fetch(ROME_BBOX, T0 + timedelta(hours=2), T0 + timedelta(hours=2))) == []
+
+
+def test_cams_map_includes_ozone() -> None:
+    from twin.providers.open.open_meteo import parse_forecast
+
+    answers = [{"latitude": 41.9, "longitude": 12.5, "hourly": {"time": ["2026-07-20T14:00"], "ozone": [150.0]}}]
+    observations = parse_forecast(answers, 0.5, "cams_open_meteo")
+    assert observations[0].values == {"o3": 150.0} and observations[0].sigma == {"o3": 75.0}

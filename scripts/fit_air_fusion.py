@@ -2,7 +2,7 @@
 
     python scripts/fit_air_fusion.py [--split 2026-09-01] [--out docs/air_fusion_fit.md]
 
-Inputs (both open): EEA up-to-date station files (NO2 hourly, PM10 and PM2.5 daily means)
+Inputs (both open): EEA up-to-date station files (NO2 and O3 hourly, PM10 and PM2.5 daily means)
 and the CAMS European forecast at each station from the Open-Meteo air-quality archive.
 Steps (twin/beliefs/learn.py), fitted on data BEFORE ``--split`` only:
   1. CAMS bias:   station = offset + scale * CAMS
@@ -34,11 +34,11 @@ from twin.providers.base import ROME_BBOX, Observation
 from twin.providers.open.eea import EeaHourlyProvider
 
 CAMS_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
-CAMS_VAR = {"no2": "nitrogen_dioxide", "pm10": "pm10", "pm25": "pm2_5"}
-LAYER = {"no2": "air_no2", "pm10": "air_pm10", "pm25": "air_pm25"}
+CAMS_VAR = {"no2": "nitrogen_dioxide", "pm10": "pm10", "pm25": "pm2_5", "o3": "ozone"}
+LAYER = {"no2": "air_no2", "pm10": "air_pm10", "pm25": "air_pm25", "o3": "air_o3"}
 #: Averaging period of the EEA values (hours): NO2 is hourly, PM10/PM2.5 are daily means in Rome.
-PERIOD_H = {"no2": 1, "pm10": 24, "pm25": 24}
-LAGS_H = {"no2": [1.0, 2.0, 3.0, 6.0], "pm10": [24.0, 48.0], "pm25": [24.0, 48.0]}
+PERIOD_H = {"no2": 1, "pm10": 24, "pm25": 24, "o3": 1}
+LAGS_H = {"no2": [1.0, 2.0, 3.0, 6.0], "pm10": [24.0, 48.0], "pm25": [24.0, 48.0], "o3": [1.0, 2.0, 3.0, 6.0]}
 MAX_GROUPS = 1500
 #: Land-use regression for NO2: motor road length within this radius. 100 m is the ESCAPE traffic
 #: buffer and close to the size of an H3 res-9 cell; on 13 Rome stations it explains r = 0.85 of the
@@ -122,6 +122,7 @@ def main() -> None:
     p.add_argument("--json", default="docs/air_fusion_fit.json")
     p.add_argument("--no-land-use", dest="land_use", action="store_false", help="fit NO2 without the road term")
     p.add_argument("--covariates", action="store_true", help="also write the per-cell road table for the whole city")
+    p.add_argument("--only", nargs="+", choices=sorted(LAYER), help="fit these pollutants and keep the others' saved results")
     args = p.parse_args()
     split = datetime.fromisoformat(args.split).replace(tzinfo=timezone.utc)
     end = datetime.now(timezone.utc)
@@ -138,7 +139,11 @@ def main() -> None:
         write_cell_covariates()
 
     results: dict[str, Any] = {}
+    if args.only and Path(args.json).exists():
+        results = json.loads(Path(args.json).read_text(encoding="utf-8")).get("results", {})
     for key, layer_name in LAYER.items():
+        if args.only and key not in args.only:
+            continue
         spec = specs[layer_name]
         pairs: list[tuple[Observation, float]] = []
         for o in obs:
@@ -189,7 +194,7 @@ def main() -> None:
         tau = min(memory.tau_hours, 168.0)
 
         test_obs = [o for o, _ in test]
-        old = leave_one_station_out(spec, test_obs, rules)
+        old = leave_one_station_out(spec, test_obs, rules)  # a new layer: its starting (unlearned) settings
         raw_cams = {(o.entity_id, o.observed_at): c for o, c in test}
         cams_sd = float(np.median([max(1.0, 0.5 * c) for _, c in test]))  # the live layer's CAMS sigma (50%)
         cams_only = leave_one_station_out(spec, test_obs, rules, prior_means=raw_cams, prior_sd=cams_sd)
@@ -246,7 +251,7 @@ def _fmt(d: dict[str, Any]) -> str:
 def report(results: dict[str, Any], split: str, start: datetime, end: datetime, rules: CalibrationRules) -> str:
     lines = ["# Air-quality fusion learned from real data", "",
              f"Data: EEA up-to-date station files for Rome, {start:%d %b %Y} to {end:%d %b %Y %H:%M} UTC, and the CAMS "
-             "European forecast at each station (Open-Meteo archive). NO2 is hourly; PM10 and PM2.5 are daily means.",
+             "European forecast at each station (Open-Meteo archive). NO2 and O3 are hourly; PM10 and PM2.5 are daily means.",
              f"Settings are fitted on readings before {split} and checked on readings after it (never seen by the fit), "
              f"by hiding one station at a time and testing the {rules.interval:.0%} range.", "",
              "## What was learned", "",

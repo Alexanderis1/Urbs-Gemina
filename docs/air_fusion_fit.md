@@ -1,6 +1,6 @@
 # Air-quality fusion learned from real data
 
-Data: EEA up-to-date station files for Rome, 01 Jan 2026 to 14 Nov 2026 00:54 UTC, and the CAMS European forecast at each station (Open-Meteo archive). NO2 is hourly; PM10 and PM2.5 are daily means.
+Data: EEA up-to-date station files for Rome, 01 Jan 2026 to 14 Nov 2026 04:18 UTC, and the CAMS European forecast at each station (Open-Meteo archive). NO2 and O3 are hourly; PM10 and PM2.5 are daily means.
 Settings are fitted on readings before 2026-09-01 and checked on readings after it (never seen by the fit), by hiding one station at a time and testing the 90% range.
 
 ## What was learned
@@ -8,8 +8,9 @@ Settings are fitted on readings before 2026-09-01 and checked on readings after 
 | Layer | CAMS bias: station = a + b x CAMS | CAMS error left (sd) | shared part sd | reach L | local part sd (minus station error) | memory tau |
 |---|---|---|---|---|---|---|
 | air_no2 | 13.61 + 0.624 x CAMS (station mean 22.76, CAMS mean 14.61) | 9.26 | 5.7 | 41.28 km | 7.3 (8.36 - 4.07) | 4.9 h |
-| air_pm10 | 6.98 + 0.807 x CAMS (station mean 22.11, CAMS mean 18.74) | 4.71 | 4.69 | 50.0 km | 0.44 (3.65 - 3.62) | 43.6 h |
-| air_pm25 | 3.66 + 0.602 x CAMS (station mean 11.12, CAMS mean 12.38) | 2.9 | 2.8 | 50.0 km | 0.73 (1.99 - 1.85) | 40.8 h |
+| air_pm10 | 6.98 + 0.807 x CAMS (station mean 22.11, CAMS mean 18.74) | 4.69 | 4.69 | 50.0 km | 0.0 (3.65 - 4.4) | 43.6 h |
+| air_pm25 | 3.66 + 0.602 x CAMS (station mean 11.12, CAMS mean 12.38) | 2.8 | 2.8 | 50.0 km | 0.0 (1.99 - 3.11) | 40.8 h |
+| air_o3 | 3.99 + 0.798 x CAMS (station mean 56.63, CAMS mean 65.93) | 13.26 | 13.0 | 26.33 km | 2.6 (9.98 - 9.64) | 6.9 h |
 
 ## Honesty check on held-out months
 
@@ -18,12 +19,15 @@ Settings are fitted on readings before 2026-09-01 and checked on readings after 
 | air_no2 | no map, one city-wide value | calibrated | 96% | 0.8026 | 11.3599 |
 | air_no2 | CAMS as is, 50% sigma | uncalibrated | 73% | 1.4645 | 11.4077 |
 | air_no2 | **learned** | calibrated | 90% | 0.969 | 9.3461 |
-| air_pm10 | no map, one city-wide value | calibrated | 92% | 0.9779 | 4.053 |
-| air_pm10 | CAMS as is, 50% sigma | calibrated | 86% | 1.1504 | 4.0457 |
-| air_pm10 | **learned** | calibrated | 83% | 1.2742 | 4.0266 |
-| air_pm25 | no map, one city-wide value | calibrated | 91% | 0.9725 | 3.015 |
-| air_pm25 | CAMS as is, 50% sigma | calibrated | 89% | 1.0695 | 2.8462 |
-| air_pm25 | **learned** | calibrated | 84% | 1.2726 | 2.8774 |
+| air_pm10 | no map, one city-wide value | calibrated | 97% | 0.7706 | 3.9264 |
+| air_pm10 | CAMS as is, 50% sigma | calibrated | 94% | 0.8392 | 3.8354 |
+| air_pm10 | **learned** | calibrated | 93% | 0.8856 | 3.7698 |
+| air_pm25 | no map, one city-wide value | uncalibrated | 97% | 0.6975 | 2.9571 |
+| air_pm25 | CAMS as is, 50% sigma | calibrated | 97% | 0.7019 | 2.7478 |
+| air_pm25 | **learned** | calibrated | 95% | 0.768 | 2.7421 |
+| air_o3 | no map, one city-wide value | uncalibrated | 100% | 0.4567 | 14.1618 |
+| air_o3 | CAMS as is, 50% sigma | uncalibrated | 99% | 0.5226 | 12.1158 |
+| air_o3 | **learned** | calibrated | 87% | 1.1669 | 12.5047 |
 
 ## Land-use term for air_no2
 

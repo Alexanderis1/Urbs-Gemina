@@ -79,3 +79,23 @@ heat:
     value: 20
     source: "ETCCDI climate index TR: tropical night when the daily minimum stays above 20 °C"
     confidence: 90
+
+air_quality:
+  # Legal air-quality values in force in Italy (ug/m3). Used by the air belief layers' exceedance
+  # probability (p_exceed) and by the agents; the layers themselves never hard-code them.
+  source: "D.Lgs. 155/2010 (transposes Directive 2008/50/EC): Allegato XI limit values, Allegato XII ozone information and alert thresholds, Allegato VII ozone target value"
+  confidence: 90
+  note: "Directive (EU) 2024/2881 lowers several limits from 2030 (e.g. NO2 and PM10 annual 20, PM2.5 annual 10); not yet the values in force."
+  no2:
+    hourly_limit: {value: 200, meaning: "hourly mean, not to be exceeded more than 18 times a calendar year"}
+    annual_limit: {value: 40, meaning: "calendar-year mean"}
+    alert_3h: {value: 400, meaning: "alert threshold: hourly mean above it for 3 consecutive hours"}
+  pm10:
+    daily_limit: {value: 50, meaning: "daily mean, not to be exceeded more than 35 times a calendar year"}
+    annual_limit: {value: 40, meaning: "calendar-year mean"}
+  pm25:
+    annual_limit: {value: 25, meaning: "calendar-year mean"}
+  o3:
+    information_1h: {value: 180, meaning: "information threshold: hourly mean; the public must be informed"}
+    alert_1h: {value: 240, meaning: "alert threshold: hourly mean"}
+    target_8h: {value: 120, meaning: "target value: highest daily 8-hour running mean, not more than 25 days a year averaged over 3 years"}

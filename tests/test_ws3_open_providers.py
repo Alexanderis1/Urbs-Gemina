@@ -142,7 +142,7 @@ def test_eea_hourly_values_get_coordinates_and_utc_times() -> None:
     provider = EeaHourlyProvider(SETTINGS, http_post=post, http_get=get)
     assert provider.describe().kind == "open" and not provider.describe().synthetic
     observations = list(provider.fetch(ROME_BBOX, datetime(2026, 11, 13, 16, tzinfo=timezone.utc), NOW + timedelta(hours=2)))
-    assert calls[0]["countries"] == ["IT"] and calls[0]["pollutants"] == ["NO2", "PM10", "PM2.5"]
+    assert calls[0]["countries"] == ["IT"] and calls[0]["pollutants"] == ["NO2", "PM10", "PM2.5", "O3"]
     assert [obs.observed_at for obs in observations] == [
         datetime(2026, 11, 13, 17, tzinfo=timezone.utc), datetime(2026, 11, 13, 19, tzinfo=timezone.utc)]
     assert all(type(obs.observed_at) is datetime for obs in observations)
@@ -251,6 +251,19 @@ def test_cartoradio_default_source_is_a_remote_range_read() -> None:
     from twin.providers.restricted.cartoradio import CartoradioGridProvider
 
     assert CartoradioGridProvider(SETTINGS).source.startswith("/vsicurl/https://")
+
+
+def test_eea_station_error_has_a_floor_for_low_readings() -> None:
+    """A reference instrument is never better than its between-sampler uncertainty, even near zero."""
+    from twin.providers.open.eea import parse_rows
+
+    row = {"Samplingpoint": "IT/SPO.IT0953A_5_BETA", "Pollutant": 5, "Value": 8.0, "Validity": 1,
+           "End": datetime(2026, 11, 13, 1, 0)}
+    stations = {"IT0953A": (12.5069, 41.9327)}
+    plain = next(parse_rows([row], stations, {5: "PM10"}, 1.0, 0.15, "eea"))
+    floored = next(parse_rows([row], stations, {5: "PM10"}, 1.0, 0.15, "eea", sigma_floor={"pm10": 2.0}))
+    assert plain.sigma["pm10"] == pytest.approx(1.2)
+    assert floored.sigma["pm10"] == pytest.approx((1.2**2 + 2.0**2) ** 0.5, abs=1e-3)
 
 
 def test_eea_hourly_answers_a_now_window_with_the_latest_hours_and_nearby_stations() -> None:

@@ -41,7 +41,7 @@ layers:
     calibration: {method: loso, note: "only meaningful once real loop data (pa_datex) replaces sim_loops"}
     basis: "assumption: congestion is correlated along about one km of street network; it changes within half an hour"
 
-  # The three air layers start from the CAMS forecast corrected for its measured bias in Rome, and
+  # The four air layers start from the CAMS forecast corrected for its measured bias in Rome, and
   # their spread, reach and memory are LEARNED from 2026 EEA history by maximum likelihood
   # (scripts/fit_air_fusion.py -> docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)). Re-run the script to refresh them.
   air_no2:
@@ -81,7 +81,7 @@ layers:
       method: idw
       offset: {value: 6.98, basis: "learned: CAMS reads 18.7 where Rome stations read 22.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
       scale: {value: 0.807, basis: "learned, same fit (2,950 daily pairs)"}
-      sd: {value: 4.71, basis: "learned: corrected-CAMS error at a station; almost all of it is shared city-wide"}
+      sd: {value: 4.69, basis: "learned: corrected-CAMS error at a station; all of it beyond the stations' own error is shared city-wide"}
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm10
@@ -92,11 +92,11 @@ layers:
     correlation_length_km:
       value: 50.0
       basis: "learned: the maximum-likelihood reach is beyond the 50 km cap, i.e. on a given day CAMS is off by the same amount across Rome"
-    spatial_share: {value: 0.991, basis: "learned: almost no street-scale PM10 error beyond the stations' own measurement error"}
+    spatial_share: {value: 1.0, basis: "learned: no street-scale PM10 error beyond the stations' own measurement error (EEA sigma_floor 2.5)"}
     history_hours: {value: 48, basis: "EEA PM10/PM2.5 are daily means; on 14 Nov 00:30 UTC the latest was for 12 Nov (about 25 h late)"}
     relax_tau_hours: {value: 43.6, basis: "learned: daily error correlation 0.55 after 1 day, 0.34 after 2 (PM is regional and slow)"}
     min_value: 0
-    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 83%, error spread 1.27, RMSE 4.0 (old settings 5.0, too wide)"}
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 93%, error spread 0.89, RMSE 3.8 (old settings 5.0, too wide; before the station error floor 83%, too narrow)"}
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm25:
@@ -108,7 +108,7 @@ layers:
       method: idw
       offset: {value: 3.66, basis: "learned: CAMS reads 12.4 where Rome stations read 11.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
       scale: {value: 0.602, basis: "learned, same fit (1,805 daily pairs, 8 stations)"}
-      sd: {value: 2.9, basis: "learned: corrected-CAMS error at a station; mostly shared city-wide"}
+      sd: {value: 2.8, basis: "learned: corrected-CAMS error at a station; all of it beyond the stations' own error is shared city-wide"}
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm25
@@ -119,12 +119,38 @@ layers:
     correlation_length_km:
       value: 50.0
       basis: "learned: maximum-likelihood reach beyond the 50 km cap (city-wide daily offset)"
-    spatial_share: {value: 0.936, basis: "learned: 94% of the error is shared across the city"}
+    spatial_share: {value: 1.0, basis: "learned: no street-scale PM2.5 error beyond the stations' own measurement error (EEA sigma_floor 2.5)"}
     history_hours: {value: 48, basis: "EEA PM2.5 are daily means published about a day late (as PM10)"}
     relax_tau_hours: {value: 40.8, basis: "learned: daily error correlation 0.50 after 1 day, 0.33 after 2"}
     min_value: 0
-    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 84%, error spread 1.27, RMSE 2.9 (old settings 3.9, too wide)"}
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 95%, error spread 0.77 (a little wide, the safe side), RMSE 2.7 (old settings 3.9; before the station error floor 84%, too narrow)"}
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
+
+  air_o3:
+    # Ozone: a summer, afternoon pollutant made by sunlight from traffic NO2 and VOCs; it peaks in
+    # heatwaves, so it is the air co-hazard of the heat scenario. Lowest by busy roads (NO2 eats it).
+    sources: [air_quality]   # EEA/ARPA Lazio stations (real, 9 in Rome measure O3 hourly). Sensor.Community has no O3.
+    prior_field:             # CAMS ozone via Open-Meteo, corrected: start = offset + scale x CAMS
+      source: air_quality_model
+      entity_types: [AirQualityForecast]
+      value_key: o3
+      method: idw
+      offset: {value: 3.99, basis: "learned: CAMS reads 65.9 where Rome stations read 56.6 ug/m3 (hourly), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 9 EEA stations)"}
+      scale: {value: 0.798, basis: "learned, same fit (50,594 hourly pairs)"}
+      sd: {value: 13.26, basis: "learned: corrected-CAMS error at a station; almost all of it is shared across the city"}
+    unit: ug/m3
+    entity_types: [AirQualityObserved]
+    value_key: o3
+    prior:
+      mean: 57
+      sd: 35
+      basis: "used only where the CAMS map is missing: 2026 mean of Rome EEA ozone stations (56.6 ug/m3); ozone swings from near 0 at night to 150+ on summer afternoons"
+    correlation_length_km: {value: 26.33, basis: "learned (maximum likelihood): CAMS misses ozone by about the same amount across the city"}
+    spatial_share: {value: 0.962, basis: "learned: 96% of the error is shared; the local part is small"}
+    relax_tau_hours: {value: 6.9, basis: "learned: a station's error keeps correlation 0.88 / 0.73 / 0.62 / 0.43 after 1 / 2 / 3 / 6 h"}
+    min_value: 0
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 87%, error spread 1.17, RMSE 12.5 ug/m3 (one city-wide value: 14.2; raw CAMS 12.1 but with ranges far too wide, 99%)"}
+    basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 9 EEA stations)"
 
   transit_delay:
     sources: [transit]       # GTFS-RT trip updates (real)

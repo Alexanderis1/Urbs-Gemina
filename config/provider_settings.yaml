@@ -95,11 +95,16 @@ open:
     metadata_url: https://discomap.eea.europa.eu/map/fme/metadata/PanEuropean_metadata.csv
     country: IT
     city: Roma
-    pollutants: [NO2, PM10, PM2.5]
+    pollutants: [NO2, PM10, PM2.5, O3]   # O3: 9 Rome stations, hourly (checked 14 Nov 2026)
     dataset: {value: 1, basis: "1 = unverified up-to-date data (E2a), EEA download service docs"}
     # Hourly "Start" times are station local time; Italy reports in UTC+1.
     utc_offset_hours: {value: 1, basis: "EEA time zone Etc/GMT-1 for Italian stations (C=75)"}
     relative_sigma: {value: 0.15, basis: "data quality objective for continuous NO2 measurement, Directive 2008/50/EC Annex I"}
+    # Added in quadrature to the relative error: a daily PM monitor is never better than its
+    # between-sampler uncertainty, even on clean days (without it the PM ranges came out narrow).
+    sigma_floor:
+      pm10: {value: 2.5, basis: "between-sampler uncertainty criterion 2.5 ug/m3 for PM equivalence (EN 12341 / EN 16450, EC equivalence guide 2010), C=60"}
+      pm25: {value: 2.5, basis: "same criterion as PM10, C=60"}
     pollutant_codes: {NO2: 8, PM10: 5, O3: 7, PM2.5: 6001}
     timeout_s: 60
     lookback_hours: {value: 6, basis: "E2a up-to-date values arrived about 3.7 h late on 13 Nov 2026 (latest 17:00 UTC at 20:43 UTC)"}
