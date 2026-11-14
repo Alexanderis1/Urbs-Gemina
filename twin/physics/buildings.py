@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 import struct
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -216,6 +217,41 @@ class Buildings:
 
 # --- loading -----------------------------------------------------------------------------
 
+@dataclass(frozen=True)
+class _CityTable:
+    """The few columns the field engine needs, for the whole city, held in memory."""
+
+    ids: list[str]
+    heights: NDArray[np.float64]
+    height_sd: NDArray[np.float64]
+    geometry: list[bytes]
+    xmin: NDArray[np.float64]
+    ymin: NDArray[np.float64]
+    xmax: NDArray[np.float64]
+    ymax: NDArray[np.float64]
+
+
+@lru_cache(maxsize=2)
+def _city_table(path: str) -> _CityTable:
+    """Read the city model once per process. The file is one 100 MB row group on a network
+    folder, so a filtered read still scans all of it (about 10 s); after this, a window is a
+    numpy bounding-box test (milliseconds)."""
+    import pyarrow.parquet as pq  # type: ignore[import-untyped]
+
+    t = pq.read_table(path, columns=["id", "height_m", "height_sd_m", "geometry", "bbox"])
+    bbox = t.column("bbox").combine_chunks()
+
+    def col(name: str) -> NDArray[np.float64]:
+        return np.asarray(t.column(name).to_numpy(zero_copy_only=False), dtype=np.float64)
+
+    def part(name: str) -> NDArray[np.float64]:
+        return np.asarray(bbox.field(name).to_numpy(zero_copy_only=False), dtype=np.float64)
+
+    return _CityTable(ids=[str(x) for x in t.column("id").to_pylist()], heights=col("height_m"),
+                      height_sd=col("height_sd_m"), geometry=t.column("geometry").to_pylist(),
+                      xmin=part("xmin"), ymin=part("ymin"), xmax=part("xmax"), ymax=part("ymax"))
+
+
 def buildings_path() -> Path | None:
     for path in config.search_paths("buildings"):
         if path.exists():
@@ -228,19 +264,17 @@ def load_window(lon0: float, lat0: float, radius_m: float, path: Path | None = N
     path = path or buildings_path()
     if path is None:
         return None
-    import pyarrow.dataset as ds  # type: ignore[import-untyped]
-
     dlat = math.degrees(radius_m / EARTH_RADIUS_M)
     dlon = dlat / math.cos(math.radians(lat0))
-    flt = ((ds.field("bbox", "xmax") >= lon0 - dlon) & (ds.field("bbox", "xmin") <= lon0 + dlon)
-           & (ds.field("bbox", "ymax") >= lat0 - dlat) & (ds.field("bbox", "ymin") <= lat0 + dlat))
-    table = ds.dataset(str(path), format="parquet").to_table(
-        columns=["id", "height_m", "height_sd_m", "geometry"], filter=flt)
-    rows: dict[str, Any] = table.to_pydict()
+    city = _city_table(str(path))
+    hit = np.flatnonzero((city.xmax >= lon0 - dlon) & (city.xmin <= lon0 + dlon)
+                         & (city.ymax >= lat0 - dlat) & (city.ymin <= lat0 + dlat))
+    rows: dict[str, Any] = {"id": [city.ids[i] for i in hit], "height_m": city.heights[hit],
+                            "height_sd_m": city.height_sd[hit], "geometry": [city.geometry[i] for i in hit]}
     polys = [parse_wkb(bytes(g)) for g in rows["geometry"]]
     keep = [i for i, p in enumerate(polys) if p]
-    heights = np.array([float(rows["height_m"][i] or 0.0) for i in keep])
-    sd = np.array([float(rows["height_sd_m"][i] or 0.0) for i in keep])
+    heights = np.nan_to_num(np.array([float(rows["height_m"][i]) for i in keep]), nan=0.0)
+    sd = np.nan_to_num(np.array([float(rows["height_sd_m"][i]) for i in keep]), nan=0.0)
     flat: list[list[Ring]] = []
     flags: list[list[bool]] = []
     for i in keep:

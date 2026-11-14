@@ -54,6 +54,10 @@ class FieldSpec:
     scale: float = 1.0
     #: Learned error of the corrected map against stations; replaces the map's own sigma when set.
     sd: float | None = None
+    #: Optional land-use term (twin/beliefs/landuse.py): start += coef * (covariate(cell) - center).
+    covariate_file: str | None = None
+    covariate_coef: float = 0.0
+    covariate_center: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -157,6 +161,9 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 offset=_num(field.get("offset", 0.0)),
                 scale=_num(field.get("scale", 1.0)),
                 sd=None if field.get("sd") is None else _num(field["sd"]),
+                covariate_file=None if field.get("covariate") is None else str(field["covariate"]["file"]),
+                covariate_coef=0.0 if field.get("covariate") is None else _num(field["covariate"]["coef"]),
+                covariate_center=0.0 if field.get("covariate") is None else _num(field["covariate"]["center"]),
             ),
             allow_simulated=bool(entry.get("allow_simulated", False)),
             aggregate=str(entry.get("aggregate", "none")),

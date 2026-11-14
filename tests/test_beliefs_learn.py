@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
@@ -153,3 +154,50 @@ def test_daily_pm_published_a_day_late_still_counts() -> None:
     cells = cells_in_bbox(WINDOW, 9)
     layer = build_layer("air_pm10", cells, [_Feed([late])], T0 - timedelta(hours=1), T0, spec=spec)  # type: ignore[list-item]
     assert layer.n_observations == 1
+
+
+def test_road_length_within_a_circle() -> None:
+    import shapely
+
+    from twin.beliefs import landuse
+
+    # A straight east-west road through the point: 2 * radius of it lies inside the circle.
+    lon_per_m = 1.0 / (111_320.0 * math.cos(math.radians(landuse.LAT0)))
+    line = shapely.LineString([(HERE[0] - 500 * lon_per_m, HERE[1]), (HERE[0] + 500 * lon_per_m, HERE[1])])
+    lines = landuse.project_lines([shapely.to_wkb(line)])
+    got = landuse.road_length_within(lines, [HERE[0], HERE[0]], [HERE[1], HERE[1] + 0.01], 100.0)
+    assert got[0] == pytest.approx(200.0, rel=0.01)
+    assert got[1] == 0.0
+
+
+def test_land_use_term_shifts_cells_with_more_road(tmp_path: object, monkeypatch: pytest.MonkeyPatch) -> None:
+    from pathlib import Path
+
+    from twin.beliefs import landuse
+
+    assert isinstance(tmp_path, Path)
+    cells = cells_in_bbox(WINDOW, 9)
+    busy = cell_of(*HERE, 9)
+    (tmp_path / "cov.csv").write_text("cell,value\n" + "".join(f"{c},{400.0 if c == busy else 100.0}\n" for c in cells))
+    monkeypatch.setattr(landuse, "SEARCH_DIRS", (tmp_path,))
+    landuse.load_cell_covariate.cache_clear()
+    cams = [Observation("c1", "AirQualityForecast", HERE[0], HERE[1], T0, {"no2": 20.0}, {"no2": 10.0}, "cams", False)]
+    spec = _air_spec(sd=8.0)
+    field = replace(spec.prior_field, covariate_file="cov.csv", covariate_coef=0.02, covariate_center=100.0)  # type: ignore[arg-type]
+    layer = prior_layer(replace(spec, prior_field=field), cells, T0, prior_field=cams)
+    quiet = next(c for c in cells if c != busy)
+    assert layer.belief(busy).mean - layer.belief(quiet).mean == pytest.approx(0.02 * 300.0)
+    landuse.load_cell_covariate.cache_clear()
+
+
+def test_missing_covariate_file_is_reported_not_invented(monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.beliefs import landuse
+
+    monkeypatch.setattr(landuse, "SEARCH_DIRS", ())
+    landuse.load_cell_covariate.cache_clear()
+    spec = _air_spec(sd=8.0)
+    field = replace(spec.prior_field, covariate_file="nope.csv", covariate_coef=0.02)  # type: ignore[arg-type]
+    cams = [Observation("c1", "AirQualityForecast", HERE[0], HERE[1], T0, {"no2": 20.0}, {"no2": 10.0}, "cams", False)]
+    layer = prior_layer(replace(spec, prior_field=field), cells_in_bbox(WINDOW, 9), T0, prior_field=cams)
+    assert any("land-use term off" in w for w in layer.warnings)
+    landuse.load_cell_covariate.cache_clear()

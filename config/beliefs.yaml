@@ -46,14 +46,18 @@ layers:
   # (scripts/fit_air_fusion.py -> docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)). Re-run the script to refresh them.
   air_no2:
     sources: [air_quality]   # EEA/ARPA Lazio stations (real). Sensor.Community has no NO2.
-    prior_field:             # CAMS forecast via Open-Meteo, 0.1 deg lattice, corrected: start = offset + scale x CAMS
+    prior_field:             # CAMS forecast via Open-Meteo, 0.1 deg lattice, corrected: start = offset + scale x CAMS + road term
       source: air_quality_model
       entity_types: [AirQualityForecast]
       value_key: no2
       method: idw
-      offset: {value: 13.21, basis: "learned: CAMS reads 14.6 ug/m3 where Rome stations read 22.8 (a 10 km model misses traffic NO2), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
-      scale: {value: 0.653, basis: "learned, same fit (least squares, 69,924 hourly pairs)"}
-      sd: {value: 10.62, basis: "learned: corrected-CAMS error at a station, shared 7.05 + local 7.94 ug/m3, station error removed"}
+      offset: {value: 13.61, basis: "learned: CAMS reads 14.6 ug/m3 where Rome stations read 22.8 (a 10 km model misses traffic NO2), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
+      scale: {value: 0.624, basis: "learned, same fit (least squares, 69,924 hourly pairs, with the road term)"}
+      covariate:             # land-use regression (twin/beliefs/landuse.py): + coef x (road metres within 100 m - center)
+        file: no2_lur_covariates.csv
+        coef: {value: 0.01202, basis: "learned: +1.2 ug/m3 per 100 m of motor road within 100 m; explains the stations' lasting differences (spread 6.4 -> 3.7 ug/m3 on stations left out); Overture roads, ESCAPE method"}
+        center: {value: 607.2, basis: "mean road length within 100 m of the 13 stations, so the station average is unchanged"}
+      sd: {value: 9.26, basis: "learned: error at a station after bias and road term, shared 5.7 + local 7.3 ug/m3, station error removed"}
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: no2
@@ -61,11 +65,11 @@ layers:
       mean: 23
       sd: 15
       basis: "used only where the CAMS map is missing: 2026 mean of Rome EEA stations (22.8 ug/m3) and their spread"
-    correlation_length_km: {value: 12.19, basis: "learned (maximum likelihood): the shared part of CAMS's error spans about 12 km"}
-    spatial_share: {value: 0.441, basis: "learned: 44% of the error is shared across the city, 56% is local to the street (kerbside vs background)"}
-    relax_tau_hours: {value: 7.0, basis: "learned: a station's error keeps correlation 0.88 / 0.74 / 0.63 / 0.44 after 1 / 2 / 3 / 6 h"}
+    correlation_length_km: {value: 41.28, basis: "learned (maximum likelihood): once roads are accounted for, the shared error is city-wide"}
+    spatial_share: {value: 0.379, basis: "learned: 38% of the remaining error is shared across the city, 62% is local"}
+    relax_tau_hours: {value: 4.9, basis: "learned: a station's error keeps correlation 0.84 / 0.67 / 0.53 / 0.29 after 1 / 2 / 3 / 6 h"}
     min_value: 0
-    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 92%, error spread 0.96, RMSE 10.6 (old settings 12.8)"}
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 90%, error spread 0.97, RMSE 9.3 ug/m3 (before this upgrade 12.8)"}
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm10:

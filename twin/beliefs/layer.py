@@ -24,7 +24,7 @@ import numpy as np
 import numpy.typing as npt
 
 from twin.beliefs.cell import Belief
-from twin.beliefs.config import LayerSpec
+from twin.beliefs.config import FieldSpec, LayerSpec
 from twin.beliefs.grid import cell_center, cell_of, local_xy_km
 from twin.providers.base import Observation
 
@@ -103,6 +103,7 @@ def prior_layer(
     prior_var = np.full(n, spec.prior.variance)
     sources: set[str] = set()
     synthetic = False
+    warnings: list[str] = []
     if prior_field is not None:
         fspec = spec.prior_field
         key = fspec.value_key if fspec is not None else spec.value_key
@@ -127,6 +128,10 @@ def prior_layer(
                     # Map error plus how much the nearby map points disagree (interpolation error).
                     prior_var[lo : lo + CHUNK] = w @ sig2 + w @ (vals**2) - m**2
             prior_var = np.maximum(prior_var, 1e-6 * spec.prior.variance)
+            if fspec.covariate_file is not None:
+                land_use_note = _apply_covariate(fspec, cells, offset)
+                if land_use_note:
+                    warnings.append(land_use_note)
         else:
             acc: dict[int, list[tuple[float, float]]] = {}
             for o in points:
@@ -151,8 +156,23 @@ def prior_layer(
         prior_var=prior_var,
         sources=tuple(sorted(sources)),
         synthetic=synthetic,
+        warnings=tuple(warnings),
         index=index,
     )
+
+
+def _apply_covariate(fspec: FieldSpec, cells: Sequence[str], offset: Array) -> str | None:
+    """Add the land-use term to each cell's starting point; a note when the covariate file is missing."""
+    from twin.beliefs.landuse import load_cell_covariate
+
+    assert fspec.covariate_file is not None
+    table = load_cell_covariate(fspec.covariate_file)
+    if table is None:
+        return (f"land-use term off: {fspec.covariate_file} not found (scripts/fit_air_fusion.py --covariates); "
+                "the map starts from the bias-corrected regional model only")
+    x = np.array([table.get(c, fspec.covariate_center) for c in cells])
+    offset += fspec.covariate_coef * (x - fspec.covariate_center)
+    return None
 
 
 def assimilate(layer: BeliefLayer, observations: Iterable[Observation], until: datetime | None = None) -> BeliefLayer:

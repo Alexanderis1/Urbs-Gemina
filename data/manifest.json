@@ -272,6 +272,24 @@
       "licence": "facts with source links; page text is not stored beyond a short quote",
       "redistribution": true,
       "status": "implemented, not run"
+    },
+    "lazio_gauges_daily": {
+      "kind": "real",
+      "what": "Regione Lazio Civil Protection daily rain (37 gauges) and daily min/max temperature (12 thermometers) inside Rome, Sep 2018 onwards; positions from the Roma Capitale Civil Protection plan (2018), Tab. 8",
+      "endpoint": "https://dati.lazio.it datasets serie-storica-dato-pluviometrico and serie-storica-dato-termometrico (monthly CSV)",
+      "access": "open download, no key (scripts/fetch_lazio_gauges.py)",
+      "licence": "CC BY 4.0, Regione Lazio - Agenzia Regionale di Protezione Civile",
+      "redistribution": true,
+      "status": "implemented, run 14 Nov 2026 (some months return an HTML error page on the portal; listed in stations.json). History for model checks, published months late, not a live feed"
+    },
+    "no2_lur_covariates": {
+      "kind": "estimated",
+      "what": "Motor road length within 100 m of every H3 res-9 cell centre of the city grid, the land-use covariate of the NO2 layer",
+      "endpoint": "derived from Overture Maps transportation segments (release 2026-10-21.0)",
+      "access": "python scripts/fit_air_fusion.py --covariates -> /mnt/project-files/model/no2_lur_covariates.csv",
+      "licence": "ODbL (OpenStreetMap-derived)",
+      "redistribution": true,
+      "status": "implemented, run 14 Nov 2026 (24,711 cells)"
     }
   },
   "snapshots": {}
