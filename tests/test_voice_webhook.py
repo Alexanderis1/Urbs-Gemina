@@ -153,3 +153,16 @@ def test_briefing_is_office_only() -> None:
     status, resp, orch = call({"question": "brief me", "mode": "briefing", "area": "municipio:1"}, secret="citizen-secret")
     assert status == 200 and resp["status"] == "refused"
     assert orch.calls == []
+
+
+def test_use_case_and_place_reach_the_orchestrator() -> None:
+    status, resp, orch = call({"question": "Rischi per questa scuola", "use_case": "site_risk_check",
+                               "place": "Via Tiburtina 385"})
+    assert status == 200
+    q = orch.calls[-1]
+    assert q.use_case == "site_risk_check" and q.params == {"place": "Via Tiburtina 385"}
+
+
+def test_bad_use_case_id_is_rejected() -> None:
+    status, resp, _ = call({"question": "x", "use_case": "Robert'); DROP"})
+    assert status == 400
