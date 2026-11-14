@@ -41,6 +41,9 @@ def test_missing_network_is_not_available_and_not_cached(tmp_path: Path, monkeyp
         raise OSError("offline")
 
     monkeypatch.setattr(traffic, "network_for_area", offline)
+    # Pretend SUMO is installed so the test reaches the network step on any machine.
+    monkeypatch.setattr(traffic, "sumo_binary", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(traffic, "sumo_home", lambda: Path("/usr/share/sumo"))
     out = engine.run("road_closure", DISTRICT, CLOSE, data=ScenarioData(), cache_dir=tmp_path)
     assert out["status"] == "not_available"
     assert "network" in out["reason"]
