@@ -1,0 +1,47 @@
+{
+  "name": "flood_watch",
+  "description": "Cells where heavy rain is likely on flood-prone ground (PGRA) or road underpasses: places to watch.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Cells where heavy rain is likely on flood-prone ground (PGRA) or road underpasses: places to watch.",
+    "properties": {
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      }
+    },
+    "title": "FloodWatchIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/flood_watch"
+  },
+  "owner": "WS5"
+}

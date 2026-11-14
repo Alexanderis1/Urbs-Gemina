@@ -3,14 +3,60 @@
 // roof_material: centre district only, estimated.
 import type { ExpressionSpecification } from "maplibre-gl";
 import { MAP_PALETTE, type Theme } from "./theme";
+import { texts, tr } from "@/lib/i18n";
+
+const T = texts({
+  en: {
+    plain: "Plain",
+    height_sd: "Height uncertainty",
+    insar: "Ground motion (InSAR)",
+    roof: "Roof material",
+    heightLow: "0 m (sure)",
+    heightHigh: "6 m+ (unsure)",
+    insarLow: "−10 mm/yr sinking",
+    insarHigh: "+10 rising",
+    roofs: {
+      clay_tiles: "clay tiles",
+      flat_light: "flat light",
+      mixed: "mixed",
+      green_roof: "green roof",
+      dark_or_shaded: "dark or shaded",
+      unknown: "unknown",
+    } as Record<string, string>,
+  },
+  it: {
+    plain: "Semplice",
+    height_sd: "Incertezza sull'altezza",
+    insar: "Movimento del suolo (InSAR)",
+    roof: "Materiale del tetto",
+    heightLow: "0 m (sicuro)",
+    heightHigh: "6 m+ (incerto)",
+    insarLow: "−10 mm/anno in abbassamento",
+    insarHigh: "+10 in sollevamento",
+    roofs: {
+      clay_tiles: "tegole in laterizio",
+      flat_light: "piano chiaro",
+      mixed: "misto",
+      green_roof: "tetto verde",
+      dark_or_shaded: "scuro o in ombra",
+      unknown: "sconosciuto",
+    } as Record<string, string>,
+  },
+});
+
+/** A roof class in plain words; an unknown class falls back to its id with spaces. */
+export function roofLabel(key: string): string {
+  return tr(T).roofs[key] ?? key.replace(/_/g, " ");
+}
 
 export type BuildingView = "plain" | "height_sd" | "insar" | "roof";
 
 export const BUILDING_VIEWS: { id: BuildingView; label: string; kind: "real" | "estimated" }[] = [
-  { id: "plain", label: "Plain", kind: "estimated" },
-  { id: "height_sd", label: "Height uncertainty", kind: "estimated" },
-  { id: "insar", label: "Ground motion (InSAR)", kind: "estimated" },
-  { id: "roof", label: "Roof material", kind: "estimated" },
+  // `label` is read when shown, so it follows the current language.
+  { id: "plain", get label() { return tr(T).plain; }, kind: "estimated" },
+  { id: "height_sd", get label() { return tr(T).height_sd; }, kind: "estimated" },
+  { id: "insar", get label() { return tr(T).insar; }, kind: "estimated" },
+  { id: "roof", get label() { return tr(T).roof; }, kind: "estimated" },
 ];
 
 export const ROOF_COLORS: Record<string, string> = {
@@ -50,6 +96,6 @@ export function buildingColor(view: BuildingView, theme: Theme = "light"): Expre
 }
 
 export const LEGENDS: Record<Exclude<BuildingView, "plain" | "roof">, { gradient: string; low: string; high: string }> = {
-  height_sd: { gradient: "linear-gradient(90deg,#f5f3ff,#c4b5fd,#8b5cf6,#4c1d95)", low: "0 m (sure)", high: "6 m+ (unsure)" },
-  insar: { gradient: "linear-gradient(90deg,#b91c1c,#fca5a5,#e7e5e4,#93c5fd,#1d4ed8)", low: "−10 mm/yr sinking", high: "+10 rising" },
+  height_sd: { gradient: "linear-gradient(90deg,#f5f3ff,#c4b5fd,#8b5cf6,#4c1d95)", get low() { return tr(T).heightLow; }, get high() { return tr(T).heightHigh; } },
+  insar: { gradient: "linear-gradient(90deg,#b91c1c,#fca5a5,#e7e5e4,#93c5fd,#1d4ed8)", get low() { return tr(T).insarLow; }, get high() { return tr(T).insarHigh; } },
 };

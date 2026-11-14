@@ -51,6 +51,7 @@ def site_values(
         sd = math.sqrt(float(layer.variance[i]))
         row: dict[str, Any] = {
             "site_id": props.get("site_id"),
+            "cell": layer.cells[i],
             "name": props.get("name"),
             "category": props.get("category"),
             "subtype": props.get("subtype"),

@@ -20,17 +20,21 @@ function initial(): Theme {
 }
 
 /** Holds the light / dark choice, writes it on <html data-theme> and remembers it in this browser. */
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(initial);
+export function ThemeProvider({ force, children }: { force?: Theme; children: ReactNode }) {
+  const [chosen, setChosen] = useState<Theme>(initial);
+  // `force` wins while it is set (the public service is always light) but does not overwrite the remembered choice.
+  const theme = force ?? chosen;
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+  }, [theme]);
+  useEffect(() => {
     try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+      window.localStorage.setItem(THEME_STORAGE_KEY, chosen);
     } catch {
       // Not remembered; the choice still holds for this visit.
     }
-  }, [theme]);
-  const toggle = useCallback(() => setTheme((t) => (t === "light" ? "dark" : "light")), []);
+  }, [chosen]);
+  const toggle = useCallback(() => setChosen((t) => (t === "light" ? "dark" : "light")), []);
   const value = useMemo(() => ({ theme, palette: MAP_PALETTE[theme], toggle }), [theme, toggle]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

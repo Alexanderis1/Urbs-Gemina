@@ -13,15 +13,20 @@
       "area"
     ],
     "params": {},
+    "param_types": {},
     "steps": [
       "public transport delays",
+      "buses and trams running by the timetable now (estimated; the fallback when the live feed is stale)",
       "road traffic (simulated loops)",
       "air quality stations",
       "rain forecast, next hours (coarse grid over all of Rome)",
-      "temperature and wind forecast (coarse grid over all of Rome)",
+      "temperature and wind forecast for the next afternoon around 15:00 (coarse grid over all of Rome)",
       "Tiber and Aniene discharge forecast",
       "disruption news (unverified)",
       "which layers are real, estimated or simulated"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -40,6 +45,9 @@
     "params": {
       "duration_h": 3
     },
+    "param_types": {
+      "duration_h": "number"
+    },
     "steps": [
       "rain forecast (coarse grid over all of Rome)",
       "river discharge forecast",
@@ -47,8 +55,13 @@
       "Tiber at its forecast peak",
       "road underpasses",
       "official flood hazard areas (PGRA)",
+      "official landslide areas",
+      "emergency plan areas (A waiting, B reception, C shelters, D staging)",
       "ambulance reach with flooded roads closed",
       "official alerts and news (unverified)"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -69,15 +82,25 @@
       "tmin_c": null,
       "cover_added_pct": 10
     },
+    "param_types": {
+      "tmax_c": "number",
+      "tmin_c": "number",
+      "cover_added_pct": "number"
+    },
     "steps": [
-      "temperature forecast (coarse grid over all of Rome)",
+      "temperature forecast for the next afternoon around 15:00 (coarse grid over all of Rome)",
       "heat by street, residents over 65 above thresholds (forecast, or the officer's what-if temperatures)",
       "what-if: more tree cover across the area",
       "care homes (RSA)",
       "emergency hospitals",
       "pharmacies",
       "municipal parks (shade)",
+      "indoor cool places of the Roma climate-refuge map (aria_cond = air conditioning)",
+      "public drinking fountains (nasoni)",
       "official heat plan"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -95,8 +118,13 @@
     ],
     "params": {
       "radius_m": 500,
-      "district_radius_m": 2500,
+      "district_radius_m": 1500,
       "duration_h": 3
+    },
+    "param_types": {
+      "radius_m": "number",
+      "district_radius_m": "number",
+      "duration_h": "number"
     },
     "steps": [
       "where the site is",
@@ -104,8 +132,15 @@
       "official flood hazard areas (PGRA) within the ring",
       "Seveso plant damage zones within the ring",
       "road underpasses within the ring",
+      "official landslide areas within the ring",
+      "known underground cavities within the ring (sinkhole context)",
+      "past civil-protection interventions within the ring, 2013-2022 (floods, trees down, fires, sinkholes)",
+      "emergency plan areas within the ring (waiting, reception, staging)",
       "air quality in its municipio",
       "ambulance reach in the district around it, with roads flooded by the forecast rain closed"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -124,7 +159,14 @@
     "params": {
       "attendees": 20000,
       "radius_m": 400,
-      "district_radius_m": 2500
+      "district_radius_m": 1500,
+      "traffic_radius_m": 650
+    },
+    "param_types": {
+      "attendees": "number",
+      "radius_m": "number",
+      "district_radius_m": "number",
+      "traffic_radius_m": "number"
     },
     "steps": [
       "where the event is",
@@ -134,6 +176,9 @@
       "traffic with the event (SUMO, synthetic demand)",
       "ambulance reach with the perimeter closed",
       "emergency hospitals"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -154,12 +199,20 @@
       "band": "3500",
       "height_m": 25
     },
+    "param_types": {
+      "radius_m": "number",
+      "band": "text",
+      "height_m": "number"
+    },
     "steps": [
       "where the antenna would be",
       "sensitive sites and constraints",
       "field estimate today (P5-P95)",
       "residents above thresholds, before and after",
       "attention value"
+    ],
+    "tiers": [
+      "office"
     ]
   },
   {
@@ -176,11 +229,18 @@
       "area"
     ],
     "params": {
-      "discipline": "calcio"
+      "discipline": "football"
+    },
+    "param_types": {
+      "discipline": "text"
     },
     "steps": [
       "facilities for the discipline",
       "residents within walking time"
+    ],
+    "tiers": [
+      "office",
+      "citizen"
     ]
   },
   {
@@ -199,14 +259,282 @@
     "params": {
       "radius_m": 800
     },
+    "param_types": {
+      "radius_m": "number"
+    },
     "steps": [
       "the address",
       "air quality",
       "rain forecast (coarse grid over all of Rome)",
       "temperature forecast (coarse grid over all of Rome)",
       "public transport nearby",
+      "lines running nearby by the timetable (estimated; used when the live feed is stale)",
       "pharmacies nearby",
       "emergency hospitals"
+    ],
+    "tiers": [
+      "office",
+      "citizen"
+    ]
+  },
+  {
+    "id": "industrial_accident",
+    "title": {
+      "it": "Incidente in uno stabilimento a rischio (Seveso)",
+      "en": "Accident at a high-risk (Seveso) plant"
+    },
+    "summary": {
+      "it": "Nube tossica con il vento previsto: zone sopra le soglie sanitarie, residenti e siti sensibili, zone ufficiali del piano, ospedali.",
+      "en": "Toxic cloud with the forecast wind: areas above health thresholds, residents and sensitive sites, official plan zones, hospitals."
+    },
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "substance": "ammonia",
+      "release_kg_s": null
+    },
+    "param_types": {
+      "substance": "text",
+      "release_kg_s": "number"
+    },
+    "steps": [
+      "wind and temperature forecast (coarse grid over all of Rome)",
+      "toxic cloud with the forecast wind (Gaussian plume ensemble)",
+      "official damage zones of the external emergency plans",
+      "emergency hospitals",
+      "emergency plan areas (waiting, reception, shelters)",
+      "news about the plant (unverified)",
+      "external emergency plan rules"
+    ],
+    "tiers": [
+      "office"
+    ]
+  },
+  {
+    "id": "air_quality_episode",
+    "title": {
+      "it": "Episodio di inquinamento dell'aria",
+      "en": "Air pollution episode"
+    },
+    "summary": {
+      "it": "Stazioni ufficiali, sensori dei cittadini e modello CAMS, vento previsto, scuole e nidi dell'area, norme sui limiti.",
+      "en": "Official stations, citizen sensors and the CAMS model, forecast wind, schools and nurseries in the area, legal limits."
+    },
+    "needs": [
+      "area"
+    ],
+    "params": {},
+    "param_types": {},
+    "steps": [
+      "official stations (EEA, ARPA Lazio)",
+      "citizen PM sensors (noisier)",
+      "CAMS model background (coarse grid over all of Rome)",
+      "wind forecast (coarse grid over all of Rome)",
+      "state schools",
+      "municipal nurseries",
+      "legal limits",
+      "traffic bans and notices (unverified)"
+    ],
+    "tiers": [
+      "office"
+    ]
+  },
+  {
+    "id": "strike_day_mobility",
+    "title": {
+      "it": "Giornata di sciopero dei trasporti",
+      "en": "Public transport strike day"
+    },
+    "summary": {
+      "it": "Ritardi dei mezzi, velocità stradali, monopattini disponibili, affollamento e notizie sullo sciopero.",
+      "en": "Transit delays, road speeds, shared e-scooters available, crowding and news about the strike."
+    },
+    "needs": [
+      "area"
+    ],
+    "params": {},
+    "param_types": {},
+    "steps": [
+      "public transport delays (GTFS-RT)",
+      "buses and trams running by the timetable now (estimated; the fallback when the live feed is stale)",
+      "transit delay map with uncertainty",
+      "road speed map (simulated loops fused)",
+      "shared e-scooters available",
+      "public Wi-Fi activity (crowd proxy)",
+      "park-and-ride car parks (places, metro line)",
+      "strike notices (unverified)"
+    ],
+    "tiers": [
+      "office"
+    ]
+  },
+  {
+    "id": "roadworks_check",
+    "title": {
+      "it": "Verifica di un cantiere stradale",
+      "en": "Roadworks check"
+    },
+    "summary": {
+      "it": "Per un cantiere: vincoli e siti sensibili vicini, cavità e interventi passati, traffico con la strada chiusa, soccorsi, trasporti, norme.",
+      "en": "For a worksite: constraints and sensitive sites nearby, cavities and past interventions, traffic with the street closed, emergency reach, transit, rules."
+    },
+    "tiers": [
+      "office"
+    ],
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "street": null,
+      "radius_m": 200,
+      "worksite_radius_m": 40,
+      "district_radius_m": 1500,
+      "traffic_radius_m": 650
+    },
+    "param_types": {
+      "street": "text",
+      "radius_m": "number",
+      "worksite_radius_m": "number",
+      "district_radius_m": "number",
+      "traffic_radius_m": "number"
+    },
+    "steps": [
+      "where the works are",
+      "heritage and landscape constraints, sensitive sites around the worksite",
+      "known underground cavities (sinkhole context)",
+      "past civil-protection interventions nearby, 2013-2022 (sinkholes, flooding, trees down)",
+      "traffic with the street closed (SUMO, synthetic demand)",
+      "ambulance reach with the worksite fenced off",
+      "public transport passing the worksite",
+      "works already announced there (unverified)",
+      "rules for worksites on roads"
+    ]
+  },
+  {
+    "id": "cold_weather_plan",
+    "title": {
+      "it": "Piano freddo",
+      "en": "Cold-weather plan"
+    },
+    "summary": {
+      "it": "Minime previste, punti di accoglienza del Piano Freddo, luoghi pubblici al chiuso, ospedali e avvisi.",
+      "en": "Forecast minimum temperatures, Piano Freddo reception points, indoor public places, hospitals and notices."
+    },
+    "tiers": [
+      "office"
+    ],
+    "needs": [
+      "area"
+    ],
+    "params": {},
+    "param_types": {},
+    "steps": [
+      "temperature and wind forecast for tonight around 03:00 (coarse grid over all of Rome)",
+      "Piano Freddo reception points (sites)",
+      "indoor public places (libraries, civic centres)",
+      "emergency hospitals",
+      "civil-protection reception structures and areas",
+      "Piano Freddo notices (unverified)",
+      "frost and ice alerts (unverified)"
+    ]
+  },
+  {
+    "id": "wildfire_risk",
+    "title": {
+      "it": "Rischio incendi di interfaccia",
+      "en": "Wildfire risk at the urban edge"
+    },
+    "summary": {
+      "it": "Aree di interfaccia a rischio R3-R4, vento e caldo previsti, aree protette e parchi, aree di attesa, avvisi.",
+      "en": "Urban-edge areas at fire risk R3-R4, forecast wind and heat, protected areas and parks, waiting areas, notices."
+    },
+    "tiers": [
+      "office"
+    ],
+    "needs": [
+      "area"
+    ],
+    "params": {},
+    "param_types": {},
+    "steps": [
+      "temperature and wind forecast for the next afternoon around 15:00 (coarse grid over all of Rome)",
+      "official interface areas at fire risk R3-R4",
+      "protected natural areas",
+      "municipal parks",
+      "emergency plan waiting and reception areas",
+      "recent fires (unverified)",
+      "high-risk season rules"
+    ]
+  },
+  {
+    "id": "nightlife_check",
+    "title": {
+      "it": "Movida e vivibilità notturna",
+      "en": "Nightlife and night-time liveability"
+    },
+    "summary": {
+      "it": "Zone movida ufficiali, classe acustica e limiti, folla dal Wi-Fi pubblico, siti sensibili, trasporti e ordinanze.",
+      "en": "Official nightlife zones, noise class and limits, crowd from public Wi-Fi, sensitive sites, transit and ordinances."
+    },
+    "tiers": [
+      "office"
+    ],
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "radius_m": 300,
+      "spot_radius_m": 30
+    },
+    "param_types": {
+      "radius_m": "number",
+      "spot_radius_m": "number"
+    },
+    "steps": [
+      "the square or street",
+      "official nightlife (movida) zones",
+      "acoustic zoning class at the place, with its day and night limits (2002 plan)",
+      "crowd now (public Wi-Fi sessions)",
+      "schools, care and health sites nearby",
+      "public transport nearby",
+      "ordinances and news (unverified)",
+      "noise limits by class"
+    ]
+  },
+  {
+    "id": "citizen_emergency_info",
+    "title": {
+      "it": "In caso di emergenza vicino a casa",
+      "en": "In an emergency near home"
+    },
+    "summary": {
+      "it": "Per un indirizzo: aree di attesa del piano di protezione civile, rischio alluvione e frana, zone industriali, ospedali.",
+      "en": "For an address: civil-protection waiting areas, flood and landslide hazard, industrial zones, hospitals."
+    },
+    "tiers": [
+      "office",
+      "citizen"
+    ],
+    "needs": [
+      "place"
+    ],
+    "params": {
+      "radius_m": 800,
+      "home_radius_m": 60
+    },
+    "param_types": {
+      "radius_m": "number",
+      "home_radius_m": "number"
+    },
+    "steps": [
+      "the address",
+      "emergency plan areas within walking distance",
+      "official flood hazard areas at the address",
+      "official landslide areas at the address",
+      "industrial-accident plan zones at the address",
+      "emergency hospitals in the municipio",
+      "current alerts (unverified)"
     ]
   }
 ]

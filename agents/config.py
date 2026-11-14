@@ -64,6 +64,14 @@ class AgentConfig:
     circle_vertices: int
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
+    def disclosure_for(self, tier: str, language: str) -> str:
+        """AI disclosure for the first answer: officers get 'the official decides', residents get
+        'information only; in an emergency call 112' (config/agents.yaml disclosure.citizen_*)."""
+        d = self.raw.get("disclosure") or {}
+        if tier == "citizen" and d.get(f"citizen_{language}"):
+            return str(d[f"citizen_{language}"])
+        return self.disclosure.get(language, self.disclosure["en"])
+
     @property
     def model_view_max_items(self) -> int:
         return int((self.raw.get("model_view") or {}).get("max_list_items", 25))
@@ -85,7 +93,7 @@ def load_agent_config(config_dir: Path = CONFIG_DIR) -> AgentConfig:
     exa = raw["exa"]
     v = raw["verifier"]
     return AgentConfig(
-        models={k: str(m[k]) for k in ("orchestrator", "permit", "scenario", "voice")},
+        models={k: str(m[k]) for k in ("orchestrator", "permit", "scenario", "voice", "signals") if k in m},
         effort=str(m["effort"]),
         max_tokens=int(m["max_tokens"]),
         max_tool_rounds=int(raw["loop"]["max_tool_rounds"]),

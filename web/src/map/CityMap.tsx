@@ -9,6 +9,7 @@ import { onMapAction } from "@/lib/mapbus";
 import { buildingColor, type BuildingView } from "@/lib/buildingStyles";
 import { MAP_PALETTE, type Theme } from "@/lib/theme";
 import { useTheme } from "@/lib/useTheme";
+import { texts, tr } from "@/lib/i18n";
 import { buildingAnchor, labelAnchor, OVER_TWIN, TWIN_START_ZOOM, twinVisible } from "@/lib/twinOverlay";
 
 // Base maps: Positron for the light theme, Dark for the operations-room theme (both OpenFreeMap, no key).
@@ -22,6 +23,11 @@ const G0_ATTRIBUTION =
   "Buildings © OpenStreetMap contributors / Overture (ODbL). Heights: GlobalBuildingAtlas, TUM (CC BY-NC 4.0, non-commercial); Copernicus Urban Atlas. Terrain: Copernicus DEM.";
 // Public copy on Cloudflare R2 (byte ranges + CORS for Lovable domains and localhost 5173/8080/4173).
 const G0_DEFAULT = "https://pub-92f3b81279724b93b2c580e6b7c1cb37.r2.dev/buildings.pmtiles";
+const ZOOM_TEXT = texts({
+  en: { zoomIn: "Zoom in to see the 3D buildings" },
+  it: { zoomIn: "Ingrandisci per vedere gli edifici in 3D" },
+});
+
 const G0_ENV = import.meta.env.VITE_BUILDINGS_PMTILES_URL as string | undefined;
 // Unset = the R2 copy. Set to "osm" to use the base map's OpenStreetMap buildings instead.
 const TREES_ENV = import.meta.env.VITE_TREES_PMTILES_URL as string | undefined;
@@ -291,7 +297,7 @@ export function CityMap({
           onClick={() => mapRef.current?.easeTo({ zoom: TWIN_START_ZOOM, duration: 600 })}
         >
           <Building2 className="h-4 w-4" aria-hidden="true" />
-          Zoom in to see the 3D buildings
+          {tr(ZOOM_TEXT).zoomIn}
         </button>
       )}
     </div>

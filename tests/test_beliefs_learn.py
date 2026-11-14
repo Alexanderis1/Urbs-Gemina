@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import replace
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
@@ -127,10 +128,10 @@ def test_calibration_uses_the_layers_own_starting_map() -> None:
 
 def test_air_layers_carry_learned_settings() -> None:
     specs = load_specs()
-    for name in ("air_no2", "air_pm10", "air_pm25"):
+    for name in ("air_no2", "air_pm10", "air_pm25", "air_o3"):
         s = specs[name]
         assert s.prior_field is not None and s.prior_field.sd is not None, name
-        assert 0.0 < s.spatial_share < 1.0, name
+        assert 0.0 < s.spatial_share <= 1.0, name
 
 
 class _Feed:
@@ -201,3 +202,18 @@ def test_missing_covariate_file_is_reported_not_invented(monkeypatch: pytest.Mon
     layer = prior_layer(replace(spec, prior_field=field), cells_in_bbox(WINDOW, 9), T0, prior_field=cams)
     assert any("land-use term off" in w for w in layer.warnings)
     landuse.load_cell_covariate.cache_clear()
+
+
+def test_ozone_layer_reads_stations_and_the_cams_ozone_map() -> None:
+    spec = load_specs()["air_o3"]
+    assert spec.value_key == "o3" and "air_quality" in spec.source_layers
+    assert "air_quality_citizen" not in spec.source_layers  # citizen sensors measure PM only
+    assert spec.prior_field is not None and spec.prior_field.value_key == "o3"
+
+
+def test_air_quality_legal_limits_live_in_thresholds() -> None:
+    import yaml
+
+    air = yaml.safe_load(Path("config/thresholds.yaml").read_text(encoding="utf-8"))["air_quality"]
+    assert air["o3_information_1h_ug_m3"]["value"] == 180 and air["o3_alert_1h_ug_m3"]["value"] == 240
+    assert air["no2_hourly_limit_ug_m3"]["value"] == 200 and air["pm10_daily_limit_ug_m3"]["value"] == 50

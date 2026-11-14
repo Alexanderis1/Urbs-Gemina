@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from twin.providers.registry import data_kind_of
 from twin.providers.base import ProviderNotConfigured
 from twin.providers.registry import FACTORIES
 from twin.tools.runtime import ToolRuntime
@@ -34,7 +35,7 @@ def data_status(runtime: ToolRuntime) -> dict[str, Any]:
                 entry.update(status="active", provider_kind=info.kind, synthetic=info.synthetic,
                              licence=info.licence, cadence=info.cadence, redistribution=info.redistribution,
                              notes=info.notes)
-                data_kind = str(kind_map.get(info.kind, "real"))
+                data_kind = data_kind_of(provider_id, info.kind, kind_map)
             except ProviderNotConfigured as error:
                 entry.update(status="needs_access", reason=str(error))
                 data_kind = _manifest_kind(meta)

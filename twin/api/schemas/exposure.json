@@ -10,7 +10,8 @@
           "emf",
           "air_no2",
           "air_pm10",
-          "air_pm25"
+          "air_pm25",
+          "air_o3"
         ],
         "title": "Layer",
         "type": "string"
@@ -30,7 +31,7 @@
         "title": "Area"
       },
       "threshold": {
-        "description": "emf: attention_value | exposure_limit; air_no2: no2_hourly_limit | no2_annual_limit; air_pm10: pm10_daily_limit | pm10_annual_limit; air_pm25: pm25_annual_limit",
+        "description": "emf: attention_value | exposure_limit; air_no2: no2_hourly_limit | no2_annual_limit; air_pm10: pm10_daily_limit | pm10_annual_limit; air_pm25: pm25_annual_limit; air_o3: o3_information_1h | o3_alert_1h | o3_target_8h",
         "maxLength": 60,
         "minLength": 1,
         "title": "Threshold",

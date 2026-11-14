@@ -1,0 +1,184 @@
+{
+ "events": [
+  {
+   "id": "sig-0899cd856f",
+   "category": "flood",
+   "category_label": "Allagamento",
+   "lon": 12.520533,
+   "lat": 41.923033,
+   "radius_m": 74,
+   "first_seen": "2026-11-14T08:02:00+00:00",
+   "last_seen": "2026-11-14T08:11:00+00:00",
+   "stale": false,
+   "n_reports": 3,
+   "n_reporters": 3,
+   "n_photos": 3,
+   "n_location_match": 3,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-1",
+    "sample-2",
+    "sample-3"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Sottopasso di via Salaria pieno d'acqua, auto ferme",
+    "Acqua alta nel sottopasso, non si passa",
+    "Allagamento sottopasso, tombini che rigurgitano"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.913,
+   "level": "likely",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 27.0,
+     "detail": "3 independent reporter(s), 3 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 2.197,
+     "detail": "3 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-6e16930f10",
+   "category": "congestion",
+   "category_label": "Traffico intenso",
+   "lon": 12.49275,
+   "lat": 41.88995,
+   "radius_m": 68,
+   "first_seen": "2026-11-14T08:15:00+00:00",
+   "last_seen": "2026-11-14T08:19:00+00:00",
+   "stale": false,
+   "n_reports": 2,
+   "n_reporters": 2,
+   "n_photos": 2,
+   "n_location_match": 2,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-4",
+    "sample-5"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Coda ferma su via Labicana verso il Colosseo",
+    "Traffico bloccato, incidente?"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.729,
+   "level": "probable",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 9.0,
+     "detail": "2 independent reporter(s), 2 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.69,
+     "detail": "2 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-78dddd3d59",
+   "category": "fire",
+   "category_label": "Incendio o fumo",
+   "lon": 12.4433,
+   "lat": 41.8601,
+   "radius_m": 0,
+   "first_seen": "2026-11-14T08:21:00+00:00",
+   "last_seen": "2026-11-14T08:21:00+00:00",
+   "stale": false,
+   "n_reports": 1,
+   "n_reporters": 1,
+   "n_photos": 1,
+   "n_location_match": 1,
+   "n_location_mismatch": 0,
+   "report_ids": [
+    "sample-6"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Fumo nero dal parco, sembra sterpaglia"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.408,
+   "level": "unconfirmed",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 3.0,
+     "detail": "1 independent reporter(s), 1 counted"
+    },
+    {
+     "factor": "photos",
+     "lr": 1.3,
+     "detail": "1 reporter(s) attached a photo"
+    }
+   ]
+  },
+  {
+   "id": "sig-df06dfe9f5",
+   "category": "emergency",
+   "category_label": "Emergenza (incidente, crollo, pericolo)",
+   "lon": 12.4769,
+   "lat": 41.901,
+   "radius_m": 0,
+   "first_seen": "2026-11-14T08:24:00+00:00",
+   "last_seen": "2026-11-14T08:24:00+00:00",
+   "stale": false,
+   "n_reports": 1,
+   "n_reporters": 1,
+   "n_photos": 1,
+   "n_location_match": 0,
+   "n_location_mismatch": 1,
+   "report_ids": [
+    "sample-7"
+   ],
+   "photo_refs": [],
+   "texts": [
+    "Calcinacci caduti dal cornicione"
+   ],
+   "twin": [],
+   "checks": {},
+   "confidence": 0.15,
+   "level": "unconfirmed",
+   "factors": [
+    {
+     "factor": "prior",
+     "lr": null,
+     "p": 0.15
+    },
+    {
+     "factor": "reporters",
+     "lr": 1.0,
+     "detail": "1 independent reporter(s), 1 counted, 1 with a photo taken elsewhere or long ago"
+    }
+   ]
+  }
+ ],
+ "n_reports": 7,
+ "as_of": "2026-11-14T08:30:00+00:00",
+ "warnings": []
+}

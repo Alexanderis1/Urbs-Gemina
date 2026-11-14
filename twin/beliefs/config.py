@@ -48,6 +48,7 @@ class FieldSpec:
     value_key: str
     #: "bin" = average the map values inside each cell (fine maps like Cartoradio);
     #: "idw" = inverse-distance interpolation to every cell (coarse maps like the CAMS lattice).
+    #: "none" = no map at all, only the covariate term on the generic prior.
     method: str = "bin"
     #: Bias correction learned from real stations (idw maps): start = offset + scale * map.
     offset: float = 0.0
@@ -58,6 +59,9 @@ class FieldSpec:
     covariate_file: str | None = None
     covariate_coef: float = 0.0
     covariate_center: float = 0.0
+    #: Optional weight of the covariate term per UTC hour (24 values), e.g. a heat island that only
+    #: shows at night. None = the same weight (1) at every hour.
+    covariate_weight_by_hour: tuple[float, ...] | None = None
     #: Floor on the map's error, for maps that understate it (a rain forecast misses cloudbursts).
     min_sd: float = 0.0
 
@@ -178,6 +182,7 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 covariate_file=None if field.get("covariate") is None else str(field["covariate"]["file"]),
                 covariate_coef=0.0 if field.get("covariate") is None else _num(field["covariate"]["coef"]),
                 covariate_center=0.0 if field.get("covariate") is None else _num(field["covariate"]["center"]),
+                covariate_weight_by_hour=_hour_weights(field.get("covariate")),
                 min_sd=float(field.get("min_sd", 0.0)),
             ),
             allow_simulated=bool(entry.get("allow_simulated", False)),
@@ -195,6 +200,17 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
             history_hours=_num(entry.get("history_hours", 0.0)),
         )
     return specs
+
+
+def _hour_weights(covariate: Any) -> tuple[float, ...] | None:
+    raw = None if not isinstance(covariate, dict) else covariate.get("weight_by_utc_hour")
+    if raw is None:
+        return None
+    values: list[Any] = list(raw.get("value") or []) if isinstance(raw, dict) else list(raw)
+    weights = tuple(float(v) for v in values)
+    if len(weights) != 24:
+        raise ValueError(f"weight_by_utc_hour needs 24 values, got {len(weights)}")
+    return weights
 
 
 def _num(raw: Any) -> float:

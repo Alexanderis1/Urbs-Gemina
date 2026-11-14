@@ -13,13 +13,15 @@ from twin.api import models as m
 from twin.modules.antennas.report import build_permit_report
 from twin.tools.area import AreaTooLarge, resolve_area
 from twin.tools.layers import LayerSnapshot
-from twin.tools.crowds_exposure import check_sensors_tool, crowds_view, exposure_count, site_values_at
+from twin.tools.crowds_exposure import (check_sensors_tool, crowds_view, exposure_count, flood_watch_tool,
+                                        heat_watch_tool, schools_check, site_values_at)
 from twin.tools.data_status import data_status
-from twin.tools.envelope import ToolError, make_envelope, utc_now
+from twin.tools.envelope import Source, ToolError, make_envelope, utc_now
 from twin.tools.estimate_field import estimate_field
 from twin.tools.permit_context import run_context_check
 from twin.tools.query_layer import query_layer
 from twin.tools.resolve_place import resolve_place
+from twin.tools.signals import load_signal_config, signal_events
 from twin.tools.runtime import ToolRuntime
 
 Handler = Callable[[ToolRuntime, Any, str], dict[str, Any]]
@@ -256,6 +258,60 @@ def _sport_coverage(rt: ToolRuntime, req: m.SportCoverageIn, role: str) -> dict[
     return out
 
 
+def _office_only(rt: ToolRuntime, tool: str, inputs: dict[str, Any], role: str) -> dict[str, Any] | None:
+    if role == "office":
+        return None
+    return rt.envelope(tool, inputs, None, {}, status="refused",
+                       reason="City staff only: citizen reports are reviewed by the operations room.")
+
+
+def _signal_events(rt: ToolRuntime, req: m.SignalEventsIn, role: str) -> dict[str, Any]:
+    inputs = {"n_reports": len(req.reports), "check_twin": req.check_twin, "now": req.now,
+              "checks": {k: _dump(v) for k, v in (req.checks or {}).items()}}
+    refused = _office_only(rt, "signal_events", inputs, role)
+    if refused is not None:
+        return refused
+    cfg = load_signal_config(rt.settings.paths.config / "signals.yaml")
+    kinds: dict[str, str] = {"citizen_reports": "real"}
+    sources: list[Source] = []
+    simulated = False
+
+    def read_layer(layer: str, area: dict[str, Any]) -> Mapping[str, Any]:
+        nonlocal simulated
+        env = query_layer(rt, layer, area, req.now, None, "office")
+        for name, kind in (env.get("data_kinds") or {}).items():
+            kinds[name] = str(kind)
+        simulated = simulated or bool(env.get("synthetic"))
+        sources.extend(Source(id=str(s["id"]), retrieved_at=str(s.get("retrieved_at") or utc_now()), url=s.get("url"))
+                       for s in env.get("sources", []) if isinstance(s, Mapping) and s.get("id"))
+        return env
+
+    checks = {k: v.model_dump(exclude_none=True) for k, v in (req.checks or {}).items()}
+    result = signal_events([_dump(r) for r in req.reports], cfg, read_layer if req.check_twin else None, checks, req.now)
+    warnings = list(result.pop("warnings"))
+    warnings.append("Citizen reports are unverified until an officer confirms them; confidence is a model, not a fact.")
+    if simulated:
+        warnings.append("Road speed fuses simulated traffic loops: its agreement counts at reduced weight.")
+    sources.append(Source(id="citizen_reports", retrieved_at=utc_now()))
+    return rt.envelope("signal_events", inputs, result, kinds, sources, warnings, synthetic=simulated)
+
+
+def _verify_signal(rt: ToolRuntime, req: m.VerifySignalIn, role: str) -> dict[str, Any]:
+    inputs = {"event_id": req.event.id, "place": req.place, "photos": len(req.photo_urls)}
+    refused = _office_only(rt, "verify_signal", inputs, role)
+    if refused is not None:
+        return refused
+    cfg = load_signal_config(rt.settings.paths.config / "signals.yaml")
+
+    def run(verify: Callable[..., dict[str, Any]]) -> dict[str, Any]:
+        out = verify(_dump(req.event), place=req.place, photo_urls=list(req.photo_urls), cfg=cfg)
+        news = [Source(id="exa", retrieved_at=utc_now(), url=str(n["url"])) for n in out["news_results"] if n.get("url")]
+        warnings = [*out["warnings"], "Verdicts by Claude on photos and news: a hint for the officer, not a confirmation."]
+        return rt.envelope("verify_signal", inputs, out, {"citizen_reports": "real", "news": "real"}, news, warnings)
+
+    return _delegate("verify_signal", "agents.signal_check", "verify_event", "WS7 (agents)", inputs, run)
+
+
 TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("resolve_place", m.ResolvePlaceIn, lambda rt, req, role: resolve_place(rt, req.text)),
     ToolSpec("context_check", m.ContextCheckIn,
@@ -263,7 +319,8 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
                                                      include_properties=role == "office")),
     ToolSpec("estimate_field", m.EstimateFieldIn, _estimate_field),
     ToolSpec("query_layer", m.QueryLayerIn,
-             lambda rt, req, role: query_layer(rt, req.layer, _dump(req.area), req.time, req.limit, role)),
+             lambda rt, req, role: query_layer(rt, req.layer, _dump(req.area), req.time, req.limit, role,
+                                                 req.group_by)),
     ToolSpec("crowds", m.CrowdsIn, lambda rt, req, role: crowds_view(rt, _dump(req.area), req.time), owner="WS5"),
     ToolSpec("exposure", m.ExposureIn,
              lambda rt, req, role: exposure_count(rt, req.layer, _dump(req.area), req.threshold, req.time),
@@ -273,6 +330,12 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
                                                   req.limit, req.time), owner="WS5"),
     ToolSpec("check_sensors", m.CheckSensorsIn,
              lambda rt, req, role: check_sensors_tool(rt, req.layer, _dump(req.area), req.time), owner="WS5"),
+    ToolSpec("heat_watch", m.HeatWatchIn, lambda rt, req, role: heat_watch_tool(rt, _dump(req.area), req.time),
+             owner="WS5"),
+    ToolSpec("flood_watch", m.FloodWatchIn, lambda rt, req, role: flood_watch_tool(rt, _dump(req.area), req.time),
+             owner="WS5"),
+    ToolSpec("schools_to_check", m.SchoolsToCheckIn,
+             lambda rt, req, role: schools_check(rt, _dump(req.area), req.top, req.time), owner="WS5"),
     ToolSpec("run_scenario", m.RunScenarioIn, _run_scenario, owner="WS6"),
     ToolSpec("legal_lookup", m.LegalLookupIn, _legal_lookup, owner="WS7"),
     ToolSpec("find_dataset", m.FindDatasetIn, _find_dataset, owner="WS7"),
@@ -280,6 +343,8 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("permit_report", m.PermitReportIn, _permit_report),
     ToolSpec("sports_facilities", m.SportsFacilitiesIn, _sports_facilities, owner="WS10"),
     ToolSpec("sport_coverage", m.SportCoverageIn, _sport_coverage, owner="WS10"),
+    ToolSpec("signal_events", m.SignalEventsIn, _signal_events, owner="citizen-reports"),
+    ToolSpec("verify_signal", m.VerifySignalIn, _verify_signal, owner="citizen-reports"),
 ]}
 
 

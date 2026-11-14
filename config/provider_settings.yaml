@@ -99,11 +99,16 @@ open:
     metadata_url: https://discomap.eea.europa.eu/map/fme/metadata/PanEuropean_metadata.csv
     country: IT
     city: Roma
-    pollutants: [NO2, PM10, PM2.5]
+    pollutants: [NO2, PM10, PM2.5, O3]   # O3: 9 Rome stations, hourly (checked 14 Nov 2026)
     dataset: {value: 1, basis: "1 = unverified up-to-date data (E2a), EEA download service docs"}
     # Hourly "Start" times are station local time; Italy reports in UTC+1.
     utc_offset_hours: {value: 1, basis: "EEA time zone Etc/GMT-1 for Italian stations (C=75)"}
     relative_sigma: {value: 0.15, basis: "data quality objective for continuous NO2 measurement, Directive 2008/50/EC Annex I"}
+    # Added in quadrature to the relative error: a daily PM monitor is never better than its
+    # between-sampler uncertainty, even on clean days (without it the PM ranges came out narrow).
+    sigma_floor:
+      pm10: {value: 2.5, basis: "between-sampler uncertainty criterion 2.5 ug/m3 for PM equivalence (EN 12341 / EN 16450, EC equivalence guide 2010), C=60"}
+      pm25: {value: 2.5, basis: "same criterion as PM10, C=60"}
     pollutant_codes: {NO2: 8, PM10: 5, O3: 7, PM2.5: 6001}
     timeout_s: 60
     lookback_hours: {value: 6, basis: "E2a up-to-date values arrived about 3.7 h late on 13 Nov 2026 (latest 17:00 UTC at 20:43 UTC)"}
@@ -147,7 +152,16 @@ open:
 
   sensor_community:
     api_url: https://data.sensor.community/airrohr/v1/filter
-    relative_sigma: {value: 0.4, basis: "low-cost SDS011 sensors agree with reference PM within about 30-50% in dry air (C=60)"}
+    # Learned by scripts/calibrate_citizen_pm.py (docs/citizen_pm_calibration.md): daily means of the Rome
+    # SDS011 nodes against the mean of the EEA stations that day, 90 days to 13 Nov 2026, scored leaving one
+    # sensor out. Readings are divided by dry_scale; the humidity growth term came out near zero (c = 0.01)
+    # on daily means, so only the high-humidity sigma doubling below is kept.
+    dry_scale:
+      pm10: {value: 0.527, basis: "learned: 4 sensors, 306 sensor-days; raw bias -8.0 ug/m3, corrected bias +1.1"}
+      pm25: {value: 0.488, basis: "learned: 4 sensors, 306 sensor-days; raw bias -3.8 ug/m3, corrected bias +0.9"}
+    relative_sigma:
+      pm10: {value: 0.43, basis: "learned: left-out daily relative error 43%"}
+      pm25: {value: 0.59, basis: "learned: left-out daily relative error 59%"}
     humid_threshold_pct: {value: 80, basis: "optical PM sensors over-read in humid air above about 80% RH"}
     humid_sigma_factor: {value: 2.0, basis: "assumption"}
     timeout_s: 90

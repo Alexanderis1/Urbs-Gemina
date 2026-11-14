@@ -25,12 +25,30 @@ layers:
         extra_sd: 10            # assumption (C=40): a bus's instant speed is a rough proxy for car speed (bus lanes, stops)
         drop_below: 3           # a bus standing at a stop says nothing about traffic
     allow_simulated: true   # the only simulated input allowed: Roma Mobilita loop data is not public
+    # Starting map: the city's hourly profile below, scaled by the free-flow speed of the roads in each
+    # cell (real Overture road classes): start = profile(h) x free_flow(cell) / 45. Written as a
+    # covariate term: profile(h) + weight(h) x (free_flow - 45) with weight(h) = profile(h) / 45.
+    prior_field:
+      source: none
+      entity_types: []
+      value_key: averageVehicleSpeed
+      method: none
+      covariate:
+        file: road_free_flow_kmh.csv     # scripts/build_road_speed_prior.py
+        coef: {value: 1.0, basis: "free-flow speed is already in km/h"}
+        center: {value: 45, basis: "the night-time (free-flowing) value of the city profile: an arterial at night"}
+        weight_by_utc_hour:
+          value: [0.978, 1.0, 1.0, 0.978, 0.889, 0.733, 0.578, 0.489, 0.556, 0.644, 0.667, 0.644, 0.644, 0.667, 0.644, 0.6, 0.533, 0.489, 0.533, 0.644, 0.756, 0.844, 0.889, 0.933]
+          basis: "mean_by_hour / 45, shifted to UTC for winter time (UTC+1); in summer time the profile runs one hour early"
+        free_flow_kmh_by_class:
+          value: {motorway: 90, trunk: 70, primary: 50, secondary: 45, tertiary: 40, unclassified: 35, residential: 30, living_street: 15}
+          basis: "assumption (C=50): legal limits (Codice della Strada art. 142: 50 km/h in town, up to 70 on main urban roads, GRA motorway 130) reduced to typical free-flow driving; residential streets near Rome's 30 km/h zones"
+        radius_m: {value: 100, basis: "roads within 100 m of the cell centre, about one H3 res-9 cell"}
     unit: km/h
     entity_types: [TrafficFlowObserved]
     value_key: averageVehicleSpeed
     prior:
-      # City-wide average speed by hour; to be replaced by free-flow speed per road class
-      # once the road graph is ingested.
+      # City-wide average speed by hour (local time); prior_field scales it by each cell's road class.
       mean_by_hour: [42, 44, 45, 45, 44, 40, 33, 26, 22, 25, 29, 30,
                      29, 29, 30, 29, 27, 24, 22, 24, 29, 34, 38, 40]
       sd: 12
@@ -41,7 +59,7 @@ layers:
     calibration: {method: loso, note: "only meaningful once real loop data (pa_datex) replaces sim_loops"}
     basis: "assumption: congestion is correlated along about one km of street network; it changes within half an hour"
 
-  # The three air layers start from the CAMS forecast corrected for its measured bias in Rome, and
+  # The four air layers start from the CAMS forecast corrected for its measured bias in Rome, and
   # their spread, reach and memory are LEARNED from 2026 EEA history by maximum likelihood
   # (scripts/fit_air_fusion.py -> docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)). Re-run the script to refresh them.
   air_no2:
@@ -74,7 +92,7 @@ layers:
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm10:
-    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
+    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (rescaled to the stations, 43-59% sigma, doubled at humidity >= 80%)
     prior_field:
       source: air_quality_model
       entity_types: [AirQualityForecast]
@@ -82,7 +100,7 @@ layers:
       method: idw
       offset: {value: 6.98, basis: "learned: CAMS reads 18.7 where Rome stations read 22.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
       scale: {value: 0.807, basis: "learned, same fit (2,950 daily pairs)"}
-      sd: {value: 4.71, basis: "learned: corrected-CAMS error at a station; almost all of it is shared city-wide"}
+      sd: {value: 4.69, basis: "learned: corrected-CAMS error at a station; all of it beyond the stations' own error is shared city-wide"}
     wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
@@ -94,15 +112,15 @@ layers:
     correlation_length_km:
       value: 50.0
       basis: "learned: the maximum-likelihood reach is beyond the 50 km cap, i.e. on a given day CAMS is off by the same amount across Rome"
-    spatial_share: {value: 0.991, basis: "learned: almost no street-scale PM10 error beyond the stations' own measurement error"}
+    spatial_share: {value: 1.0, basis: "learned: no street-scale PM10 error beyond the stations' own measurement error (EEA sigma_floor 2.5)"}
     history_hours: {value: 48, basis: "EEA PM10/PM2.5 are daily means; on 14 Nov 00:30 UTC the latest was for 12 Nov (about 25 h late)"}
     relax_tau_hours: {value: 43.6, basis: "learned: daily error correlation 0.55 after 1 day, 0.34 after 2 (PM is regional and slow)"}
     min_value: 0
-    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 83%, error spread 1.27, RMSE 4.0 (old settings 5.0, too wide)"}
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 93%, error spread 0.89, RMSE 3.8 (old settings 5.0, too wide; before the station error floor 83%, too narrow)"}
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm25:
-    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
+    sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (rescaled to the stations, 43-59% sigma, doubled at humidity >= 80%)
     prior_field:
       source: air_quality_model
       entity_types: [AirQualityForecast]
@@ -110,7 +128,7 @@ layers:
       method: idw
       offset: {value: 3.66, basis: "learned: CAMS reads 12.4 where Rome stations read 11.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
       scale: {value: 0.602, basis: "learned, same fit (1,805 daily pairs, 8 stations)"}
-      sd: {value: 2.9, basis: "learned: corrected-CAMS error at a station; mostly shared city-wide"}
+      sd: {value: 2.8, basis: "learned: corrected-CAMS error at a station; all of it beyond the stations' own error is shared city-wide"}
     wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
@@ -122,12 +140,69 @@ layers:
     correlation_length_km:
       value: 50.0
       basis: "learned: maximum-likelihood reach beyond the 50 km cap (city-wide daily offset)"
-    spatial_share: {value: 0.936, basis: "learned: 94% of the error is shared across the city"}
+    spatial_share: {value: 1.0, basis: "learned: no street-scale PM2.5 error beyond the stations' own measurement error (EEA sigma_floor 2.5)"}
     history_hours: {value: 48, basis: "EEA PM2.5 are daily means published about a day late (as PM10)"}
     relax_tau_hours: {value: 40.8, basis: "learned: daily error correlation 0.50 after 1 day, 0.33 after 2"}
     min_value: 0
-    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 84%, error spread 1.27, RMSE 2.9 (old settings 3.9, too wide)"}
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 95%, error spread 0.77 (a little wide, the safe side), RMSE 2.7 (old settings 3.9; before the station error floor 84%, too narrow)"}
     basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
+
+  air_o3:
+    # Ozone: a summer, afternoon pollutant made by sunlight from traffic NO2 and VOCs; it peaks in
+    # heatwaves, so it is the air co-hazard of the heat scenario. Lowest by busy roads (NO2 eats it).
+    sources: [air_quality]   # EEA/ARPA Lazio stations (real, 9 in Rome measure O3 hourly). Sensor.Community has no O3.
+    prior_field:             # CAMS ozone via Open-Meteo, corrected: start = offset + scale x CAMS
+      source: air_quality_model
+      entity_types: [AirQualityForecast]
+      value_key: o3
+      method: idw
+      offset: {value: 3.99, basis: "learned: CAMS reads 65.9 where Rome stations read 56.6 ug/m3 (hourly), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 9 EEA stations)"}
+      scale: {value: 0.798, basis: "learned, same fit (50,594 hourly pairs)"}
+      sd: {value: 13.26, basis: "learned: corrected-CAMS error at a station; almost all of it is shared across the city"}
+    unit: ug/m3
+    entity_types: [AirQualityObserved]
+    value_key: o3
+    prior:
+      mean: 57
+      sd: 35
+      basis: "used only where the CAMS map is missing: 2026 mean of Rome EEA ozone stations (56.6 ug/m3); ozone swings from near 0 at night to 150+ on summer afternoons"
+    correlation_length_km: {value: 26.33, basis: "learned (maximum likelihood): CAMS misses ozone by about the same amount across the city"}
+    spatial_share: {value: 0.962, basis: "learned: 96% of the error is shared; the local part is small"}
+    relax_tau_hours: {value: 6.9, basis: "learned: a station's error keeps correlation 0.88 / 0.73 / 0.62 / 0.43 after 1 / 2 / 3 / 6 h"}
+    min_value: 0
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 87%, error spread 1.17, RMSE 12.5 ug/m3 (one city-wide value: 14.2; raw CAMS 12.1 but with ranges far too wide, 99%)"}
+    basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 9 EEA stations)"
+
+  air_temperature:
+    # Street-level air temperature: the hourly weather forecast (Open-Meteo, ICON-2I 2.2 km) plus the
+    # night-time urban heat island the forecast does not carry (sealed ground warms, trees cool), with
+    # the heatwave scenario's station-fitted coefficients. No live street thermometers are open, so
+    # this is a model map (estimated); the regional thermometers check it (docs/heat_check_lazio.md).
+    sources: []
+    prior_field:
+      source: weather_forecast
+      entity_types: [WeatherForecast]
+      value_key: temperature_c
+      method: idw
+      covariate:
+        file: heat_island_night.csv
+        coef: {value: 1.0, basis: "the covariate is already in degC (twin/beliefs/landuse.py night_heat_island)"}
+        center: {value: 0.0, basis: "the forecast carries no heat island (ICON-2I gives central Rome only 0.1-0.3 degC more than the Appia Antica park at night, 14 Nov 2026)"}
+        weight_by_utc_hour:
+          value: [1, 1, 1, 1, 1, 0.75, 0.5, 0.25, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1, 1, 1]
+          basis: "the heat island builds after sunset and fades after sunrise; by day no term beats the forecast (17 ASTI stations, scripts/validate_heat.py). C=60 for the ramp hours"
+      min_sd: 1.0
+    unit: "°C"
+    entity_types: [WeatherObserved]
+    value_key: temperature_c
+    prior:
+      mean: 17
+      sd: 8
+      basis: "used only where the forecast is missing: Rome's yearly mean temperature (about 16-17 degC) and its seasonal spread"
+    correlation_length_km: 5.0
+    relax_tau_hours: 1.0
+    calibration: {method: loso, note: "night minimum on 12 Regione Lazio thermometers 2018-2026: error 1.83 degC with the heat-island term against 2.24 without (docs/heat_check_lazio.md); daytime follows the forecast"}
+    basis: "weather forecast + heat island from Copernicus imperviousness and tree cover 2018"
 
   transit_delay:
     sources: [transit]       # GTFS-RT trip updates (real)
@@ -254,6 +329,12 @@ layers:
     caveats:
       - "temperature is the weather forecast (Open-Meteo), not measured in the street; urban heat islands are not resolved"
     basis: "forecast lattice; min_sd 1 degC because a 2 m forecast is rarely better than that"
+
+microclimate:
+  tree_c_per_pct: -0.04     # 10 points more tree cover than the area mean: about 0.4 degC cooler
+  imperv_c_per_pct: 0.03    # 10 points more sealed ground: about 0.3 degC warmer
+  extra_sd_c: 0.7           # added uncertainty because the coefficients are assumptions
+  basis: "assumption (C=45): urban studies report roughly 1-2 degC between low- and high-canopy blocks and a 1-3 degC surface-to-air heat-island effect; coefficients chosen inside those ranges"
 
 heat:
   threshold_c: 32

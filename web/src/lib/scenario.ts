@@ -1,5 +1,7 @@
 // Scenario catalogue and change objects for run_scenario, in the shapes the scenario engine publishes
 // (twin/scenarios/README.md, WS6). Note: add_antennas is estimate_field's variant shape, not run_scenario's.
+import { texts, tr } from "@/lib/i18n";
+
 export type ScenarioKind =
   | "antenna"
   | "population_exposure"
@@ -27,13 +29,113 @@ export interface ScenarioSpec {
   usesPoint: boolean;
 }
 
+const T = texts({
+  en: {
+    groups: { Water: "Water", Heat: "Heat", Hazard: "Hazard", Mobility: "Mobility", Antennas: "Antennas" } as Record<ScenarioGroup, string>,
+    tiles: {
+      river_flood: { label: "River flood", description: "The Tiber rises: which streets and people get wet." },
+      rain_flood: { label: "Heavy rain and sewers", description: "A downpour fills hollows and overloads the drains." },
+      heatwave: { label: "Heatwave", description: "Hot days and nights, and the effect of trees." },
+      chemical_plume: { label: "Chemical release", description: "A toxic gas leak and who is downwind." },
+      road_closure: { label: "Road closure or event", description: "Close a street, hold an event or open roadworks." },
+      emergency_access: { label: "Emergency access", description: "How fast fire, police or ambulances still arrive." },
+      antenna: { label: "New antenna", description: "Add a mast and estimate the field around it." },
+      population_exposure: { label: "Population exposure", description: "Residents near a new mast, before and after." },
+    } as Record<ScenarioTile, { label: string; description: string }>,
+    gauges: { tevere_ripetta: "Tiber at Ripetta" } as Record<string, string>,
+    services: { fire: "Fire brigade", ambulance: "Ambulance", police: "Police" } as Record<string, string>,
+    longitude: "Longitude",
+    latitude: "Latitude",
+    height: "Height",
+    gaugeLevel: "Gauge level",
+    riverRise: "River rise",
+    rain: "Rain",
+    duration: "Duration",
+    releaseRate: "Release rate",
+    windSpeed: "Wind speed",
+    windDirection: "Wind direction",
+    dayMax: "Day maximum",
+    nightMin: "Night minimum",
+    treeCover: "Tree cover added",
+    sealed: "Sealed ground removed",
+    lanes: "Lanes closed",
+    attendees: "Attendees",
+    siteName: "Type the name of a hazardous site.",
+    placeRelease: "Click the map to place the release point, or name a site.",
+    substance: "Choose a substance.",
+    streetName: "Type the name of the street.",
+    number: (label: string) => `${label}: enter a number.`,
+  },
+  it: {
+    groups: { Water: "Acqua", Heat: "Caldo", Hazard: "Rischio", Mobility: "Mobilità", Antennas: "Antenne" } as Record<ScenarioGroup, string>,
+    tiles: {
+      river_flood: { label: "Piena del fiume", description: "Il Tevere sale: quali strade e quante persone finiscono sott'acqua." },
+      rain_flood: { label: "Pioggia intensa e fognature", description: "Un temporale riempie le conche e sovraccarica le fognature." },
+      heatwave: { label: "Ondata di calore", description: "Giorni e notti calde, e l'effetto degli alberi." },
+      chemical_plume: { label: "Rilascio chimico", description: "Una perdita di gas tossico e chi si trova sottovento." },
+      road_closure: { label: "Chiusura stradale o evento", description: "Chiudi una strada, organizza un evento o apri un cantiere." },
+      emergency_access: { label: "Accesso dei soccorsi", description: "Quanto in fretta arrivano ancora vigili del fuoco, polizia o ambulanze." },
+      antenna: { label: "Nuova antenna", description: "Aggiungi un palo e stima il campo intorno." },
+      population_exposure: { label: "Esposizione dei residenti", description: "Residenti vicino a un nuovo palo, prima e dopo." },
+    } as Record<ScenarioTile, { label: string; description: string }>,
+    gauges: { tevere_ripetta: "Tevere a Ripetta" } as Record<string, string>,
+    services: { fire: "Vigili del fuoco", ambulance: "Ambulanza", police: "Polizia" } as Record<string, string>,
+    longitude: "Longitudine",
+    latitude: "Latitudine",
+    height: "Altezza",
+    gaugeLevel: "Livello all'idrometro",
+    riverRise: "Aumento del fiume",
+    rain: "Pioggia",
+    duration: "Durata",
+    releaseRate: "Portata del rilascio",
+    windSpeed: "Velocità del vento",
+    windDirection: "Direzione del vento",
+    dayMax: "Massima di giorno",
+    nightMin: "Minima di notte",
+    treeCover: "Verde aggiunto",
+    sealed: "Suolo impermeabile rimosso",
+    lanes: "Corsie chiuse",
+    attendees: "Partecipanti",
+    siteName: "Scrivi il nome di un sito a rischio.",
+    placeRelease: "Clicca sulla mappa per indicare il punto del rilascio, oppure scrivi il nome di un sito.",
+    substance: "Scegli una sostanza.",
+    streetName: "Scrivi il nome della strada.",
+    number: (label: string) => `${label}: inserisci un numero.`,
+  },
+});
+
+/** Display name of a scenario group, in the current language. */
+export const groupLabel = (g: ScenarioGroup): string => tr(T).groups[g];
+
 export const SCENARIO_BANDS = ["800", "900", "1800", "2100", "3500"] as const;
-export const SCENARIO_GAUGES = [{ id: "tevere_ripetta", label: "Tiber at Ripetta" }] as const;
+export const SCENARIO_GAUGES = [
+  {
+    id: "tevere_ripetta",
+    get label() {
+      return tr(T).gauges.tevere_ripetta!;
+    },
+  },
+] as const;
 export const SCENARIO_SUBSTANCES = ["ammonia", "chlorine"] as const;
 export const SCENARIO_SERVICES = [
-  { id: "fire", label: "Fire brigade" },
-  { id: "ambulance", label: "Ambulance" },
-  { id: "police", label: "Police" },
+  {
+    id: "fire",
+    get label() {
+      return tr(T).services.fire!;
+    },
+  },
+  {
+    id: "ambulance",
+    get label() {
+      return tr(T).services.ambulance!;
+    },
+  },
+  {
+    id: "police",
+    get label() {
+      return tr(T).services.police!;
+    },
+  },
 ] as const;
 
 // The default antenna site is the one the lab always started from (Via Nazionale area).
@@ -42,64 +144,96 @@ const ANTENNA_SITE = { lat: "41.9009", lon: "12.4833", height_m: "30", band: "35
 export const SCENARIOS: readonly ScenarioSpec[] = [
   {
     id: "river_flood",
-    label: "River flood",
-    description: "The Tiber rises: which streets and people get wet.",
+    get label() {
+      return tr(T).tiles.river_flood.label;
+    },
+    get description() {
+      return tr(T).tiles.river_flood.description;
+    },
     group: "Water",
     defaults: { mode: "rise", rise_m: "3", gauge: "tevere_ripetta", level_m: "14" },
     usesPoint: false,
   },
   {
     id: "rain_flood",
-    label: "Heavy rain and sewers",
-    description: "A downpour fills hollows and overloads the drains.",
+    get label() {
+      return tr(T).tiles.rain_flood.label;
+    },
+    get description() {
+      return tr(T).tiles.rain_flood.description;
+    },
     group: "Water",
     defaults: { mode: "rain", rain_mm: "60", duration_h: "1", river_rise_m: "" },
     usesPoint: false,
   },
   {
     id: "heatwave",
-    label: "Heatwave",
-    description: "Hot days and nights, and the effect of trees.",
+    get label() {
+      return tr(T).tiles.heatwave.label;
+    },
+    get description() {
+      return tr(T).tiles.heatwave.description;
+    },
     group: "Heat",
     defaults: { temperature: "forecast", tmax_c: "36", tmin_c: "24", trees_pct: "", depave_pct: "" },
     usesPoint: false,
   },
   {
     id: "chemical_plume",
-    label: "Chemical release",
-    description: "A toxic gas leak and who is downwind.",
+    get label() {
+      return tr(T).tiles.chemical_plume.label;
+    },
+    get description() {
+      return tr(T).tiles.chemical_plume.description;
+    },
     group: "Hazard",
     defaults: { place: "point", site: "", lon: "", lat: "", substance: "ammonia", release_kg_s: "5", wind: "forecast", wind_speed_ms: "3", wind_from_deg: "270" },
     usesPoint: true,
   },
   {
     id: "road_closure",
-    label: "Road closure or event",
-    description: "Close a street, hold an event or open roadworks.",
+    get label() {
+      return tr(T).tiles.road_closure.label;
+    },
+    get description() {
+      return tr(T).tiles.road_closure.description;
+    },
     group: "Mobility",
     defaults: { mode: "close", street: "", attendees: "20000", lanes_closed: "1" },
     usesPoint: false,
   },
   {
     id: "emergency_access",
-    label: "Emergency access",
-    description: "How fast fire, police or ambulances still arrive.",
+    get label() {
+      return tr(T).tiles.emergency_access.label;
+    },
+    get description() {
+      return tr(T).tiles.emergency_access.description;
+    },
     group: "Mobility",
     defaults: { service: "fire", street: "", flood_rise_m: "" },
     usesPoint: false,
   },
   {
     id: "antenna",
-    label: "New antenna",
-    description: "Add a mast and estimate the field around it.",
+    get label() {
+      return tr(T).tiles.antenna.label;
+    },
+    get description() {
+      return tr(T).tiles.antenna.description;
+    },
     group: "Antennas",
     defaults: { ...ANTENNA_SITE },
     usesPoint: true,
   },
   {
     id: "population_exposure",
-    label: "Population exposure",
-    description: "Residents near a new mast, before and after.",
+    get label() {
+      return tr(T).tiles.population_exposure.label;
+    },
+    get description() {
+      return tr(T).tiles.population_exposure.description;
+    },
     group: "Antennas",
     defaults: { ...ANTENNA_SITE },
     usesPoint: true,
@@ -184,34 +318,35 @@ export function buildScenarioChange(kind: ScenarioKind, f: Record<string, string
 
 /** Fields that must hold a number for this kind and form. Optional ones are checked only when filled. */
 function numberFields(kind: ScenarioKind, f: Record<string, string>): [string, string, boolean][] {
+  const L = tr(T);
   // [key, label, required]
   switch (kind) {
     case "antenna":
     case "population_exposure":
-      return [["lon", "Longitude", true], ["lat", "Latitude", true], ["height_m", "Height", false]];
+      return [["lon", L.longitude, true], ["lat", L.latitude, true], ["height_m", L.height, false]];
     case "river_flood":
-      return f.mode === "level" ? [["level_m", "Gauge level", true]] : f.mode === "forecast" ? [] : [["rise_m", "River rise", true]];
+      return f.mode === "level" ? [["level_m", L.gaugeLevel, true]] : f.mode === "forecast" ? [] : [["rise_m", L.riverRise, true]];
     case "rain_flood":
       return [
-        ...(f.mode === "rain" || !f.mode ? ([["rain_mm", "Rain", true], ["duration_h", "Duration", true]] as [string, string, boolean][]) : []),
-        ["river_rise_m", "River rise", false],
+        ...(f.mode === "rain" || !f.mode ? ([["rain_mm", L.rain, true], ["duration_h", L.duration, true]] as [string, string, boolean][]) : []),
+        ["river_rise_m", L.riverRise, false],
       ];
     case "chemical_plume":
       return [
-        ...(f.place === "site" ? [] : ([["lon", "Longitude", true], ["lat", "Latitude", true]] as [string, string, boolean][])),
-        ["release_kg_s", "Release rate", true],
-        ...(f.wind === "manual" ? ([["wind_speed_ms", "Wind speed", true], ["wind_from_deg", "Wind direction", true]] as [string, string, boolean][]) : []),
+        ...(f.place === "site" ? [] : ([["lon", L.longitude, true], ["lat", L.latitude, true]] as [string, string, boolean][])),
+        ["release_kg_s", L.releaseRate, true],
+        ...(f.wind === "manual" ? ([["wind_speed_ms", L.windSpeed, true], ["wind_from_deg", L.windDirection, true]] as [string, string, boolean][]) : []),
       ];
     case "emergency_access":
-      return [["flood_rise_m", "River rise", false]];
+      return [["flood_rise_m", L.riverRise, false]];
     case "heatwave":
       return [
-        ...(f.temperature === "manual" ? ([["tmax_c", "Day maximum", true], ["tmin_c", "Night minimum", false]] as [string, string, boolean][]) : []),
-        ["trees_pct", "Tree cover added", false],
-        ["depave_pct", "Sealed ground removed", false],
+        ...(f.temperature === "manual" ? ([["tmax_c", L.dayMax, true], ["tmin_c", L.nightMin, false]] as [string, string, boolean][]) : []),
+        ["trees_pct", L.treeCover, false],
+        ["depave_pct", L.sealed, false],
       ];
     case "traffic_event":
-      return f.mode === "roadworks" ? [["lanes_closed", "Lanes closed", true]] : [["attendees", "Attendees", true]];
+      return f.mode === "roadworks" ? [["lanes_closed", L.lanes, true]] : [["attendees", L.attendees, true]];
     case "road_closure":
       return [];
   }
@@ -219,19 +354,20 @@ function numberFields(kind: ScenarioKind, f: Record<string, string>): [string, s
 
 /** Plain-English reason the form cannot run yet, or null when it can. */
 export function changeProblem(kind: ScenarioKind, f: Record<string, string>): string | null {
+  const L = tr(T);
   if (kind === "chemical_plume") {
-    if (f.place === "site" && !filled(f.site)) return "Type the name of a hazardous site.";
-    if (f.place !== "site" && (!filled(f.lon) || !filled(f.lat))) return "Click the map to place the release point, or name a site.";
-    if (!filled(f.substance)) return "Choose a substance.";
+    if (f.place === "site" && !filled(f.site)) return L.siteName;
+    if (f.place !== "site" && (!filled(f.lon) || !filled(f.lat))) return L.placeRelease;
+    if (!filled(f.substance)) return L.substance;
   }
-  if ((kind === "road_closure" || kind === "traffic_event" || kind === "emergency_access") && !street(f)) return "Type the name of the street.";
+  if ((kind === "road_closure" || kind === "traffic_event" || kind === "emergency_access") && !street(f)) return L.streetName;
   for (const [key, label, required] of numberFields(kind, f)) {
     const v = f[key];
     if (!filled(v)) {
-      if (required) return `${label}: enter a number.`;
+      if (required) return L.number(label);
       continue;
     }
-    if (!Number.isFinite(Number(v))) return `${label}: enter a number.`;
+    if (!Number.isFinite(Number(v))) return L.number(label);
   }
   return null;
 }

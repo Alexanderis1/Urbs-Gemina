@@ -1,5 +1,11 @@
 import type { DataKind } from "@/api/types";
+import { texts, tr } from "@/lib/i18n";
 import { KIND_META, type KindKey } from "@/lib/theme";
+
+const T = texts({
+  en: { whatIf: "what-if", sample: "sample data", placeholder: "Placeholder value: the tool API is not connected" },
+  it: { whatIf: "ipotesi", sample: "dati di esempio", placeholder: "Valore segnaposto: l'API degli strumenti non è collegata" },
+});
 
 const STYLE: Record<KindKey, string> = {
   real: "border-real/45 bg-real/10 text-real",
@@ -40,7 +46,8 @@ export function KindGlyph({ kind, className = "h-2.5 w-2.5" }: { kind: KindKey; 
 export function KindBadge({ kind, label, text, size = "sm" }: { kind: DataKind; label?: string; text?: string; size?: "sm" | "md" }) {
   const key: KindKey = kind === "hypothetical" || text === "what-if" || label === "what-if" || label === "what_if" ? "what_if" : kind;
   const meta = KIND_META[key];
-  const shown = text ?? (key === "what_if" ? "what-if" : meta.label);
+  const t = tr(T);
+  const shown = text === "what-if" ? t.whatIf : (text ?? (key === "what_if" ? t.whatIf : meta.label));
   const prefix = label && label !== "what_if" && label !== "what-if" ? label.replace(/_/g, " ") : "";
   return (
     <span
@@ -58,12 +65,13 @@ export function KindBadge({ kind, label, text, size = "sm" }: { kind: DataKind; 
 
 /** Marks placeholder values while the tool API is not connected. Independent of the data kind. */
 export function SampleBadge() {
+  const t = tr(T);
   return (
     <span
       className="inline-flex items-center rounded-sm border border-estimated/50 bg-estimated/15 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-[0.06em] text-estimated"
-      title="Placeholder value: the tool API is not connected"
+      title={t.placeholder}
     >
-      sample data
+      {t.sample}
     </span>
   );
 }

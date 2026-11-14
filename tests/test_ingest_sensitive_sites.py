@@ -119,3 +119,15 @@ def test_identical_records_in_one_layer_are_kept_once(tmp_path: Path) -> None:
     frame, report = build_sensitive_sites(LAYER, tmp_path)
     assert sorted(frame["name"]) == ["IC VIA X", "LICEO Y"]  # same place, different school: both kept
     assert report["dropped_identical"] == 1
+
+
+def test_an_empty_rebuild_keeps_the_last_good_file(processed: Path, tmp_path: Path) -> None:
+    """With every input missing the merge is empty; it must not overwrite a good copy."""
+    assert ingest_layer(LAYER, CATALOG, lambda r: b"", processed, NOW)["status"] == "ok"
+    good = (processed / "sensitive_sites.geojson").read_bytes()
+    for path in processed.glob("*.parquet"):
+        if path.stem != "sensitive_sites":
+            path.unlink()
+    entry = ingest_layer(LAYER, CATALOG, lambda r: b"", processed, NOW)
+    assert entry["status"] == "not_available" and "kept the previous file" in entry["error"]
+    assert (processed / "sensitive_sites.geojson").read_bytes() == good

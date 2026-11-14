@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from twin.scenarios import engine, layers
-from twin.scenarios.plume import concentration
+from twin.scenarios.plume import concentration, dense_centreline, dense_half_width, is_dense
 
 SITE = {"lon": 12.3361, "lat": 41.9577}
 
@@ -78,3 +78,45 @@ def test_dense_gas_is_flagged(tmp_path: Path) -> None:
                                                 "release_kg_s": 1.0, "wind": {"speed_ms": 3, "from_deg": 270}},
                      cache_dir=tmp_path)
     assert any("heavier than air" in w for w in out["warnings"])
+    assert out["result"]["model"] == "gaussian_plume_briggs_urban+britter_mcquaid_dense"
+
+
+def test_britter_mcquaid_centreline_follows_the_workbook() -> None:
+    """Continuous dense plume (Britter & McQuaid 1988; CCPS fits): ratio to the source concentration."""
+    rho_cl2, u = 2.99, 3.0
+    q0 = 5.0 / rho_cl2  # m3/s of pure gas
+    d = (q0 / u) ** 0.5
+    near = dense_centreline(q0, rho_cl2, u, np.array([0.0, 10 * d, 30 * d]))
+    assert near[0] == pytest.approx(1.0)
+    assert near[2] == pytest.approx(306 / (306 + 900), rel=1e-6)  # near-field formula up to x/D = 30
+    g0 = 9.81 * (rho_cl2 - 1.2) / 1.2
+    alpha = 0.2 * np.log10(g0 ** 2 * q0 / u ** 5)
+    assert -0.14 < alpha <= 1.0  # chlorine at 5 kg/s, 3 m/s sits in the workbook's upper alpha band
+    x01 = d * 10 ** (-0.50 * alpha + 1.78)  # workbook point for Cm/C0 = 0.1 in that band
+    assert dense_centreline(q0, rho_cl2, u, np.array([x01]))[0] == pytest.approx(0.1, rel=1e-3)
+    far = dense_centreline(q0, rho_cl2, u, np.geomspace(50, 5000, 30))
+    assert np.all(np.diff(far) < 0)  # falls steadily with distance
+    assert is_dense(q0, rho_cl2, u) and not is_dense(q0, 1.2 * 0.59, u)  # chlorine yes, ammonia no
+    assert dense_half_width(q0, rho_cl2, u, np.array([100.0]))[0] > d  # spreads sideways as it slumps
+
+
+def test_heavy_gas_makes_the_near_field_zone_wider(tmp_path: Path) -> None:
+    base = {"lon": 12.48, "lat": 41.90, "release_kg_s": 5.0, "wind": {"speed_ms": 3, "from_deg": 270}}
+    dense = engine.run("chemical_plume", "city", {**base, "substance": "chlorine"}, cache_dir=tmp_path)
+    passive = engine.run("chemical_plume", "city", {**base, "substance": "chlorine", "dense_gas": False},
+                         cache_dir=tmp_path)
+    for zone in ("aegl3", "aegl2"):
+        if zone in dense["result"]["zones"]:
+            assert (dense["result"]["zones"][zone]["area_km2"]["likely"]
+                    >= passive["result"]["zones"][zone]["area_km2"]["likely"])
+    assert passive["result"]["model"] == "gaussian_plume_briggs_urban"
+
+
+def test_dense_plume_hands_over_smoothly_to_a_passive_plume() -> None:
+    from twin.scenarios.plume import _bm_curve_end, dense_concentration
+
+    q, rho, u = 5.0, 2.99, 3.0
+    x_end = _bm_curve_end(q / rho, rho, u)
+    near = dense_concentration(q, rho, u, "D", np.array([x_end * 0.999, x_end * 1.001]), np.zeros(2))
+    assert near[1] == pytest.approx(near[0], rel=0.05)  # no jump at the hand-over
+    assert dense_concentration(q, 1.2 * 0.59, u, "D", np.array([100.0]), np.zeros(1))[0] == 0.0

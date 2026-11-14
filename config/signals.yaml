@@ -1,0 +1,77 @@
+# Citizen reports ("segnalazioni") merged into candidate live events for city staff.
+# Code reads everything here; nothing below is hard-coded. Every number is an assumption with a basis.
+
+categories:
+  # Reports of the same category merge when they are within radius_m of the event centre and within
+  # window_min of its latest report.
+  congestion: {label: "Traffico intenso", radius_m: 400, window_min: 60}
+  flood:      {label: "Allagamento", radius_m: 300, window_min: 180}
+  fire:       {label: "Incendio o fumo", radius_m: 500, window_min: 120}
+  emergency:  {label: "Emergenza (incidente, crollo, pericolo)", radius_m: 200, window_min: 60}
+  other:      {label: "Altro", radius_m: 150, window_min: 60}
+  basis: "assumption (C=55): a jam or a smoke column is seen from a few hundred metres; flooding of an underpass lasts hours; a point emergency is local and short"
+
+max_reports: 2000          # one call never clusters more than this
+stale_after_min: 180       # an event with no new report for this long is shown as 'stale'
+max_text_chars: 280
+
+location_check:
+  # Alessandro (14 Nov 2026): a report needs the photo's GPS and the device GPS. The two must agree.
+  max_distance_m: 250            # photo GPS vs device GPS when sending
+  max_age_min: 120               # photo time vs sending time
+  basis: "assumption (C=55): phone GPS errors are tens of metres, up to ~200 m in narrow streets; a photo of a live event is sent within the hour or two"
+
+confidence:
+  # Log-odds model: start from the prior, multiply the odds by one likelihood ratio (LR) per piece of evidence.
+  # LR > 1 supports the event, LR < 1 speaks against it, LR = 1 says nothing.
+  prior: 0.15
+  reporter_lr: 3.0               # each independent reporter (one account counts once)
+  max_reporters_counted: 5       # more reporters beyond this add nothing (crowds copy each other)
+  photo_lr: 1.3                  # each reporter who attached a photo, on top of reporter_lr
+  location_power:                # how much a reporter counts, by photo-vs-device GPS check (reporter_lr ** power)
+    match: 1.0
+    missing: 0.5                 # older app versions or a photo without GPS: half weight in log-odds
+    mismatch: 0.0                # photo taken elsewhere or long ago: the reporter adds nothing
+  simulated_evidence_power: 0.5  # a twin layer fed by simulated inputs counts with LR**0.5 (half the weight in log-odds)
+  checks:
+    photo:
+      consistent: 2.5
+      inconsistent: 0.3
+      unclear: 1.0
+      no_photo: 1.0
+    news:
+      confirms: 4.0
+      no_match: 1.0              # minutes after an event the news is often silent: absence is not evidence against
+  levels:                        # probability bands shown to staff
+    likely: 0.75
+    probable: 0.45
+  basis: "assumption (C=50): one citizen report alone stays 'unconfirmed' (35%, 41% with a photo whose GPS matches); two independent reporters or one report plus a twin layer that agrees reach 'probable'; three reporters, or reports plus twin plus a photo check, reach 'likely'"
+
+twin_checks:
+  # Twin layers read around the event (a square of half-size max(event radius, area_half_m)).
+  # stat: max | min | mean over the cells' mean values. 'supports' and 'contradicts' are conditions on that value.
+  area_half_m: 300
+  congestion:
+    - {layer: road_speed, stat: min, unit: km/h, supports: {op: "<=", value: 15}, contradicts: {op: ">=", value: 35},
+       supports_lr: 3.0, contradicts_lr: 0.6,
+       basis: "assumption: below 15 km/h on an urban arterial is a jam; above 35 km/h traffic flows (road_speed fuses simulated loops with real bus speeds)"}
+    - {layer: transit_delay, stat: max, unit: s, supports: {op: ">=", value: 300}, supports_lr: 1.5,
+       basis: "assumption: buses more than 5 minutes late around the place point to a jam (real GTFS-RT)"}
+  flood:
+    - {layer: rain, stat: max, unit: mm/h, supports: {op: ">=", value: 5}, contradicts: {op: "<=", value: 0.1},
+       supports_lr: 3.0, contradicts_lr: 0.8,
+       basis: "assumption: 5 mm/h or more is enough to flood underpasses with blocked drains; no rain lowers the odds only a little (burst pipes and river floods happen without local rain)"}
+  fire:
+    - {layer: temperature, stat: max, unit: degC, supports: {op: ">=", value: 30}, supports_lr: 1.3,
+       basis: "assumption (C=40): vegetation fires are more frequent on hot days; weak evidence"}
+  emergency: []
+  other: []
+
+verify:
+  # Optional check by Claude (photos + texts) and Exa (news), once per event, on an officer's request.
+  model_role: signals            # model chosen in config/agents.yaml models.signals
+  max_photos: 3
+  max_photo_bytes: 4000000
+  photo_hosts: ["supabase.co", "supabase.in"]   # photos are fetched only from Lovable Cloud storage
+  max_texts: 8
+  basis: "cost control: one Claude call and one Exa search per event, never per report"

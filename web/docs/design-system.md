@@ -38,7 +38,7 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
    prototype and carries the AI notice on every screen.
 8. **Status bar at the bottom**: connection, tier, number of tool runs, last run id. It makes the audit trail
    visible without opening Admin.
-9. **Interface language stays English** (as built); the voice assistant speaks Italian. Labels use plain words:
+9. **Interface language: Italian first, English as a switch** (changed 14 Nov 2026, see "Language"; it was English only before); the voice assistant speaks Italian. Labels use plain words:
    "Operating area", "Check context", "Compare".
 10. **Scenario lab shows all eight scenario kinds**, grouped by theme (water, heat, hazard, mobility, antenna).
     A kind the service cannot run right now shows a clear notice with the server's reason instead of failing silently.
@@ -66,9 +66,83 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     readable (`AREA_ALPHA` in `src/lib/colors.ts`). Whole-city screens open at the widest zoom that still shows
     the buildings; further out, a small button brings them back.
 20. **A sleeping service is not a failure.** The live service stops when idle and takes two to three minutes to
-    wake. A missing answer is retried automatically and a blue strip says what is happening. Simulations are
-    never started more than twice (`src/lib/retry.ts`).
+    wake. After a missing answer the screen waits for it and asks once more, and a blue strip says what is
+    happening (`src/lib/retry.ts`, see 26).
 21. **Map credits start folded** behind the (i) button so they never cover a legend; one click opens them.
+22. **Sensor dots carry their value.** With 40 sensors or fewer each dot shows its number next to it; dots have a
+    dark (light theme) or light (dark theme) edge so they stand out from the buildings. Values get plain names
+    and units ("NO₂ (µg/m³)", not "no2"); a layer with several values per sensor gets a "Value shown" chooser.
+23. **The City view opens on the twin's own estimates.** The first group of layers is "Live estimates (sensor
+    fusion)": air, road speed, bus delay, rain, temperature, electric field, street activity, one value and its
+    range per 170 m cell. A fused layer picked on "Whole city" opens on Municipio I (the whole city is about
+    25,000 cells, more than one answer carries) and the camera frames the chosen area.
+24. **One value everywhere is said in words**, not drawn as a colour scale from x to x.
+25. **A layer the service does not carry is NOT AVAILABLE**, with the service's own first sentence as the reason.
+    A large area comes back thinned (items picked evenly); the screen says how many of how many are shown.
+26. **No call is started more than twice.** After a missing answer the service is woken with a light request and
+    the call runs once more; a request the service cannot serve is not repeated (every start costs money).
+27. **A long run is waited for, not repeated.** When a request runs long the service answers "still running" with
+    a job id. The screen then reads that job every 4 seconds until the result is ready and shows it as a normal
+    answer; a blue strip says "the live service is working on this request". Reading a job starts nothing. The
+    wait ends after 15 minutes, or when the job is lost, with a plain sentence (`src/lib/jobs.ts`,
+    `src/lib/errors.ts`). Through the staff gateway the job is read with the caller's own key (`/jobs/<id>`).
+
+
+## Two experiences
+
+One twin, two front doors (decided 14 Nov 2026, on Alessandro's request for a clear division between public
+users and city administration personnel). Which one a person gets is decided by their role, never by a
+setting in the page: no sign-in or no staff role means the public service.
+
+| | Public service ("Rome for residents") | Operations workspace (city staff) |
+|---|---|---|
+| Who | Anyone, no account | Signed-in personnel with the `office` role |
+| Question it answers | "What is happening around me?" | "What is happening in the city, and what if?" |
+| Header | PA blue, sections named in words across the top | Navy, "City staff" badge, icon rail on the left |
+| Opens on | My area: one address field, one answer in plain words | City view: the 3D console with every layer |
+| Sections | La mia zona, Mappa della città, Sport, Chiedi, I dati (My area, City map, Sport, Ask, About the data) | Città, Chiedi, Istanze, Scenari, Sport, Dati, Admin (City, Ask, Permit, Scenarios, Sport, Data, Admin) |
+| Map | A short list of layers in plain words, whole city or a municipio | Every layer, drawn areas, last 24 hours, display options |
+| Evidence | Folded under "How we know this" | Open: run ids, sources, the status bar with the run log |
+| Theme | Always light | Light or dark "operations room" |
+| Voice | Citizen line | Office assistant |
+| Footer | "Information only. In an emergency call 112." | Connection, role, number of runs, last run id |
+
+Rules:
+
+1. **The colour of the header says where you are.** PA blue = public, navy = staff. Nothing else changes colour.
+2. **Residents never see an office tool, not even greyed out.** Permit check, Scenario lab and Admin exist only
+   in the workspace. Simulated layers (traffic loops, road speed) and raw model points are not in the public map.
+3. **The public side leads with the person's address**, not with a tool. The topics offered come from the
+   service's own list of tasks for citizens, so a new citizen task appears without a change here.
+4. **The honesty labels stay on both sides.** REAL / ESTIMATED / SIMULATED / NOT AVAILABLE are public
+   information too; only the run ids and the tool trace are folded away for residents.
+5. **One door between the two:** "City staff sign-in" in the public header leads to `/staff` (magic link through
+   Lovable Cloud). "Sign out" in the workspace leads back. A signed-in account without the staff role stays on
+   the public side and is told why.
+6. **Without Lovable Cloud (demo, local run)** the same page offers "Enter the staff workspace (demo)"; the
+   choice is remembered in the browser. Data the service reserves for staff stays reserved either way.
+
+Where it lives: `src/lib/tiers.ts` (who sees which screen, and each screen's address), `src/shell/PublicShell.tsx`
+and `src/shell/StaffShell.tsx` (the two frames), `src/lib/layerCatalogue.ts` (layers and their wording per
+experience), `src/pages/Home.tsx` and `src/pages/StaffAccess.tsx`. Screens shared by both (`CityView`, `Ask`)
+take an `audience` prop and change wording and density, not behaviour.
+
+
+## Language
+
+Italian first, English as a switch (Alessandro, 14 Nov 2026; this replaces the earlier "UI in English" choice).
+
+- The app opens in Italian. `IT | EN` in the header switches; the choice is remembered in the browser.
+- Every text the interface writes exists in both languages, side by side, in the file that uses it:
+  `const T = texts({ en: {...}, it: {...} })`, read with `tr(T)` (`src/lib/i18n.ts`). The compiler refuses a
+  text that exists in one language only.
+- Numbers follow the language (`locale()`): 12.345,6 in Italian, 12,345.6 in English.
+- Text that arrives from the service is shown as it arrives: warnings, refusal reasons, place names. Assistant
+  answers are requested in the interface language.
+- Italian style follows Designers Italia: simple and direct, informal "tu" ("Scegli", "Riprova"), short
+  sentences, no bureaucratic wording. Fixed vocabulary: livello, area operativa, reale / stimato / simulato /
+  ipotesi / non disponibile, esecuzione, fonte, evidenze, incertezza, intervallo, istanza, sala operativa.
+- Tests run in English (`src/__tests__/setup.ts`); each text library has an "in Italian" case.
 
 ## Tokens
 

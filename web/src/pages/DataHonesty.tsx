@@ -7,24 +7,67 @@ import { useSession } from "@/lib/runlog";
 import { KIND_META, type KindKey } from "@/lib/theme";
 import type { DataKind, DataStatusResult, Envelope } from "@/api/types";
 import { errorText } from "@/lib/errors";
+import { texts, tr } from "@/lib/i18n";
 
 // Order of the legend cards and of the stat tiles.
 const KIND_ORDER: KindKey[] = ["real", "estimated", "simulated", "what_if", "not_available"];
 
 type Filter = "all" | DataKind;
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "real", label: "Real" },
-  { id: "estimated", label: "Estimated" },
-  { id: "simulated", label: "Simulated" },
-  { id: "not_available", label: "Not available" },
-];
+const T = texts({
+  en: {
+    all: "All",
+    title: "Data honesty",
+    lead: "Every layer says where it comes from and how far to trust it.",
+    loadError: "Could not load the data status",
+    layers: "Layers",
+    filterLabel: "Filter by kind",
+    searchLabel: "Search layers",
+    searchPlaceholder: "Search layers or providers",
+    layer: "Layer",
+    kind: "Kind",
+    provider: "Provider",
+    status: "Status",
+    licence: "Licence",
+    updates: "Updates",
+    notes: "Notes",
+    none: "No layers match.",
+  },
+  it: {
+    all: "Tutti",
+    title: "Onestà dei dati",
+    lead: "Ogni livello dice da dove arriva e quanto fidarsi.",
+    loadError: "Non è stato possibile caricare lo stato dei dati",
+    layers: "Livelli",
+    filterLabel: "Filtra per tipo",
+    searchLabel: "Cerca livelli",
+    searchPlaceholder: "Cerca livelli o fornitori",
+    layer: "Livello",
+    kind: "Tipo",
+    provider: "Fornitore",
+    status: "Stato",
+    licence: "Licenza",
+    updates: "Aggiornamenti",
+    notes: "Note",
+    none: "Nessun livello corrisponde.",
+  },
+});
+
+function filters(): { id: Filter; label: string }[] {
+  return [
+    { id: "all", label: tr(T).all },
+    { id: "real", label: KIND_META.real.label },
+    { id: "estimated", label: KIND_META.estimated.label },
+    { id: "simulated", label: KIND_META.simulated.label },
+    { id: "not_available", label: KIND_META.not_available.label },
+  ];
+}
 
 // Status words that mean the layer is being read right now.
 // Statuses the tool returns today: active, needs_access, planned.
 const isLive = (status: string) => status === "active" || status === "ok" || status.startsWith("live") || status.startsWith("available");
 
 export default function DataHonesty() {
+  const t = tr(T);
   const { run } = useSession();
   const [env, setEnv] = useState<Envelope<DataStatusResult> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,17 +97,17 @@ export default function DataHonesty() {
   }, [layers, filter, query]);
 
   const statTiles: { kind: DataKind; label: string; tone: "real" | "estimated" | "simulated" | "ink" }[] = [
-    { kind: "real", label: "Real", tone: "real" },
-    { kind: "estimated", label: "Estimated", tone: "estimated" },
-    { kind: "simulated", label: "Simulated", tone: "simulated" },
-    { kind: "not_available", label: "Not available", tone: "ink" },
+    { kind: "real", label: KIND_META.real.label, tone: "real" },
+    { kind: "estimated", label: KIND_META.estimated.label, tone: "estimated" },
+    { kind: "simulated", label: KIND_META.simulated.label, tone: "simulated" },
+    { kind: "not_available", label: KIND_META.not_available.label, tone: "ink" },
   ];
 
   return (
     <Page
-      title="Data honesty"
+      title={t.title}
       icon={Database}
-      lead="Every layer says where it comes from and how far to trust it."
+      lead={t.lead}
     >
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {KIND_ORDER.map((key) => (
@@ -80,7 +123,7 @@ export default function DataHonesty() {
       </div>
 
       {error && (
-        <Callout tone="error" title="Could not load the data status">
+        <Callout tone="error" title={t.loadError}>
           {error}
         </Callout>
       )}
@@ -94,21 +137,21 @@ export default function DataHonesty() {
       {env && (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Layers" value={layers.length} />
+            <Stat label={t.layers} value={layers.length} />
             {statTiles
-              .filter((t) => counts[t.kind] > 0)
-              .map((t) => (
-                <Stat key={t.kind} label={t.label} value={counts[t.kind]} tone={t.tone} />
+              .filter((s) => counts[s.kind] > 0)
+              .map((s) => (
+                <Stat key={s.kind} label={s.label} value={counts[s.kind]} tone={s.tone} />
               ))}
           </div>
 
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <Segmented value={filter} onChange={setFilter} options={FILTERS} label="Filter by kind" />
+            <Segmented value={filter} onChange={setFilter} options={filters()} label={t.filterLabel} />
             <input
               type="search"
               className="input max-w-xs"
-              aria-label="Search layers"
-              placeholder="Search layers or providers"
+              aria-label={t.searchLabel}
+              placeholder={t.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -118,13 +161,13 @@ export default function DataHonesty() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Layer</th>
-                  <th>Kind</th>
-                  <th>Provider</th>
-                  <th>Status</th>
-                  <th>Licence</th>
-                  <th>Updates</th>
-                  <th>Notes</th>
+                  <th>{t.layer}</th>
+                  <th>{t.kind}</th>
+                  <th>{t.provider}</th>
+                  <th>{t.status}</th>
+                  <th>{t.licence}</th>
+                  <th>{t.updates}</th>
+                  <th>{t.notes}</th>
                 </tr>
               </thead>
               <tbody>
@@ -152,7 +195,7 @@ export default function DataHonesty() {
                 {visible.length === 0 && (
                   <tr>
                     <td colSpan={7} className="hint text-center">
-                      No layers match.
+                      {t.none}
                     </td>
                   </tr>
                 )}

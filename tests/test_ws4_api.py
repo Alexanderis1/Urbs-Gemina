@@ -348,6 +348,9 @@ def test_use_cases_are_listed_per_tier(client: TestClient) -> None:
     assert {u["id"] for u in citizen} < ids and "event_planning" not in {u["id"] for u in citizen}
     heat = next(u for u in office if u["id"] == "heat_plan_elderly")
     assert heat["needs"] == ["area"] and heat["title"]["it"] and "cover_added_pct" in heat["params"]
+    assert heat["param_types"]["tmax_c"] == "number" and heat["param_types"]["cover_added_pct"] == "number"
+    works = next(u for u in office if u["id"] == "roadworks_check")
+    assert works["params"]["street"] is None and works["param_types"]["street"] == "text"
 
 
 def test_ask_passes_use_case_and_params(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> None:
@@ -408,6 +411,18 @@ def test_hypothetical_scenario_inputs_are_labelled_not_rejected(client: TestClie
 
 def test_population_tools_are_registered(client: TestClient) -> None:
     names = {t["name"] for t in client.get("/tools").json()}
-    assert {"crowds", "exposure", "site_values", "check_sensors"} <= names
+    assert {"crowds", "exposure", "site_values", "check_sensors", "heat_watch", "flood_watch",
+            "schools_to_check"} <= names
     r = client.post("/tools/exposure", json={"layer": "emf", "area": "city", "threshold": "no2_hourly_limit"})
     assert r.status_code == 400  # threshold of another layer
+
+
+def test_thin_evenly_spreads_over_the_whole_list() -> None:
+    from twin.tools.query_layer import thin_evenly
+
+    items = list(range(10_000))
+    kept = thin_evenly(items, 5)
+    assert kept == [0, 2500, 5000, 7499, 9999]
+    assert thin_evenly(items[:3], 5) == [0, 1, 2]
+    assert len(thin_evenly(items, 5000)) == 5000
+    assert thin_evenly(items, 5000)[-1] == 9999

@@ -85,6 +85,15 @@ road_closure:
   rerouting_period_s:
     value: 60
     basis: "assumption: drivers update their route each minute (navigation apps)"
+  end_overrun_s:
+    value: 1800
+    basis: "the simulation stops 30 minutes after the last departure; cars still on the road then count as not completed (gridlock shows as fewer completed trips). It was 3 hours, which made gridlocked runs slow"
+  parallel_runs:
+    value: 4
+    basis: "demand seeds run as parallel SUMO processes; the Modal scenarios worker has 4 CPUs (deploy/scenarios_worker.py)"
+  large_event:
+    value: {min_vehicles: 3000, replicates: 3, rerouting_period_s: 300}
+    basis: "measured 14 Nov 2026 on a 2.25 km2 grid: 60,000 attendees (11,700 cars) gridlock the district and one detailed (microscopic) run took 440 s, 5 runs over 30 minutes. SUMO's mesoscopic queue model with junction control took 101 s, and 33-50 s with re-routing every 5-10 minutes (re-routing thousands of stuck cars is the main cost), with time loss of the same order as the detailed run (600-1200 s per car against 800-1450 s). Above 3,000 event cars the run uses it, with 3 demand seeds in parallel"
   auto_network:
     value: true
     basis: "build the district network from OpenStreetMap (Overpass) on first use and cache it"
@@ -209,8 +218,8 @@ river_flood:
 rain_flood:
   heavy: false
   calibration:
-    value: "checked on 2 Rome cloudbursts (3 Sep 2024, 19 Sep 2011): 14 of 19 reported flooded places within 150 m of modelled flooding, against 33-52 % for random streets; sewer efficiency 0.3 chosen from a sweep"
-    basis: "scripts/validate_rain.py, eval/scenarios/rain_validation.json"
+    value: "checked on 4,577 real flooding call-outs (2013-2022) and 4 Rome cloudbursts: the flood map is right at district scale but weak street by street (AUC 0.54; 16 of 26 reported places); the trouble-spot ranking (low ground + past call-outs) scores AUC 0.71 on later years and 0.66-0.86 in every cloudburst, so use it to choose where to act first"
+    basis: "scripts/validate_rain.py, scripts/validate_rain_log.py, eval/scenarios/rain_validation.json, rain_events_validation.json, rain_log_validation.json"
   members:
     value: 40
     basis: "ensemble size: enough for a stable P5 / P95 of hotspot depth"
@@ -286,6 +295,18 @@ rain_flood:
   underpasses_file:
     value: road_underpasses_osm.geojson
     basis: "WS1 OSM tunnels and underpasses, used to point out underpasses inside flooded hollows"
+  trouble_spots:
+    value:
+      call_out_file: civil_protection_events.geojson
+      tpi_window_m: 1000
+      history_radius_m: 150
+      history_weight: 0.5
+      min_sealed: 0.3
+      listed: 15
+      spacing_m: 300
+      reference: {tpi_mean: 1.39, tpi_sd: 5.73, history_mean: 0.402, history_sd: 0.585}
+      method: "ranked by how low the ground sits below its surroundings within 1 km and by past flooding call-outs within 150 m (Roma Capitale civil protection log 2013-2022). Checked on the log: using only 2013-2017, it ranks the 2018-2022 call-outs above random inhabited places 71 % of the time (AUC 0.71); the pond-and-sewer map alone reaches 0.54"
+    basis: "scripts/validate_rain_log.py and the validation report. reference = mean and spread over the centres of Rome's inhabited census sections (low ground in m; log(1 + call-outs within 150 m)), so scores are comparable across areas. Only built-up cells (sealed >= 30 %) are listed"
 
 impacts:
   sensitive_sites_file:
@@ -295,9 +316,12 @@ impacts:
 chemical_plume:
   heavy: false
   calibration:
-    value: "formulas checked against Briggs urban dispersion (Hanna 1982) and mass conservation; Gaussian plume models typically get within a factor of 2 of measured concentrations about half the time (FAC2 about 0.5, Hanna and Chang 2012); heavy gases flagged for ALOHA"
+    value: "formulas checked against Briggs urban dispersion (Hanna 1982) and mass conservation; Gaussian plume models typically get within a factor of 2 of measured concentrations about half the time (FAC2 about 0.5, Hanna and Chang 2012); heavy gases (chlorine) add a Britter-McQuaid dense plume checked against the workbook curves; slopes and underpasses not modelled"
     basis: "tests/test_scenarios_plume.py and the validation report"
   model: gaussian_plume_briggs_urban
+  dense_gas:
+    value: "Britter & McQuaid 1988 HSE workbook, CCPS curve fits; fitted on flat rural trials (Thorney Island, Burro), so conservative in a built-up city"
+    basis: "Britter and McQuaid 1988 (HSE CRR 88/017); CCPS 1996 / Crowl and Louvar curve fits; Hanna et al. 2020 used it for the Jack Rabbit II chlorine trials. C=60 near the plant, falls to the Gaussian far away"
   relative_density:
     value: {ammonia: 0.59, chlorine: 2.49, hydrogen_sulfide: 1.19}
     basis: "gas density relative to air (standard physical data). Above about 1.1 the gas slumps and spreads along low ground: a Gaussian plume (passive gas) is then only a first look; ALOHA / DEGADIS heavy-gas models are the reference"
@@ -348,10 +372,18 @@ emergency_access:
   heavy: true
   facilities:
     value:
-      ambulance: {file: emergency_hospitals.geojson, field: denominazione, filter: {}}
+      ambulance:
+        - {file: ares118_posts.geojson, field: name, filter: {}}
+        - {file: emergency_hospitals.geojson, field: denominazione, filter: {}}
       fire: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: Vigili del Fuoco}}
       police: {file: police_fire.geojson, field: _denominaz, filter: {_tipologia: [Carabinieri, Polizia di Stato, Polizia Locale]}}
-    basis: "WS1 layers; ambulances are taken to start from emergency hospitals (118 posts are not in an open layer)"
+    basis: "WS1 layers. Ambulances: the 26 ARES 118 posts inside Rome from ARES 118's public list of posts, placed with the city's street-number service (scripts/fetch_ares118_posts.py); emergency hospitals when that layer is missing. The first layer found is used"
+  pre_travel_min:
+    value:
+      ambulance: {median: 4.5, sigma_ln: 0.3, basis: "NUE 112 transfer about 1 min, 118 call handling and dispatch about 2.4 min (Lecce 118 2021: 2 min 26 s, target 2-3 min; Citerio 2006, Lombardy: 2.3 min), crew departure about 1 min (assumption)"}
+      fire: {median: 3.0, sigma_ln: 0.4, basis: "assumption (C=35): NUE 112 transfer plus Vigili del Fuoco call handling and departure"}
+      police: {median: 3.0, sigma_ln: 0.4, basis: "assumption (C=30): NUE 112 call handling and dispatch of a patrol"}
+    basis: "minutes from the call to the vehicle leaving; median and log-normal spread of its typical value. Legal 118 targets (DPR 27/3/1992) and the LEA indicator run from the call, so the model adds this time unless count_from is 'departure'"
   speed_factor:
     value: 0.7
     basis: "assumption (C=45): emergency vehicles average about 70% of the road speed limit in city traffic"
@@ -370,7 +402,7 @@ emergency_access:
       source: "Ministero della Salute, NSG 2023, indicator D09Z (alarm-to-target time of the first 118 vehicle, 75th percentile, red and yellow codes), Lazio region"
     basis: "official reference for scripts/validate_access.py; it includes call handling, dispatch and ambulance availability, which the model leaves out"
   calibration:
-    value: "checked against the official Lazio 118 alarm-to-target time: the model gives road reach from the nearest hospital with an ambulance ready, about 12 minutes faster than real responses at the 75th percentile (eval/scenarios/access_validation.json)"
+    value: "checked against the official Lazio 118 alarm-to-target time (20 min at the 75th percentile): from the 26 real 118 posts, with call handling and dispatch, the model gives 10.8 min, a best case with a free ambulance at the nearest post; the real figure is matched if the nearest post is busy about 3 times in 4 (eval/scenarios/access_validation.json)"
     basis: "shown with every result so users know how far the numbers were checked"
   members:
     value: 30
@@ -398,11 +430,11 @@ heatwave:
     basis: "ICON-2I grid spacing: the forecast is read as the average of this neighbourhood, and local differences are added around it"
   coefficients:
     value:
-      day: {impervious: [0.0, 0.3], trees: [0.3, 0.3]}
+      day: {impervious: [0.0, 0.3], trees: [1.8, 0.5]}
       night: {impervious_city: [2.9, 0.6], impervious: [0.6, 0.4], trees: [1.2, 0.6]}
-    basis: "station calibration (C=65), °C for going from 0 to 100 %; [mean, sigma]. impervious_city: sealing of the 2.2 km forecast cell, added because the forecast carries no heat island (ICON-2I gives Porta Maggiore only 0.1-0.3 °C warmer at night than the Appia Antica park, on 14 Nov 2026, against about 2 °C in summer station data). impervious / trees: difference of the 100 m cell from that district. Fitted on 17 ASTI-Network rooftop stations, 184 summer days 2019-2020 (scripts/validate_heat.py, eval/scenarios/heat_validation.json): night minimum, district 2.9 and local 0.6, leave-one-station-out error 0.48 °C against 0.69 °C with no model; district sealing explains Rome's nights far better than the block itself, matching Cecilia et al. 2022 (3.4 °C on 1.4 km sealing). Daytime maximum: no reading beats 'every station equals the average' (0.56 °C), so day terms are near zero (sea breeze; Cecilia et al. 2026): the hot-day map follows the forecast. Trees: rooftop stations cannot see canopy cooling, so the street-level value of the bus-sensor study is kept (0.5 °C for 40 % cover at dawn)"
+    basis: "station calibration (C=65), °C for going from 0 to 100 %; [mean, sigma]. impervious_city: sealing of the 2.2 km forecast cell, added because the forecast carries no heat island (ICON-2I gives Porta Maggiore only 0.1-0.3 °C warmer at night than the Appia Antica park, on 14 Nov 2026, against about 2 °C in summer station data). impervious / trees: difference of the 100 m cell from that district. Fitted on 17 ASTI-Network rooftop stations, 184 summer days 2019-2020 (scripts/validate_heat.py, eval/scenarios/heat_validation.json): night minimum, district 2.9 and local 0.6, leave-one-station-out error 0.50 °C against 0.69 °C with no model; district sealing explains Rome's nights far better than the block itself, matching Cecilia et al. 2022 (3.4 °C on 1.4 km sealing). Daytime maximum: no reading beats 'every station equals the average' (0.56 °C), so day terms are near zero (sea breeze; Cecilia et al. 2026): the hot-day map follows the forecast. Trees: rooftop stations cannot see canopy cooling, so street-level values are used. Night: the Rome bus-sensor study (0.5 °C for 40 % cover at dawn). Day: 1.8 °C for 0 to 100 % canopy around the cell, from bicycle transects at city-block scale (Ziter et al. 2019 PNAS: more than 1.5 °C at 60-90 m, plus 0.2-0.6 °C on days above 30 °C; Locke et al. 2024: 1.62 °C at midday within 90 m), i.e. about 0.2 °C per 10 points of canopy; linear, so it understates the extra cooling above about 40 % cover"
   calibration:
-    value: "stations: night minimum fitted on 17 Rome stations, summers 2019-2020, error 0.48 °C on stations left out (0.69 °C without the model); daytime differences are not predicted better than the forecast alone"
+    value: "stations: night minimum fitted on 17 Rome stations, summers 2019-2020, error 0.50 °C on stations left out (0.69 °C without the model); by day sealing adds nothing beyond the forecast; street-level tree shade (1.8 °C for full canopy) comes from published bicycle transects, not from these rooftop stations"
     basis: "shown with every result so users know how far the numbers were checked"
   forecast_sigma_c:
     value: 1.5

@@ -34,6 +34,12 @@ EXAMPLES: dict[str, dict[str, Any]] = {
     "industrial_accident": {"place": "Energas", "area": "municipio:12"},
     "air_quality_episode": {"area": "municipio:2"},
     "strike_day_mobility": {"area": "municipio:1"},
+    # Coordinates where Nominatim is not reachable from the sandbox (Via Nazionale, Piazza Trilussa, Piazza Bologna).
+    "roadworks_check": {"place": "41.9003, 12.4925", "params": {"street": "Via Nazionale"}},
+    "cold_weather_plan": {"area": "municipio:1"},
+    "wildfire_risk": {"area": "municipio:15"},
+    "nightlife_check": {"place": "41.8915, 12.4700"},
+    "citizen_emergency_info": {"place": "41.9136, 12.5208"},
 }
 
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import io
+import math
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -24,6 +25,7 @@ from twin.providers import http
 from twin.providers.base import BBox, Observation, ProviderInfo
 from twin.providers.geo import expand_bbox, in_bbox
 from twin.providers.settings import Settings, integer, number
+from twin.providers.settings import value as setting_value
 
 PROVIDER_ID = "eea_hourly"
 STATION_CODE = re.compile(r"SPO[.\-]([A-Z]{2}\d{4}[A-Z])")
@@ -58,8 +60,13 @@ def read_parquet_rows(data: bytes) -> list[dict[str, Any]]:
 
 def parse_rows(rows: Iterable[Mapping[str, Any]], stations: Mapping[str, tuple[float, float]],
                pollutant_names: Mapping[int, str], utc_offset_hours: float,
-               relative_sigma: float, source_id: str) -> Iterator[Observation]:
-    """Turn EEA parquet rows into observations; drops invalid and unlocated values."""
+               relative_sigma: float, source_id: str,
+               sigma_floor: Mapping[str, float] | None = None) -> Iterator[Observation]:
+    """Turn EEA parquet rows into observations; drops invalid and unlocated values.
+
+    A reading's error is ``relative_sigma`` x value, combined with an absolute ``sigma_floor`` per
+    pollutant (the instrument's uncertainty near zero), so low readings are not trusted too much."""
+    floors = sigma_floor or {}
     offset = timedelta(hours=utc_offset_hours)
     for row in rows:
         value = row.get("Value")
@@ -85,7 +92,7 @@ def parse_rows(rows: Iterable[Mapping[str, Any]], stations: Mapping[str, tuple[f
             lat=lat,
             observed_at=observed,
             values={key: float(value)},
-            sigma={key: round(relative_sigma * float(value), 3)},
+            sigma={key: round(math.hypot(relative_sigma * float(value), floors.get(key, 0.0)), 3)},
             source_id=source_id,
             synthetic=False,
         )
@@ -151,6 +158,7 @@ class EeaHourlyProvider:
         stations = {code: pos for code, pos in self.stations().items() if in_bbox(pos[0], pos[1], search)}
         offset = number(self._config, "utc_offset_hours", 1.0)
         rel_sigma = number(self._config, "relative_sigma", 0.15)
+        floors = {str(k): float(setting_value(v, 0.0)) for k, v in (self._config.get("sigma_floor") or {}).items()}
         wanted = [url for url in self.parquet_urls()
                   if (code := station_code(url)) is None or code in stations]
         workers = max(1, integer(self._config, "download_workers", 8))
@@ -158,7 +166,8 @@ class EeaHourlyProvider:
             files = list(pool.map(self._get_cached, wanted))
         for url, data in zip(wanted, files):
             source = f"{PROVIDER_ID}@{url.rsplit('/', 1)[-1]}"
-            for obs in parse_rows(read_parquet_rows(data), stations, self._pollutant_names, offset, rel_sigma, source):
+            for obs in parse_rows(read_parquet_rows(data), stations, self._pollutant_names, offset, rel_sigma, source,
+                                  sigma_floor=floors):
                 if start <= obs.observed_at <= end:
                     yield obs
 

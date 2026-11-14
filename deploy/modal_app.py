@@ -28,7 +28,10 @@ image = (
                  "rasterio>=1.3", "scipy>=1.10", "pyarrow>=14", "gtfs-realtime-bindings>=1.0", "protobuf>=4",
                  "mapbox-earcut>=1.0")  # twin/physics (PR #13)
     # Heavy scenario kinds (SUMO, floods, plumes) run in deploy/scenarios_worker.py, which scales to zero.
-    .env({"PYTHONPATH": APP_DIR, "URBS_ROOT": APP_DIR, "URBS_SCENARIO_WORKER": "modal"})
+    .env({"PYTHONPATH": APP_DIR, "URBS_ROOT": APP_DIR, "URBS_SCENARIO_WORKER": "modal",
+          # Requests still running after 110 s answer 202 + job id (Modal cuts web requests at ~150 s
+          # with a redirect that has no CORS headers); results are shared across containers.
+          "URBS_SYNC_WAIT_S": "110", "URBS_JOBS_DICT": "urbs-gemina-jobs"})
     .add_local_dir("twin", f"{APP_DIR}/twin", ignore=["**/__pycache__"])
     .add_local_dir("config", f"{APP_DIR}/config")
     .add_local_dir("scripts", f"{APP_DIR}/scripts", ignore=["**/__pycache__"])
@@ -49,8 +52,8 @@ app = modal.App("urbs-gemina-tools")
 
 @app.function(image=image, volumes=VOLUMES, secrets=[modal.Secret.from_name("urbs-gemina-api")],
               min_containers=0, scaledown_window=300, timeout=600,  # sleeps when idle; event_planning playbook runs SUMO + Claude
-              memory=4096)  # heatwave rasters ran out of the default memory
-@modal.concurrent(max_inputs=20)
+              memory=8192)  # use-case playbooks in parallel ran out of 4 GB
+@modal.concurrent(max_inputs=4)  # heavy playbooks share one container; more inputs start another
 @modal.asgi_app()
 def api() -> object:
     from twin.api.app import create_app

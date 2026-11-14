@@ -18,3 +18,17 @@ describe("area argument", () => {
     expect(areaLabel({ type: "municipio", id: "15" })).toBe("Municipio XV");
   });
 });
+
+describe("area label in Italian", () => {
+  it("speaks Italian", async () => {
+    const { setLang } = await import("@/lib/i18n");
+    setLang("it");
+    try {
+      expect(areaLabel({ type: "city" })).toBe("Tutta la città");
+      expect(areaLabel({ type: "municipio", id: "2" })).toBe("Municipio II");
+      expect(areaLabel({ type: "zone", id: "1A" })).toBe("Zona 1A");
+    } finally {
+      setLang("en");
+    }
+  });
+});

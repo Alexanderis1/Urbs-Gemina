@@ -231,9 +231,16 @@ def test_gbfs_keeps_available_vehicles_without_ids() -> None:
     assert provider.describe().synthetic is False
 
 
-def test_sensor_community_pm_gets_a_wider_sigma_in_humid_air() -> None:
+def test_sensor_community_pm_is_rescaled_to_the_stations_and_wider_in_humid_air() -> None:
     from twin.providers.open.sensor_community import SensorCommunityProvider
+    from twin.providers.settings import Settings
 
+    # Calibration against the EEA stations (scripts/calibrate_citizen_pm.py): the sensors read about
+    # half the official daily mean, with a per-pollutant relative error.
+    settings = Settings(providers={"open": {"sensor_community": {
+        "api_url": "https://x", "humid_threshold_pct": 80, "humid_sigma_factor": 2.0,
+        "dry_scale": {"pm10": {"value": 0.5, "basis": "test"}, "pm25": 0.4},
+        "relative_sigma": {"pm10": 0.4, "pm25": {"value": 0.6, "basis": "test"}}}}})
     stamp = T0.strftime("%Y-%m-%d %H:%M:%S")
     records = [
         {"location": {"id": 1, "longitude": "12.50", "latitude": "41.90", "indoor": 0}, "sensor": {"id": 10},
@@ -245,12 +252,21 @@ def test_sensor_community_pm_gets_a_wider_sigma_in_humid_air() -> None:
         {"location": {"id": 3, "longitude": "12.52", "latitude": "41.92", "indoor": 1}, "sensor": {"id": 13},
          "timestamp": stamp, "sensordatavalues": [{"value_type": "P1", "value": "50.0"}]},
     ]
-    provider = SensorCommunityProvider(SETTINGS, fetch_bytes=lambda url: json.dumps(records).encode())
+    provider = SensorCommunityProvider(settings, fetch_bytes=lambda url: json.dumps(records).encode())
     observations = list(provider.fetch(ROME_BBOX, T0, T0))
-    assert [obs.values for obs in observations] == [{"pm10": 20.0, "pm25": 10.0}, {"pm10": 20.0}]
-    assert observations[0].sigma["pm10"] == pytest.approx(8.0)       # dry: 40 %
-    assert observations[1].sigma["pm10"] == pytest.approx(16.0)      # humid: doubled
+    assert [obs.values for obs in observations] == [{"pm10": 40.0, "pm25": 25.0}, {"pm10": 40.0}]
+    assert observations[0].sigma["pm10"] == pytest.approx(16.0)      # dry: 40 % of the corrected value
+    assert observations[0].sigma["pm25"] == pytest.approx(15.0)      # PM2.5 is noisier: 60 %
+    assert observations[1].sigma["pm10"] == pytest.approx(32.0)      # humid: doubled
     assert all(obs.entity_type == "AirQualityObserved" and not obs.synthetic for obs in observations)
+
+
+def test_sensor_community_calibration_is_in_config() -> None:
+    from twin.providers.open.sensor_community import SensorCommunityProvider
+
+    provider = SensorCommunityProvider(SETTINGS, fetch_bytes=lambda url: b"[]")
+    assert 0.3 < provider.dry_scale("pm10") < 1.0 and 0.3 < provider.dry_scale("pm25") < 1.0
+    assert provider.relative_sigma("pm25") > provider.relative_sigma("pm10") >= 0.4
 
 
 def test_cams_model_background_is_labelled_as_a_forecast() -> None:
@@ -310,3 +326,11 @@ def test_gbfs_snapshot_answers_a_now_window_despite_clock_skew() -> None:
     assert len(list(provider.fetch(ROME_BBOX, T0, T0))) == 1  # feed clock 30 s ahead of ours
     assert len(list(provider.fetch(ROME_BBOX, T0 + timedelta(minutes=5), T0 + timedelta(minutes=5)))) == 1
     assert list(provider.fetch(ROME_BBOX, T0 + timedelta(hours=2), T0 + timedelta(hours=2))) == []
+
+
+def test_cams_map_includes_ozone() -> None:
+    from twin.providers.open.open_meteo import parse_forecast
+
+    answers = [{"latitude": 41.9, "longitude": 12.5, "hourly": {"time": ["2026-07-20T14:00"], "ozone": [150.0]}}]
+    observations = parse_forecast(answers, 0.5, "cams_open_meteo")
+    assert observations[0].values == {"o3": 150.0} and observations[0].sigma == {"o3": 75.0}

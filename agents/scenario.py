@@ -33,7 +33,7 @@ class SlotCheckingGateway:
         return self.inner.call(name, arguments)
 
 
-def scenario_turn(message: str, *, llm: LLM, gateway: ToolGateway, language: str = "en",
+def scenario_turn(message: str, *, llm: LLM, gateway: ToolGateway, language: str = "it",
                   first_message: bool = False, config: AgentConfig | None = None) -> Answer:
     return answer(message, llm=llm, gateway=SlotCheckingGateway(gateway),
                   tool_names=["resolve_place", "run_scenario", "query_layer", "estimate_field"],

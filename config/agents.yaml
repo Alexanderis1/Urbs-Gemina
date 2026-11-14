@@ -7,6 +7,7 @@ models:
   permit: claude-opus-5-5
   scenario: claude-opus-5-5
   voice: claude-sonnet-5-5
+  signals: claude-sonnet-5-5   # citizen-report check (photos + texts + news), once per event
   effort: medium            # low | medium | high | xhigh | max
   max_tokens: 16000
   basis: "Opus 5.5 is the current default Claude model; Sonnet 5.5 for the voice line where latency matters."
@@ -35,9 +36,11 @@ tool_api:
 disclosure:
   en: "I am an AI assistant of the Urbs Gemina digital twin. I support decisions; the official decides."
   it: "Sono un assistente di intelligenza artificiale del gemello digitale Urbs Gemina. Supporto le decisioni; decide il funzionario."
+  citizen_en: "I am an AI assistant of the Urbs Gemina digital twin. Information for guidance only; in an emergency call 112."
+  citizen_it: "Sono un assistente di intelligenza artificiale del gemello digitale Urbs Gemina. Informazioni a scopo orientativo; per le emergenze chiama il 112."
   simulated_note_en: "Note: part of the data used here is simulated, not measured."
   simulated_note_it: "Nota: parte dei dati usati qui è simulata, non misurata."
-  basis: "AI Act art. 50 (transparency), Legge 132/2025 art. 14. Simulated note: guardrail 7, added by code when a cited run is synthetic."
+  basis: "AI Act art. 50 (transparency), Legge 132/2025 art. 14. Citizen tier: no officer decides for a resident, so their line says information only and 112 (interface thread, 14 Nov). Simulated note: guardrail 7, added by code when a cited run is synthetic."
 
 exa:
   api_key_env: EXA_API_KEY

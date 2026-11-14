@@ -17,3 +17,16 @@ describe("estimate display", () => {
     expect(calibrationLabel("calibrated")).toMatch(/calibrated/i);
   });
 });
+
+describe("estimate display in Italian", () => {
+  it("speaks Italian", async () => {
+    const { setLang } = await import("@/lib/i18n");
+    setLang("it");
+    try {
+      expect(formatRange({ p5: 0.4, p50: 1.2, p95: 3.05 }, "V/m")).toBe("1,2 V/m (intervallo da 0,4 a 3,1)");
+      expect(calibrationLabel("calibrated")).toBe("Calibrato sulle misure");
+    } finally {
+      setLang("en");
+    }
+  });
+});

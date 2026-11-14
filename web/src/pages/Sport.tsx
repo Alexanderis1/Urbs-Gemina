@@ -34,6 +34,8 @@ import {
 } from "@/lib/sport";
 import type { Envelope } from "@/api/types";
 import { errorText } from "@/lib/errors";
+import { locale, tr } from "@/lib/i18n";
+import { T } from "@/pages/Sport.text";
 
 type Tab = "map" | "deserts";
 const STATUS_COLOR: Record<string, string> = {
@@ -46,6 +48,8 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function Sport() {
+  const t = tr(T);
+  const num = (n: number) => n.toLocaleString(locale());
   const { run, tier } = useSession();
   const { palette } = useTheme();
   const [tab, setTab] = useState<Tab>("map");
@@ -202,7 +206,7 @@ export default function Sport() {
       await run<WhatIf>("sport_coverage", {
         area: "city",
         discipline: desertDisc,
-        open_school_gyms: [{ name: "School gym (what-if)", lon: gym.lon, lat: gym.lat }],
+        open_school_gyms: [{ name: t.gymName, lon: gym.lon, lat: gym.lat }],
       }),
     );
   }
@@ -227,9 +231,9 @@ export default function Sport() {
   return (
     <Workspace
       panel={
-        <Panel title="Sport" icon={Trophy} subtitle="Facilities and areas without them" width="w-[24rem]">
+        <Panel title="Sport" icon={Trophy} subtitle={t.subtitle} width="w-[24rem]">
           <Segmented
-            label="View"
+            label={t.view}
             value={tab}
             onChange={(t) => {
               // The facility sheet belongs to the Facilities tab: close it when leaving.
@@ -237,34 +241,34 @@ export default function Sport() {
               setSelected(null);
             }}
             options={[
-              { id: "map", label: "Facilities" },
-              { id: "deserts", label: "Sport deserts" },
+              { id: "map", label: t.facilities },
+              { id: "deserts", label: t.deserts },
             ]}
           />
           {error && <Callout tone="error">{error}</Callout>}
 
           {tab === "map" && (
             <>
-              <Section title="Filters">
+              <Section title={t.filters}>
                 <div className="grid grid-cols-2 gap-2">
-                  <Select label="Discipline" value={discipline} onChange={setDiscipline} options={disciplines} />
-                  <Select label="Kind" value={kind} onChange={setKind} options={kinds} />
-                  <Select label="Type" value={ftype} onChange={setFtype} options={FACILITY_TYPES} show={(t) => typeLabel(t as FacilityType)} />
+                  <Select label={t.discipline} value={discipline} onChange={setDiscipline} options={disciplines} />
+                  <Select label={t.kind} value={kind} onChange={setKind} options={kinds} />
+                  <Select label={t.type} value={ftype} onChange={setFtype} options={FACILITY_TYPES} show={(t) => typeLabel(t as FacilityType)} />
                   <Select label="Municipio" value={municipio} onChange={setMunicipio} options={MUNICIPI} show={(m) => `Municipio ${roman(Number(m))}`} />
                 </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" className="check" checked={accessibleOnly} onChange={(e) => setAccessibleOnly(e.target.checked)} />
-                  Accessible (stated by a source)
+                  {t.accessibleOnly}
                 </label>
               </Section>
               <Stat
-                label="Facilities shown"
-                value={shown.length.toLocaleString()}
-                note={clustered ? "Grouped in hexagons when zoomed out: zoom in to click one." : "Click one on the map."}
+                label={t.shown}
+                value={num(shown.length)}
+                note={clustered ? t.clusteredNote : t.clickOne}
               />
-              <p className="hint">Grey = closed, private or no access. These do not count in coverage.</p>
+              <p className="hint">{t.greyHint}</p>
               {facEnv && (
-                <Section title="Evidence" collapsible defaultOpen={false}>
+                <Section title={t.evidence} collapsible defaultOpen={false}>
                   <RunMeta env={facEnv} compact />
                 </Section>
               )}
@@ -273,27 +277,27 @@ export default function Sport() {
 
           {tab === "deserts" && (
             <>
-              <Select label="Discipline" value={desertDisc} onChange={setDesertDisc} options={disciplines.length ? disciplines : SAMPLE_DISCIPLINES} noAll />
+              <Select label={t.discipline} value={desertDisc} onChange={setDesertDisc} options={disciplines.length ? disciplines : SAMPLE_DISCIPLINES} noAll />
               {coverage && (
-                <Section title="Coverage">
+                <Section title={t.coverage}>
                   <div className="grid grid-cols-1 gap-2">
                     <Stat
-                      label={`Residents without one within ${reach} m`}
-                      value={coverage.residents_uncovered.toLocaleString()}
-                      note={`of ${coverage.residents_total.toLocaleString()}`}
+                      label={t.residentsWithout(reach)}
+                      value={num(coverage.residents_uncovered)}
+                      note={t.of(num(coverage.residents_total))}
                       tone="danger"
                     />
                     <Stat
-                      label={`Children without one within ${reach} m`}
-                      value={coverage.children_uncovered.toLocaleString()}
-                      note={`of ${coverage.children_total.toLocaleString()}`}
+                      label={t.childrenWithout(reach)}
+                      value={num(coverage.children_uncovered)}
+                      note={t.of(num(coverage.children_total))}
                       tone="danger"
                     />
                   </div>
-                  <p className="hint">Reach is a straight-line estimate of a walk.</p>
+                  <p className="hint">{t.reachHint}</p>
                   {coverage.desert_zones.length > 0 && (
                     <div>
-                      <div className="label mb-1">Desert zones</div>
+                      <div className="label mb-1">{t.desertZones}</div>
                       <ul className="flex flex-wrap gap-1">
                         {coverage.desert_zones.map((z) => (
                           <li key={z} className="rounded-sm border border-danger/40 bg-danger/10 px-1.5 text-xs">
@@ -307,21 +311,21 @@ export default function Sport() {
               )}
               <div className="card space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="label">What if: open a school gym</h2>
-                  <KindBadge kind="simulated" text="what-if" />
+                  <h2 className="label">{t.whatIfTitle}</h2>
+                  <KindBadge kind="simulated" text={t.whatIfBadge} />
                 </div>
-                <p className="hint">{gym ? `Gym at ${gym.lat.toFixed(4)}, ${gym.lon.toFixed(4)}` : "Click the map to place the gym."}</p>
+                <p className="hint">{gym ? t.gymAt(gym.lat.toFixed(4), gym.lon.toFixed(4)) : t.placeGym}</p>
                 <button type="button" className="btn w-full" disabled={!gym} onClick={() => void runWhatIf()}>
-                  Compare with and without
+                  {t.compare}
                 </button>
                 {whatIf && (
                   <div className="animate-rise-in space-y-2">
                     <div className="grid grid-cols-2 gap-2">
-                      <Stat label="Newly covered residents" value={whatIf.result.delta.residents_newly_covered.toLocaleString()} tone="whatif" />
-                      <Stat label="Newly covered children" value={whatIf.result.delta.children_newly_covered.toLocaleString()} tone="whatif" />
+                      <Stat label={t.newResidents} value={num(whatIf.result.delta.residents_newly_covered)} tone="whatif" />
+                      <Stat label={t.newChildren} value={num(whatIf.result.delta.children_newly_covered)} tone="whatif" />
                     </div>
                     <p className="hint">
-                      Desert zones: {whatIf.result.baseline.desert_zones.length} before, {whatIf.result.variant.desert_zones.length} after
+                      {t.desertBeforeAfter(whatIf.result.baseline.desert_zones.length, whatIf.result.variant.desert_zones.length)}
                     </p>
                   </div>
                 )}
@@ -339,7 +343,7 @@ export default function Sport() {
             title={displayName(selected)}
             subtitle={facilitySubtitle(selected)}
             actions={
-              <button type="button" className="btn-quiet btn-sm" onClick={() => setSelected(null)} aria-label="Close facility">
+              <button type="button" className="btn-quiet btn-sm" onClick={() => setSelected(null)} aria-label={t.closeFacility}>
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             }
@@ -351,24 +355,24 @@ export default function Sport() {
     >
       <CityMap layers={layers} pitch={30} onZoom={setZoom} onClick={tab === "deserts" ? (p) => setGym({ lon: p.lon, lat: p.lat }) : undefined} />
       <MapFloat position="bottom-left">
-        <div className="label mb-1">Map key</div>
+        <div className="label mb-1">{t.mapKey}</div>
         <ul className="space-y-1 text-xs">
           {tab === "map" ? (
             <>
-              <LegendRow swatch={sw(palette.point)} text="Usable facility" />
+              <LegendRow swatch={sw(palette.point)} text={t.legUsable} />
               <LegendRow
                 swatch={<span aria-hidden="true" className="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-white bg-link ring-2 ring-link" />}
-                text="Selected facility (larger, white outline)"
+                text={t.legSelected}
               />
-              <LegendRow swatch={sw(palette.inactive)} text="Closed, private or no access" />
-              <LegendRow swatch={sw(palette.point, false)} text="Hexagon: facilities grouped (darker = more)" />
+              <LegendRow swatch={sw(palette.inactive)} text={t.legClosed} />
+              <LegendRow swatch={sw(palette.point, false)} text={t.legHex} />
             </>
           ) : (
             <>
-              <LegendRow swatch={sw(palette.good, true, true)} text="Within walking reach of a facility" />
-              <LegendRow swatch={sw(palette.bad, true, true)} text="Sport desert zone" />
-              <LegendRow swatch={sw(palette.inactive, true, true)} text="Other zone" />
-              <LegendRow swatch={sw(palette.whatIf, true, true)} text="School gym (what-if)" />
+              <LegendRow swatch={sw(palette.good, true, true)} text={t.legReach} />
+              <LegendRow swatch={sw(palette.bad, true, true)} text={t.legDesert} />
+              <LegendRow swatch={sw(palette.inactive, true, true)} text={t.legOther} />
+              <LegendRow swatch={sw(palette.whatIf, true, true)} text={t.gymName} />
             </>
           )}
         </ul>
@@ -379,9 +383,10 @@ export default function Sport() {
 
 function facilitySubtitle(f: SportFeature): string {
   const p = f.properties;
-  return `${p.kind.replace(/_/g, " ")} · ${typeLabel(p.type)} · accessible: ${
-    p.accessible === true ? "yes" : p.accessible === false ? "no" : "not known"
-  } · ${accessLabel(p.access)}${p.closed ? " · closed" : ""}${p.municipio ? ` · Municipio ${roman(Number(p.municipio))}` : ""}`;
+  const t = tr(T);
+  return `${p.kind.replace(/_/g, " ")} · ${typeLabel(p.type)} · ${t.accessible}: ${
+    p.accessible === true ? t.yes : p.accessible === false ? t.no : t.notKnown
+  } · ${accessLabel(p.access)}${p.closed ? ` · ${t.closed}` : ""}${p.municipio ? ` · Municipio ${roman(Number(p.municipio))}` : ""}`;
 }
 
 function Select({
@@ -399,10 +404,11 @@ function Select({
   show?: (s: string) => string;
   noAll?: boolean;
 }) {
+  const t = tr(T);
   return (
     <Field label={label}>
       <select className="input" value={value} onChange={(e) => onChange(e.target.value)}>
-        {!noAll && <option value="">All</option>}
+        {!noAll && <option value="">{t.all}</option>}
         {options.map((o) => (
           <option key={o} value={o}>
             {show(o)}
@@ -414,7 +420,8 @@ function Select({
 }
 
 function FieldRow({ name, f }: { name: string; f: SportField }) {
-  const value = f.value == null ? "—" : f.value === true ? "yes" : f.value === false ? "no" : typeof f.value === "object" ? JSON.stringify(f.value) : String(f.value);
+  const t = tr(T);
+  const value = f.value == null ? "—" : f.value === true ? t.yes : f.value === false ? t.no : typeof f.value === "object" ? JSON.stringify(f.value) : String(f.value);
   return (
     <li className="space-y-0.5 py-2 text-sm">
       <div className="flex justify-between gap-2">
@@ -432,7 +439,7 @@ function FieldRow({ name, f }: { name: string; f: SportField }) {
             s.source
           )}
           {s.retrieved_at ? ` · ${s.retrieved_at}` : ""}
-          {s.confidence != null ? ` · confidence ${Math.round(s.confidence * 100)}%` : ""}
+          {s.confidence != null ? ` · ${t.confidence} ${Math.round(s.confidence * 100)}%` : ""}
           {s.quote ? ` · “${s.quote}”` : ""}
         </div>
       ))}
@@ -442,6 +449,7 @@ function FieldRow({ name, f }: { name: string; f: SportField }) {
 
 function FacilityPage({ f, canManage }: { f: SportFeature; canManage: boolean }) {
   const p = f.properties;
+  const t = tr(T);
   const [field, setField] = useState<string>("hours");
   const [value, setValue] = useState("");
   const [account, setAccount] = useState("org:");
@@ -459,12 +467,12 @@ function FacilityPage({ f, canManage }: { f: SportFeature; canManage: boolean })
           const body = (await res.json().catch(() => ({}))) as { detail?: unknown; reason?: unknown };
           throw new Error(String(body.detail ?? body.reason ?? `HTTP ${res.status}`));
         }
-        setMsg({ ok: true, text: "Sent. The value will show as confirmed by manager after the next refresh." });
-      } else setMsg({ ok: true, text: "Sample mode: kept in this browser only." });
+        setMsg({ ok: true, text: t.sent });
+      } else setMsg({ ok: true, text: t.sampleKept });
       setSaved((s) => [u, ...s]);
       setValue("");
     } catch (e) {
-      setMsg({ ok: false, text: `Not saved: ${errorText(e)}` });
+      setMsg({ ok: false, text: `${t.notSaved}: ${errorText(e)}` });
     }
   }
 
@@ -475,14 +483,14 @@ function FacilityPage({ f, canManage }: { f: SportFeature; canManage: boolean })
           <KindBadge kind="simulated" />
         </div>
       )}
-      <Section title="Disciplines">
+      <Section title={t.disciplines}>
         <ul className="divide-y divide-line">
           {Object.entries(p.discipline_details).map(([d, v]) => (
             <FieldRow key={d} name={d} f={v} />
           ))}
         </ul>
       </Section>
-      <Section title="Details">
+      <Section title={t.details}>
         <ul className="divide-y divide-line">
           {Object.entries(p.fields).map(([k, v]) => (
             <FieldRow key={k} name={k} f={v} />
@@ -490,27 +498,27 @@ function FacilityPage({ f, canManage }: { f: SportFeature; canManage: boolean })
         </ul>
       </Section>
       {canManage && (
-        <Section title="Manager: confirm or correct">
-          <Field label="Field">
+        <Section title={t.managerTitle}>
+          <Field label={t.field}>
             <select className="input" value={field} onChange={(e) => setField(e.target.value)}>
               {EDITABLE_FIELDS.map((x) => (
                 <option key={x}>{x}</option>
               ))}
             </select>
           </Field>
-          <Field label="New value">
-            <input className="input" placeholder={field === "disciplines" ? "football, tennis" : "New value"} value={value} onChange={(e) => setValue(e.target.value)} />
+          <Field label={t.newValue}>
+            <input className="input" placeholder={field === "disciplines" ? "football, tennis" : t.newValue} value={value} onChange={(e) => setValue(e.target.value)} />
           </Field>
-          <Field label="Organisation account" hint="Organisation account only. Use the club's public contact, never a person's.">
+          <Field label={t.orgAccount} hint={t.orgHint}>
             <input className="input" placeholder="org:your-club" value={account} onChange={(e) => setAccount(e.target.value.toLowerCase())} />
           </Field>
           <button type="button" className="btn w-full" onClick={() => void confirm()} disabled={!value}>
-            Confirm
+            {t.confirm}
           </button>
           {msg && <Callout tone={msg.ok ? "info" : "error"}>{msg.text}</Callout>}
           {saved.map((u) => (
             <div key={u.confirmed_at} className="hint">
-              {u.field} → {JSON.stringify(u.value)} by {u.account_ref}
+              {u.field} → {JSON.stringify(u.value)} {t.by} {u.account_ref}
             </div>
           ))}
         </Section>

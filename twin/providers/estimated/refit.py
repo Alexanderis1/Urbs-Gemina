@@ -21,6 +21,7 @@ All functions are pure; ``scripts/refit_register.py`` runs them on real data.
 """
 from __future__ import annotations
 
+import functools
 import math
 from dataclasses import dataclass, replace
 from typing import Any, Sequence
@@ -35,8 +36,14 @@ F64 = NDArray[np.float64]
 OFFSETS_DEG = np.arange(0.0, 120.0, 10.0)
 
 
+@functools.lru_cache(maxsize=1)
+def _refit_section() -> dict[str, Any]:
+    """Read once per process: the fit asks for these values thousands of times (once per site)."""
+    return dict(Settings.load().section("estimated", "register").get("refit", {}))
+
+
 def _cfg(key: str) -> Any:
-    node = Settings.load().section("estimated", "register").get("refit", {})[key]
+    node = _refit_section()[key]
     return node["value"] if isinstance(node, dict) and "value" in node else node
 
 

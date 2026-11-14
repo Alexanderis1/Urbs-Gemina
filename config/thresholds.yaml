@@ -103,3 +103,16 @@ air_quality:
     value: 25
     averaging: "calendar-year mean"
     source: "D.Lgs. 155/2010, Allegato XI"
+  o3_information_1h_ug_m3:
+    value: 180
+    averaging: "1-hour mean; information threshold: the public must be informed"
+    source: "D.Lgs. 155/2010, Allegato XII"
+  o3_alert_1h_ug_m3:
+    value: 240
+    averaging: "1-hour mean; alert threshold"
+    source: "D.Lgs. 155/2010, Allegato XII"
+  o3_target_8h_ug_m3:
+    value: 120
+    averaging: "highest daily 8-hour running mean, not more than 25 days a year averaged over 3 years (target value)"
+    source: "D.Lgs. 155/2010, Allegato VII"
+  # Directive (EU) 2024/2881 lowers several limits from 2030 (e.g. NO2 and PM10 annual 20, PM2.5 annual 10); not yet in force.

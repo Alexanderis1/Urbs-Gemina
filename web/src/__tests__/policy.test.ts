@@ -75,6 +75,18 @@ describe("live API routes", () => {
     const p = planForward("/ask", "office", { question: "q" }, { ...env, ORCHESTRATOR_URL: "" });
     expect(p.ok && "url" in p && p.url).toBe("https://api.example/ask");
   });
+  it("reads a long-running job with the caller's own key", () => {
+    expect(planForward("/jobs/ab12-CD_3", "office", {}, env)).toEqual({
+      ok: true,
+      url: "https://api.example/jobs/ab12-CD_3",
+      key: "office-key",
+      body: {},
+      method: "GET",
+    });
+    expect(planForward("/jobs/ab12", "citizen", {}, env)).toMatchObject({ ok: true, key: env.TOOL_API_CITIZEN_KEY });
+    expect(planForward("/jobs/../tools/x", "office", {}, env)).toMatchObject({ ok: false, status: 404 });
+    expect(planForward("/jobs/", "office", {}, env)).toMatchObject({ ok: false, status: 404 });
+  });
   it("knows the permit_report tool", () => {
     expect(planForward("/tools/permit_report", "office", {}, env)).toMatchObject({ ok: true });
   });
@@ -88,5 +100,15 @@ describe("live API routes", () => {
       method: "GET",
     });
     expect(planForward("/use_cases", "citizen", {}, env)).toMatchObject({ ok: true, key: "", method: "GET" });
+  });
+});
+
+describe("citizen report tools", () => {
+  const env = { TOOL_API_URL: "https://api.example", TOOL_API_OFFICE_KEY: "o", TOOL_API_CITIZEN_KEY: "", ORCHESTRATOR_URL: "" };
+  it("are office only", () => {
+    for (const tool of ["signal_events", "verify_signal"]) {
+      expect(planForward(`/tools/${tool}`, "citizen", {}, env)).toMatchObject({ ok: false, status: 403 });
+      expect(planForward(`/tools/${tool}`, "office", { reports: [] }, env)).toMatchObject({ ok: true, key: "o" });
+    }
   });
 });
