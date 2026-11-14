@@ -39,3 +39,12 @@ export function conversationCallbacks(onError: (message: string) => void) {
     onError: (message: unknown) => onError(String(message)),
   };
 }
+
+/** Browser microphone failures: "denied" (blocked for this site) or "missing" (no microphone found). */
+export function micProblem(e: unknown): "denied" | "missing" | null {
+  const name = e instanceof Error || (typeof DOMException !== "undefined" && e instanceof DOMException) ? (e as Error).name : "";
+  const message = e instanceof Error ? e.message : String(e ?? "");
+  if (name === "NotAllowedError" || name === "SecurityError" || /permission denied|not allowed/i.test(message)) return "denied";
+  if (name === "NotFoundError" || name === "OverconstrainedError" || /requested device not found/i.test(message)) return "missing";
+  return null;
+}
