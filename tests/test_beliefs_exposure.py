@@ -8,7 +8,7 @@ import pytest
 
 from twin.beliefs.calibration import sensor_health
 from twin.beliefs.config import load_specs
-from twin.beliefs.crowds import census_per_cell
+from twin.beliefs.crowds import census_per_cell, points_per_cell
 from twin.beliefs.exposure import exposure
 from twin.beliefs.grid import cell_boundary, cell_of, cells_in_bbox, local_xy_km
 from twin.beliefs.layer import assimilate, prior_layer
@@ -47,12 +47,12 @@ def test_people_above_threshold_with_a_range(tmp_path: Path) -> None:
     by_mun = {g["group"]: g for g in out["result"]["groups"]}
     m1 = by_mun["1"]
     assert m1["residents"] == 1000
-    assert m1["people_above"]["expected"] == pytest.approx(1000, rel=0.01)
-    assert m1["children_above"]["expected"] == pytest.approx(150, rel=0.01)
+    assert m1["residents_above"]["expected"] == pytest.approx(1000, rel=0.01)
+    assert m1["children_0_14_above"]["expected"] == pytest.approx(150, rel=0.01)
     m2 = by_mun["2"]
     # Far from the station: near the prior (30), so a minority chance of being above 40.
-    assert 0 < m2["people_above"]["expected"] < 400
-    assert m2["people_above"]["low"] <= m2["people_above"]["expected"] <= m2["people_above"]["high"]
+    assert 0 < m2["residents_above"]["expected"] < 400
+    assert m2["residents_above"]["low"] <= m2["residents_above"]["expected"] <= m2["residents_above"]["high"]
     assert m2["mean_exposure"]["value"] < m1["mean_exposure"]["value"]
     city = out["result"]["city"]
     assert city["residents"] == 1400
@@ -86,3 +86,35 @@ def test_check_sensors_reads_its_settings_from_config() -> None:
     from twin.beliefs.api import check_sensors
 
     assert check_sensors("air_no2", []) == []
+
+
+def test_heat_exposure_counts_elderly_and_care_homes(tmp_path: Path) -> None:
+    census = census_file(tmp_path)
+    ages = tmp_path / "ages.csv"
+    ages.write_text("sez_id,elderly_65_plus,elderly_75_plus\n")  # header only: joined by sez_id below
+    homes = tmp_path / "homes.geojson"
+    homes.write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {"name": "x"}, "geometry": {"type": "Point", "coordinates": list(A)}}]}))
+    cells = cells_in_bbox(WINDOW, 9)
+    c = census_per_cell(census, cells, ages_path=ages)
+    for cell, n in points_per_cell(homes, cells).items():
+        c.setdefault(cell, {"residents": 0})["care_homes"] = n
+    spec = load_specs()["temperature"]
+    assert spec.prior_field is not None and spec.prior_field.value_key == "temperature_c"
+    hot = Observation("f", "WeatherForecast", *A, T0, {"temperature_c": 38.0}, {"temperature_c": 1.0}, "om_weather_forecast", False)
+    layer = prior_layer(spec, cells, T0, prior_field=[hot])
+    out = exposure(layer, c, threshold=32.0, columns=("residents", "elderly_65_plus", "care_homes"))
+    city = out["result"]["city"]
+    assert city["care_homes_above"]["expected"] == 1
+    assert city["elderly_65_plus_above"]["expected"] == 0  # the ages file had no rows
+    assert city["residents_above"]["expected"] >= 1000
+
+
+def test_heat_watch_uses_the_configured_threshold(tmp_path: Path) -> None:
+    from twin.beliefs.exposure import heat_watch
+
+    cells = cells_in_bbox(WINDOW, 9)
+    layer = prior_layer(load_specs()["temperature"], cells, T0)
+    out = heat_watch(layer, census_per_cell(census_file(tmp_path), cells))
+    assert out["inputs"]["threshold"] == 32.0
+    assert "elderly_75_plus_above" in out["result"]["city"]

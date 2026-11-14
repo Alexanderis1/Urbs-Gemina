@@ -15,6 +15,7 @@ extracted here; settings live in the ``crowds`` block of config/beliefs.yaml.
 """
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import math
@@ -42,7 +43,7 @@ def crowds_settings(config_dir: Path = CONFIG_DIR) -> dict[str, Any]:
     return raw
 
 
-def census_per_cell(path: Path, cells: Sequence[str]) -> dict[str, dict[str, Any]]:
+def census_per_cell(path: Path, cells: Sequence[str], ages_path: Path | None = None) -> dict[str, dict[str, Any]]:
     """ISTAT 2021 census per cell: residents, children aged 0-14 and municipio.
 
     Each section goes to the cell holding its centre (sections are small in the
@@ -51,6 +52,11 @@ def census_per_cell(path: Path, cells: Sequence[str]) -> dict[str, dict[str, Any
     """
     wanted = set(cells)
     resolution = _resolution(cells)
+    ages: dict[str, tuple[int, int]] = {}
+    if ages_path is not None:
+        with ages_path.open(encoding="utf-8") as fh:
+            for rec in csv.DictReader(fh):
+                ages[rec["sez_id"]] = (int(rec["elderly_65_plus"] or 0), int(rec["elderly_75_plus"] or 0))
     out: dict[str, dict[str, Any]] = {}
     by_mun: dict[str, dict[str, int]] = {}
     for feature in json.loads(path.read_text(encoding="utf-8"))["features"]:
@@ -65,12 +71,31 @@ def census_per_cell(path: Path, cells: Sequence[str]) -> dict[str, dict[str, Any
         row = out.setdefault(cell, {"residents": 0, "children_0_14": 0, "municipio": None})
         row["residents"] += residents
         row["children_0_14"] += int(props.get("children_0_14") or 0)
+        if ages_path is not None:
+            e65, e75 = ages.get(str(props.get("sez_id")), (0, 0))
+            row["elderly_65_plus"] = row.get("elderly_65_plus", 0) + e65
+            row["elderly_75_plus"] = row.get("elderly_75_plus", 0) + e75
         mun = str(props.get("municipio")) if props.get("municipio") is not None else None
         if mun is not None:
             counts = by_mun.setdefault(cell, {})
             counts[mun] = counts.get(mun, 0) + residents
     for cell, counts in by_mun.items():
         out[cell]["municipio"] = max(counts, key=lambda m: counts[m])
+    return out
+
+
+def points_per_cell(path: Path, cells: Sequence[str]) -> dict[str, int]:
+    """Count point features (e.g. care homes) per cell."""
+    wanted = set(cells)
+    resolution = _resolution(cells)
+    out: dict[str, int] = {}
+    for feature in json.loads(path.read_text(encoding="utf-8"))["features"]:
+        if feature["geometry"]["type"] != "Point":
+            continue
+        lon, lat = feature["geometry"]["coordinates"][:2]
+        cell = cell_of(lon, lat, resolution)
+        if cell in wanted:
+            out[cell] = out.get(cell, 0) + 1
     return out
 
 

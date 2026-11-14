@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import math
 from statistics import NormalDist
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 
@@ -24,7 +24,12 @@ from twin.beliefs.layer import BeliefLayer
 Z95 = NormalDist().inv_cdf(0.95)
 
 
-def exposure(layer: BeliefLayer, census: Mapping[str, Mapping[str, Any]], threshold: float) -> dict[str, Any]:
+def exposure(
+    layer: BeliefLayer,
+    census: Mapping[str, Mapping[str, Any]],
+    threshold: float,
+    columns: Sequence[str] = ("residents", "children_0_14"),
+) -> dict[str, Any]:
     idx = [layer.index[c] for c in census if c in layer.index]
     cells = [c for c in census if c in layer.index]
     mean = layer.mean[idx]
@@ -32,26 +37,25 @@ def exposure(layer: BeliefLayer, census: Mapping[str, Mapping[str, Any]], thresh
     p_above = np.array([1.0 - NormalDist().cdf((threshold - m) / s) if s > 0 else float(m > threshold) for m, s in zip(mean, sd)])
     low_above = (mean - Z95 * sd) > threshold
     high_above = (mean + Z95 * sd) > threshold
-    residents = np.array([float(census[c]["residents"]) for c in cells])
-    children = np.array([float(census[c].get("children_0_14") or 0) for c in cells])
+    residents = np.array([float(census[c].get("residents") or 0) for c in cells])
+    counts = {col: np.array([float(census[c].get(col) or 0) for c in cells]) for col in columns}
     groups = np.array([str(census[c].get("municipio")) for c in cells])
 
     def summary(mask: np.ndarray, name: str) -> dict[str, Any]:
         r = residents[mask]
-        k = children[mask]
         total = float(r.sum())
         weighted = float((r * mean[mask]).sum() / total) if total > 0 else math.nan
         # Errors of nearby cells are correlated, so the population-weighted sd is the
         # weighted mean of cell sds (fully correlated), not the smaller independent one.
         weighted_sd = float((r * sd[mask]).sum() / total) if total > 0 else math.nan
-        return {
+        row: dict[str, Any] = {
             "group": name,
-            "residents": int(total),
-            "children_0_14": int(k.sum()),
             "mean_exposure": {"value": round(weighted, 2), "sd": round(weighted_sd, 2), "unit": layer.spec.unit},
-            "people_above": _count(r, p_above[mask], low_above[mask], high_above[mask]),
-            "children_above": _count(k, p_above[mask], low_above[mask], high_above[mask]),
         }
+        for col, values in counts.items():
+            row[col] = int(values[mask].sum())
+            row[f"{col}_above"] = _count(values[mask], p_above[mask], low_above[mask], high_above[mask])
+        return row
 
     by_group = [summary(groups == g, g) for g in sorted(set(groups.tolist()), key=_order)]
     warnings = list(layer.spec.caveats)
@@ -69,7 +73,7 @@ def exposure(layer: BeliefLayer, census: Mapping[str, Mapping[str, Any]], thresh
             "city": summary(np.ones(len(cells), dtype=bool), "city"),
             "groups": by_group,
         },
-        "data_kinds": {layer.spec.name: "simulated" if layer.synthetic else "estimated", "residents": "real"},
+        "data_kinds": {layer.spec.name: "simulated" if layer.synthetic else "estimated", "census": "real"},
         "sources": [{"id": s, "retrieved_at": layer.as_of.isoformat()} for s in layer.sources] + [{"id": "istat_census_2021", "retrieved_at": None}],
         "synthetic": layer.synthetic,
         "warnings": warnings,
@@ -87,3 +91,17 @@ def _count(people: np.ndarray, p: np.ndarray, low: np.ndarray, high: np.ndarray)
 
 def _order(group: str) -> tuple[int, str]:
     return (int(group), "") if group.isdigit() else (10**6, group)
+
+
+def heat_watch(temperature: BeliefLayer, census: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+    """Elderly residents and care homes where it is likely above the heat threshold (``heat`` in config)."""
+    import yaml
+
+    from twin.beliefs.config import CONFIG_DIR
+
+    raw = yaml.safe_load((CONFIG_DIR / "beliefs.yaml").read_text(encoding="utf-8"))["heat"]
+    out = exposure(temperature, census, float(raw["threshold_c"]),
+                   columns=("residents", "elderly_65_plus", "elderly_75_plus", "care_homes"))
+    out["warnings"].append("care homes come from OpenStreetMap and are incomplete (17 mapped in Rome on 13 Nov 2026)")
+    out["warnings"].append(f"heat threshold {raw['threshold_c']} degC is an operational assumption: {raw['basis']}")
+    return out
