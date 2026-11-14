@@ -79,7 +79,7 @@ const T = texts({
     errPublic: (e: string) => `This could not be loaded right now. ${e}`,
     emptyArea: "No data in this area right now",
     incomplete: (shown: string, total: string, things: string) =>
-      `Incomplete: only the first ${shown} of ${total} ${things} arrived. Pick a municipio, an urban zone or draw an area to see them all.`,
+      `Thinned view: ${shown} of ${total} ${things}, picked evenly across the area. Pick a municipio, an urban zone or draw an area to see them all.`,
     onePer: "One dot per",
     site: "site",
     record: "record",
@@ -128,7 +128,7 @@ const T = texts({
     errPublic: (e: string) => `Al momento non è stato possibile caricarlo. ${e}`,
     emptyArea: "Nessun dato in quest'area adesso",
     incomplete: (shown: string, total: string, things: string) =>
-      `Incompleto: sono arrivati solo i primi ${shown} di ${total} ${things}. Scegli un municipio, una zona urbanistica o disegna un'area per vederli tutti.`,
+      `Vista ridotta: ${shown} di ${total} ${things}, scelti in modo uniforme nell'area. Scegli un municipio, una zona urbanistica o disegna un'area per vederli tutti.`,
     onePer: "Un punto per",
     site: "sito",
     record: "record",

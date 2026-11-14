@@ -78,7 +78,7 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     25,000 cells, more than one answer carries) and the camera frames the chosen area.
 24. **One value everywhere is said in words**, not drawn as a colour scale from x to x.
 25. **A layer the service does not carry is NOT AVAILABLE**, with the service's own first sentence as the reason.
-    An incomplete answer says how many items arrived out of how many.
+    A large area comes back thinned (items picked evenly); the screen says how many of how many are shown.
 26. **No call is started more than twice.** After a missing answer the service is woken with a light request and
     the call runs once more; a request the service cannot serve is not repeated (every start costs money).
 27. **A long run is waited for, not repeated.** When a request runs long the service answers "still running" with
