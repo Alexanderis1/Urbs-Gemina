@@ -198,3 +198,71 @@ def check_sensors_tool(runtime: ToolRuntime, layer: str, area: Any = "city", tim
     sources = [Source(id=name, retrieved_at=at.isoformat()) for name in used]
     return runtime.envelope("check_sensors", inputs, result, {name: "real" for name in used}, sources,
                             feed_warnings)
+
+
+def _processed(runtime: ToolRuntime, name: str) -> Path:
+    return runtime.settings.paths.data / "processed" / name
+
+
+def heat_watch_tool(runtime: ToolRuntime, area: Any = "city", time: str | None = None) -> dict[str, Any]:
+    """Elderly residents and health/care sites where it is likely above the heat threshold (WS5 heat_watch)."""
+    inputs = {"area": area, "time": time}
+    mods = _ws5("api", "grid", "config", "crowds", "exposure")
+    if mods is None or not hasattr(mods[4], "heat_watch"):
+        return _not_wired(runtime, "heat_watch", inputs)
+    crowds, exposure = mods[3], mods[4]
+    census_path = _census_path(runtime)
+    if not census_path.exists():
+        return runtime.envelope("heat_watch", inputs, None, {"residents": "not_available"}, [], [],
+                                status="not_available", reason="Census sections (WS1) not built yet.")
+    resolved = resolve_area(area, runtime.store, runtime.settings)
+    feed_warnings: list[str] = []
+    built = _belief(runtime, "temperature", resolved, time, feed_warnings)
+    if isinstance(built, str):
+        return runtime.envelope("heat_watch", inputs, None, {"temperature": "not_available"}, [], feed_warnings,
+                                status="not_available", reason=built)
+    belief, _, cells = built
+    ages = _processed(runtime, "census_ages.csv")
+    if not ages.exists():
+        feed_warnings.append("Census age table not built: elderly counts are missing.")
+    census = {cell: dict(row) for cell, row in
+              crowds.census_per_cell(census_path, cells, ages_path=ages if ages.exists() else None).items()}
+    sites = _processed(runtime, "sensitive_sites.geojson")
+    if sites.exists():
+        health = crowds.points_per_cell(sites, cells, categories=["health"])
+        for cell, row in census.items():
+            row["health_sites"] = int(health.get(cell, 0))
+    part = exposure.heat_watch(belief, census)
+    return _wrap(runtime, "heat_watch", inputs, part, resolved, {}, feed_warnings)
+
+
+#: (area id, file mtimes) -> per-cell hazard class / underpass count. The city-wide hazard lookup is slow.
+_FLOOD_CACHE: dict[tuple[str, float, float], tuple[dict[str, str], dict[str, int]]] = {}
+
+
+def flood_watch_tool(runtime: ToolRuntime, area: Any = "city", time: str | None = None) -> dict[str, Any]:
+    """Cells where heavy rain is likely on flood-prone ground or road underpasses (WS5 flood_watch)."""
+    inputs = {"area": area, "time": time}
+    mods = _ws5("api", "grid", "config", "flood")
+    if mods is None:
+        return _not_wired(runtime, "flood_watch", inputs)
+    flood = mods[3]
+    hazard_path = _processed(runtime, "flood_hazard_pgra.geojson")
+    under_path = _processed(runtime, "road_underpasses_osm.geojson")
+    if not hazard_path.exists() or not under_path.exists():
+        return runtime.envelope("flood_watch", inputs, None, {"flood_hazard": "not_available"}, [], [],
+                                status="not_available", reason="Flood hazard or underpass layer (WS1) not built yet.")
+    resolved = resolve_area(area, runtime.store, runtime.settings)
+    feed_warnings: list[str] = []
+    built = _belief(runtime, "rain", resolved, time, feed_warnings)
+    if isinstance(built, str):
+        return runtime.envelope("flood_watch", inputs, None, {"rain": "not_available"}, [], feed_warnings,
+                                status="not_available", reason=built)
+    belief, _, cells = built
+    key = (resolved.id, hazard_path.stat().st_mtime, under_path.stat().st_mtime)
+    if key not in _FLOOD_CACHE:
+        _FLOOD_CACHE[key] = (dict(flood.hazard_per_cell(hazard_path, cells)),
+                             dict(flood.underpasses_per_cell(under_path, cells)))
+    hazard, underpasses = _FLOOD_CACHE[key]
+    part = flood.flood_watch(belief, hazard, underpasses)
+    return _wrap(runtime, "flood_watch", inputs, part, resolved, {}, feed_warnings)

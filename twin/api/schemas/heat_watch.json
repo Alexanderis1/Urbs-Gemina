@@ -1,0 +1,47 @@
+{
+  "name": "heat_watch",
+  "description": "Elderly residents and health/care sites where it is likely above the heat threshold, per municipio.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Elderly residents and health/care sites where it is likely above the heat threshold, per municipio.",
+    "properties": {
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      }
+    },
+    "title": "HeatWatchIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/heat_watch"
+  },
+  "owner": "WS5"
+}

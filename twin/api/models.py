@@ -110,6 +110,20 @@ class CheckSensorsIn(Strict):
     time: str | None = Field(default=None, description="ISO 8601; default now")
 
 
+class HeatWatchIn(Strict):
+    """Elderly residents and health/care sites where it is likely above the heat threshold, per municipio."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class FloodWatchIn(Strict):
+    """Cells where heavy rain is likely on flood-prone ground (PGRA) or road underpasses: places to watch."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
 class RunScenarioIn(Strict):
     """Run a what-if scenario on an operating area: baseline vs variant with ranges."""
 
