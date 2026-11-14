@@ -7,7 +7,8 @@ from typing import Any
 import pytest
 
 from twin.tools.crowds_exposure import (check_sensors_tool, crowds_view, exposure_count, flood_watch_tool,
-                                        heat_watch_tool, schools_check, site_values_at)
+                                        heat_watch_tool, schools_check, site_values_at,
+                                        care_sites_check, feed_status)
 from twin.tools.envelope import ToolError
 from twin.tools.layers import LayerStore
 from twin.tools.runtime import ToolRuntime
@@ -99,6 +100,19 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         return _part(schools=[{"name": "Visconti"}])
 
     schools.schools_to_check = schools_to_check  # type: ignore[attr-defined]
+
+    def care_sites_to_check(layers: Any, path: Any, census: Any, top: int = 10) -> Any:
+        seen["care"] = (layers, path, census, top)
+        return _part(sites=[{"name": "RSA"}])
+
+    schools.care_sites_to_check = care_sites_to_check  # type: ignore[attr-defined]
+    freshness = types.ModuleType("twin.beliefs.freshness")
+
+    def feed_freshness(providers: Any, now: Any) -> Any:
+        seen.setdefault("fresh_calls", []).append(dict(providers))
+        return _part(feeds=[{"feed": "rain", "status": "live"}], summary={"live": 1})
+
+    freshness.feed_freshness = feed_freshness  # type: ignore[attr-defined]
     micro = types.ModuleType("twin.beliefs.microclimate")
     micro.raster_mean_per_cell = lambda path, cells: {"c1": 1.0}  # type: ignore[attr-defined]
 
@@ -107,7 +121,7 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         return "LAYER+MICRO"
 
     micro.apply_microclimate = apply_microclimate  # type: ignore[attr-defined]
-    for mod in (api, grid, bconfig, crowds, exposure, sites, flood, schools, micro):
+    for mod in (api, grid, bconfig, crowds, exposure, sites, flood, schools, micro, freshness):
         monkeypatch.setitem(sys.modules, mod.__name__, mod)
     return seen
 
@@ -218,3 +232,23 @@ def test_schools_to_check_uses_the_configured_legal_limits(runtime: ToolRuntime,
     assert {k: v[1] for k, v in layers.items()} == {"air_no2": 200.0, "air_pm10": 50.0, "air_pm25": 25.0}
     assert top == 5 and census == {"c1": {"residents": 10}}
     assert env["result"]["limits"]["air_no2"]["name"] == "no2_hourly_limit"
+
+
+def test_care_sites_use_the_age_table(runtime: ToolRuntime, fake_ws5: dict[str, Any], tmp_path: Path) -> None:
+    (tmp_path / "processed" / "sensitive_sites.geojson").write_text('{"type": "FeatureCollection", "features": []}')
+    (tmp_path / "processed" / "census_ages.csv").write_text("sez_id,elderly_65_plus,elderly_75_plus\n")
+    runtime.providers = {"air_quality": object()}  # type: ignore[dict-item]
+    env = care_sites_check(runtime, SQUARE, top=4)
+    assert env["status"] == "ok" and env["tool"] == "care_sites_to_check"
+    assert fake_ws5["care"][3] == 4 and str(fake_ws5["ages"]).endswith("census_ages.csv")
+
+
+def test_feed_status_is_cached_for_a_few_minutes(runtime: ToolRuntime, fake_ws5: dict[str, Any]) -> None:
+    runtime.providers = {"rain": object()}  # type: ignore[dict-item]
+    first = feed_status(runtime)
+    second = feed_status(runtime)
+    assert first["status"] == "ok" and first["tool"] == "feed_status"
+    assert first["result"]["summary"] == {"live": 1}
+    assert len(fake_ws5["fresh_calls"]) == 1 and second["cached"] is True
+    feed_status(runtime, refresh=True)
+    assert len(fake_ws5["fresh_calls"]) == 2
