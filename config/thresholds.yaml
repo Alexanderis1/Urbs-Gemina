@@ -18,3 +18,64 @@ antenna_context:
   radius_m: 300
   source: "Application form (Modello A, D.Lgs. 259/2003)"
   meaning: "Context information only. Not a prohibition (Consiglio di Stato, Sez. IV, 2021)."
+
+river_gauges:
+  # Official hydrometric alert thresholds of the Regione Lazio civil-protection alert system (metres on the gauge).
+  source: "Regione Lazio, Determinazione G11149 del 2 settembre 2025 (aggiornamento soglie idrometriche), table of section 4"
+  url: "https://mydewiki.cimafoundation.org/italia/determina_g11149_02_09_2025_aggiornamento_soglie_idrometriche_lazio.pdf"
+  confidence: 80
+  note: "Read from the text of the determina as indexed on 13 Nov 2026; check against the PDF before relying on it."
+  stations:
+    tevere_ripetta: {river: Tevere, attenzione_m: 7.0, preallarme_m: 11.0, allarme_m: 13.0}
+    tevere_ponte_del_grillo: {river: Tevere, attenzione_m: 4.0, preallarme_m: 5.0, allarme_m: 6.0}
+    tevere_mezzocammino: {river: Tevere, attenzione_m: 3.5, preallarme_m: 5.0, allarme_m: 7.0}
+    aniene_ponte_salario: {river: Aniene, attenzione_m: 3.0, preallarme_m: 5.0, allarme_m: 7.0}
+    aniene_lunghezza: {river: Aniene, attenzione_m: 3.0, preallarme_m: 4.5, allarme_m: 5.0}
+    aniene_ponte_lucano: {river: Aniene, attenzione_m: 3.0, preallarme_m: 4.0, allarme_m: 4.5}
+
+toxic_gas:
+  # Concentration thresholds for the chemical-plume scenario (WS6), 60-minute exposure, mg/m3.
+  # Italian Seveso land-use planning (DM 9 maggio 2001) uses LC50 / IDLH for its damage zones; the AEGL
+  # guideline values are added to show reversible and disabling effects. Health guidelines, not legal limits,
+  # except where the DM refers to them for planning.
+  source: "NIOSH IDLH values (CDC); US EPA AEGL final values (60 min); DM 9 maggio 2001 (zone di danno)"
+  confidence: 80
+  substances:
+    ammonia:   {aegl1_mg_m3: 21, aegl2_mg_m3: 111, idlh_mg_m3: 210, aegl3_mg_m3: 766, molar_mass: 17.03}
+    chlorine:  {aegl1_mg_m3: 1.5, aegl2_mg_m3: 5.8, idlh_mg_m3: 29, aegl3_mg_m3: 58, molar_mass: 70.9}
+    hydrogen_sulfide: {aegl1_mg_m3: 0.71, aegl2_mg_m3: 38, idlh_mg_m3: 139, aegl3_mg_m3: 70, molar_mass: 34.08}
+  meaning:
+    aegl1: "discomfort, reversible"
+    aegl2: "irreversible or serious effects, or impaired ability to escape"
+    idlh: "immediately dangerous to life or health (Seveso 'lesioni irreversibili' boundary)"
+    aegl3: "life-threatening effects"
+
+emergency_response:
+  # Target times for emergency services, used by the emergency-access scenario (WS6).
+  ambulance_urban_min:
+    value: 8
+    source: "DPR 27 marzo 1992 and Atto d'intesa Stato-Regioni 1996 (118 system): 8 minutes in urban areas"
+    confidence: 75
+  ambulance_extraurban_min:
+    value: 20
+    source: "same as above: 20 minutes outside urban areas"
+    confidence: 75
+  fire_min:
+    value: 20
+    source: "assumption (C=40): Vigili del Fuoco national average arrival time is about 20 minutes; no legal target found"
+    confidence: 40
+  police_min:
+    value: 15
+    source: "assumption (C=35): no legal target found"
+    confidence: 35
+
+heat:
+  # Heat thresholds used by the heatwave scenario (WS6).
+  hot_day_tmax_c:
+    value: 35
+    source: "assumption (C=55): 'very hot day' (daily maximum 35 °C or more), as used in SNPA/ISPRA climate indicators; the Ministry of Health bulletin for Rome uses city-specific apparent-temperature levels that are not published as fixed numbers"
+    confidence: 55
+  tropical_night_tmin_c:
+    value: 20
+    source: "ETCCDI climate index TR: tropical night when the daily minimum stays above 20 °C"
+    confidence: 90

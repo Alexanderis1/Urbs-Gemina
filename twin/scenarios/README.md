@@ -19,17 +19,26 @@ envelope = engine.run(kind, area, change, data=ScenarioData(...))
 
 ## Live inputs
 
-`twin.scenarios.baselines.live_data(kind, area, change)` returns a `ScenarioData` with the real Cartoradio baseline (WS3 provider `cartoradio_grid`, read by byte range for just the window the run needs, held in memory only). The tool API should call `engine.run(kind, area, change, data=live_data(kind, area, change))`. Census and boundaries are read from WS1 layers automatically.
+`twin.scenarios.baselines.live_data(kind, area, change)` returns the `ScenarioData` a run needs from live providers: the Cartoradio baseline (antenna, exposure; read by byte range, held in memory only), the GloFAS discharge forecast (river flood, and rain flood with a `river` forecast), rainfall from radar or forecast (rain flood), the wind forecast at the release point (chemical plume, `"wind": "forecast"`), daily max and min temperatures (heatwave). The tool API should call `engine.run(kind, area, change, data=live_data(kind, area, change))`. Static layers (census, boundaries, terrain, outfalls, facilities) are read from the shared processed folder automatically.
+
+With `URBS_SCENARIO_WORKER=modal`, kinds marked `isolate` run on the Modal function `urbs-gemina-scenarios/run_heavy` (`deploy/scenarios_worker.py`, scales to zero).
 
 ## Kinds
 
-Only traffic may be simulated. The EMF baseline (Cartoradio) and the existing antenna register (OpenCelliD + OSM, parameters fitted to Cartoradio) are `estimated`; a simulated baseline is refused.
+Only traffic may be simulated. Every other input is real or estimated and labelled in `data_kinds`; every result has P5/P50/P95.
 
-| Kind | Change | Engine | Heavy |
+| Kind | Change (examples) | Model | Heavy |
 |---|---|---|---|
-| `antenna` | `{"action": "add", "site": {lon, lat, height_m}, "eirp_w" or "band"}`; `"move"` adds `"from": {...}` | Cartoradio baseline + free-space isotropic worst case; powers combined as log-normal sums (Fenton-Wilkinson). P5/P50/P95 and probability of exceeding the attention value and the limit (`config/thresholds.yaml`) | no |
-| `population_exposure` | same as `antenna` | Census sections from `census_sections.geojson` (WS1, found in `layers.search_dirs`; fields `sez_id`, `residents`, `children_0_14`). Field at each section centroid; residents and children in sections flagged (probability ≥ 5%) before and after. Aggregates only; `not_available` until the file exists | no |
-| `road_closure` | `{"close": {"edges": [...]}}` or `{"close": {"street": "Via del Corso"}}` | SUMO on the district network, synthetic random-trip demand scaled to loop counts where given (`loop_counts_veh_per_h`), baseline checked against GTFS-RT bus speeds (`observed_speeds_m_per_s`), dynamic rerouting, five demand seeds; baseline, variant and paired difference | yes |
+| `antenna` | `{"action": "add", "site": {lon, lat, height_m}, "eirp_w"}` | Cartoradio baseline + free-space worst case, log-normal power sums; probability over the attention value and limit | no |
+| `population_exposure` | same as `antenna` | residents and children in census sections flagged before and after | no |
+| `river_flood` | `{"rise_m": 3}`, `{"gauge": "tevere_ripetta", "level_m": 14}`, `{"gauge": ..., "forecast_day": "peak"}` | rating curve, ensemble, height above the river, sea taper, Tiber walls (LiDAR crests); alert-level probabilities; residents, sensitive sites | no (worker) |
+| `rain_flood` | `{"rain_mm": 60, "duration_h": 1}`, `{"source": "radar"}`, plus optional `"river": {...}` | fill-and-spill hollows; sewers from Rome's design rules (Comune di Roma 2000) routed on the terrain with surcharge; ACEA outfalls blocked by a high river; hotspots, underpasses | no (worker) |
+| `chemical_plume` | `{"site": "Papasped", "substance": "ammonia", "release_kg_s": 5, "wind": {...} or "forecast"}` | Gaussian plume, Briggs urban, wind/stability/release ensemble; AEGL/IDLH zones; official Seveso zones beside | no |
+| `emergency_access` | `{"service": "fire", "close": {"street": ...}}`, `"closed_area"`, `"flood": {kind, change}` | shortest times on the OSM road network from real stations; residents beyond the target time before and after | yes |
+| `heatwave` | `{"temperature": "forecast"}` or `{"tmax_c": 36, "tmin_c": 24}`, plus `"plant_trees": {"where", "cover_added_pct"}`, `"depave"` | forecast + local effect of sealed ground and tree cover (Copernicus); residents, children, over-65s above heat thresholds; hot map; tree-planting what-if | no |
+| `traffic_event` / `road_closure` | `{"close": ...}`, `{"roadworks": ...}`, `{"event": ...}` | SUMO on the district network, demand scaled to loop counts, congestion points | yes |
+
+Static layers added by WS6: `scripts/fetch_heat_layers.py` (tree cover, residents 65+), `scripts/fetch_sewer_layers.py` (ACEA outfalls).
 
 All parameters (grid, sigma, demand density, replicates...) are in `config/scenarios.yaml` with a `basis:` note.
 
@@ -37,6 +46,10 @@ All parameters (grid, sigma, demand density, replicates...) are in `config/scena
 
 `twin.scenarios.traffic.build_network(osm_file, out)` builds the district SUMO network from an OSM extract (street names kept). SUMO: `pip install -e .[scenarios]`.
 
+## Validation
+
+Each model was checked against real events or official figures: see `docs/scenario-validation.md`. Every result has a `calibration` field saying how.
+
 ## Planned
 
-Sionna RT ray tracing on a district (GPU), viewshed on the protected skyline, buses from GTFS in SUMO, accessibility (r5py), noise, shadow.
+Re-fit of the heatwave on the raw ASTI station data (Zenodo 19454855); traffic calibration on real loop counts; Sionna RT ray tracing on a district (GPU), viewshed on the protected skyline, buses from GTFS in SUMO, noise, shadow.

@@ -8,13 +8,13 @@ dependencies = ["PyYAML>=6"]
 [project.optional-dependencies]
 dev = ["pytest>=8", "mypy>=1.10", "types-PyYAML"]
 api = ["fastapi>=0.110", "pydantic>=2", "uvicorn>=0.29", "httpx>=0.27"]   # WS4: tool API (httpx for its tests)
+scenarios = ["eclipse-sumo>=1.20", "numpy>=1.24", "scipy>=1.10", "rasterio>=1.3"]   # WS6: SUMO traffic; terrain, floods, plumes
 # WS3 live providers: GTFS-RT protobuf, EEA parquet, radar and Cartoradio GeoTIFF reads
 providers = ["gtfs-realtime-bindings>=1.0", "protobuf>=4", "pyarrow>=14", "rasterio>=1.3", "numpy>=1.24", "scipy>=1.10"]
 # WS3 seed building only (python -m twin.providers.simulated.build_seeds sites).
 # mapbox-vector-tile pins protobuf<7: install this group in its own environment if it clashes.
 seeds = ["pmtiles>=3", "mapbox-vector-tile>=2"]
 beliefs = ["numpy>=1.26", "h3>=4"]
-scenarios = ["eclipse-sumo>=1.20"]   # WS6: road closure micro-simulation
 agents = ["anthropic>=2.8"]
 
 [tool.setuptools.packages.find]

@@ -255,6 +255,60 @@
       "redistribution": true,
       "status": "verified 2026-11-13; DOMAIN, LOGINCOUNT, traffic and language dropped at parse"
     },
+    "open_meteo_forecast": {
+      "kind": "estimated",
+      "what": "Hourly rain, 10 m wind and 2 m temperature forecasts (ICON-2I, fallback ICON-EU)",
+      "endpoint": "https://api.open-meteo.com/v1/forecast",
+      "access": "no key; free tier is rate-limited per IP (the shared cloud egress hit the daily limit on 2026-11-13)",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "tested offline with fixtures"
+    },
+    "glofas_flood": {
+      "kind": "estimated",
+      "what": "Daily river discharge, Tiber at Ripetta and Aniene at Lunghezza (GloFAS)",
+      "endpoint": "https://flood-api.open-meteo.com/v1/flood",
+      "access": "no key",
+      "licence": "CC BY 4.0 (Copernicus CEMS)",
+      "redistribution": true,
+      "status": "verified 2026-11-13"
+    },
+    "copernicus_hrl_tree_cover": {
+      "kind": "real",
+      "what": "Tree Cover Density 2018, 20 m, 0-100 % (Copernicus HRL), Rome window; heatwave scenario",
+      "endpoint": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_TreeCoverDensity_2018/ImageServer",
+      "access": "exportImage, no key (scripts/fetch_heat_layers.py)",
+      "licence": "Copernicus free and open data policy",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "istat_census_ages": {
+      "kind": "real",
+      "what": "Residents aged 65+ and 75+ per 2021 census section (P27+P28+P29, P29); heatwave scenario",
+      "endpoint": "https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip",
+      "access": "zip download, no key (scripts/fetch_heat_layers.py)",
+      "licence": "CC BY 4.0 (ISTAT)",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "acea_sewer_outfalls": {
+      "kind": "real",
+      "what": "ACEA ATO2 sewer outfall points on the Tiber basin (280); rain flood river backflow",
+      "endpoint": "https://dati-siitevere.cittametropolitanaroma.it/dataset/punti-di-scarico",
+      "access": "GeoJSON download, no key; host blocked from the cloud sandbox, fetched via Modal (scripts/fetch_sewer_layers.py)",
+      "licence": "CC BY 4.0 (ACEA ATO2, SIITevere)",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "roma_sewer_design_rules": {
+      "kind": "real",
+      "what": "Comune di Roma (Dip. XII, 2000) sewer sizing rules and design rain curve, used as parameters in config/scenarios.yaml",
+      "endpoint": "https://www.studiopetrillo.com/files/Progetto%20fogne%20linee%20guida%20DIP-TP%20XII.pdf",
+      "access": "PDF, read once; numbers copied to config with a basis note",
+      "licence": "public administration document",
+      "redistribution": true,
+      "status": "verified"
+    },
     "mim_school_buildings": {
       "kind": "real",
       "what": "School building register (which school buildings have a gym), for the sports add-on",

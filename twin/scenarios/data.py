@@ -5,7 +5,7 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Mapping, Optional
+from typing import Any, Callable, Mapping, Optional, Sequence
 
 from twin.scenarios.area import AreaLookup
 
@@ -43,6 +43,22 @@ class ScenarioData:
     observed_speeds_m_per_s: Mapping[str, float] = field(default_factory=dict)
     #: Label of the loop counts: "simulated" while sim_loops is the active provider, "real" with pa_datex.
     loop_counts_kind: str = "simulated"
+    #: Physical scenarios. Terrain grid (tests, or a pre-loaded DTM); otherwise read from WS2 / WS1 files.
+    dtm: Any = None
+    #: River lines (GeoJSON FeatureCollection, field 'name'); otherwise rivers_osm.geojson.
+    rivers: Mapping[str, Any] | None = None
+    #: Live river gauge readings: gauge id -> (level m, sigma m). Real.
+    river_levels: Mapping[str, tuple[float, float]] = field(default_factory=dict)
+    #: River discharge forecast per gauge: list of (ISO date, m3/s, sigma m3/s). Estimated (GloFAS).
+    river_discharge: Mapping[str, Sequence[tuple[str, float, float]]] = field(default_factory=dict)
+    #: Emergency facilities override: (lon, lat, name); otherwise read from WS1 layers.
+    facilities: Sequence[tuple[float, float, str]] | None = None
+    #: Wind at the release point: (speed m/s, direction it blows FROM in degrees). Estimated (forecast).
+    wind: tuple[float, float] | None = None
+    #: Rainfall in mm over the scenario duration as (lon, lat, mm) cells, keyed "radar" (real) or "forecast".
+    rain_mm: Mapping[str, Sequence[tuple[float, float, float]]] = field(default_factory=dict)
+    #: Air temperature forecast per day (ISO date) as (lon, lat, max °C, min °C, sigma °C) points. Estimated.
+    temperature: Mapping[str, Sequence[tuple[float, float, float, float, float]]] = field(default_factory=dict)
     #: Boundary lookup for named areas (municipi, urban zones).
     area_lookup: AreaLookup | None = None
     #: Data snapshot hashes (from the manifest) that enter the run id.
@@ -65,6 +81,17 @@ class ScenarioData:
             out["loop_counts"] = _json_hash(self.loop_counts_veh_per_h)
         if self.observed_speeds_m_per_s and "observed_speeds" not in out:
             out["observed_speeds"] = _json_hash(self.observed_speeds_m_per_s)
+        for key, value in (("rivers", self.rivers), ("river_levels", self.river_levels), ("rain_mm", self.rain_mm),
+                           ("river_discharge", self.river_discharge), ("temperature", self.temperature)):
+            if value and key not in out:
+                out[key] = _json_hash(value)
+        if self.facilities is not None and "facilities" not in out:
+            out["facilities"] = hashlib.sha256(json.dumps([list(f) for f in self.facilities]).encode()).hexdigest()
+        if self.wind is not None and "wind" not in out:
+            out["wind"] = f"{self.wind[0]:.2f}@{self.wind[1]:.0f}"
+        if self.dtm is not None and "dtm" not in out:
+            z = getattr(self.dtm, "z", None)
+            out["dtm"] = hashlib.sha256(z.tobytes()).hexdigest() if z is not None else "unknown"
         if "road_network" not in out:
             out["road_network"] = ("none" if self.road_network is None else
                                    _file_hash(self.road_network))
@@ -72,7 +99,7 @@ class ScenarioData:
 
 
 def _json_hash(value: Mapping[str, Any]) -> str:
-    return hashlib.sha256(json.dumps(dict(value), sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(dict(value), sort_keys=True, default=str).encode()).hexdigest()
 
 
 def _file_hash(path: Path) -> str:
