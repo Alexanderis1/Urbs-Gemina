@@ -18,6 +18,7 @@ from twin.providers.open.arpa_points import ArpaPointsProvider
 from twin.providers.open.eea import EeaHourlyProvider
 from twin.providers.open.gbfs import GbfsProvider
 from twin.providers.open.gtfs_rt import RomaGtfsRtProvider
+from twin.providers.open.gtfs_schedule import RomaGtfsScheduleProvider
 from twin.providers.open.open_meteo import CamsOpenMeteoProvider
 from twin.providers.open.open_meteo_weather import FloodDischargeProvider, OpenMeteoForecastProvider
 from twin.providers.open.roma_wifi import RomaWifiProvider
@@ -46,6 +47,7 @@ FACTORIES: dict[str, Factory] = {
     "est_register": EstimatedRegisterProvider,
     # open, real
     "roma_gtfs_rt": RomaGtfsRtProvider,
+    "roma_gtfs_schedule": RomaGtfsScheduleProvider,
     "eea_hourly": EeaHourlyProvider,
     "dpc_radar": DpcRadarProvider,
     "arpa_points": ArpaPointsProvider,
@@ -70,6 +72,7 @@ DATA_KIND: dict[str, DataKind] = {
     "sim_loops": "simulated",
     "est_register": "estimated",
     "roma_gtfs_rt": "real",
+    "roma_gtfs_schedule": "estimated",
     "eea_hourly": "real",
     "dpc_radar": "real",
     "bird_gbfs": "real",

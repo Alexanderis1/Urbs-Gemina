@@ -15,6 +15,7 @@ uses real sensors, or estimates fused from real sources with a physical model.
 | emf_measurements | `arpa_points` | real (ARPA Lazio); "not available" until the table is loaded | `ElectromagneticFieldObserved`: electricField (V/m) |
 | emf_baseline | `cartoradio_grid` | estimated, restricted | `EMFEstimate`: electricField (V/m), at_cap (1 = "15 or more") |
 | transit | `roma_gtfs_rt` | real | `Vehicle`: speed_kmh, bearing_deg. `PublicTransportDelayObserved`: delay (s) |
+| transit_schedule | `roma_gtfs_schedule` | estimated (timetable positions; the fallback when the live feed is stale) | `ScheduledVehicle`: scheduledVehicles, routeType |
 | air_quality | `eea_hourly` | real (official stations) | `AirQualityObserved`: no2 / pm10 / pm25 (µg/m³) |
 | air_quality_citizen | `sensor_community` | real (low-cost, larger sigma) | `AirQualityObserved`: pm10 / pm25 |
 | air_quality_model | `cams_open_meteo` | estimated (CAMS model) | `AirQualityForecast`: no2 / pm10 / pm25 |

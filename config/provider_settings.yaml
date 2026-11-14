@@ -74,6 +74,11 @@ open:
     delay_sigma_s: {value: 60.0, basis: "assumption, used only when the feed gives no 'uncertainty' (Roma's gives about 30 s)"}
     timeout_s: 30
 
+  roma_gtfs_schedule:
+    static_gtfs_url: https://romamobilita.it/wp-content/uploads/shared/rome_static_gtfs.zip
+    cache_hours: {value: 12, basis: "the timetable zip is republished about once a day"}
+    timeout_s: 180
+
   eea_hourly:
     api_url: https://eeadmz1-downloads-api-appservice.azurewebsites.net/ParquetFile/urls
     metadata_url: https://discomap.eea.europa.eu/map/fme/metadata/PanEuropean_metadata.csv
