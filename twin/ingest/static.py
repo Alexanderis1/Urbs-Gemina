@@ -41,13 +41,18 @@ Entry = dict[str, Any]
 
 # --- Download -----------------------------------------------------------------
 
-def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None, native: bool = False) -> str:
-    """WFS 1.0.0 GetFeature in EPSG:4326 (lon, lat order) as GeoJSON; ``native`` keeps the stored CRS."""
+def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None, version: str = "1.0.0",
+            native: bool = False) -> str:
+    """WFS GetFeature in EPSG:4326 (lon, lat order) as GeoJSON; 1.0.0 unless the layer asks for 2.0.0.
+
+    GeoServer keeps lon, lat order for the short "EPSG:4326" name in 2.0.0 too (checked on the Roma
+    server). ``native`` keeps the stored CRS (see ``options.true_crs``).
+    """
     params = {
         "service": "WFS",
-        "version": "1.0.0",
+        "version": version,
         "request": "GetFeature",
-        "typeName": type_name,
+        "typeNames" if version.startswith("2") else "typeName": type_name,
         "outputFormat": "application/json",
     }
     if not native:
@@ -119,6 +124,7 @@ def _download(layer: LayerSpec, catalog: Catalog, fetch: Fetch) -> tuple[bytes, 
         assert layer.type_name is not None
         bbox = catalog.city_bbox if layer.clip_to_city else None
         url = wfs_url(source.urls[0], layer.type_name, None if layer.options.get("true_crs") else bbox,
+                      version=str(layer.options.get("wfs_version", "1.0.0")),
                       native=bool(layer.options.get("true_crs")))
         return fetch(HttpRequest(url)), url
     if source.protocol == "overpass":

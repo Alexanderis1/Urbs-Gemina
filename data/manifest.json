@@ -480,6 +480,15 @@
       "status": "verified (2026-11-14)",
       "what": "ISPRA land consumption monitoring: new sealed soil 2023-2024 (points)",
       "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/sina_consumo_suolo/localizzazione_cambiamenti_2023_2024_v7/MapServer"
+    },
+    "roma_geoserver_csv": {
+      "kind": "real",
+      "what": "Roma GeoServer WFS, CSV output (fire hydrants)",
+      "endpoint": "https://geoportale.comune.roma.it/geoserver/ows",
+      "access": "WFS GetFeature outputFormat=csv, no login",
+      "licence": "not stated in capabilities; credit Roma Capitale - GeoPortale (CC BY assumed, confidence 60)",
+      "redistribution": true,
+      "status": "verified"
     }
   },
   "snapshots": {
@@ -3524,10 +3533,10 @@
       "data_kind": "real",
       "synthetic": false,
       "theme": "mobility",
-      "fetched_at": "2026-11-14T04:13:14Z",
+      "fetched_at": "2026-11-14T04:23:14Z",
       "type_name": "DIPMOB:ParcheggiScambio",
       "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPMOB%3AParcheggiScambio&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
-      "raw_sha256": "75234b9d1dc6e659f6fe47e4536647636cea865c9d271cc078a3c8cf1aeaca83",
+      "raw_sha256": "e7fc29fe7e00763e7adef62a0ace232aff3eda42bb9aae2cc944aad137a7daa1",
       "cleaning": {
         "dropped_no_geometry": 0,
         "repaired_geometries": 0,
@@ -3586,12 +3595,11 @@
       "source": "roma_geoserver",
       "data_kind": "real",
       "synthetic": false,
-      "theme": "heat",
-      "fetched_at": "2026-11-14T04:13:15Z",
+      "theme": "climate",
+      "fetched_at": "2026-11-14T04:23:11Z",
       "type_name": "GABSIN:fontanelle_rifugi_climatici",
-      "notes": "Public drinking fountains (nasoni) published with the climate-shelter map; for heat-wave use cases",
       "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GABSIN%3Afontanelle_rifugi_climatici&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
-      "raw_sha256": "4994b2ba09e3ca255ba9756919685bf3e157e2fdaea5451c4d9b4523822790ac",
+      "raw_sha256": "82c7052a5cd155ed74e3cc29daf5587962bef0b9a62d05cb553ed23436c730c1",
       "cleaning": {
         "dropped_no_geometry": 0,
         "repaired_geometries": 0,
@@ -3600,18 +3608,16 @@
       },
       "status": "ok",
       "features": 3294,
-      "dropped_fields": [
-        "googlemaps"
-      ],
+      "dropped_fields": [],
       "crs": "EPSG:4326",
       "files": {
         "geoparquet": {
           "path": "data/processed/drinking_fountains.parquet",
-          "sha256": "34ff907a52ae80d47e62ba9ed00c22d43eda19b99965e32fd22588c7864e1fb4"
+          "sha256": "af13aabec43ba1aa5084c33ec6ffe55066455974bf7e45eeea884c34568ce8d3"
         },
         "geojson": {
           "path": "data/processed/drinking_fountains.geojson",
-          "sha256": "a5c18551cc957ccaeefcffd536b35feb9a4c731c75d9e0c7c62de5d39dfa55e3"
+          "sha256": "05f0a77d78959e3fc7f965b2b7eb88b6a54d3c19a36c21f47d1a07a6fbe07c34"
         }
       },
       "warnings": []
@@ -3676,6 +3682,468 @@
         "geojson": {
           "path": "data/processed/street_trees_m8.geojson",
           "sha256": "798c9ae8923b9f9b2a5862e58691c7ddb03066c23eae44df63db65ae423e49a7"
+        }
+      },
+      "warnings": []
+    },
+    "fire_hydrants": {
+      "source": "roma_geoserver_csv",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:23:59Z",
+      "notes": "Roma Capitale fire hydrants 2026 (type, UNI size, working). The GeoJSON output breaks mid-stream, so the CSV output is used.",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A430_Idranti_2026&outputFormat=csv&propertyName=id,lat,lon,municipio,tipo,uni,funzionant",
+      "raw_sha256": "58f35b63a5b64534edc23e08a1d458a85f6244dfe98b087c7045ed5497b7df73",
+      "skipped_rows": {
+        "filtered": 0,
+        "no_position": 0
+      },
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 1963,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/fire_hydrants.parquet",
+          "sha256": "74e199135f7a9832d8af9c838faa694f20681faacc0bee202301285735d711a1"
+        },
+        "geojson": {
+          "path": "data/processed/fire_hydrants.geojson",
+          "sha256": "c7e895ea46faa34bcf3173a2b731833c97f8b7b2caa40f28fa718d24efba3c21"
+        }
+      },
+      "warnings": []
+    },
+    "flood_hazard_roma_2023": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "flood",
+      "fetched_at": "2026-11-14T04:21:12Z",
+      "type_name": "DIPPC:302_00_PericoloIdraulico_2023_",
+      "notes": "Roma Capitale civil protection flood hazard map 2023 (local, finer than the ISPRA mosaic)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A302_00_PericoloIdraulico_2023_&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "9c1a05089970e091092b907df0daa524a5ba877479798616ca455888831baab1",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 19,
+        "dropped_outside_city": 8,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 3788,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/flood_hazard_roma_2023.parquet",
+          "sha256": "fe712c3d0cf5cab03293ec98b14626dfac90b9efea5398ee7ff5edc5a2ea0a12"
+        },
+        "geojson": {
+          "path": "data/processed/flood_hazard_roma_2023.geojson",
+          "sha256": "73be027d91eef8785fd6beef3b229891aab4d6e4f894803757b061c3f9788d16"
+        }
+      },
+      "warnings": []
+    },
+    "tsunami_advisory": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "hazard",
+      "fetched_at": "2026-11-14T04:21:17Z",
+      "type_name": "DIPPC:308_07_Maremoto_ADVISORY",
+      "notes": "Coastal area to evacuate on a tsunami advisory (Ostia)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A308_07_Maremoto_ADVISORY&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "6be83c420d7a558e30e04ec5d29281edb8e61831086f07ae372534dc42872133",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 1,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/tsunami_advisory.parquet",
+          "sha256": "5396ec2ece40b01590cd80d72bd5a4d736409e6ba42895fc95d4eb4e95957d0b"
+        },
+        "geojson": {
+          "path": "data/processed/tsunami_advisory.geojson",
+          "sha256": "62ea0f2aa5a05c6524cbd80349cbb356b2ce48401706fa8f2ade83f20d92fd68"
+        }
+      },
+      "warnings": []
+    },
+    "gas_emissions": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "hazard",
+      "fetched_at": "2026-11-14T04:21:18Z",
+      "type_name": "DIPPC:308_02_Emissioni_GAS",
+      "notes": "Areas with natural gas (CO2, H2S) emissions from the ground",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A308_02_Emissioni_GAS&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "4793db8815da8d52b67f89bef6926a86b5d70698de21c2411c8ad1c6c25fa8bd",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 1,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/gas_emissions.parquet",
+          "sha256": "4a38c47043b6a00ad7e60528e0c54a66194437edacda9457210e15a892724f1e"
+        },
+        "geojson": {
+          "path": "data/processed/gas_emissions.geojson",
+          "sha256": "8e60d9eef214fc2fa5b329401f003a6c633942095a7b679ef9339cddd55708a4"
+        }
+      },
+      "warnings": []
+    },
+    "event_plan_sites": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:21:19Z",
+      "type_name": "DIPPC:308_3_Eventi_0_Siti",
+      "notes": "Sites covered by civil protection plans for large events",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A308_3_Eventi_0_Siti&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "fafb6b11d8cb86f4f0859b6ea8361c8cd1037ca80bfb758a53b3a90a49fd874f",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 24,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/event_plan_sites.parquet",
+          "sha256": "a818d234c7fdf2776b483c814ce2d3835c4ae8ddf858b32e26ec34752d8d5228"
+        },
+        "geojson": {
+          "path": "data/processed/event_plan_sites.geojson",
+          "sha256": "0c61706259a47e4c322bd8ddd55c1f942488acb3eff756c091c00ea508387bd0"
+        }
+      },
+      "warnings": []
+    },
+    "event_plan_areas": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:21:20Z",
+      "type_name": "DIPPC:308_3_Eventi_1_Aree",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A308_3_Eventi_1_Aree&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "8cf52f89f1c4b7e9f0d2ef6d96ff3977d6cbb60f7522ce9763fc3bbefdd1ae68",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 24,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/event_plan_areas.parquet",
+          "sha256": "46befab2aa2bdd9babc5882f69bd4885d1e070a93dd2cc6c714f895f2369d838"
+        },
+        "geojson": {
+          "path": "data/processed/event_plan_areas.geojson",
+          "sha256": "aac42c3cef28711507ad433dc46db3768c04a4f528789f5c543f7575a0803fee"
+        }
+      },
+      "warnings": []
+    },
+    "civil_protection_areas": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:22:59Z",
+      "type_name": "DIPPC:422_AreePC_2026",
+      "notes": "Emergency plan areas: A waiting (primary/secondary), B reception, C shelters, D staging (1018 areas)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=DIPPC%3A422_AreePC_2026&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "b0a80edd83925eb6d4a273cc9da3ba0727c925f130370fc910ed06265c0c9ccf",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 1018,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/civil_protection_areas.parquet",
+          "sha256": "3c17cd08dc9524f81d876f75f5995c4b16e67a8f061059fdcbac4406e709dd4e"
+        },
+        "geojson": {
+          "path": "data/processed/civil_protection_areas.geojson",
+          "sha256": "ae5677bb98b75fbdf2d9dba2b03762ad7aae76299a7a8d74b503870693aaf655"
+        }
+      },
+      "warnings": []
+    },
+    "landslide_areas": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:23:01Z",
+      "type_name": "DIPPC:303_Aree_inFrana",
+      "notes": "Landslide areas with risk class R (PAI)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A303_Aree_inFrana&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "0b3876e3574637c8b2c6d8b656fa74903cc6736e3c0f5ee7d8dde8acb6577689",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 4,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 29,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/landslide_areas.parquet",
+          "sha256": "48df6f4add6078080a020c55f5a32dfceb7c3606ec32553edc50ae7f9c5bf608"
+        },
+        "geojson": {
+          "path": "data/processed/landslide_areas.geojson",
+          "sha256": "d48c91d57e40f232941973312a11aa88c47d709f9f834082e86fdee5c0cf6029"
+        }
+      },
+      "warnings": []
+    },
+    "wildfire_interface": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:23:02Z",
+      "type_name": "DIPPC:305_AreeInterfaccia_R3-R4_xMunicipio",
+      "notes": "Urban-vegetation interface areas at fire risk R3-R4, per municipio",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=DIPPC%3A305_AreeInterfaccia_R3-R4_xMunicipio&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "e8793d2b89f6829f24cb471f84b394aaf7541ae5205f679694852e3c011939f7",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 24,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 5883,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/wildfire_interface.parquet",
+          "sha256": "70c0a16cdaeae1f6db9bb4dd066bebf28e2d53ffa80a0164cd26fdd0abfb3ad1"
+        },
+        "geojson": {
+          "path": "data/processed/wildfire_interface.geojson",
+          "sha256": "a69b2c75867f1711a60c21a9fc7d36f8a5c8fb1aee01028e263e97ef010df157"
+        }
+      },
+      "warnings": []
+    },
+    "underground_cavities": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:23:06Z",
+      "type_name": "DIPPC:308_01_CavitaSotterranee",
+      "notes": "Known underground cavities (sinkhole context); geometry only",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A308_01_CavitaSotterranee&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "2ae1c43ca2e44d9a5f9cd309be4936f741f185ded6f4547d6470576dce38a722",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 164,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/underground_cavities.parquet",
+          "sha256": "f966dd09ebc9e65876ef64dbec4a4ac965a76e25b921783f4ed00f910f72fe7b"
+        },
+        "geojson": {
+          "path": "data/processed/underground_cavities.geojson",
+          "sha256": "b0ac4b43f251adfb858be69d86f14e3f06cd360c3b842678f4ec178499f585c9"
+        }
+      },
+      "warnings": []
+    },
+    "civil_protection_events": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:23:07Z",
+      "type_name": "DIPPC:300_Eventi_STORICI",
+      "notes": "Past civil-protection interventions 2013-2022 (street flooding, fallen trees, fires, sinkholes, landslides)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3A300_Eventi_STORICI&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "3fb65b8720b0a3e90b911b2db05f96d7f7919a697841d6945f28634740cd8729",
+      "excluded_rows": 9287,
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 13333,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/civil_protection_events.parquet",
+          "sha256": "15bb4d26279af823c672053413773b7e704df06f73c24c4dc7b8d996bb30d7ae"
+        },
+        "geojson": {
+          "path": "data/processed/civil_protection_events.geojson",
+          "sha256": "e2c1285fb30f7d5c53c9260934a4053f98e92798b7a7c743884f809b4ab07fa4"
+        }
+      },
+      "warnings": []
+    },
+    "climate_refuges_indoor": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "climate",
+      "fetched_at": "2026-11-14T04:23:10Z",
+      "type_name": "GABSIN:al_chiuso",
+      "notes": "Indoor cool places (libraries, civic centres) of the Roma climate-refuge map; contacts dropped",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GABSIN%3Aal_chiuso&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "056e94ebba0f3720d62006d0d4b136880c08097b991b405cb5dfb957def80f0d",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 178,
+      "dropped_fields": [
+        "email",
+        "email2",
+        "telefono"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/climate_refuges_indoor.parquet",
+          "sha256": "d23e7a3ba523c3f99e6e857cc2acee58d040526e1862b066b78525fb8326e239"
+        },
+        "geojson": {
+          "path": "data/processed/climate_refuges_indoor.geojson",
+          "sha256": "a34fa9d0bb7b6f52c41c019680c9cc309aed1bbbe7ee6394065ce42e0424f26f"
+        }
+      },
+      "warnings": []
+    },
+    "cold_plan_shelters": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "civil_protection",
+      "fetched_at": "2026-11-14T04:23:12Z",
+      "type_name": "DIPPC:accoglienza_piano_freddo",
+      "notes": "Piano Freddo reception points for people without a home (sites, not people)",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3Aaccoglienza_piano_freddo&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "91658a1df6a4b32dd8c2f6c9b9fb429900b3d7d74b9abba6692ecf5a631e818c",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 34,
+      "dropped_fields": [
+        "id_pec"
+      ],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/cold_plan_shelters.parquet",
+          "sha256": "70c00f7e83b00b50941504e53894ff41166f8c081cd9f887dbb06325808300bb"
+        },
+        "geojson": {
+          "path": "data/processed/cold_plan_shelters.geojson",
+          "sha256": "d67dafcf1b3dfb6a6e73b95b936d09a2809373649d0471d9090f585dfbcdfa7f"
+        }
+      },
+      "warnings": []
+    },
+    "movida_zones": {
+      "source": "roma_geoserver",
+      "data_kind": "real",
+      "synthetic": false,
+      "theme": "night",
+      "fetched_at": "2026-11-14T04:23:13Z",
+      "type_name": "DIPPC:mappa_roma_notte_zonemovida",
+      "request_url": "https://geoportale.comune.roma.it/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=DIPPC%3Amappa_roma_notte_zonemovida&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+      "raw_sha256": "b2226d91b1ad0e58357ca3aad118e4804cbde966d08b41c0b77ea127d7c632e4",
+      "cleaning": {
+        "dropped_no_geometry": 0,
+        "repaired_geometries": 0,
+        "dropped_outside_city": 0,
+        "dropped_empty_columns": []
+      },
+      "status": "ok",
+      "features": 29,
+      "dropped_fields": [],
+      "crs": "EPSG:4326",
+      "files": {
+        "geoparquet": {
+          "path": "data/processed/movida_zones.parquet",
+          "sha256": "a67e967d003445a27b01b61db8ef8d33fb4d040185bc61f4514a2cbe49e1322c"
+        },
+        "geojson": {
+          "path": "data/processed/movida_zones.geojson",
+          "sha256": "8d9017183afcfac756b7eeab7791edc039cf989e431096f64250a8297f2c7afd"
         }
       },
       "warnings": []

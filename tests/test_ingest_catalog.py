@@ -51,3 +51,29 @@ def test_unknown_source_is_rejected() -> None:
            "layers": {"a": {"source": "nope", "type_name": "t", "data_kind": "real"}}}
     with pytest.raises(CatalogError):
         parse_catalog(raw, city_bbox=(0.0, 0.0, 1.0, 1.0))
+
+
+def test_wfs_layer_can_ask_for_wfs_2() -> None:
+    """Some Roma GeoServer views fail on WFS 1.0.0 ("variable not found in subplan target list") but serve 2.0.0."""
+    from twin.ingest.static import wfs_url
+
+    old = wfs_url("https://x/ows", "DIPPC:422_AreePC_2026")
+    new = wfs_url("https://x/ows", "DIPPC:422_AreePC_2026", version="2.0.0")
+    assert "version=1.0.0" in old and "typeName=DIPPC" in old
+    assert "version=2.0.0" in new and "typeNames=DIPPC" in new and "srsName=EPSG%3A4326" in new
+
+
+def test_layers_that_need_wfs_2_say_so_in_the_catalogue() -> None:
+    catalog = load_catalog(Path("config/ingest.yaml"))
+    for key in ("civil_protection_areas", "wildfire_interface"):
+        assert catalog.layers[key].options.get("wfs_version") == "2.0.0"
+
+
+def test_fire_hydrants_come_from_the_csv_output() -> None:
+    """The hydrant GeoJSON breaks after 1,952 of 1,963 features (server exception mid-stream);
+    the CSV output of the same WFS is complete and carries lat/lon columns."""
+    catalog = load_catalog(Path("config/ingest.yaml"))
+    layer = catalog.layers["fire_hydrants"]
+    assert catalog.sources[layer.source].protocol == "csv_points"
+    assert "outputFormat=csv" in layer.options["url"]
+    assert layer.options["lat_column"] == "lat" and layer.options["lon_column"] == "lon"
