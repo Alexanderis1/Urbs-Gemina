@@ -91,7 +91,7 @@ def main() -> None:
             rep = run_use_case(uid, llm=AnthropicLLM(), gateway=gw, area=ex.get("area"), place=ex.get("place"),
                                params=ex.get("params"), language=a.language)
             report[uid] = {"seconds": round(time.time() - t0, 1), "verified": rep.verified, "text": rep.text,
-                           "problems": [f"{p.code}: {p.message}" for p in rep.problems], "missing": rep.missing,
+                           "problems": [f"{p.code}: {p.message} | {p.sentence[:200]}" for p in rep.problems], "missing": rep.missing,
                            "steps": [{"step": r.get("step"), "status": r.get("status", "ok"), "run_id": r["run_id"][:12]} for r in rep.runs]}
             print(f"\n== {uid} ({report[uid]['seconds']} s) verified={rep.verified}\n{rep.text}\nproblems: {report[uid]['problems']}\nmissing: {rep.missing}")
             continue
