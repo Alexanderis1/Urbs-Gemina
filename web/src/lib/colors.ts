@@ -1,5 +1,6 @@
 // Sequential colour ramp (low = pale, high = dark red) for belief layers, in RGB.
-const RAMP: [number, number, number][] = [
+// The map (rampColor) and the legend (rampGradient) both read these stops, so they cannot drift apart.
+export const RAMP: readonly (readonly [number, number, number])[] = [
   [255, 245, 220],
   [253, 204, 138],
   [252, 141, 89],
@@ -16,8 +17,17 @@ export function rampColor(t: number): [number, number, number] {
   return [0, 1, 2].map((k) => Math.round(a[k]! + (b[k]! - a[k]!) * f)) as [number, number, number];
 }
 
-/** Opacity falls as uncertainty grows, so stale or poorly observed cells fade out. */
-export function confidenceAlpha(variance: number, maxVariance: number): number {
+/** CSS gradient for the legend, evenly spaced like rampColor. */
+export function rampGradient(): string {
+  const stops = RAMP.map((c, i) => `rgb(${c.join(" ")}) ${Math.round((i / (RAMP.length - 1)) * 100)}%`);
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
+}
+
+/** Lowest opacity per theme: on the dark map the faintest cells need more body to be seen at all. */
+export const ALPHA_FLOOR = { light: 40, dark: 90 } as const;
+
+/** Opacity falls as uncertainty grows, so stale or poorly observed cells fade out (never below `floor`). */
+export function confidenceAlpha(variance: number, maxVariance: number, floor: number = ALPHA_FLOOR.light): number {
   if (maxVariance <= 0) return 200;
-  return Math.round(220 - 180 * Math.min(1, variance / maxVariance));
+  return Math.max(floor, Math.round(220 - 180 * Math.min(1, variance / maxVariance)));
 }

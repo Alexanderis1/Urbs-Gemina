@@ -89,7 +89,8 @@ export const MAP_PALETTE: Record<Theme, MapPalette> = {
   },
 };
 
-export type KindKey = DataKind | "what_if";
+// "hypothetical" inputs are drawn with the what-if style, so they share its key.
+export type KindKey = Exclude<DataKind, "hypothetical"> | "what_if";
 
 /** One vocabulary for the whole app. The glyph differs per kind so the label never relies on colour alone. */
 export const KIND_META: Record<KindKey, { label: string; hint: string; glyph: "solid" | "half" | "dashed" | "diamond" | "empty" }> = {

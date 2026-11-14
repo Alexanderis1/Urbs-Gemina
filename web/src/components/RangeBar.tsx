@@ -32,14 +32,14 @@ export function RangeBar({
         <div className={`absolute h-3 rounded-sm transition-all duration-500 ease-out ${band}`} style={{ left: pct(e.p5), width: `calc(${pct(e.p95)} - ${pct(e.p5)})` }} />
         <div className={`absolute -top-0.5 h-4 w-0.5 transition-all duration-500 ease-out ${mid}`} style={{ left: pct(e.p50) }} />
         {marker && marker.value <= max && (
-          <div className="absolute -top-1 h-5 w-px border-l border-dashed border-danger" style={{ left: pct(marker.value) }} title={marker.label} />
+          <div className="absolute -top-1.5 h-6 border-l-2 border-dashed border-danger" style={{ left: pct(marker.value) }} title={marker.label} />
         )}
       </div>
       <div className="num text-sm font-medium">{formatRange(e, unit)}</div>
       {note && (
         <div className="hint">
           Estimate, not a measurement.{e.calibration ? ` ${calibrationLabel(e.calibration)}.` : ""}
-          {marker && marker.value <= max ? ` Dashed line: ${marker.label}.` : ""}
+          {marker && marker.value <= max ? ` Red dashed line: ${marker.label}.` : ""}
         </div>
       )}
     </div>

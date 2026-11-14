@@ -97,3 +97,34 @@ export function normalizeLayer(result: unknown): MapData {
   }
   return { kind: "points", metric: "value", unit: "", items: [] };
 }
+
+const NUM = new Intl.NumberFormat("en-GB", { maximumSignificantDigits: 3 });
+
+/** At most three significant digits, for legends and tooltips. The value itself is unchanged. */
+export function formatValue(n: number): string {
+  return NUM.format(n).replace(/^−/, "-");
+}
+
+/** Real minimum and maximum of what is on screen. */
+export function valueExtent(items: Pick<MapItem, "value">[]): { min: number; max: number } | null {
+  if (!items.length) return null;
+  let min = Infinity;
+  let max = -Infinity;
+  for (const i of items) {
+    if (i.value < min) min = i.value;
+    if (i.value > max) max = i.value;
+  }
+  return { min, max };
+}
+
+/** Hover text for one item: only the fields the tool returned. */
+export function describeItem(item: MapItem, data: Pick<MapData, "metric" | "unit">): { title?: string; lines: string[]; synthetic: boolean } {
+  const u = data.unit ? ` ${data.unit}` : "";
+  const synthetic = item.synthetic === true;
+  if (data.metric === "site") return { title: item.label, lines: [], synthetic };
+  const name = data.metric.replace(/_/g, " ");
+  const lines = [`${name.charAt(0).toUpperCase()}${name.slice(1)}: ${formatValue(item.value)}${u}`];
+  if (item.p5 !== undefined && item.p95 !== undefined) lines.push(`Range ${formatValue(item.p5)} to ${formatValue(item.p95)}${u}`);
+  if (item.uncertainty > 0) lines.push(`Uncertainty ± ${formatValue(item.uncertainty)}${u}`);
+  return { title: item.label, lines, synthetic };
+}

@@ -56,6 +56,94 @@ const ctxLayer = (layer: string, label: string, hits: { distance_m: number; name
   hits,
 });
 
+// Sample results for the scenario kinds beyond antenna / exposure / road closure: same field names as the
+// scenario engine (twin/scenarios), tiny footprints near the centre, placeholder numbers only.
+const rc = (n: number) => Math.round(n * 1e5) / 1e5;
+const q = (p50: number, spread: number) => ({ p5: r1(p50 * (1 - spread)), p50: r1(p50), p95: r1(p50 * (1 + spread)) });
+const qi = (p50: number, spread: number) => ({ p5: Math.round(p50 * (1 - spread)), p50: Math.round(p50), p95: Math.round(p50 * (1 + spread)) });
+
+/** Small box around a point (degrees), as a GeoJSON MultiPolygon like the engine's footprints. */
+function box(lon: number, lat: number, dLon: number, dLat: number) {
+  return {
+    type: "MultiPolygon",
+    coordinates: [[[[lon - dLon, lat - dLat], [lon + dLon, lat - dLat], [lon + dLon, lat + dLat], [lon - dLon, lat + dLat], [lon - dLon, lat - dLat]]]],
+  };
+}
+
+const sampleSites = (rnd: () => number, n: number) =>
+  Array.from({ length: n }, (_, i) => ({
+    name: `Sample site ${i + 1}`,
+    category: i % 3 === 0 ? "health" : "school",
+    lon: rc(12.47 + rnd() * 0.02),
+    lat: rc(41.888 + rnd() * 0.014),
+    probability: r1(0.9 - i * 0.07),
+  }));
+
+function sampleScenario(kind: string, rnd: () => number): Record<string, unknown> | null {
+  // Tiber bend by Ponte Garibaldi: a recognisable spot for the sample footprints.
+  const [lon, lat] = [12.4745, 41.8925];
+  switch (kind) {
+    case "river_flood":
+      return {
+        river: "tevere",
+        rise_m: 3,
+        sigma_m: 0.4,
+        gauge: "tevere_ripetta",
+        gauge_level_m: r1(9 + rnd()),
+        discharge_m3s: Math.round(1300 + rnd() * 300),
+        alert_probability: { ordinary: r1(0.5 + rnd() * 0.3), moderate: r1(0.1 + rnd() * 0.2), high: r1(rnd() * 0.05) },
+        flooded_km2: q(0.4 + rnd() * 0.3, 0.5),
+        footprint_p50: box(lon, lat, 0.004, 0.0025),
+        footprint_p95: box(lon, lat, 0.008, 0.005),
+        residents: { p5: { residents: 120, children: 14, sections_touched: 4 }, p50: { residents: 480, children: 52, sections_touched: 11 }, p95: { residents: 1350, children: 140, sections_touched: 27 } },
+        sensitive_sites: { count: 10, by_category: { school: 7, health: 3 }, sites: sampleSites(rnd, 10) },
+      };
+    case "rain_flood":
+      return {
+        rain_mm_mean: 60,
+        duration_h: 1,
+        hotspots_count: 3,
+        hotspots: Array.from({ length: 3 }, (_, i) => ({ lon: rc(12.48 + i * 0.006), lat: rc(41.895 - i * 0.004), max_depth_m: q(0.3 + rnd() * 0.4, 0.5), flooded_m2: q(800 + rnd() * 900, 0.6) })),
+        flooded_km2_p50: r1(0.05 + rnd() * 0.1),
+        footprint_p50: box(lon + 0.01, lat + 0.004, 0.002, 0.0015),
+        sewer: { model: "rome_design_rules", outfalls_considered: 6, outfalls_blocked: qi(1, 1), surcharge_m3: q(4000, 0.5) },
+        residents: { p50: { residents: 210, children: 22, sections_touched: 5 } },
+      };
+    case "heatwave":
+      return {
+        day: "sample",
+        forecast_tmax_c: 36,
+        forecast_tmin_c: 24,
+        hot_area_km2: r1(1 + rnd()),
+        hot_map_p50: box(lon + 0.012, lat + 0.006, 0.006, 0.004),
+        sections: Array.from({ length: 4 }, (_, i) => ({ sez_id: `sample-${i + 1}`, residents: Math.round(300 + rnd() * 400), lon: rc(12.48 + i * 0.004), lat: rc(41.897), tmax_c: q(36 + rnd() * 2, 0.04), tree_cover_pct: r1(5 + rnd() * 10) })),
+        what_if: { cooling_day_c: q(0.6 + rnd() * 0.4, 0.5), residents_no_longer_hot: qi(150, 0.6) },
+      };
+    case "chemical_plume":
+      return {
+        site: { name: "Sample site", lon, lat },
+        substance: "ammonia",
+        release_kg_s: 5,
+        wind: { speed_ms: 3, from_deg: 270 },
+        zones: { aegl_2: { max_distance_m: qi(600, 0.5), area_km2: { likely: 0.1, possible: 0.3 }, footprint_possible: box(lon + 0.006, lat, 0.006, 0.002) } },
+      };
+    case "emergency_access":
+      return {
+        service: "fire",
+        facilities: 3,
+        closed_roads: 2,
+        residents_total: 54000,
+        residents_beyond_target: { before: qi(1200, 0.4), after: qi(2100, 0.4) },
+        residents_cut_off: 0,
+        sections: [{ sez_id: "sample-1", residents: 420, lon: rc(lon + 0.01), lat: rc(lat + 0.006), minutes_before: 7.5, minutes_after: 9.2 }],
+      };
+    case "traffic_event":
+      return { metric: "vehicle hours lost", unit: "h", baseline: q(800, 0.2), variant: q(1050, 0.25) };
+    default:
+      return null;
+  }
+}
+
 function result(tool: ToolName, inputs: Record<string, unknown>): Record<string, unknown> {
   const rnd = seeded(JSON.stringify(inputs) + tool);
   switch (tool) {
@@ -130,10 +218,13 @@ function result(tool: ToolName, inputs: Record<string, unknown>): Record<string,
       return { type: "belief", layer, unit: "index", calibration: "uncalibrated", cells: sampleCells(layer) };
     }
     case "run_scenario": {
+      const kind = String(inputs.kind ?? "antenna");
+      const extra = sampleScenario(kind, rnd);
+      if (extra) return { kind, model: "sample", calibration: "uncalibrated", ...extra };
       const b = r1(1 + rnd());
       const v = r1(b * (1.1 + rnd() * 0.5));
       return {
-        kind: String(inputs.kind ?? "antenna"),
+        kind,
         metric: "residents in cells above the sample level",
         unit: "people",
         baseline: { p5: Math.round(b * 800), p50: Math.round(b * 1000), p95: Math.round(b * 1300), calibration: "uncalibrated" },
@@ -188,7 +279,7 @@ function kindsFor(tool: ToolName, inputs: Record<string, unknown>): Kinds {
     }
     case "run_scenario": {
       const k: Kinds = { what_if: "simulated", baseline: "estimated" };
-      if (inputs.kind === "road_closure") k.traffic_flow = "simulated";
+      if (inputs.kind === "road_closure" || inputs.kind === "traffic_event") k.traffic_flow = "simulated";
       return k;
     }
     case "legal_lookup":

@@ -1,7 +1,8 @@
 // Mirrors the shared "tool response envelope" contract (plan/workstreams.md, shared interface 3).
 // Do not change these shapes here: contract changes go through the design hub.
 
-export const DATA_KINDS = ["real", "estimated", "simulated", "not_available"] as const;
+// "hypothetical" (added 14 Nov): an input the user made up for a what-if, e.g. a river level. Shown as WHAT-IF.
+export const DATA_KINDS = ["real", "estimated", "simulated", "not_available", "hypothetical"] as const;
 export type DataKind = (typeof DATA_KINDS)[number];
 
 export const STATUSES = ["ok", "not_available", "refused"] as const;
@@ -22,7 +23,8 @@ export type ToolName = (typeof TOOL_NAMES)[number];
 export interface SourceRef {
   id: string;
   url?: string;
-  retrieved_at: string;
+  /** Missing for static layers that carry no download time (allowed since 14 Nov). */
+  retrieved_at?: string;
 }
 
 export interface Envelope<R = unknown> {
@@ -105,6 +107,11 @@ export interface ScenarioResult {
   unit?: string;
   baseline?: Estimate;
   variant?: Estimate;
+  /** Set inside the result when the engine could not run (e.g. no river cells in the area). */
+  status?: string;
+  reason?: string;
+  model?: string;
+  calibration?: string;
   [k: string]: unknown;
 }
 

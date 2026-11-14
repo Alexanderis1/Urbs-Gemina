@@ -143,14 +143,12 @@ export function Stat({
   value: ReactNode;
   unit?: string;
   note?: ReactNode;
-  tone?: "ink" | "danger" | "real" | "estimated" | "whatif";
+  tone?: "ink" | "danger" | "real" | "estimated" | "simulated" | "whatif";
 }) {
-  const color = { ink: "text-ink", danger: "text-danger", real: "text-real", estimated: "text-estimated", whatif: "text-whatif" }[tone];
+  const color = { ink: "text-ink", danger: "text-danger", real: "text-real", estimated: "text-estimated", simulated: "text-simulated", whatif: "text-whatif" }[tone];
   return (
     <div className="min-w-0 rounded border border-line bg-sunken px-3 py-2">
-      <div className="label truncate" title={label}>
-        {label}
-      </div>
+      <div className="label leading-tight">{label}</div>
       <div className={`num mt-0.5 text-xl font-medium leading-tight ${color}`}>
         {value}
         {unit && <span className="ml-1 text-xs font-normal text-muted">{unit}</span>}
@@ -223,7 +221,7 @@ export function LegendRamp({ gradient, low, high, mid }: { gradient: string; low
 /** Card that floats over the map (legend, status chip). */
 export function MapFloat({ position, children, className = "" }: { position: "top-left" | "bottom-left" | "top-center"; children: ReactNode; className?: string }) {
   const pos = { "top-left": "left-3 top-3", "bottom-left": "bottom-8 left-3", "top-center": "left-1/2 top-3 -translate-x-1/2" }[position];
-  return <div className={`map-float pointer-events-auto absolute z-10 animate-rise-in px-3 py-2 ${pos} ${className}`}>{children}</div>;
+  return <div className={`map-float pointer-events-auto absolute z-10 max-w-sm animate-rise-in px-3 py-2 ${pos} ${className}`}>{children}</div>;
 }
 
 /** Centred page for screens without a map (tables, logs). */

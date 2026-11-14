@@ -44,8 +44,8 @@ export function RunMeta({ env, compact = false }: { env: Envelope; compact?: boo
                   </a>
                 ) : (
                   <span className="text-ink">{s.id}</span>
-                )}{" "}
-                · retrieved {s.retrieved_at}
+                )}
+                {s.retrieved_at ? ` · retrieved ${s.retrieved_at}` : ""}
               </li>
             ))}
           </ul>

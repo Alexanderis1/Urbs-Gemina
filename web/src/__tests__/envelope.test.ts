@@ -64,4 +64,17 @@ describe("badge wording", () => {
     expect(badgeText(parseEnvelope({ ...good, data_kinds: { traffic_flow: "simulated" } }))).toBe("simulated");
     expect(badgeText(parseEnvelope({ ...good, synthetic: false, data_kinds: { emf: "estimated" } }))).toBe("estimated");
   });
+
+  // Contract additions of 14 Nov 2026 (scenario engine on the live API).
+  it("accepts a hypothetical input and shows the run as a what-if", () => {
+    const env = parseEnvelope({ ...good, synthetic: false, data_kinds: { terrain: "estimated", river_level: "hypothetical" } });
+    expect(badgeText(env)).toBe("what-if");
+    // The hypothetical input does not make the data look worse or better: the weakest real input decides.
+    expect(envelopeBadge(env)).toBe("estimated");
+  });
+
+  it("accepts a source without a retrieval time", () => {
+    expect(parseEnvelope({ ...good, sources: [{ id: "copernicus_dem" }] }).sources[0]!.retrieved_at).toBeUndefined();
+    expect(() => parseEnvelope({ ...good, sources: [{ id: "x", retrieved_at: 5 }] })).toThrow(/source/);
+  });
 });

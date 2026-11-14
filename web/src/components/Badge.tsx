@@ -38,7 +38,7 @@ export function KindGlyph({ kind, className = "h-2.5 w-2.5" }: { kind: KindKey; 
  * `label` prefixes the layer name; `text` overrides the wording (e.g. "3 real").
  */
 export function KindBadge({ kind, label, text, size = "sm" }: { kind: DataKind; label?: string; text?: string; size?: "sm" | "md" }) {
-  const key: KindKey = text === "what-if" || label === "what-if" || label === "what_if" ? "what_if" : kind;
+  const key: KindKey = kind === "hypothetical" || text === "what-if" || label === "what-if" || label === "what_if" ? "what_if" : kind;
   const meta = KIND_META[key];
   const shown = text ?? (key === "what_if" ? "what-if" : meta.label);
   const prefix = label && label !== "what_if" && label !== "what-if" ? label.replace(/_/g, " ") : "";

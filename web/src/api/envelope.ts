@@ -20,7 +20,7 @@ export function parseEnvelope(raw: unknown): Envelope {
   }
   if (!Array.isArray(raw.sources)) fail("missing sources");
   for (const s of raw.sources) {
-    if (!isObj(s) || typeof s.id !== "string" || typeof s.retrieved_at !== "string") fail("bad source entry");
+    if (!isObj(s) || typeof s.id !== "string" || (s.retrieved_at !== undefined && typeof s.retrieved_at !== "string")) fail("bad source entry");
   }
   if (typeof raw.synthetic !== "boolean") fail("missing synthetic flag");
   if (!Array.isArray(raw.warnings)) fail("missing warnings");
@@ -31,7 +31,8 @@ export function parseEnvelope(raw: unknown): Envelope {
   return raw as unknown as Envelope;
 }
 
-const RANK: Record<DataKind, number> = { real: 0, estimated: 1, simulated: 2, not_available: 3 };
+// A hypothetical input is the user's own what-if: it ranks lowest so the weakest real input decides the badge.
+const RANK: Record<DataKind, number> = { hypothetical: -1, real: 0, estimated: 1, simulated: 2, not_available: 3 };
 
 /** The badge for a whole response: SIMULATED if anything synthetic is in it, else the weakest layer kind. */
 export function envelopeBadge(env: Envelope): DataKind {
@@ -51,6 +52,6 @@ export const isOk = (env: Envelope) => (env.status ?? "ok") === "ok";
 
 /** Badge text: a hypothetical change is a "what-if", not a sensor; otherwise the kind. */
 export function badgeText(env: Envelope): string {
-  if (env.data_kinds.what_if === "simulated") return "what-if";
+  if (env.data_kinds.what_if === "simulated" || Object.values(env.data_kinds).includes("hypothetical")) return "what-if";
   return envelopeBadge(env).replace("_", " ");
 }

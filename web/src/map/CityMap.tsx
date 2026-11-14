@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import maplibregl, { type Map as MlMap, type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapboxOverlay } from "@deck.gl/mapbox";
-import type { Layer } from "@deck.gl/core";
+import type { Layer, PickingInfo } from "@deck.gl/core";
 import { Protocol } from "pmtiles";
 import { onMapAction } from "@/lib/mapbus";
 import { buildingColor, type BuildingView } from "@/lib/buildingStyles";
@@ -29,6 +29,11 @@ const TREES_PMTILES = TREES_RAW && typeof window !== "undefined" ? new URL(TREES
 const G0_RAW = G0_ENV === undefined || G0_ENV === "" ? G0_DEFAULT : G0_ENV === "osm" ? "" : G0_ENV;
 // The pmtiles protocol needs an absolute URL; a relative one (e.g. /buildings.pmtiles) is resolved against the page.
 const G0_PMTILES = G0_RAW && typeof window !== "undefined" ? new URL(G0_RAW, window.location.href).href : G0_RAW;
+
+/** Where a screen wants the camera: a point with a zoom, or a box to frame (e.g. a flood footprint). */
+export type MapFocus =
+  | { lon: number; lat: number; zoom: number; pitch?: number }
+  | { bounds: [[number, number], [number, number]]; pitch?: number };
 
 export const ROME = { lat: 41.8986, lon: 12.4769 };
 
@@ -134,12 +139,15 @@ export function CityMap({
   buildingView = "plain",
   showTrees = false,
   onZoom,
+  onHover,
 }: {
   layers: Layer[];
+  /** Optional: called when the pointer moves over a pickable deck.gl item (object is undefined when over nothing). */
+  onHover?: (info: PickingInfo) => void;
   buildingView?: BuildingView;
   showTrees?: boolean;
   /** Camera target set by the screen itself (local, not through the shared map-action bus). */
-  focus?: { lon: number; lat: number; zoom: number } | null;
+  focus?: MapFocus | null;
   onClick?: (lngLat: { lat: number; lon: number }) => void;
   /** Called with the zoom level after each zoom ends. */
   onZoom?: (zoom: number) => void;
@@ -153,6 +161,8 @@ export function CityMap({
   clickRef.current = onClick;
   const zoomRef = useRef(onZoom);
   zoomRef.current = onZoom;
+  const hoverRef = useRef(onHover);
+  hoverRef.current = onHover;
   const { theme } = useTheme();
   const themeRef = useRef(theme);
   themeRef.current = theme;
@@ -175,7 +185,16 @@ export function CityMap({
     });
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
     map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
-    const overlay = new MapboxOverlay({ interleaved: true, layers: [] });
+    const overlay = new MapboxOverlay({
+      interleaved: true,
+      layers: [],
+      onHover: (info) => {
+        if (!hoverRef.current) return;
+        hoverRef.current(info);
+        // Pointer cursor over something that has details, only on screens that show them.
+        map.getCanvas().style.cursor = info.object ? "pointer" : "";
+      },
+    });
     map.addControl(overlay);
     map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
     map.on("zoomend", () => zoomRef.current?.(map.getZoom()));
@@ -202,7 +221,8 @@ export function CityMap({
     void loadStyle(theme).then((style) => {
       if (cancelled || mapRef.current !== map) return;
       map.once("style.load", () => addBuildings(map, theme));
-      map.setStyle(style);
+      // diff: false, so "style.load" always fires (a diff against an identical fallback style would not).
+      map.setStyle(style, { diff: false });
     });
     return () => {
       cancelled = true;
@@ -228,7 +248,10 @@ export function CityMap({
   }, [buildingView, showTrees, theme]);
 
   useEffect(() => {
-    if (focus) mapRef.current?.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, pitch: 55 });
+    const map = mapRef.current;
+    if (!focus || !map) return;
+    if ("bounds" in focus) map.fitBounds(focus.bounds, { padding: 60, maxZoom: 16, pitch: focus.pitch ?? 30, duration: 1200 });
+    else map.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, pitch: focus.pitch ?? 55 });
   }, [focus]);
 
   return <div ref={el} className="h-full w-full" />;

@@ -3,6 +3,9 @@ import { ScatterplotLayer } from "@deck.gl/layers";
 import { CityMap } from "@/map/CityMap";
 import { RangeBar } from "@/components/RangeBar";
 import { RunMeta } from "@/components/RunMeta";
+import { Callout, EmptyState, Field, MapFloat, Panel, Section, Skeleton, Spinner, Stat, Workspace } from "@/components/ui";
+import { Download, MapPin, RadioTower } from "lucide-react";
+import { useTheme } from "@/lib/useTheme";
 import { buildCitedReport, type Application } from "@/lib/report";
 import { contextRows, contextSummary } from "@/lib/context";
 import { useSession } from "@/lib/runlog";
@@ -23,6 +26,7 @@ function download(name: string, text: string) {
 
 export default function PermitCheck() {
   const { run } = useSession();
+  const { palette } = useTheme();
   const [query, setQuery] = useState("Via Nazionale 194, Roma");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,6 +106,7 @@ export default function PermitCheck() {
   const layers = useMemo(() => {
     if (!site || !ctx || !isOk(ctx)) return [];
     const centre = [site.lon, site.lat] as [number, number];
+    const [r, g, b] = palette.accent;
     return [
       new ScatterplotLayer({
         id: "radius",
@@ -111,126 +116,212 @@ export default function PermitCheck() {
         radiusUnits: "meters",
         filled: true,
         stroked: true,
-        getFillColor: [139, 30, 45, 30],
-        getLineColor: [139, 30, 45, 255],
+        getFillColor: [r, g, b, 30],
+        getLineColor: [r, g, b, 255],
         lineWidthMinPixels: 2,
+        updateTriggers: { getFillColor: [r, g, b], getLineColor: [r, g, b] },
       }),
       new ScatterplotLayer({
         id: "site",
         data: [centre],
         getPosition: (d: [number, number]) => d,
-        getFillColor: [139, 30, 45],
+        getFillColor: [r, g, b],
         radiusMinPixels: 7,
+        updateTriggers: { getFillColor: [r, g, b] },
       }),
     ];
-  }, [site, ctx]);
+  }, [site, ctx, palette]);
 
   const thresholds = field && isOk(field) ? Object.entries(field.result.exceedance ?? {}) : [];
+  const firstLimit = thresholds.find(([, t]) => t.threshold_v_per_m != null);
+  const markerValue = firstLimit?.[1].threshold_v_per_m ?? null;
+  const ready = !busy && !!site && !!ctx && !!field;
+  const fieldEmpty = !busy && !place;
 
   return (
-    <div className="flex h-full">
-      <aside className="w-96 shrink-0 space-y-4 overflow-y-auto border-r border-stone-200 bg-white p-4">
-        <form
-          className="space-y-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void check({ text: query });
-          }}
+    <Workspace
+      panel={
+        <Panel
+          title="Permit check"
+          icon={RadioTower}
+          subtitle="Context for a new antenna application"
+          width="w-[26rem]"
+          footer={
+            <button type="button" className="btn-ghost w-full" disabled={!ready} onClick={() => void downloadReport()}>
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Download cited report
+            </button>
+          }
         >
-          <div className="label">New application</div>
-          <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Site address" />
-          <div className="grid grid-cols-2 gap-2">
-            <input className="input" placeholder="Operator" value={app.operator} onChange={(e) => setApp({ ...app, operator: e.target.value })} />
-            <input className="input" placeholder="Height above ground (m)" inputMode="decimal" value={app.height_m} onChange={(e) => setApp({ ...app, height_m: e.target.value })} />
-            <select
-              className="input"
-              value={band}
-              onChange={(e) => {
-                setBand(e.target.value);
-                setApp({ ...app, technology: e.target.value ? `${e.target.value} MHz` : "" });
+          <Section title="Application">
+            <form
+              className="space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void check({ text: query });
               }}
             >
-              <option value="">Band (MHz)</option>
-              {BANDS.map((b) => (
-                <option key={b} value={b}>
-                  {b} MHz
-                </option>
-              ))}
-            </select>
-            <input className="input" placeholder="File reference" value={app.reference} onChange={(e) => setApp({ ...app, reference: e.target.value })} />
-          </div>
-          <button className="btn w-full" disabled={busy}>
-            {busy ? "Checking…" : "Check context"}
-          </button>
-          <p className="text-xs text-stone-500">Or click a point on the map.</p>
-        </form>
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        {place && (
-          <div className="card space-y-1">
-            <div className="font-medium">{place.result.found ? (site?.label ?? place.result.label) : "Address not found"}</div>
-            {place.result.municipio?.name && (
-              <div className="text-xs text-stone-500">
-                {/^municipio/i.test(place.result.municipio.name) ? place.result.municipio.name : `Municipio ${place.result.municipio.name}`}
-                {place.result.urban_zone?.name ? ` · ${place.result.urban_zone.name} (${place.result.urban_zone.id})` : ""}
+              <Field label="Site address">
+                <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Operator">
+                  <input className="input" value={app.operator} onChange={(e) => setApp({ ...app, operator: e.target.value })} />
+                </Field>
+                <Field label="Height above ground (m)">
+                  <input className="input" inputMode="decimal" value={app.height_m} onChange={(e) => setApp({ ...app, height_m: e.target.value })} />
+                </Field>
+                <Field label="Band">
+                  <select
+                    className="input"
+                    value={band}
+                    onChange={(e) => {
+                      setBand(e.target.value);
+                      setApp({ ...app, technology: e.target.value ? `${e.target.value} MHz` : "" });
+                    }}
+                  >
+                    <option value="">Not specified</option>
+                    {BANDS.map((b) => (
+                      <option key={b} value={b}>
+                        {b} MHz
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="File reference">
+                  <input className="input" value={app.reference} onChange={(e) => setApp({ ...app, reference: e.target.value })} />
+                </Field>
               </div>
-            )}
-            <RunMeta env={place} compact />
-          </div>
-        )}
-        {ctx && !isOk(ctx) && <RunMeta env={ctx} />}
-        {ctx && isOk(ctx) && summary && (
-          <div className="card space-y-2">
-            <div className="label">Within {ctx.result.radius_m} m</div>
-            <p className="text-xs italic text-stone-600">{ctx.result.meaning}</p>
-            <p className="text-sm">
-              Sensitive sites: <b>{summary.sensitiveHits}</b>
-            </p>
-            {rows.length === 0 && <p className="text-sm text-stone-500">Nothing found within the radius.</p>}
-            <ul className="divide-y divide-stone-100 text-sm">
-              {rows.map((r, i) => (
-                <li key={`${r.layer}-${i}`} className="flex items-center justify-between gap-2 py-1">
-                  <span>
-                    <span className="font-medium">{r.layerLabel}</span> · {r.name}
-                  </span>
-                  <span className="whitespace-nowrap">{Math.round(r.distance_m)} m</span>
-                </li>
-              ))}
-            </ul>
-            {summary.unavailable.length > 0 && (
-              <p className="text-xs text-amber-700">Not checked (layer not available): {summary.unavailable.join(", ")}</p>
-            )}
-            <RunMeta env={ctx} />
-          </div>
-        )}
-        {field && !isOk(field) && <RunMeta env={field} />}
-        {field && isOk(field) && (
-          <div className="card space-y-2">
-            <div className="label">
-              {band ? "Estimated electric field at the site, with the new antenna" : "Estimated electric field at the site today (pick a band to add the new antenna)"}
+              <button type="submit" className="btn w-full" disabled={busy}>
+                {busy && <Spinner />}
+                {busy ? "Checking…" : "Check context"}
+              </button>
+              <p className="hint">Or click a point on the map.</p>
+            </form>
+          </Section>
+
+          {error && <Callout tone="error">{error}</Callout>}
+
+          {busy && (
+            <div className="space-y-3" aria-busy="true">
+              <div className="card space-y-2">
+                <Skeleton lines={2} />
+              </div>
+              <div className="card space-y-2">
+                <Skeleton lines={4} />
+              </div>
+              <div className="card space-y-2">
+                <Skeleton lines={3} />
+              </div>
             </div>
-            <RangeBar e={field.result} unit={field.result.unit} max={Math.max(field.result.p95 * 1.2, 1)} />
-            {field.result.model && <p className="text-xs text-stone-500">Model: {field.result.model}</p>}
-            {field.result.averaging_note && <p className="text-xs text-stone-500">{field.result.averaging_note}</p>}
-            {thresholds.map(([k, t]) => (
-              <p key={k} className="text-sm">
-                Probability of exceeding the {k.replace(/_/g, " ")}
-                {t.threshold_v_per_m != null ? ` (${t.threshold_v_per_m} V/m)` : ""}: <b>{Math.round((t.probability ?? 0) * 100)}%</b>
-                {t.source && <span className="block text-xs text-stone-500">{t.source}</span>}
-              </p>
-            ))}
-            {field.result.baseline?.credit && <p className="text-xs text-stone-500">{field.result.baseline.credit}</p>}
-            <RunMeta env={field} />
-          </div>
-        )}
-        {site && ctx && field && (
-          <button className="btn-ghost w-full" onClick={() => void downloadReport()}>
-            Download cited report
-          </button>
-        )}
-      </aside>
-      <div className="flex-1">
-        <CityMap layers={layers} initialZoom={14} pitch={45} focus={focus} onClick={(p) => void check(p)} />
-      </div>
-    </div>
+          )}
+
+          {fieldEmpty && !error && (
+            <EmptyState icon={MapPin} title="No site checked yet">
+              Enter an address or click the map to see the sensitive sites within the legal radius and an estimate of the electric field.
+            </EmptyState>
+          )}
+
+          {!busy && place && (
+            <div className="card animate-rise-in space-y-2">
+              <h2 className="label">Site</h2>
+              {place.result.found ? (
+                <>
+                  <div className="text-sm font-semibold">{site?.label ?? place.result.label}</div>
+                  {place.result.municipio?.name && (
+                    <div className="hint">
+                      {/^municipio/i.test(place.result.municipio.name) ? place.result.municipio.name : `Municipio ${place.result.municipio.name}`}
+                      {place.result.urban_zone?.name ? ` · ${place.result.urban_zone.name} (${place.result.urban_zone.id})` : ""}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Callout tone="warn" title="Address not found">
+                  Check the spelling or click the point on the map.
+                </Callout>
+              )}
+              <RunMeta env={place} compact />
+            </div>
+          )}
+
+          {!busy && ctx && !isOk(ctx) && (
+            <div className="card animate-rise-in">
+              <RunMeta env={ctx} />
+            </div>
+          )}
+          {!busy && ctx && isOk(ctx) && summary && (
+            <div className="card animate-rise-in space-y-3">
+              <h2 className="label">Within {ctx.result.radius_m} m</h2>
+              <Callout tone="info">{ctx.result.meaning}</Callout>
+              <Stat label="Sensitive sites" value={summary.sensitiveHits} />
+              {rows.length === 0 ? (
+                <p className="text-sm text-muted">Nothing found within the radius.</p>
+              ) : (
+                <ul className="divide-y divide-line text-sm">
+                  {rows.map((r, i) => (
+                    <li key={`${r.layer}-${i}`} className="flex items-baseline justify-between gap-3 py-1.5">
+                      <span className="min-w-0 break-words">
+                        <span className="font-semibold">{r.layerLabel}</span> · {r.name}
+                      </span>
+                      <span className="num whitespace-nowrap">{Math.round(r.distance_m)} m</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {summary.unavailable.length > 0 && <Callout tone="warn">Not checked: {summary.unavailable.join(", ")}</Callout>}
+              <RunMeta env={ctx} />
+            </div>
+          )}
+
+          {!busy && field && !isOk(field) && (
+            <div className="card animate-rise-in">
+              <RunMeta env={field} />
+            </div>
+          )}
+          {!busy && field && isOk(field) && (
+            <div className="card animate-rise-in space-y-3">
+              <h2 className="label">Electric field at the site</h2>
+              <p className="text-sm font-semibold">{band ? "With the new antenna" : "Today (choose a band to add the new antenna)"}</p>
+              <RangeBar
+                e={field.result}
+                unit={field.result.unit}
+                max={Math.max(field.result.p95 * 1.2, markerValue != null ? markerValue * 1.15 : 0, 1)}
+                marker={markerValue != null && firstLimit ? { value: markerValue, label: `${firstLimit[0].replace(/_/g, " ")} (${markerValue} V/m)` } : undefined}
+              />
+              {thresholds.length > 0 && (
+                <ul className="divide-y divide-line text-sm">
+                  {thresholds.map(([k, t]) => (
+                    <li key={k} className="py-1.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0 break-words">
+                          <span className="font-semibold">{k.replace(/_/g, " ")}</span>
+                          {t.threshold_v_per_m != null && <span className="num"> · {t.threshold_v_per_m} V/m</span>}
+                        </span>
+                        <span className="num whitespace-nowrap" title="Probability of exceeding">
+                          {Math.round((t.probability ?? 0) * 100)}%
+                        </span>
+                      </div>
+                      <div className="hint">Probability of exceeding{t.source ? ` · ${t.source}` : ""}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {field.result.model && <p className="hint">Model: {field.result.model}</p>}
+              {field.result.averaging_note && <p className="hint">{field.result.averaging_note}</p>}
+              {field.result.baseline?.credit && <p className="hint">{field.result.baseline.credit}</p>}
+              <RunMeta env={field} />
+            </div>
+          )}
+        </Panel>
+      }
+    >
+      <CityMap layers={layers} initialZoom={14} pitch={45} focus={focus} onClick={(p) => void check(p)} />
+      {site && (
+        <MapFloat position="top-left" className="max-w-sm">
+          <div className="text-sm font-semibold">{site.label}</div>
+          {ctx && isOk(ctx) && <div className="hint">Context radius {ctx.result.radius_m} m</div>}
+        </MapFloat>
+      )}
+    </Workspace>
   );
 }

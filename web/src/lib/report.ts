@@ -31,7 +31,7 @@ export function buildCitedReport(address: string, runs: Envelope[], app: Applica
     lines.push("```json", JSON.stringify(r.result, null, 2), "```", "");
     lines.push("Data kinds: " + Object.entries(r.data_kinds).map(([k, v]) => `${k} = ${v}`).join(", "));
     lines.push("", "Sources:");
-    for (const s of r.sources) lines.push(`- ${s.id}${s.url ? ` (${s.url})` : ""}, retrieved ${s.retrieved_at}`);
+    for (const s of r.sources) lines.push(`- ${s.id}${s.url ? ` (${s.url})` : ""}${s.retrieved_at ? `, retrieved ${s.retrieved_at}` : ""}`);
     if (r.warnings.length) lines.push("", "Warnings:", ...r.warnings.map((w) => `- ${w}`));
     lines.push("");
   }

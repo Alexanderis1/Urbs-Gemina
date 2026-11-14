@@ -27,3 +27,15 @@ export function circlePolygon(lon: number, lat: number, radiusM: number, vertice
   ring.push([...ring[0]!]);
   return { type: "Polygon", coordinates: [ring] };
 }
+
+/** Bounding box [[west, south], [east, north]] of GeoJSON geometries. Used only to frame the map camera. */
+export function boundsOf(geometries: { type?: string; coordinates?: unknown }[]): [[number, number], [number, number]] | null {
+  let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+  const visit = (c: unknown): void => {
+    if (Array.isArray(c) && typeof c[0] === "number" && typeof c[1] === "number") {
+      w = Math.min(w, c[0]); e = Math.max(e, c[0]); s = Math.min(s, c[1]); n = Math.max(n, c[1]);
+    } else if (Array.isArray(c)) c.forEach(visit);
+  };
+  for (const g of geometries) visit(g.coordinates);
+  return Number.isFinite(w) ? [[w, s], [e, n]] : null;
+}
