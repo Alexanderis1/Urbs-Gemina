@@ -415,3 +415,14 @@ def test_population_tools_are_registered(client: TestClient) -> None:
             "schools_to_check"} <= names
     r = client.post("/tools/exposure", json={"layer": "emf", "area": "city", "threshold": "no2_hourly_limit"})
     assert r.status_code == 400  # threshold of another layer
+
+
+def test_thin_evenly_spreads_over_the_whole_list() -> None:
+    from twin.tools.query_layer import thin_evenly
+
+    items = list(range(10_000))
+    kept = thin_evenly(items, 5)
+    assert kept == [0, 2500, 5000, 7499, 9999]
+    assert thin_evenly(items[:3], 5) == [0, 1, 2]
+    assert len(thin_evenly(items, 5000)) == 5000
+    assert thin_evenly(items, 5000)[-1] == 9999

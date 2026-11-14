@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
+from twin.api.jobs import Jobs, modal_store
 from twin.api.models import AskIn, EnvelopeOut
 from twin.api.orchestrator import TierOrchestrator
 from twin.api.tools import TOOLS, ToolSpec, tool_schema
@@ -60,11 +61,24 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
 
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"],
                        allow_headers=["Authorization", "Content-Type"])
+    store_name = os.environ.get("URBS_JOBS_DICT", "")
+    jobs = Jobs(float(os.environ.get("URBS_SYNC_WAIT_S", "0")), modal_store(store_name) if store_name else None)
+
+    def answer(fn: Callable[[], Any]) -> Any:
+        """The result, or a 202 with a job id when the work outlasts URBS_SYNC_WAIT_S (see twin/api/jobs.py)."""
+        finished, value = jobs.run(fn)
+        if finished:
+            return value
+        return JSONResponse(status_code=202, content={"status": "running", "job_id": value, "poll": f"/jobs/{value}"})
+
     state: dict[str, ToolRuntime] = {}
+    state_lock = threading.Lock()
 
     def get_runtime() -> ToolRuntime:
         if "rt" not in state:
-            state["rt"] = runtime or ToolRuntime.default()
+            with state_lock:  # warm-up and the first requests must share one runtime, not build several
+                if "rt" not in state:
+                    state["rt"] = runtime or ToolRuntime.default()
         return state["rt"]
 
     def get_role(authorization: str | None = Header(default=None)) -> str:
@@ -123,9 +137,13 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
                      role: str = Depends(get_role),
                      rt: ToolRuntime = Depends(get_runtime)) -> dict[str, Any]:
             request = body if body is not None else model()
-            envelope = spec.handler(rt, request, role)
-            log.info("tool=%s run=%s role=%s", spec.name, str(envelope["run_id"])[:12], role)
-            return envelope
+
+            def work() -> dict[str, Any]:
+                envelope: dict[str, Any] = spec.handler(rt, request, role)
+                log.info("tool=%s run=%s role=%s", spec.name, str(envelope["run_id"])[:12], role)
+                return envelope
+
+            return answer(work)  # type: ignore[no-any-return]
 
         app.post(f"/tools/{spec.name}", response_model=EnvelopeOut, response_model_exclude_unset=True,
                  summary=spec.description,
@@ -159,9 +177,16 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
         question = contract.TwinQuestion(question=body.question, tier=role, language=body.language, area=body.area,
                                          mode=body.mode, conversation_id=body.conversation_id, channel="chat",
                                          use_case=body.use_case, params=dict(body.params))
-        answer = get_orchestrator().ask(question)
-        out: dict[str, Any] = dataclasses.asdict(answer)
-        return out
+        orchestrator = get_orchestrator()
+        return answer(lambda: dataclasses.asdict(orchestrator.ask(question)))  # type: ignore[no-any-return]
+
+    @app.get("/jobs/{job_id}")
+    def job(job_id: str) -> JSONResponse:
+        """Poll a long request that answered 202. ``status`` is running, done (with ``result``) or error."""
+        found = jobs.get(job_id)
+        if found is None:
+            raise HTTPException(status_code=404, detail=f"unknown job '{job_id}'")
+        return JSONResponse(status_code=200, content=found)
 
     def _param_type(spec: Mapping[str, Any]) -> str:
         """'text' or 'number' for the form: an explicit ``type`` wins; a null default is an optional number."""

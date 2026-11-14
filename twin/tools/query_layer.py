@@ -57,6 +57,23 @@ class SafeFeed:
         return []
 
 
+def thin_evenly(items: list[Any], limit: int) -> list[Any]:
+    """Keep ``limit`` items spread evenly over the list (first and last kept), not just the first ones.
+
+    Lists here are sorted by place or id, so the first N would cover only one corner of the area.
+    """
+    n = len(items)
+    if n <= limit:
+        return list(items)
+    if limit <= 1:
+        return items[:limit]
+    return [items[round(i * (n - 1) / (limit - 1))] for i in range(limit)]
+
+
+THIN_WARNING = ("Large area: {count} records, {limit} returned, picked evenly across the area. "
+                "Ask for a smaller area (a municipio or a zone) to see every record.")
+
+
 def _belief_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, limit: int,
                   inputs: dict[str, Any], sources: list[Source]) -> dict[str, Any] | None:
     """Belief layer from WS5 (``twin.beliefs``), or ``None`` when the layer is not a belief layer."""
@@ -90,8 +107,10 @@ def _belief_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, li
     payload["warnings"] = list(payload.get("warnings", [])) + feed_warnings
     result = dict(payload.get("result") or {})
     all_cells = result.pop("cells", [])
-    result.update(type="belief", area=area.describe(), cells=all_cells[:limit], count=len(all_cells),
+    result.update(type="belief", area=area.describe(), cells=thin_evenly(all_cells, limit), count=len(all_cells),
                   truncated=len(all_cells) > limit)
+    if len(all_cells) > limit:
+        payload["warnings"].append(THIN_WARNING.format(count=len(all_cells), limit=limit))
     sources += [Source(id=str(s["id"]), retrieved_at=str(s.get("retrieved_at", utc_now())), url=s.get("url"))
                 for s in payload.get("sources", [])]
     status = str(payload.get("status", "ok"))
@@ -144,7 +163,7 @@ def query_layer(runtime: ToolRuntime, layer: str, area: Any = "city", time: str 
     features = [f for f in snapshot.near(resolved.bbox) if _touches_area(f["geometry"], resolved, index)]
     kind = str(runtime.settings.context_layers.get("layers", {}).get(layer, {}).get("data_kind", "real"))
     result = {"type": "features", "area": resolved.describe(), "count": len(features),
-              "features": {"type": "FeatureCollection", "features": features[:limit]},
+              "features": {"type": "FeatureCollection", "features": thin_evenly(features, limit)},
               "truncated": len(features) > limit}
     if group_by:
         # Counted over every feature in the area, not only the listed ones (static layers only).
@@ -152,7 +171,8 @@ def query_layer(runtime: ToolRuntime, layer: str, area: Any = "city", time: str 
         result["counts_by"] = {group_by: dict(tally.most_common())}
     return runtime.envelope(TOOL, inputs, result, {layer: kind}, [*sources, snapshot.source()],
                          ["Features are included when one of their vertices lies inside the area, or when a "
-                          "polygon contains the area's first vertex (an area inside a large zone)."])
+                          "polygon contains the area's first vertex (an area inside a large zone)."]
+                         + ([THIN_WARNING.format(count=len(features), limit=limit)] if len(features) > limit else []))
 
 
 class _AreaIndex:
@@ -252,8 +272,8 @@ def _provider_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, 
                   "observations": [{"id": o.entity_id, "entity_type": o.entity_type, "lon": round(o.lon, 6),
                                     "lat": round(o.lat, 6), "observed_at": o.observed_at.isoformat(),
                                     "values": o.values, "sigma": o.sigma, "synthetic": o.synthetic}
-                                   for o in rows[:limit]]}
-        warnings = []
+                                   for o in thin_evenly(rows, limit)]}
+        warnings = [THIN_WARNING.format(count=len(rows), limit=limit)] if len(rows) > limit else []
     if info.synthetic:
         warnings.append("SIMULATED data: generated values, not measurements.")
     feed_time = getattr(provider, "last_feed_time", None)  # set by snapshot feeds (GTFS-RT, GBFS)

@@ -27,6 +27,9 @@ measurements (ARPA) are available to check it.
 from __future__ import annotations
 
 import math
+
+import numpy as np
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Iterator, Sequence
@@ -39,7 +42,7 @@ from twin.providers.estimated.sites import (
     read_osm_masts,
     read_seed_sites,
 )
-from twin.providers.geo import distance_m, in_bbox
+from twin.providers.geo import EARTH_RADIUS_M, distance_m, in_bbox
 from twin.providers.raster import RasterCell
 from twin.providers.restricted.cartoradio import CartoradioGridProvider
 from twin.providers.settings import Settings, integer, number
@@ -155,10 +158,23 @@ def find_peaks(cells: Sequence[RasterCell], min_value: float) -> list[RasterCell
 
 def snap_to_points(lon: float, lat: float, points: Sequence[tuple[float, float]],
                    max_m: float) -> tuple[float, float] | None:
-    best = min(points, key=lambda p: distance_m(lon, lat, p[0], p[1]), default=None)
-    if best is not None and distance_m(lon, lat, best[0], best[1]) <= max_m:
+    if not points:
+        return None
+    coords = np.asarray(points, dtype=float)
+    best = points[int(np.argmin(_distances_m(lon, lat, coords)))]  # vectorised: a Python loop took ~16 s
+    if distance_m(lon, lat, best[0], best[1]) <= max_m:
         return best
     return None
+
+
+def _distances_m(lon: float, lat: float, coords: np.ndarray[Any, Any]) -> np.ndarray[Any, Any]:
+    """Haversine distance in metres from one point to each (lon, lat) row, same formula as ``distance_m``."""
+    phi1, phi2 = math.radians(lat), np.radians(coords[:, 1])
+    dphi = phi2 - phi1
+    dlmb = np.radians(coords[:, 0] - lon)
+    a = np.sin(dphi / 2) ** 2 + math.cos(phi1) * np.cos(phi2) * np.sin(dlmb / 2) ** 2
+    out: np.ndarray[Any, Any] = 2 * EARTH_RADIUS_M * np.arcsin(np.minimum(1.0, np.sqrt(a)))
+    return out
 
 
 def fit_effective_eirp(sites: Sequence[tuple[float, float]], cells: Sequence[RasterCell], *,
@@ -241,6 +257,7 @@ def fit_effective_eirp(sites: Sequence[tuple[float, float]], cells: Sequence[Ras
 # --- provider -------------------------------------------------------------------
 
 #: Fitted registers per (area, settings), kept in memory for the process only.
+_REGISTER_LOCK = threading.Lock()
 _REGISTER_CACHE: dict[tuple[object, str, str], tuple[list[EstimatedSite], float, float]] = {}
 
 
@@ -277,6 +294,13 @@ class EstimatedRegisterProvider:
         """The fused register. The fit takes about 20 s, so it is held in memory for the process
         (never written to disk: Cartoradio-derived data is runtime only)."""
         if self._sites is None:
+            with _REGISTER_LOCK:  # concurrent requests wait for one fit instead of each running their own
+                self._load_sites()
+        assert self._sites is not None
+        return self._sites
+
+    def _load_sites(self) -> None:
+        if self._sites is None:
             key = (self._area, repr(sorted(self._config.items(), key=str)),
                    repr(self._settings.section("restricted", "cartoradio_grid")))
             cached = _REGISTER_CACHE.get(key) if self._shared else None
@@ -286,7 +310,6 @@ class EstimatedRegisterProvider:
                 if self._shared:
                     _REGISTER_CACHE[key] = cached
             self._sites, self._background, self._fit_error_db = cached
-        return self._sites
 
     @property
     def fit_error_db(self) -> float:
@@ -377,10 +400,12 @@ class EstimatedRegisterProvider:
             else:
                 placed.append((seed, source, sigma_cells))
         new_min = number(self._config, "new_site_min_v_m", 3.0)
+        placed_xy = [(s.lon, s.lat) for s, _src, _sg in placed]
         for peak_cell in peaks:
             point = (peak_cell.lon, peak_cell.lat)
-            if peak_cell.value >= new_min and point not in used_peaks and all(
-                    distance_m(point[0], point[1], s.lon, s.lat) > peak_snap for s, _src, _sg in placed):
+            if peak_cell.value >= new_min and point not in used_peaks and (
+                    not placed_xy or bool(np.all(_distances_m(point[0], point[1], np.asarray(placed_xy)) > peak_snap))):
+                placed_xy.append(point)
                 placed.append((SeedSite(0, point[0], point[1], 0, ()), "cartoradio_peak_only", sigma_peak))
 
         placed.sort(key=lambda item: (round(item[0].lon, 6), round(item[0].lat, 6), item[0].net))
