@@ -3,6 +3,8 @@ import { mockTool } from "./mock";
 import { mockSportTool, SPORT_TOOLS, type SportTool } from "./mockSport";
 import type { Envelope, ToolName } from "./types";
 import { SUPABASE_URL, supabase } from "@/integrations/supabase/client";
+import { callWithWakeUp } from "@/lib/retry";
+import { setServiceStatus } from "@/lib/serviceStatus";
 
 // The browser never talks to the tool API directly: it calls the "tools" edge function (Lovable Cloud),
 // which holds the keys, reads the user's tier from the session, and forwards to POST /tools/<name>.
@@ -51,6 +53,18 @@ export async function callTool<R = Record<string, unknown>>(
       : await mockTool(tool as ToolName, inputs);
     return env as Envelope<R>;
   }
+  // The service sleeps when idle: a missing answer is retried while it wakes up (see lib/retry.ts).
+  const env = await callWithWakeUp(
+    tool,
+    () => postTool<R>(tool, inputs),
+    async () => void (await postTool("data_status", {})),
+    { onWait: () => setServiceStatus("waking") },
+  );
+  setServiceStatus("ready");
+  return env;
+}
+
+async function postTool<R>(tool: string, inputs: Record<string, unknown>): Promise<Envelope<R>> {
   const res = await proxyFetch(`/tools/${tool}`, inputs);
   if (!res.ok) {
     const b = (await res.json().catch(() => ({}))) as { detail?: unknown; error?: unknown };

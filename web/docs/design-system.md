@@ -60,7 +60,15 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     so the form asks for a drawn area; if the area is too large the server's own message is shown, once.
 18. **Places are drawn only when their coordinates are in Rome**, and internal road ids are hidden when a street
     name is present.
-19. **Map credits start folded** behind the (i) button so they never cover a legend; one click opens them.
+19. **Every data layer is drawn on the 3D city.** The order is fixed in one place (`src/map/CityMap.tsx`,
+    `src/lib/twinOverlay.ts`): base map, 3D buildings, data, then street and place names on top. A building never
+    hides a dot; areas (cells, flood extents, sport zones) are see-through so the buildings under them stay
+    readable (`AREA_ALPHA` in `src/lib/colors.ts`). Whole-city screens open at the widest zoom that still shows
+    the buildings; further out, a small button brings them back.
+20. **A sleeping service is not a failure.** The live service stops when idle and takes two to three minutes to
+    wake. A missing answer is retried automatically and a blue strip says what is happening. Simulations are
+    never started more than twice (`src/lib/retry.ts`).
+21. **Map credits start folded** behind the (i) button so they never cover a legend; one click opens them.
 
 ## Tokens
 

@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { Database, FlaskConical, Map as MapIcon, MessagesSquare, Moon, RadioTower, Settings2, Sun, Trophy, type LucideIcon } from "lucide-react";
-import { AiDisclosure, SampleModeBanner, StatusBar } from "@/components/Banners";
+import { AiDisclosure, SampleModeBanner, StatusBar, WakingBanner } from "@/components/Banners";
 import { ScreenRouter } from "@/components/ScreenRouter";
 import { Account } from "@/components/Account";
 import { VoiceButton } from "@/components/VoiceButton";
@@ -69,6 +69,7 @@ export default function App() {
         <Account />
       </header>
       <SampleModeBanner />
+      <WakingBanner />
       <div className="flex min-h-0 flex-1">
         <nav aria-label="Screens" className="flex w-[4.5rem] shrink-0 flex-col gap-0.5 border-r border-line bg-surface py-2">
           {visible.map((s) => (

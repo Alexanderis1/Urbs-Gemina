@@ -24,7 +24,7 @@ import { RunMeta } from "@/components/RunMeta";
 import { KindBadge } from "@/components/Badge";
 import { Callout, LegendRamp, MapFloat, Panel, Section, Skeleton, Spinner, Workspace } from "@/components/ui";
 import { areaLabel, areaToArg, type Area } from "@/lib/area";
-import { ALPHA_FLOOR, confidenceAlpha, rampColor, rampGradient } from "@/lib/colors";
+import { ALPHA_FLOOR, areaAlpha, confidenceAlpha, rampColor, rampGradient } from "@/lib/colors";
 import { onMapAction, registerCityView } from "@/lib/mapbus";
 import { areaFromId } from "@/lib/mapActions";
 import { isOk } from "@/api/envelope";
@@ -180,10 +180,11 @@ export default function CityView() {
             id: "belief",
             data: data.items,
             getHexagon: (c) => c.h3!,
-            getFillColor: (c) => [...rampColor(norm(c.value)), alpha(c)],
+            // See-through, so the 3D buildings under each cell stay readable.
+            getFillColor: (c) => [...rampColor(norm(c.value)), areaAlpha(alpha(c))],
             extruded: false,
-            // On the dark map a thin edge in the cell's own colour keeps pale, faded cells visible.
-            stroked: dark,
+            // A thin edge in the cell's own colour keeps pale, faded cells visible over the buildings.
+            stroked: true,
             getLineColor: (c) => [...rampColor(norm(c.value)), 150],
             lineWidthUnits: "pixels",
             getLineWidth: 1,

@@ -349,7 +349,7 @@ export default function Sport() {
         )
       }
     >
-      <CityMap layers={layers} initialZoom={11.5} pitch={30} onZoom={setZoom} onClick={tab === "deserts" ? (p) => setGym({ lon: p.lon, lat: p.lat }) : undefined} />
+      <CityMap layers={layers} pitch={30} onZoom={setZoom} onClick={tab === "deserts" ? (p) => setGym({ lon: p.lon, lat: p.lat }) : undefined} />
       <MapFloat position="bottom-left">
         <div className="label mb-1">Map key</div>
         <ul className="space-y-1 text-xs">
