@@ -18,3 +18,27 @@ antenna_context:
   radius_m: 300
   source: "Application form (Modello A, D.Lgs. 259/2003)"
   meaning: "Context information only. Not a prohibition (Consiglio di Stato, Sez. IV, 2021)."
+
+air_quality:
+  # Legal limit values for the protection of human health, D.Lgs. 155/2010 Annex XI (Directive 2008/50/EC).
+  # Each applies to an averaging period; the twin's belief layers are near-instantaneous estimates.
+  no2_hourly_limit_ug_m3:
+    value: 200
+    averaging: "1-hour mean, not to be exceeded more than 18 times a calendar year"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  no2_annual_limit_ug_m3:
+    value: 40
+    averaging: "calendar-year mean"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  pm10_daily_limit_ug_m3:
+    value: 50
+    averaging: "24-hour mean, not to be exceeded more than 35 times a calendar year"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  pm10_annual_limit_ug_m3:
+    value: 40
+    averaging: "calendar-year mean"
+    source: "D.Lgs. 155/2010, Allegato XI"
+  pm25_annual_limit_ug_m3:
+    value: 25
+    averaging: "calendar-year mean"
+    source: "D.Lgs. 155/2010, Allegato XI"

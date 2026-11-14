@@ -13,6 +13,7 @@ from twin.api import models as m
 from twin.modules.antennas.report import build_permit_report
 from twin.tools.area import AreaTooLarge, resolve_area
 from twin.tools.layers import LayerSnapshot
+from twin.tools.crowds_exposure import crowds_view, exposure_count
 from twin.tools.data_status import data_status
 from twin.tools.envelope import ToolError, make_envelope
 from twin.tools.estimate_field import estimate_field
@@ -238,6 +239,10 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("estimate_field", m.EstimateFieldIn, _estimate_field),
     ToolSpec("query_layer", m.QueryLayerIn,
              lambda rt, req, role: query_layer(rt, req.layer, _dump(req.area), req.time, req.limit, role)),
+    ToolSpec("crowds", m.CrowdsIn, lambda rt, req, role: crowds_view(rt, _dump(req.area), req.time), owner="WS5"),
+    ToolSpec("exposure", m.ExposureIn,
+             lambda rt, req, role: exposure_count(rt, req.layer, _dump(req.area), req.threshold, req.time),
+             owner="WS5"),
     ToolSpec("run_scenario", m.RunScenarioIn, _run_scenario, owner="WS6"),
     ToolSpec("legal_lookup", m.LegalLookupIn, _legal_lookup, owner="WS7"),
     ToolSpec("find_dataset", m.FindDatasetIn, _find_dataset, owner="WS7"),

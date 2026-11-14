@@ -288,3 +288,10 @@ def test_ask_serialises_citations(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     rt = ToolRuntime(settings=Settings.load(), store=LayerStore(raw_dir=tmp_path))
     body = TestClient(create_app(rt, api_keys={})).post("/ask", json={"question": "ciao"}).json()
     assert body["citations"] == [{"line": 1, "kind": "run", "ref": "abc", "cite_mode": "auto"}]
+
+
+def test_population_tools_are_registered(client: TestClient) -> None:
+    names = {t["name"] for t in client.get("/tools").json()}
+    assert {"crowds", "exposure"} <= names
+    r = client.post("/tools/exposure", json={"layer": "emf", "area": "city", "threshold": "no2_hourly_limit"})
+    assert r.status_code == 400  # threshold of another layer
