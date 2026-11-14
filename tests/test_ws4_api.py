@@ -248,3 +248,43 @@ def test_scenario_bad_change_is_refused_with_reason(client: TestClient, monkeypa
     r = client.post("/tools/run_scenario", json={"kind": "antenna", "area": "city", "change": {}})
     assert r.status_code == 200
     assert r.json()["status"] == "refused" and "site" in r.json()["reason"]
+
+
+def test_ask_serialises_citations(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    import sys
+    import types
+    from dataclasses import dataclass, field
+
+    from twin.api import app as app_mod
+
+    @dataclass(frozen=True)
+    class TwinQuestion:
+        question: str
+        tier: str
+        language: str = "it"
+        area: Any = None
+        mode: str = "question"
+        conversation_id: Any = None
+        channel: str = "chat"
+
+    @dataclass(frozen=True)
+    class TwinAnswer:
+        text: str
+        verified: bool
+        citations: tuple[dict[str, Any], ...] = field(default_factory=tuple)
+
+    contract = types.ModuleType("agents.contract")
+    contract.TwinQuestion = TwinQuestion  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "agents.contract", contract)
+
+    class FakeOrchestrator:
+        def __init__(self, runtime: Any) -> None:
+            pass
+
+        def ask(self, question: Any) -> TwinAnswer:
+            return TwinAnswer("ok", True, ({"line": 1, "kind": "run", "ref": "abc", "cite_mode": "auto"},))
+
+    monkeypatch.setattr(app_mod, "TierOrchestrator", FakeOrchestrator)
+    rt = ToolRuntime(settings=Settings.load(), store=LayerStore(raw_dir=tmp_path))
+    body = TestClient(create_app(rt, api_keys={})).post("/ask", json={"question": "ciao"}).json()
+    assert body["citations"] == [{"line": 1, "kind": "run", "ref": "abc", "cite_mode": "auto"}]
