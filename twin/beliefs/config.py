@@ -49,6 +49,15 @@ class FieldSpec:
     #: "bin" = average the map values inside each cell (fine maps like Cartoradio);
     #: "idw" = inverse-distance interpolation to every cell (coarse maps like the CAMS lattice).
     method: str = "bin"
+    #: Bias correction learned from real stations (idw maps): start = offset + scale * map.
+    offset: float = 0.0
+    scale: float = 1.0
+    #: Learned error of the corrected map against stations; replaces the map's own sigma when set.
+    sd: float | None = None
+    #: Optional land-use term (twin/beliefs/landuse.py): start += coef * (covariate(cell) - center).
+    covariate_file: str | None = None
+    covariate_coef: float = 0.0
+    covariate_center: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -107,6 +116,10 @@ class LayerSpec:
     wind: WindSpec | None = None
     #: Plain-language limits of the layer, repeated in every answer's warnings.
     caveats: tuple[str, ...] = ()
+    #: Share of the spread that spreads to neighbouring cells (1 = all; the rest is local, a "nugget").
+    spatial_share: float = 1.0
+    #: Readings are gathered this far back from the end of a window, at least (daily means arrive a day late).
+    history_hours: float = 0.0
 
     @property
     def source_layers(self) -> tuple[str, ...]:
@@ -144,8 +157,8 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 sd=float(prior["sd"]),
                 mean_by_hour=tuple(float(v) for v in by_hour) if by_hour is not None else None,
             ),
-            correlation_length_km=float(entry["correlation_length_km"]),
-            relax_tau_hours=float(entry["relax_tau_hours"]),
+            correlation_length_km=_num(entry["correlation_length_km"]),
+            relax_tau_hours=_num(entry["relax_tau_hours"]),
             min_value=float(entry.get("min_value", float("-inf"))),
             calibration_method=str(calibration.get("method", "loso")),
             calibration_note=str(calibration.get("note", "")),
@@ -157,6 +170,12 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 entity_types=tuple(str(t) for t in field["entity_types"]),
                 value_key=str(field["value_key"]),
                 method=str(field.get("method", "bin")),
+                offset=_num(field.get("offset", 0.0)),
+                scale=_num(field.get("scale", 1.0)),
+                sd=None if field.get("sd") is None else _num(field["sd"]),
+                covariate_file=None if field.get("covariate") is None else str(field["covariate"]["file"]),
+                covariate_coef=0.0 if field.get("covariate") is None else _num(field["covariate"]["coef"]),
+                covariate_center=0.0 if field.get("covariate") is None else _num(field["covariate"]["center"]),
             ),
             allow_simulated=bool(entry.get("allow_simulated", False)),
             aggregate=str(entry.get("aggregate", "none")),
@@ -169,8 +188,17 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 max_stretch=float(entry["wind"].get("max_stretch", 2.0)),
                 full_at_ms=float(entry["wind"].get("full_at_ms", 5.0)),
             ),
+            spatial_share=_num(entry.get("spatial_share", 1.0)),
+            history_hours=_num(entry.get("history_hours", 0.0)),
         )
     return specs
+
+
+def _num(raw: Any) -> float:
+    """A number, or a {value, basis} mapping (learned settings carry their basis)."""
+    if isinstance(raw, dict):
+        return float(raw["value"])
+    return float(raw)
 
 
 def _source(raw: Any) -> SourceSpec:

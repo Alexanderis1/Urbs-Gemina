@@ -13,6 +13,7 @@ For every H3 hexagon of Rome (resolution 9, about 0.11 km²), each dynamic layer
 | Decay | While the feed is silent, each cell drifts back to the prior and its uncertainty grows, time constant `relax_tau_hours` | `layer.BeliefLayer.at`, `cell.relax` |
 | Output | Mean, P5/P50/P95, probability above a threshold (threshold passed in by the caller from `config/thresholds.yaml`) | `api.query`, `api.layer_geojson` |
 | Honesty check | Leave-one-station-out: hide each station, predict it from the others, check that 90% of hidden readings fall in the 90% range. Otherwise the layer says "uncalibrated" and why | `calibration.leave_one_station_out`, `api.calibrate` |
+| Learned settings | Air layers: CAMS bias, spread, reach, local "nugget" share and memory fitted by maximum likelihood on 2026 EEA history, checked on held-out months (`docs/air_fusion_fit.md`) | `learn.py`, `scripts/fit_air_fusion.py` |
 
 Method P1 = Gaussian-process (kriging) update of the residual between readings and the current belief. With a tiny correlation length it is exactly the per-cell Kalman update in `cell.update`. Only per-cell variances are kept between updates (diagonal approximation).
 

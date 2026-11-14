@@ -1,0 +1,40 @@
+plan_id,code,kind,name,lat,lon,rain,temperature
+1,SM9,Pluviometro - Termometro,Osteria Nuova,42.031583,12.299833,1,1
+4,SM10,Idrometro Pluviometro - Termometro,Tevere a Castelgiubileo,41.988778,12.497889,1,1
+7,SM8,Idrometro Pluviometro,Tevere a Fidene,41.968917,12.494167,1,0
+9,SM2,Pluviometro,Roma Bufalotta,41.956972,12.5455,1,0
+11,SM8,Idrometro Pluviometro,Aniene a Ponte Salario,41.939528,12.508361,1,0
+12,SM8,Idrometro Pluviometro,Fosso di Pratolungo,41.936444,12.598861,1,0
+13,SM9,Pluviometro - Termometro,Roma Monte Mario,41.935472,12.435611,1,1
+14,SM9,Pluviometro - Termometro,Roma Flaminio,41.927917,12.468833,1,1
+15,SM8,Idrometro Pluviometro,Aniene a Lunghezza,41.927139,12.667444,1,0
+17,SM2,Pluviometro,Mario,41.9225,12.452278,1,0
+19,SM9,Pluviometro - Termometro,Salone,41.911778,12.630667,1,1
+21,SM9,Pluviometro - Termometro,Roma Macao,41.904,12.507194,1,1
+22,SM9,Pluviometro - Termometro,Collegio Romano,41.898667,12.480444,1,1
+23,SM9,Pluviometro - Termometro,Massimina,41.885194,12.365583,1,1
+24,SM2,Pluviometro,Rosolino Pilo,41.882556,12.463111,1,0
+25,SM8,Idrometro Pluviometro,Tevere a Porta Portese,41.880722,12.470556,1,0
+26,SM2,Pluviometro,Tor Marancia,41.854194,12.499861,1,0
+27,SM9,Pluviometro - Termometro,Tor Vergata,41.851056,12.631111,1,1
+28,SM9,Pluviometro - Termometro,Roma EUR,41.828583,12.497306,1,1
+33,SM10,Idrometro Pluviometro - Termometro,Fosso di Pantanello ad Ostia,41.717111,12.360833,1,1
+52,SM2,Pluviometro,Acilia,41.782935,12.365395,1,0
+53,SM2,Pluviometro,Acqua acetosa,41.936866,12.490833,1,0
+54,SM2,Pluviometro,Aurelio,41.878343,12.427905,1,0
+55,SM2,Pluviometro,Capannacce,41.939849,12.64242,1,0
+56,SM2,Pluviometro,Casilino,41.872568,12.546371,1,0
+57,SM2,Pluviometro,Cassiodoro,41.906183,12.465876,1,0
+58,SM2,Pluviometro,Eleniano,41.889661,12.515117,1,0
+59,SM2,Pluviometro,Eur,41.824602,12.494385,1,0
+60,SM2,Pluviometro,Falcognana,41.761179,12.560888,1,0
+61,SM2,Pluviometro,Flaminio,42.023286,12.434815,1,0
+62,SM2,Pluviometro,La Storta,41.971056,12.36659,1,0
+63,SM2,Pluviometro,Ostia,41.727574,12.290223,1,0
+64,SM2,Pluviometro,Ostiense,41.872512,12.489663,1,0
+65,SM2,Pluviometro,Ottavia,41.957568,12.411855,1,0
+66,SM2,Pluviometro,Ponte Galeria,41.826644,12.352218,1,0
+67,SM2,Pluviometro,Roma Est,41.922121,12.576643,1,0
+68,SM2,Pluviometro,Roma Nord,41.960563,12.485535,1,0
+69,SM9,Pluviometro - Termometro,Roma Sud,41.863905,12.478916,1,1
+70,SM2,Pluviometro,Via Marchi,41.930793,12.419,1,0

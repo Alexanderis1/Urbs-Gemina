@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from statistics import NormalDist
 from dataclasses import replace
 from typing import Any, Iterable, Iterator, Mapping, Sequence
@@ -65,6 +65,8 @@ def build_layer(
     else:
         providers = [provider]
     bbox = bbox_of_cells(cells)
+    # Slow feeds (daily means published a day late) need a longer look back than "now".
+    start = min(start, end - timedelta(hours=spec.history_hours))
     field = list(prior_provider.fetch(bbox, start, end)) if prior_provider is not None else None
     layer = prior_layer(spec, cells, start, prior_field=field)
     if wind_provider is not None and spec.wind is not None:

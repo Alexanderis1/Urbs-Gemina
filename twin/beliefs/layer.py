@@ -24,7 +24,7 @@ import numpy as np
 import numpy.typing as npt
 
 from twin.beliefs.cell import Belief
-from twin.beliefs.config import LayerSpec
+from twin.beliefs.config import FieldSpec, LayerSpec
 from twin.beliefs.grid import cell_center, cell_of, local_xy_km
 from twin.providers.base import Observation
 
@@ -106,6 +106,7 @@ def prior_layer(
     prior_var = np.full(n, spec.prior.variance)
     sources: set[str] = set()
     synthetic = False
+    warnings: list[str] = []
     if prior_field is not None:
         fspec = spec.prior_field
         key = fspec.value_key if fspec is not None else spec.value_key
@@ -127,10 +128,18 @@ def prior_layer(
                 w = 1.0 / np.maximum(d2, 1e-6)
                 w /= w.sum(axis=1, keepdims=True)
                 m = w @ vals
-                offset[lo : lo + CHUNK] = m - base
-                # Map error plus how much the nearby map points disagree (interpolation error).
-                prior_var[lo : lo + CHUNK] = w @ sig2 + w @ (vals**2) - m**2
+                offset[lo : lo + CHUNK] = fspec.offset + fspec.scale * m - base
+                if fspec.sd is not None:
+                    # Learned from real history: the model's error against stations, all included.
+                    prior_var[lo : lo + CHUNK] = fspec.sd**2
+                else:
+                    # Map error plus how much the nearby map points disagree (interpolation error).
+                    prior_var[lo : lo + CHUNK] = w @ sig2 + w @ (vals**2) - m**2
             prior_var = np.maximum(prior_var, 1e-6 * spec.prior.variance)
+            if fspec.covariate_file is not None:
+                land_use_note = _apply_covariate(fspec, cells, offset)
+                if land_use_note:
+                    warnings.append(land_use_note)
         else:
             acc: dict[int, list[tuple[float, float]]] = {}
             for o in points:
@@ -155,8 +164,23 @@ def prior_layer(
         prior_var=prior_var,
         sources=tuple(sorted(sources)),
         synthetic=synthetic,
+        warnings=tuple(warnings),
         index=index,
     )
+
+
+def _apply_covariate(fspec: FieldSpec, cells: Sequence[str], offset: Array) -> str | None:
+    """Add the land-use term to each cell's starting point; a note when the covariate file is missing."""
+    from twin.beliefs.landuse import load_cell_covariate
+
+    assert fspec.covariate_file is not None
+    table = load_cell_covariate(fspec.covariate_file)
+    if table is None:
+        return (f"land-use term off: {fspec.covariate_file} not found (scripts/fit_air_fusion.py --covariates); "
+                "the map starts from the bias-corrected regional model only")
+    x = np.array([table.get(c, fspec.covariate_center) for c in cells])
+    offset += fspec.covariate_coef * (x - fspec.covariate_center)
+    return None
 
 
 def assimilate(layer: BeliefLayer, observations: Iterable[Observation], until: datetime | None = None) -> BeliefLayer:
@@ -224,15 +248,18 @@ def posterior(
     values: Array,
     noise_var: Array,
     correlation_length_km: float,
+    spatial_share: float = 1.0,
 ) -> tuple[Array, Array]:
     """Gaussian-process update of target cells from readings at observed cells.
 
-    Prior covariance between two places = sd_a * sd_b * exp(-distance / L).
-    Returns the posterior means and variances of the targets.
+    Prior covariance between two different places = sd_a * sd_b * share * exp(-distance / L);
+    a place with itself = its full variance. ``share`` < 1 is a "nugget": the part of the
+    spread that is local (a kerbside station next to a busy road) and does not spread to
+    neighbouring cells. Returns the posterior means and variances of the targets.
     """
     sd_t = np.sqrt(target_var)
     sd_o = np.sqrt(obs_var)
-    k_oo = np.outer(sd_o, sd_o) * _correlation(obs_xy, obs_xy, correlation_length_km)
+    k_oo = np.outer(sd_o, sd_o) * _correlation(obs_xy, obs_xy, correlation_length_km, spatial_share)
     k_oo[np.diag_indices_from(k_oo)] += noise_var
     chol = np.linalg.cholesky(k_oo)
     residual = values - obs_mean
@@ -241,7 +268,7 @@ def posterior(
     var = target_var.copy()
     for lo in range(0, len(target_xy), CHUNK):
         hi = lo + CHUNK
-        k_to = np.outer(sd_t[lo:hi], sd_o) * _correlation(target_xy[lo:hi], obs_xy, correlation_length_km)
+        k_to = np.outer(sd_t[lo:hi], sd_o) * _correlation(target_xy[lo:hi], obs_xy, correlation_length_km, spatial_share)
         mean[lo:hi] += k_to @ alpha
         v = np.linalg.solve(chol, k_to.T)
         var[lo:hi] -= np.sum(v * v, axis=0)
@@ -283,6 +310,7 @@ def _update(layer: BeliefLayer, batch: Sequence[Observation]) -> BeliefLayer:
         values,
         1.0 / weights,
         layer.spec.correlation_length_km,
+        layer.spec.spatial_share,
     )
     return _stamp(layer, mean, var)
 
@@ -374,9 +402,11 @@ def _relax(layer: BeliefLayer, moment: datetime) -> BeliefLayer:
     return replace(layer, mean=mean, variance=var, as_of=moment)
 
 
-def _correlation(a: Array, b: Array, length_km: float) -> Array:
+def _correlation(a: Array, b: Array, length_km: float, share: float = 1.0) -> Array:
     d = np.sqrt(((a[:, None, :] - b[None, :, :]) ** 2).sum(axis=2))
     out: Array = np.exp(-d / max(length_km, 1e-12))
+    if share < 1.0:
+        out = np.where(d < 1e-9, 1.0, share * out)
     return out
 
 

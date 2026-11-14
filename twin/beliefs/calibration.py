@@ -68,7 +68,17 @@ class CalibrationReport:
         }
 
 
-def leave_one_station_out(spec: LayerSpec, observations: Iterable[Observation], rules: CalibrationRules) -> CalibrationReport:
+def leave_one_station_out(
+    spec: LayerSpec,
+    observations: Iterable[Observation],
+    rules: CalibrationRules,
+    prior_means: Mapping[tuple[str, datetime], float] | None = None,
+    prior_sd: float | None = None,
+) -> CalibrationReport:
+    """``prior_means`` gives the layer's own starting map at each station and moment
+    (e.g. the bias-corrected CAMS forecast), so the check tests the layer as it runs.
+    Without it the generic prior from the config is used. ``prior_sd`` overrides the
+    starting spread (the learned ``prior_field.sd``)."""
     if spec.calibration_method == "none":
         return CalibrationReport(status="uncalibrated", reason=spec.calibration_note or "calibration not possible for this layer")
 
@@ -94,20 +104,24 @@ def leave_one_station_out(spec: LayerSpec, observations: Iterable[Observation], 
         xy = np.array(local_xy_km([(o.lon, o.lat) for o in readings]), dtype=np.float64)
         values = np.array([o.values[key] for o in readings])
         noise = np.array([max(o.sigma.get(key, 0.0) ** 2, 1e-6 * spec.prior.variance) for o in readings])
-        prior_mean = spec.prior.mean_at(when)
+        generic = spec.prior.mean_at(when)
+        means = np.array([generic if prior_means is None else prior_means.get((o.entity_id, when), generic)
+                          for o in readings])
+        prior_var = spec.prior.variance if prior_sd is None else prior_sd * prior_sd
         for k in range(len(readings)):
             others = np.arange(len(readings)) != k
             n_other = int(others.sum())
             mean, var = posterior(
                 xy[k : k + 1],
-                np.array([prior_mean]),
-                np.array([spec.prior.variance]),
+                means[k : k + 1],
+                np.array([prior_var]),
                 xy[others],
-                np.full(n_other, prior_mean),
-                np.full(n_other, spec.prior.variance),
+                means[others],
+                np.full(n_other, prior_var),
                 values[others],
                 noise[others],
                 spec.correlation_length_km,
+                spec.spatial_share,
             )
             err = float(values[k] - mean[0])
             errors.append(err)
