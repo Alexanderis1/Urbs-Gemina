@@ -297,6 +297,15 @@ def clean_geometries(frame: Any, bbox: BBox, keep: list[str]) -> tuple[Any, dict
 
 # --- One layer ----------------------------------------------------------------
 
+def _has_features(parquet: Path) -> bool:
+    """True when an earlier run left a non-empty GeoParquet file."""
+    if not parquet.exists():
+        return False
+    import pyarrow.parquet as pq  # type: ignore[import-untyped,import-not-found,unused-ignore]
+
+    return bool(pq.ParquetFile(parquet).metadata.num_rows > 0)
+
+
 def _now_iso(now: datetime) -> str:
     return now.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -371,6 +380,10 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
         out_dir.mkdir(parents=True, exist_ok=True)
         parquet = out_dir / f"{layer.key}.parquet"
         geojson = out_dir / f"{layer.key}.geojson"
+        if len(frame) == 0 and _has_features(parquet):
+            # Usually missing inputs or a broken server: other threads read these files.
+            raise ValueError("0 features; kept the previous file "
+                             f"(missing inputs: {entry.get('missing_inputs') or 'none listed'})")
         frame.to_parquet(parquet, index=False)
         geojson.write_text(frame.to_json(drop_id=True, ensure_ascii=False), encoding="utf-8")
         extra_files: dict[str, Path] = {}
