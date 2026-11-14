@@ -14,10 +14,12 @@ import importlib
 import math
 from collections import Counter
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Mapping
 
 from twin.providers.base import ProviderNotConfigured
+from twin.providers.registry import data_kind_of
 from twin.tools.area import Area, resolve_area
+from twin.tools.context_check import distance_to_geometry_m
 from twin.tools.envelope import Source, ToolError, utc_now
 from twin.tools.layers import iter_positions
 from twin.tools.runtime import ToolRuntime
@@ -112,13 +114,15 @@ def _aggregate(points: list[tuple[float, float]], cell_m: float) -> list[dict[st
 
 
 def query_layer(runtime: ToolRuntime, layer: str, area: Any = "city", time: str | None = None,
-                limit: int | None = None, role: Role = "office") -> dict[str, Any]:
+                limit: int | None = None, role: Role = "office", group_by: str | None = None) -> dict[str, Any]:
     cfg = runtime.settings.tools.get("query_layer", {})
     max_limit = int(cfg.get("max_limit", 5000))
     limit = min(int(limit or cfg.get("default_limit", 500)), max_limit)
     at = parse_time(time)
     resolved = resolve_area(area, runtime.store, runtime.settings)
     inputs = {"layer": layer, "area": area, "time": at.isoformat(), "limit": limit, "role": role}
+    if group_by:
+        inputs["group_by"] = group_by
     office_only = set(runtime.settings.tools.get("api", {}).get("office_only_detail_layers", []))
     aggregate = role != "office" and layer in office_only
     sources: list[Source] = [resolved.source] if resolved.source else []
@@ -136,15 +140,74 @@ def query_layer(runtime: ToolRuntime, layer: str, area: Any = "city", time: str 
         reason = f"Layer '{layer}' is not available. Known layer names: {', '.join(known)}"
         return runtime.envelope(TOOL, inputs, {"type": "unknown"}, {layer: "not_available"}, sources,
                                 status="not_available", reason=reason)
-    features = [f for f in snapshot.near(resolved.bbox)
-                if any(resolved.contains(float(p[0]), float(p[1])) for p in iter_positions(f["geometry"]["coordinates"]))]
+    index = _AreaIndex(resolved)
+    features = [f for f in snapshot.near(resolved.bbox) if _touches_area(f["geometry"], resolved, index)]
     kind = str(runtime.settings.context_layers.get("layers", {}).get(layer, {}).get("data_kind", "real"))
     result = {"type": "features", "area": resolved.describe(), "count": len(features),
               "features": {"type": "FeatureCollection", "features": features[:limit]},
               "truncated": len(features) > limit}
+    if group_by:
+        # Counted over every feature in the area, not only the listed ones (static layers only).
+        tally = Counter(str((f.get("properties") or {}).get(group_by)) for f in features)
+        result["counts_by"] = {group_by: dict(tally.most_common())}
     return runtime.envelope(TOOL, inputs, result, {layer: kind}, [*sources, snapshot.source()],
-                         ["Features are included when at least one vertex lies inside the area."])
+                         ["Features are included when one of their vertices lies inside the area, or when a "
+                          "polygon contains the area's first vertex (an area inside a large zone)."])
 
+
+class _AreaIndex:
+    """Point-in-area test with the area's edges bucketed in latitude bands (even-odd rule, holes included).
+
+    Area.contains walks every edge for every point; a municipio has up to about 1,800 edges and a hazard layer
+    can bring 400,000 vertices, so a city-scale query took minutes. Here a point only meets the edges of its band.
+    """
+
+    BANDS = 512
+
+    def __init__(self, area: Area) -> None:
+        self.area = area
+        self.w, self.s, self.e, self.n = area.bbox
+        self.step = max((self.n - self.s) / self.BANDS, 1e-12)
+        self.bands: list[list[tuple[float, float, float, float]]] = [[] for _ in range(self.BANDS)]
+        if area.kind == "city":
+            return
+        geometry = area.geometry
+        polygons = [geometry["coordinates"]] if geometry["type"] == "Polygon" else geometry["coordinates"]
+        for rings in polygons:
+            for ring in rings:
+                for (x1, y1), (x2, y2) in zip(ring, ring[1:]):
+                    if y1 == y2:
+                        continue
+                    for band in range(self._band(min(y1, y2)), self._band(max(y1, y2)) + 1):
+                        self.bands[band].append((float(x1), float(y1), float(x2), float(y2)))
+
+    def _band(self, lat: float) -> int:
+        return min(self.BANDS - 1, max(0, int((lat - self.s) / self.step)))
+
+    def contains(self, lon: float, lat: float) -> bool:
+        if not (self.w <= lon <= self.e and self.s <= lat <= self.n):
+            return False
+        if self.area.kind == "city":
+            return True
+        inside = False
+        for x1, y1, x2, y2 in self.bands[self._band(lat)]:
+            if (y1 > lat) != (y2 > lat) and lon < x1 + (lat - y1) * (x2 - x1) / (y2 - y1):
+                inside = not inside
+        return inside
+
+
+def _touches_area(geometry: Mapping[str, Any], area: Area, index: _AreaIndex) -> bool:
+    """A feature vertex inside the area, or (polygons) the area's first vertex inside the feature.
+
+    The second test catches an area that lies wholly inside a large zone (a flood or Seveso zone around a
+    hospital), which has no zone vertex inside it.
+    """
+    if any(index.contains(float(p[0]), float(p[1])) for p in iter_positions(geometry["coordinates"])):
+        return True
+    if geometry.get("type") not in ("Polygon", "MultiPolygon") or area.kind == "city":
+        return False
+    first = next(iter_positions(area.geometry["coordinates"]))  # inside the zone => the whole area is (or edges cross)
+    return distance_to_geometry_m(float(first[0]), float(first[1]), geometry) == 0.0
 
 def _provider_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, limit: int,
                     aggregate: bool, inputs: dict[str, Any], sources: list[Source]) -> dict[str, Any]:
@@ -170,7 +233,7 @@ def _provider_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, 
         return runtime.envelope(TOOL, inputs, {"type": "observations", "provider": provider_id},
                                 {layer: "not_available"}, sources, status="not_available",
                                 reason=f"Provider '{provider_id}' failed: {type(error).__name__}: {error}")
-    kind = str(runtime.settings.tools["data_kind_by_provider_kind"].get(info.kind, "real"))
+    kind = data_kind_of(provider_id, info.kind, runtime.settings.tools["data_kind_by_provider_kind"])
     latest: dict[str, Any] = {}
     for obs in observations:
         if obs.entity_id not in latest or obs.observed_at > latest[obs.entity_id].observed_at:

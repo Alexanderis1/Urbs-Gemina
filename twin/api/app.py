@@ -12,7 +12,7 @@ import importlib
 import logging
 import os
 import threading
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Mapping
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -163,6 +163,13 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
         out: dict[str, Any] = dataclasses.asdict(answer)
         return out
 
+    def _param_type(spec: Mapping[str, Any]) -> str:
+        """'text' or 'number' for the form: an explicit ``type`` wins; a null default is an optional number."""
+        if spec.get("type") in ("text", "number"):
+            return str(spec["type"])
+        default = spec.get("default")
+        return "text" if isinstance(default, (str, bool)) else "number"
+
     @app.get("/use_cases")
     def use_cases(role: str = Depends(get_role)) -> list[dict[str, Any]]:
         """Ready-made playbooks this caller's tier may run (send the id as ``use_case`` to POST /ask)."""
@@ -172,6 +179,7 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
             raise HTTPException(status_code=501, detail=f"use cases (WS7 agents) not installed: {error}")
         return [{"id": uc.id, "title": dict(uc.title), "summary": dict(uc.summary), "needs": list(uc.needs),
                  "params": {k: v.get("default") for k, v in uc.params.items()},
+                 "param_types": {k: _param_type(v) for k, v in uc.params.items()},
                  "steps": [s.label for s in uc.steps]}
                 for uc in uc_mod.load_use_cases().values() if role in uc.tiers]
 

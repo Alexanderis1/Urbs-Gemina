@@ -288,6 +288,25 @@ def test_query_static_layer_in_area(runtime: ToolRuntime) -> None:
     assert env["data_kinds"] == {"schools_state": "real"}
 
 
+def test_query_static_layer_finds_a_polygon_that_covers_the_whole_area(runtime: ToolRuntime) -> None:
+    """A small area deep inside a big flood zone has no zone vertex inside it: the zone must still be found."""
+    runtime.store.add("flood_hazard_pgra", fc(feat(square(5000), PERICOLOSITA="P3"),
+                                              feat(square(100, cx=4000, cy=4000), PERICOLOSITA="P1")), sha256="f1")
+    env = query_layer(runtime, "flood_hazard_pgra", area=square(300))
+    assert env["result"]["count"] == 1
+    assert env["result"]["features"]["features"][0]["properties"]["PERICOLOSITA"] == "P3"
+
+
+def test_query_static_layer_counts_by_a_property_over_all_features(runtime: ToolRuntime) -> None:
+    """A truncated list cannot say how many areas are R4; group_by counts every feature in the area."""
+    runtime.store.add("wildfire_interface", fc(*[feat(square(20, cx=10.0 * i), rischio="R4" if i < 3 else "R3")
+                                                 for i in range(7)], feat(square(20, cx=9000), rischio="R4")),
+                      sha256="w1")
+    env = query_layer(runtime, "wildfire_interface", area=square(500), limit=2, group_by="rischio")
+    assert env["result"]["count"] == 7 and env["result"]["truncated"] is True
+    assert env["result"]["counts_by"] == {"rischio": {"R4": 3, "R3": 4}}
+
+
 def test_query_simulated_provider_layer_is_flagged(runtime: ToolRuntime) -> None:
     env = query_layer(runtime, "traffic_flow", area="city", time="2026-11-13T08:00:00Z")
     assert env["synthetic"] is True
@@ -323,6 +342,35 @@ def test_data_status_lists_every_configured_layer(runtime: ToolRuntime) -> None:
     assert rows["emf_baseline"]["data_kind"] == "estimated"
     assert set(env["data_kinds"].values()) <= DATA_KINDS
     assert env["synthetic"] is True
+
+
+def test_model_and_forecast_providers_are_labelled_estimated_not_real(runtime: ToolRuntime) -> None:
+    """An open forecast or model (Open-Meteo, CAMS, GloFAS, the GTFS timetable) is not a measurement."""
+    from twin.providers.registry import DATA_KIND
+
+    rows = {row["layer"]: row for row in data_status(runtime)["result"]["layers"]}
+    for layer, provider_id in runtime.settings.providers.items():
+        expected = DATA_KIND.get(provider_id)
+        if expected and rows[layer].get("status") == "active":
+            assert rows[layer]["data_kind"] == expected, (layer, provider_id)
+    assert rows["weather_forecast"]["data_kind"] == "estimated"
+
+
+def test_query_layer_labels_a_forecast_estimated(runtime: ToolRuntime, monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.providers.base import Observation, ProviderInfo
+
+    class Forecast:
+        def describe(self) -> ProviderInfo:
+            return ProviderInfo(id="om_weather_forecast", kind="open", layer="weather_forecast",
+                                licence="CC BY 4.0", cadence="hourly", synthetic=False)
+
+        def fetch(self, bbox: Any, start: Any, end: Any) -> list[Observation]:
+            return []
+
+    runtime.settings.providers["weather_forecast"] = "om_weather_forecast"
+    runtime.providers["weather_forecast"] = Forecast()  # type: ignore[assignment]
+    env = query_layer(runtime, "weather_forecast", area="city")
+    assert env["data_kinds"]["weather_forecast"] == "estimated"
 
 
 # --- permit report --------------------------------------------------------
@@ -503,3 +551,21 @@ def test_runtime_warm_preloads_slow_providers_and_ignores_failures(runtime: Tool
     runtime.providers = {"antenna_register": Slow(), "other": Broken()}  # type: ignore[dict-item]
     assert runtime.warm() == {"antenna_register": "ok", "other": "failed: RuntimeError"}
     assert calls == ["sites"]
+
+
+def test_fast_point_in_area_agrees_with_the_exact_test() -> None:
+    """query_layer's banded point-in-polygon index must give the same answer as Area.contains."""
+    import random
+
+    from twin.tools.query_layer import _AreaIndex
+
+    outer = square(3000)["coordinates"][0]
+    hole = list(reversed(square(800, cx=1000, cy=-500)["coordinates"][0]))
+    island = square(400, cx=6000, cy=6000)["coordinates"][0]
+    geometry = {"type": "MultiPolygon", "coordinates": [[outer, hole], [island]]}
+    area = resolve_area(geometry)
+    index = _AreaIndex(area)
+    rng = random.Random(7)
+    for _ in range(3000):
+        lon, lat = at(rng.uniform(-4000, 7000), rng.uniform(-4000, 7000))
+        assert index.contains(lon, lat) == area.contains(lon, lat), (lon, lat)

@@ -51,6 +51,21 @@
         ],
         "default": null,
         "title": "Limit"
+      },
+      "group_by": {
+        "anyOf": [
+          {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Static feature layers: also count all features in the area by this property (e.g. rischio, class_are, sottotipol)",
+        "title": "Group By"
       }
     },
     "required": [

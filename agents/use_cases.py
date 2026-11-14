@@ -16,8 +16,10 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -91,6 +93,26 @@ def load_use_cases(path: Path = USE_CASES_PATH) -> dict[str, UseCase]:
 def default_area(path: Path = USE_CASES_PATH) -> str:
     doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     return str((doc.get("defaults") or {}).get("area", "city"))
+
+
+def moments(now: datetime | None = None, path: Path = USE_CASES_PATH) -> dict[str, str]:
+    """``{when.<name>}`` refs: the next local clock time of each name in defaults.moments, as UTC ISO.
+
+    A forecast layer answers for one time, so 'tonight' and 'this afternoon' are what a cold or fire note needs.
+    """
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    spec = dict((doc.get("defaults") or {}).get("moments") or {})
+    zone = ZoneInfo(str(spec.pop("timezone", "Europe/Rome")))
+    spec.pop("basis", None)
+    local = (now or datetime.now(timezone.utc)).astimezone(zone)
+    out: dict[str, str] = {}
+    for name, clock in spec.items():
+        hour, minute = (int(x) for x in str(clock).split(":"))
+        at = local.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if at <= local:
+            at = (local + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+        out[name] = at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return out
 
 
 def area_label(area: Any, language: str = "it") -> str:
@@ -186,6 +208,8 @@ def fill(template: Any, ctx: Mapping[str, Any]) -> Any:
 
 def _skip_reason(missing: str) -> str:
     head = missing.partition(".")[0]
+    if head == "params":
+        return f"skipped: needs {missing.partition('.')[2]}, which was not given"
     if head == "place" or "." in missing:
         return f"skipped: needs {missing}, but the place was not found in Rome"
     return f"skipped: needs {missing}"
@@ -204,7 +228,8 @@ def _fence(env: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_steps(uc: UseCase, *, gateway: ToolGateway, area: Any = None, place: str | None = None,
-              params: Mapping[str, Any] | None = None, language: str = "it") -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+              params: Mapping[str, Any] | None = None, language: str = "it",
+              now: datetime | None = None) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     """Run the playbook's tool steps. Returns (envelopes, skipped steps with reasons)."""
     if "place" in uc.needs and not (place and place.strip()):
         raise UseCaseError(f"use case '{uc.id}' needs a place (address or place name)")
@@ -216,7 +241,7 @@ def run_steps(uc: UseCase, *, gateway: ToolGateway, area: Any = None, place: str
     rings = {k[: -len("_radius_m")]: float(v) for k, v in merged.items()
              if k.endswith("_radius_m") and k != "radius_m" and v}
     ctx: dict[str, Any] = {"params": merged, "area": area, "area_label": area_label(area, language),
-                           "place": place.strip() if place else None}
+                           "place": place.strip() if place else None, "when": moments(now)}
     runs: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
     for step in uc.steps:
@@ -253,6 +278,7 @@ class UseCaseReport:
     warnings: list[str] = field(default_factory=list)
     citations: list[dict[str, Any]] = field(default_factory=list)
     cited_run_ids: list[str] = field(default_factory=list)
+    language: str = "it"
 
     @property
     def missing(self) -> list[str]:
@@ -261,9 +287,9 @@ class UseCaseReport:
             if r.get("status", "ok") != "ok":
                 out.append(f"{r.get('tool')}: {r.get('reason') or r.get('status')}")
         if not self.verified:
-            from agents.orchestrator import PLAIN_PROBLEMS
+            from agents.orchestrator import plain_problem
 
-            out += sorted({PLAIN_PROBLEMS.get(p.code, p.code) for p in self.problems})
+            out += sorted({plain_problem(p, self.language, with_figure=False) for p in self.problems})
         return out
 
 
@@ -368,22 +394,26 @@ def run_use_case(use_case: str, *, llm: LLM, gateway: ToolGateway, area: Any = N
         text, report, auto_lines, withheld = _withhold_lines(text, report, by_id, cfg, ask, language)
     if withheld:
         warnings.append(f"{withheld} line(s) withheld: a figure could not be traced to a tool run")
-        skipped.append({"step": "narrative", "tool": "verifier", "label": "note",
-                        "reason": f"{withheld} line(s) withheld because a figure could not be traced to a tool run"})
+        reason = (f"{withheld} riga/righe omesse: una cifra non era riconducibile a un'esecuzione di uno strumento"
+                  if language == "it" else
+                  f"{withheld} line(s) withheld because a figure could not be traced to a tool run")
+        skipped.append({"step": "narrative", "tool": "verifier", "label": "nota" if language == "it" else "note",
+                        "reason": reason})
 
     if report.ok and text.strip():
         from agents.orchestrator import _drop_self_disclosure
 
         text = _drop_self_disclosure(text)  # code adds the AI disclosure line once, at the start of a conversation
         return UseCaseReport(use_case, text, True, [], runs, skipped, warnings,
-                             citations=citation_trace(text, by_id, auto_lines), cited_run_ids=list(report.cited_runs))
-    from agents.orchestrator import INSUFFICIENT, PLAIN_PROBLEMS
+                             citations=citation_trace(text, by_id, auto_lines), cited_run_ids=list(report.cited_runs),
+                             language=language)
+    from agents.orchestrator import INSUFFICIENT, plain_problem
 
     problems = list(report.problems) or [Problem("no_answer", "the agent produced no answer")]
-    missing = sorted({PLAIN_PROBLEMS.get(p.code, p.code) for p in problems})
+    missing = sorted({plain_problem(p, language, with_figure=False) for p in problems})
     fallback = (INSUFFICIENT.get(language, INSUFFICIENT["en"]) + " "
                 + ("Problem found: " if language == "en" else "Problema: ") + "; ".join(missing) + ".")
-    return UseCaseReport(use_case, fallback, False, problems, runs, skipped, warnings)
+    return UseCaseReport(use_case, fallback, False, problems, runs, skipped, warnings, language=language)
 
 
 def to_twin_answer(rep: UseCaseReport, *, disclosure: str | None = None) -> TwinAnswer:

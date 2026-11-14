@@ -348,6 +348,9 @@ def test_use_cases_are_listed_per_tier(client: TestClient) -> None:
     assert {u["id"] for u in citizen} < ids and "event_planning" not in {u["id"] for u in citizen}
     heat = next(u for u in office if u["id"] == "heat_plan_elderly")
     assert heat["needs"] == ["area"] and heat["title"]["it"] and "cover_added_pct" in heat["params"]
+    assert heat["param_types"]["tmax_c"] == "number" and heat["param_types"]["cover_added_pct"] == "number"
+    works = next(u for u in office if u["id"] == "roadworks_check")
+    assert works["params"]["street"] is None and works["param_types"]["street"] == "text"
 
 
 def test_ask_passes_use_case_and_params(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> None:

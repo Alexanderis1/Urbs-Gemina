@@ -35,6 +35,16 @@ describe("ready-made use cases", () => {
     ]);
   });
 
+  it("treats an option the server marks as text as text, even with no default", () => {
+    const works = { ...event, id: "roadworks_check", params: { street: null, radius_m: 200 },
+                    param_types: { street: "text", radius_m: "number" } };
+    const [uc] = parseUseCases([works]) as [UseCase];
+    expect(paramFields(uc).map((f) => [f.key, f.numeric])).toEqual([["street", false], ["radius_m", true]]);
+    const body = buildUseCaseQuestion(uc, { place: "Via Nazionale", area: { type: "city" },
+      values: { street: " Via Nazionale " }, language: "it", conversationId: null });
+    expect(body.params).toEqual({ street: "Via Nazionale", radius_m: 200 });
+  });
+
   it("builds the /ask body for a place: numbers as numbers, empty options left out", () => {
     const [uc] = parseUseCases([event]) as [UseCase];
     const body = buildUseCaseQuestion(uc, {

@@ -69,6 +69,9 @@ class QueryLayerIn(Strict):
     area: Area = Field(default="city", description=AREA_DESCRIPTION)
     time: str | None = Field(default=None, description="ISO 8601; default now")
     limit: int | None = Field(default=None, ge=1, le=5000)
+    group_by: str | None = Field(default=None, min_length=1, max_length=60,
+                                 description="Static feature layers: also count all features in the area by this "
+                                             "property (e.g. rischio, class_are, sottotipol)")
 
 
 class CrowdsIn(Strict):

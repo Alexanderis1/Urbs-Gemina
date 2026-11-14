@@ -55,7 +55,7 @@ def _runs_block(runs: list[dict[str, Any]], untrusted: set[str]) -> str:
     return "\n\n".join(parts)
 
 
-def permit_context(address: str, *, llm: LLM, gateway: ToolGateway, language: str = "en",
+def permit_context(address: str, *, llm: LLM, gateway: ToolGateway, language: str = "it",
                    config: AgentConfig | None = None) -> PermitReport:
     cfg = config or load_agent_config()
     runs: list[dict[str, Any]] = []
