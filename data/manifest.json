@@ -271,7 +271,8 @@
       "access": "Exa API (key in environment)",
       "licence": "facts with source links; page text is not stored beyond a short quote",
       "redistribution": true,
-      "status": "implemented, not run",
+      "status": "implemented, not run"
+    },
     "open_meteo_forecast": {
       "kind": "estimated",
       "what": "Hourly rain, 10 m wind and 2 m temperature forecasts (ICON-2I, fallback ICON-EU)",
