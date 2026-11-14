@@ -200,7 +200,7 @@ use_cases:
       radius_m: {default: 800, basis: "About a 10-minute walk."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "the address"}
-      - {id: air, tool: query_layer, args: {layer: air_quality, area: "{place.municipio}"}, label: "air quality"}
+      - {id: air, tool: air_here, args: {point: "{place.point}"}, label: "air quality at the address (fused map: stations + CAMS model + roads, the same values the map shows)"}
       - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: city}, label: "rain forecast (coarse grid over all of Rome)"}
       - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature forecast (coarse grid over all of Rome)"}
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{place.circle}"}, label: "public transport nearby"}
@@ -239,6 +239,8 @@ use_cases:
     prompt: air_episode
     steps:
       - {id: stations, tool: query_layer, args: {layer: air_quality, area: "{area}"}, label: "official stations (EEA, ARPA Lazio)"}
+      - {id: fused_no2, tool: query_layer, args: {layer: air_no2, area: "{area}", limit: 40}, label: "NO2 map of the area (fused estimate, same as the map)"}
+      - {id: fused_pm10, tool: query_layer, args: {layer: air_pm10, area: "{area}", limit: 40}, label: "PM10 map of the area (fused estimate, same as the map)"}
       - {id: citizens, tool: query_layer, args: {layer: air_quality_citizen, area: "{area}"}, label: "citizen PM sensors (noisier)"}
       - {id: model, tool: query_layer, args: {layer: air_quality_model, area: city}, label: "CAMS model background (coarse grid over all of Rome)"}
       - {id: wind, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "wind forecast (coarse grid over all of Rome)"}

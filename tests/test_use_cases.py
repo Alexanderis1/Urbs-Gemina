@@ -351,3 +351,20 @@ def test_forecast_steps_can_ask_for_tonight_and_this_afternoon() -> None:
     run_steps(load_use_cases()["cold_weather_plan"], gateway=gw, area="municipio:1", now=evening)
     weather = [a for n, a in gw.calls if n == "query_layer" and a["layer"] == "weather_forecast"]
     assert weather and weather[0]["time"] == "2026-11-15T02:00:00Z"
+
+
+def test_air_answers_read_the_fused_map_not_only_stations() -> None:
+    """Evaluator, 14 Nov: 'no NO2 data' at the Colosseum while the map showed a value. Air at a place
+    must come from the same fused layer as the map (air_here), and the agent must be able to call it."""
+    from agents.orchestrator import DEFAULT_TOOLS
+    gw = FakeGateway()
+    run_use_case("citizen_area_info", llm=CitingLLM(text="Info."), gateway=gw, place="Colosseo", tier="citizen")
+    air = [args for name, args in gw.calls if name == "air_here"]
+    assert air and air[0]["point"] == [PLACE["lon"], PLACE["lat"]]
+    gw = FakeGateway()
+    run_use_case("air_quality_episode", llm=CitingLLM(text="Aria."), gateway=gw, area="municipio:1")
+    layers = {args.get("layer") for name, args in gw.calls if name == "query_layer"}
+    assert {"air_no2", "air_pm10"} <= layers
+    assert {"air_here", "emf_here", "heat_here", "places_open", "transport_now"} <= set(DEFAULT_TOOLS)
+    prompt = (Path(__file__).resolve().parents[1] / "agents" / "prompts" / "orchestrator.md").read_text(encoding="utf-8")
+    assert "air_here" in prompt

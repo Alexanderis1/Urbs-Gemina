@@ -22,7 +22,8 @@ from agents.verifier import Problem, VerifierReport, auto_cite_marked, citation_
 LOG = logging.getLogger("urbs.agents")
 
 DEFAULT_TOOLS = ["run_use_case", "resolve_place", "context_check", "estimate_field", "query_layer", "run_scenario",
-                 "sports_facilities", "sport_coverage", "legal_lookup", "find_dataset", "news_search", "data_status"]
+                 "sports_facilities", "sport_coverage", "legal_lookup", "find_dataset", "news_search", "data_status",
+                 "air_here", "emf_here", "heat_here", "places_open", "transport_now"]
 
 PLAIN_PROBLEMS_IT = {
     "uncited_number": "una cifra senza esecuzione di uno strumento o fonte",
