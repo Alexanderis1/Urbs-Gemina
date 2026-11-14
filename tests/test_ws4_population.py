@@ -33,6 +33,9 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 
     def build_layer(name: str, cells: Any, providers: Any, start: Any, end: Any, **kw: Any) -> Any:
         seen["build"] = (name, list(cells), providers)
+        for provider in providers:
+            if hasattr(provider, "fetch"):
+                provider.fetch((0, 0, 1, 1), start, end)
         return "LAYER"
 
     api.build_layer = build_layer  # type: ignore[attr-defined]
@@ -252,3 +255,60 @@ def test_feed_status_is_cached_for_a_few_minutes(runtime: ToolRuntime, fake_ws5:
     assert len(fake_ws5["fresh_calls"]) == 1 and second["cached"] is True
     feed_status(runtime, refresh=True)
     assert len(fake_ws5["fresh_calls"]) == 2
+
+
+def test_feed_probes_run_in_parallel_with_a_timeout(runtime: ToolRuntime, fake_ws5: dict[str, Any],
+                                                    monkeypatch: pytest.MonkeyPatch) -> None:
+    import time as _time
+    from datetime import timedelta
+
+    from twin.tools import crowds_exposure
+
+    freshness = sys.modules["twin.beliefs.freshness"]
+    freshness._load_section = lambda name: {"feeds": {f"f{i}": {"late": 10, "down": 60} for i in range(6)}}  # type: ignore[attr-defined]
+    freshness.CLOCK_SLACK = timedelta(minutes=15)  # type: ignore[attr-defined]
+    freshness.ROME_BBOX = (12.2, 41.6, 12.9, 42.1)  # type: ignore[attr-defined]
+
+    class Slow:
+        def __init__(self, delay: float) -> None:
+            self.delay = delay
+
+        def fetch(self, bbox: Any, start: Any, end: Any) -> list[str]:
+            _time.sleep(self.delay)
+            return ["reading"]
+
+    outcomes: dict[str, Any] = {}
+
+    def feed_freshness(providers: Any, now: Any) -> Any:
+        for name, provider in providers.items():
+            try:
+                outcomes[name] = provider.fetch(freshness.ROME_BBOX, now, now)  # type: ignore[attr-defined]
+            except Exception as error:  # noqa: BLE001
+                outcomes[name] = type(error).__name__
+        return _part(feeds=[], summary={})
+
+    freshness.feed_freshness = feed_freshness  # type: ignore[attr-defined]
+    monkeypatch.setitem(runtime.settings.tools, "feed_status", {"cache_minutes": 5, "probe_timeout_s": 0.6})
+    runtime.providers = {**{f"f{i}": Slow(0.3) for i in range(4)}, "f4": Slow(3.0), "f5": Slow(3.0)}  # type: ignore[dict-item]
+    started = _time.monotonic()
+    feed_status(runtime, refresh=True)
+    assert _time.monotonic() - started < 1.0  # in sequence: 4 x 0.3 s plus two time limits
+    assert all(outcomes[f"f{i}"] == ["reading"] for i in range(4))
+    assert outcomes["f4"] == outcomes["f5"] == "TimeoutError"
+    crowds_exposure._FRESHNESS_CACHE.clear()
+
+
+def test_site_rankings_fetch_each_shared_feed_once(runtime: ToolRuntime, fake_ws5: dict[str, Any],
+                                                   tmp_path: Path) -> None:
+    (tmp_path / "processed" / "sensitive_sites.geojson").write_text('{"type": "FeatureCollection", "features": []}')
+    calls: list[int] = []
+
+    class Feed:
+        def fetch(self, bbox: Any, start: Any, end: Any) -> list[Any]:
+            calls.append(1)
+            return []
+
+    runtime.providers = {"air_quality": Feed()}  # type: ignore[dict-item]
+    env = schools_check(runtime, SQUARE)
+    assert env["status"] == "ok" and set(fake_ws5["schools"][0]) == {"air_no2", "air_pm10", "air_pm25"}
+    assert len(calls) == 1  # three air layers, one fetch of the shared feed

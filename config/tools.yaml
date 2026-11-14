@@ -122,3 +122,4 @@ citizen:
 
 feed_status:
   cache_minutes: {value: 5, basis: "a whole-city freshness run calls every feed (about 60 s); feeds update every 5-15 min"}
+  probe_timeout_s: {value: 20, basis: "feeds are probed in parallel; one that has not answered in 20 s is reported down"}
