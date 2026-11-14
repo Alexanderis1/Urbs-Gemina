@@ -7,7 +7,7 @@ uses that slope in every cell (ESCAPE project method: Beelen et al. 2013, Atmos.
 
 Covariate here: length (m) of motor roads (Overture Maps transportation, ODbL) within a radius of a
 point. Per-cell values for the whole city are precomputed by ``scripts/fit_air_fusion.py --covariates``
-into ``no2_lur_covariates.csv`` (cell, value), looked for in the same folders as the city model.
+into ``no2_lur_covariates.csv`` (cell, value), looked for in data/model, data/processed (the deployed API) and the shared model folder.
 """
 from __future__ import annotations
 
@@ -23,7 +23,8 @@ import numpy.typing as npt
 #: Overture road classes that carry motor traffic.
 MOTOR_CLASSES = ("motorway", "trunk", "primary", "secondary", "tertiary", "residential", "unclassified",
                  "living_street")
-SEARCH_DIRS = (Path("data/model"), Path("/mnt/project-files/model"))
+#: The deployed API mounts the processed-data volume at data/processed (Modal volume urbs-gemina-processed).
+SEARCH_DIRS = (Path("data/model"), Path("data/processed"), Path("/mnt/project-files/model"))
 LAT0, LON0 = 41.9, 12.5
 
 
