@@ -266,6 +266,8 @@ def test_ask_serialises_citations(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
         mode: str = "question"
         conversation_id: Any = None
         channel: str = "chat"
+        use_case: Any = None
+        params: Any = None
 
     @dataclass(frozen=True)
     class TwinAnswer:
@@ -316,3 +318,40 @@ def test_scenario_sources_without_retrieval_time_still_validate(client: TestClie
     assert r.status_code == 200, r.text
     src = r.json()["sources"][0]
     assert src["id"] == "copernicus_hrl_tree_cover" and src["retrieved_at"]
+
+
+def test_use_cases_are_listed_per_tier(client: TestClient) -> None:
+    office = client.get("/use_cases", headers=OFFICE).json()
+    citizen = client.get("/use_cases").json()
+    ids = {u["id"] for u in office}
+    assert {"heat_plan_elderly", "civil_protection_alert", "site_risk_check"} <= ids
+    assert {u["id"] for u in citizen} < ids and "event_planning" not in {u["id"] for u in citizen}
+    heat = next(u for u in office if u["id"] == "heat_plan_elderly")
+    assert heat["needs"] == ["area"] and heat["title"]["it"] and "cover_added_pct" in heat["params"]
+
+
+def test_ask_passes_use_case_and_params(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> None:
+    from agents.contract import TwinAnswer
+    from twin.api import app as app_mod
+
+    seen: list[Any] = []
+
+    class FakeOrchestrator:
+        def __init__(self, runtime: Any) -> None:
+            pass
+
+        def ask(self, question: Any) -> TwinAnswer:
+            seen.append(question)
+            return TwinAnswer("ok", True, (), (), {}, False)
+
+    monkeypatch.setattr(app_mod, "TierOrchestrator", FakeOrchestrator)
+    from twin.tools.runtime import ToolRuntime
+    from twin.tools.settings import Settings
+    from twin.tools.layers import LayerStore
+
+    rt = ToolRuntime(settings=Settings.load(), store=LayerStore(raw_dir=Path("/nonexistent")))
+    c = TestClient(create_app(rt, api_keys={"office-key": "office"}))
+    r = c.post("/ask", headers=OFFICE, json={"question": "Circo Massimo", "use_case": "event_planning",
+                                             "params": {"attendees": 60000}})
+    assert r.status_code == 200, r.text
+    assert seen[0].use_case == "event_planning" and seen[0].params == {"attendees": 60000}

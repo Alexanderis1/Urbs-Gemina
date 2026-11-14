@@ -57,7 +57,9 @@ exa:
     - mase.gov.it
     - regione.lazio.it
     - eur-lex.europa.eu
-  legal_basis: "Design proposal section 11 list, plus the Consiglio di Stato site (distance-ban ruling), the two ministries that issue EMF decrees, Regione Lazio and EUR-Lex (AI Act)."
+    - salute.gov.it
+    - protezionecivile.gov.it
+  legal_basis: "Heat plan and civil-protection playbooks (14 Nov 2026) add the Ministry of Health (heat-wave plan and city bulletins) and the Department of Civil Protection (alert codes). Design proposal section 11 list, plus the Consiglio di Stato site (distance-ban ruling), the two ministries that issue EMF decrees, Regione Lazio and EUR-Lex (AI Act)."
   dataset_domains:
     - dati.gov.it
     - dati.comune.roma.it
@@ -82,7 +84,9 @@ exa:
     - romatoday.it
     - ansa.it
     - roma.repubblica.it
-  news_basis: "Municipal and transport-agency notices first; two regional news outlets for strikes and demonstrations. News is a 'text sensor': unverified until an officer confirms."
+    - protezionecivile.gov.it
+    - regione.lazio.it
+  news_basis: "Civil-protection playbook (14 Nov 2026): official alert bulletins (Department of Civil Protection, Regione Lazio Centro Funzionale). Municipal and transport-agency notices first; two regional news outlets for strikes and demonstrations. News is a 'text sensor': unverified until an officer confirms."
 
 monitors:
   - id: roadworks
