@@ -42,22 +42,41 @@ def crowds_settings(config_dir: Path = CONFIG_DIR) -> dict[str, Any]:
     return raw
 
 
-def residents_per_cell(path: Path, cells: Sequence[str]) -> dict[str, int]:
-    """Census residents per cell, each section assigned to the cell holding its centre."""
+def census_per_cell(path: Path, cells: Sequence[str]) -> dict[str, dict[str, Any]]:
+    """ISTAT 2021 census per cell: residents, children aged 0-14 and municipio.
+
+    Each section goes to the cell holding its centre (sections are small in the
+    city, so this is close to an area split). The municipio is the one with the
+    most residents in the cell.
+    """
     wanted = set(cells)
     resolution = _resolution(cells)
-    out: dict[str, int] = {}
+    out: dict[str, dict[str, Any]] = {}
+    by_mun: dict[str, dict[str, int]] = {}
     for feature in json.loads(path.read_text(encoding="utf-8"))["features"]:
-        residents = int(feature["properties"].get("residents") or 0)
+        props = feature["properties"]
         geometry = feature["geometry"]
         ring = geometry["coordinates"][0] if geometry["type"] == "Polygon" else geometry["coordinates"][0][0]
         pts = ring[:-1] if ring[0] == ring[-1] else ring
-        lon = sum(p[0] for p in pts) / len(pts)
-        lat = sum(p[1] for p in pts) / len(pts)
-        cell = cell_of(lon, lat, resolution)
-        if cell in wanted:
-            out[cell] = out.get(cell, 0) + residents
+        cell = cell_of(sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts), resolution)
+        if cell not in wanted:
+            continue
+        residents = int(props.get("residents") or 0)
+        row = out.setdefault(cell, {"residents": 0, "children_0_14": 0, "municipio": None})
+        row["residents"] += residents
+        row["children_0_14"] += int(props.get("children_0_14") or 0)
+        mun = str(props.get("municipio")) if props.get("municipio") is not None else None
+        if mun is not None:
+            counts = by_mun.setdefault(cell, {})
+            counts[mun] = counts.get(mun, 0) + residents
+    for cell, counts in by_mun.items():
+        out[cell]["municipio"] = max(counts, key=lambda m: counts[m])
     return out
+
+
+def residents_per_cell(path: Path, cells: Sequence[str]) -> dict[str, int]:
+    """Census residents per cell (see ``census_per_cell``)."""
+    return {cell: int(row["residents"]) for cell, row in census_per_cell(path, cells).items()}
 
 
 def crowds(

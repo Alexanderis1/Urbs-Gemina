@@ -75,3 +75,10 @@ These live in `config/beliefs.yaml`, so a provider with different names needs on
 ## Crowds view
 
 `crowds.crowds(cells, start, end, providers, residents_path=...)` puts the real activity signals side by side per cell, each with its own margin: City Wi-Fi sessions (people, lower bound, a day late), parked scooters (weak proxy), timetable transit supply (planned), and census residents (static, ISTAT 2021, checked: 2.75 million over the city grid). A cell is `busy` when at least 2 live signals are above their own city-wide 75th percentile (`crowds` block in `config/beliefs.yaml`). Signals with no feed are reported as `not_available`, never filled in.
+
+## Combinations that extract new information
+
+| What | How | Where |
+|---|---|---|
+| People exposed above a threshold | layer x ISTAT 2021 residents and children per cell, by municipio: expected = sum(residents x P(above)); low/high = whole field at P5/P95 | `exposure.exposure` (census via `crowds.census_per_cell`) |
+| Sensor health | leave-one-out prediction of each station from its neighbours; flag median abs z > 3 over 3+ moments, worst first, then re-check | `calibration.sensor_health`, `api.check_sensors` |

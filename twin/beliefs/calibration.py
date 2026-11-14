@@ -68,27 +68,31 @@ class CalibrationReport:
         }
 
 
-def leave_one_station_out(spec: LayerSpec, observations: Iterable[Observation], rules: CalibrationRules) -> CalibrationReport:
-    if spec.calibration_method == "none":
-        return CalibrationReport(status="uncalibrated", reason=spec.calibration_note or "calibration not possible for this layer")
+@dataclass(frozen=True)
+class Residual:
+    entity_id: str
+    observed_at: datetime
+    error: float
+    z: float
 
+
+def _group(spec: LayerSpec, observations: Iterable[Observation]) -> dict[datetime, dict[str, Observation]]:
     by_time: dict[datetime, dict[str, Observation]] = {}
     for o in observations:
         if o.entity_type in spec.entity_types and spec.value_key in o.values:
             # One reading per station per moment (the last one wins).
             by_time.setdefault(o.observed_at, {})[o.entity_id] = o
-    n_stations = len({sid for group in by_time.values() for sid in group})
-    if n_stations < rules.min_stations:
-        return CalibrationReport(
-            status="uncalibrated",
-            reason=f"only {n_stations} stations with readings; the check needs at least {rules.min_stations}",
-        )
+    return by_time
 
+
+def station_residuals(
+    spec: LayerSpec, by_time: Mapping[datetime, Mapping[str, Observation]], min_stations: int
+) -> list[Residual]:
+    """For every moment with enough stations: predict each station from the others."""
     key = spec.value_key
-    z_scores: list[float] = []
-    errors: list[float] = []
+    out: list[Residual] = []
     for when, group in sorted(by_time.items()):
-        if len(group) < rules.min_stations:
+        if len(group) < min_stations:
             continue
         readings = list(group.values())
         xy = np.array(local_xy_km([(o.lon, o.lat) for o in readings]), dtype=np.float64)
@@ -110,8 +114,62 @@ def leave_one_station_out(spec: LayerSpec, observations: Iterable[Observation], 
                 spec.correlation_length_km,
             )
             err = float(values[k] - mean[0])
-            errors.append(err)
-            z_scores.append(err / math.sqrt(float(var[0]) + float(noise[k])))
+            out.append(Residual(readings[k].entity_id, when, err, err / math.sqrt(float(var[0]) + float(noise[k]))))
+    return out
+
+
+def sensor_health(
+    spec: LayerSpec, observations: Iterable[Observation], z_flag: float = 3.0, min_moments: int = 3, min_stations: int = 5
+) -> list[dict[str, Any]]:
+    """Stations whose readings keep disagreeing with what their neighbours imply.
+
+    Uses the same leave-one-out predictions as the calibration check. The worst
+    station above ``z_flag`` (median absolute standardised error over at least
+    ``min_moments`` moments) is flagged and removed, then the check is repeated,
+    so one broken sensor does not make its neighbours look wrong too.
+    """
+    by_time = _group(spec, observations)
+    flagged: dict[str, dict[str, Any]] = {}
+    while True:
+        residuals = station_residuals(spec, by_time, min_stations)
+        per_station: dict[str, list[Residual]] = {}
+        for r in residuals:
+            per_station.setdefault(r.entity_id, []).append(r)
+        summary: dict[str, dict[str, Any]] = {
+            sid: {
+                "entity_id": sid,
+                "moments": len(rs),
+                "median_abs_z": round(float(np.median([abs(r.z) for r in rs])), 2),
+                "typical_offset": round(float(np.median([r.error for r in rs])), 2),
+                "flag": False,
+            }
+            for sid, rs in per_station.items()
+        }
+        candidates = [s for s in summary.values() if s["moments"] >= min_moments and s["median_abs_z"] > z_flag]
+        if not candidates:
+            break
+        worst = max(candidates, key=lambda s: float(s["median_abs_z"]))
+        worst["flag"] = True
+        flagged[str(worst["entity_id"])] = worst
+        by_time = {t: {k: v for k, v in g.items() if k != worst["entity_id"]} for t, g in by_time.items()}
+    return sorted(list(flagged.values()) + list(summary.values()), key=lambda s: str(s["entity_id"]))
+
+
+def leave_one_station_out(spec: LayerSpec, observations: Iterable[Observation], rules: CalibrationRules) -> CalibrationReport:
+    if spec.calibration_method == "none":
+        return CalibrationReport(status="uncalibrated", reason=spec.calibration_note or "calibration not possible for this layer")
+
+    by_time = _group(spec, observations)
+    n_stations = len({sid for group in by_time.values() for sid in group})
+    if n_stations < rules.min_stations:
+        return CalibrationReport(
+            status="uncalibrated",
+            reason=f"only {n_stations} stations with readings; the check needs at least {rules.min_stations}",
+        )
+
+    residuals = station_residuals(spec, by_time, rules.min_stations)
+    z_scores = [r.z for r in residuals]
+    errors = [r.error for r in residuals]
 
     if not z_scores:
         return CalibrationReport(status="uncalibrated", reason=f"no moment had {rules.min_stations} stations reporting together")

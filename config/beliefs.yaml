@@ -207,6 +207,13 @@ crowds:
   min_agree: 2
   basis: "assumption (C=60): agreement of independent signals is more trustworthy than any single proxy"
 
+sensor_health:
+  # A station is flagged when its median standardised error against its neighbours is above z_flag
+  # over at least min_moments moments. Worst first, removed, then re-checked.
+  z_flag: 3.0
+  min_moments: 3
+  basis: "assumption: 3 standard deviations is rare by chance (about 0.3% per reading); the median over several moments ignores one-off spikes"
+
 calibration_rules:
   interval: 0.90            # we check the 90% range
   coverage_ok: [0.80, 0.97] # share of held-out readings inside that range for the layer to count as calibrated
