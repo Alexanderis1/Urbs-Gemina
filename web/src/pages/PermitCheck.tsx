@@ -251,7 +251,7 @@ export default function PermitCheck() {
           title={t.title}
           icon={RadioTower}
           subtitle={t.subtitle}
-          width="w-[26rem]"
+          width="md:w-[26rem]"
           footer={
             <button type="button" className="btn-ghost w-full" disabled={!ready} onClick={() => void downloadReport()}>
               <Download className="h-4 w-4" aria-hidden="true" />

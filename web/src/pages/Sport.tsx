@@ -248,7 +248,7 @@ export default function Sport() {
   return (
     <Workspace
       panel={
-        <Panel title="Sport" icon={Trophy} subtitle={t.subtitle} width="w-[24rem]">
+        <Panel title="Sport" icon={Trophy} subtitle={t.subtitle} width="md:w-[24rem]">
           <Segmented
             label={t.view}
             value={tab}
@@ -356,7 +356,7 @@ export default function Sport() {
         selected && (
           <Panel
             side="right"
-            width="w-[24rem]"
+            width="md:w-[24rem]"
             title={displayName(selected)}
             subtitle={facilitySubtitle(selected)}
             actions={

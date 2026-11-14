@@ -234,7 +234,7 @@ export default function Signals() {
           title={t.title}
           subtitle={t.subtitle}
           icon={Megaphone}
-          width="w-[25rem]"
+          width="md:w-[25rem]"
           actions={
             <button className="btn-quiet" onClick={() => void refresh(checks)} disabled={busy} title={t.refresh} aria-label={t.refresh}>
               {busy ? <Spinner /> : <RefreshCw className="h-4 w-4" aria-hidden="true" />}

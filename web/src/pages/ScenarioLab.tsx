@@ -989,7 +989,7 @@ export default function ScenarioLab() {
     <Panel
       title={t.labTitle}
       icon={FlaskConical}
-      width="w-[24rem]"
+      width="md:w-[24rem]"
       subtitle={t.labSubtitle}
       footer={
         <div className="space-y-2">
@@ -1073,7 +1073,7 @@ export default function ScenarioLab() {
     showResult && (busy || env || error) ? (
       <Panel
         side="right"
-        width="w-[24rem]"
+        width="md:w-[24rem]"
         title={t.result}
         subtitle={ran ? `${ran.title} · ${ran.area}` : undefined}
         actions={
