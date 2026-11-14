@@ -58,7 +58,7 @@ layers:
         coef: {value: 0.01202, basis: "learned: +1.2 ug/m3 per 100 m of motor road within 100 m; explains the stations' lasting differences (spread 6.4 -> 3.7 ug/m3 on stations left out); Overture roads, ESCAPE method"}
         center: {value: 607.2, basis: "mean road length within 100 m of the 13 stations, so the station average is unchanged"}
       sd: {value: 9.26, basis: "learned: error at a station after bias and road term, shared 5.7 + local 7.3 ug/m3, station error removed"}
-    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it   # CAMS forecast via Open-Meteo, 0.1 deg lattice
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: no2
