@@ -104,7 +104,8 @@ describe("guided steps", () => {
   it("walks login, category, GPS, photo, text, confirm", () => {
     expect(nextStep(EMPTY_DRAFT, false)).toBe("login");
     expect(nextStep(EMPTY_DRAFT, true)).toBe("category");
-    const d1 = { ...EMPTY_DRAFT, category: "flood" as const };
+    expect(nextStep({ ...EMPTY_DRAFT, category: "flood" }, true)).toBe("category"); // flood or sewer?
+    const d1 = { ...EMPTY_DRAFT, category: "flood" as const, subtype: "sewer" };
     expect(nextStep(d1, true)).toBe("gps");
     const d2 = { ...d1, gps: GPS };
     expect(nextStep(d2, true)).toBe("photo");
@@ -113,14 +114,19 @@ describe("guided steps", () => {
     expect(nextStep({ ...d3, description: "Sottopasso allagato" }, true)).toBe("confirm");
   });
   it("does not accept a device position outside Rome", () => {
-    expect(nextStep({ ...EMPTY_DRAFT, category: "fire", gps: { ...GPS, lat: 45.46, lon: 9.19 } }, true)).toBe("gps");
+    expect(nextStep({ ...EMPTY_DRAFT, category: "pothole", gps: { ...GPS, lat: 45.46, lon: 9.19 } }, true)).toBe("gps");
+  });
+  it("a public event can skip the photo, a pothole cannot", () => {
+    const base = { ...EMPTY_DRAFT, gps: GPS, skipPhoto: true, description: "Concerto in piazza" };
+    expect(nextStep({ ...base, category: "public_event" }, true)).toBe("confirm");
+    expect(nextStep({ ...base, category: "pothole" }, true)).toBe("photo");
   });
 });
 
 describe("staff rows", () => {
   it("become anonymous tool reports and skip dismissed ones", () => {
     const row: StaffReportRow = {
-      id: "r1", category: "flood", description: "acqua", lon: 12.48, lat: 41.89, photo_path: "u/p.jpg",
+      id: "r1", category: "flood", subtype: "sewer", screen_photo: "consistent", description: "acqua", lon: 12.48, lat: 41.89, photo_path: "u/p.jpg",
       photo_gps_distance_m: 20, photo_age_min: 3, status: "new", created_at: "2026-11-14T05:00:00Z", reporter_key: "k1",
     };
     const out = toToolReports([row, { ...row, id: "r2", status: "dismissed" }]);

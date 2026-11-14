@@ -199,11 +199,12 @@ class CitizenReport(Strict):
     """One citizen report, anonymised: 'reporter' is an opaque key (one per account), never a name."""
 
     id: str = Field(min_length=1, max_length=80)
-    category: Literal["congestion", "flood", "fire", "emergency", "other"]
+    category: Literal["flood", "pothole", "traffic", "roadworks", "public_event"]
     lon: float = Field(ge=12.0, le=13.1)
     lat: float = Field(ge=41.4, le=42.4)
     time: str = Field(min_length=10, max_length=40, description="ISO 8601")
     reporter: str = Field(min_length=1, max_length=80)
+    subtype: str | None = Field(default=None, max_length=40)
     has_photo: bool = False
     text: str = Field(default="", max_length=280)
     photo_ref: str | None = Field(default=None, max_length=300, description="storage path of the photo, if any")
@@ -227,12 +228,21 @@ class SignalEventsIn(Strict):
 
 class SignalEvent(Strict):
     id: str = Field(min_length=1, max_length=40)
-    category: Literal["congestion", "flood", "fire", "emergency", "other"]
+    category: Literal["flood", "pothole", "traffic", "roadworks", "public_event"]
     category_label: str | None = Field(default=None, max_length=80)
     lon: float = Field(ge=12.0, le=13.1)
     lat: float = Field(ge=41.4, le=42.4)
     first_seen: str = Field(max_length=40)
     texts: list[str] = Field(default_factory=list, max_length=20)
+
+
+class ScreenReportIn(Strict):
+    """Office only (called by the Lovable Cloud function when a resident sends a report): Claude screens it first."""
+
+    category: Literal["flood", "pothole", "traffic", "roadworks", "public_event"]
+    subtype: str | None = Field(default=None, max_length=40)
+    text: str = Field(default="", max_length=280)
+    photo_url: str | None = Field(default=None, max_length=2000, description="short-lived signed URL from Lovable Cloud storage")
 
 
 class VerifySignalIn(Strict):

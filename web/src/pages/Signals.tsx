@@ -17,7 +17,7 @@ const T = texts({
     none: "Nessuna segnalazione nelle ultime 48 ore",
     noneText: "Quando i cittadini inviano una segnalazione con foto e GPS, compare qui come evento.",
     sample: "Dati di esempio: segnalazioni inventate per la dimostrazione, eventi calcolati dal vero strumento.",
-    level: { likely: "Probabile evento", probable: "Possibile evento", unconfirmed: "Da verificare" } as Record<Level, string>,
+    level: { likely: "Probabile evento", probable: "Possibile evento", unconfirmed: "Da verificare", not_scored: "Evento pubblico segnalato" } as Record<Level, string>,
     reports: (n: number, r: number) => `${n} segnalazion${n === 1 ? "e" : "i"} da ${r} person${r === 1 ? "a" : "e"}`,
     since: (t: string) => `dalle ${t}`,
     stale: "nessuna segnalazione recente",
@@ -49,7 +49,7 @@ const T = texts({
     none: "No reports in the last 48 hours",
     noneText: "When residents send a report with a photo and GPS it shows up here as an event.",
     sample: "Sample data: reports made up for the demo, events computed by the real tool.",
-    level: { likely: "Likely event", probable: "Possible event", unconfirmed: "To be checked" },
+    level: { likely: "Likely event", probable: "Possible event", unconfirmed: "To be checked", not_scored: "Reported public event" },
     reports: (n: number, r: number) => `${n} report${n === 1 ? "" : "s"} from ${r} ${r === 1 ? "person" : "people"}`,
     since: (t: string) => `since ${t}`,
     stale: "no recent report",
@@ -76,7 +76,7 @@ const T = texts({
   },
 });
 
-const pct = (p: number) => `${Math.round(p * 100)}%`;
+const pct = (p: number | null) => (p === null ? "–" : `${Math.round(p * 100)}%`);
 
 /** Staff layer: citizen reports merged into candidate live events, on the 3D city. */
 export default function Signals() {
@@ -201,7 +201,7 @@ export default function Signals() {
       <MapFloat position="bottom-left">
         <div className="space-y-1 text-xs">
           <div className="font-semibold">{t.legend}</div>
-          {(["likely", "probable", "unconfirmed"] as Level[]).map((l) => (
+          {(["likely", "probable", "unconfirmed", "not_scored"] as Level[]).map((l) => (
             <div key={l} className="flex items-center gap-2">
               <span className="inline-block h-3 w-3 rounded-full" style={{ background: `rgb(${levelColour(l).join(",")})` }} />
               {t.level[l]}
@@ -270,9 +270,11 @@ function EventCard({
       </button>
       {open && (
         <div className="space-y-3 border-t border-line p-3 text-sm">
-          <div className="h-2 overflow-hidden rounded bg-sunken" role="meter" aria-valuenow={Math.round(e.confidence * 100)} aria-valuemin={0} aria-valuemax={100}>
-            <div className="h-full" style={{ width: pct(e.confidence), background: `rgb(${r},${g},${b})` }} />
-          </div>
+          {e.confidence !== null && (
+            <div className="h-2 overflow-hidden rounded bg-sunken" role="meter" aria-valuenow={Math.round(e.confidence * 100)} aria-valuemin={0} aria-valuemax={100}>
+              <div className="h-full" style={{ width: pct(e.confidence), background: `rgb(${r},${g},${b})` }} />
+            </div>
+          )}
           <p className="text-xs text-muted">{t.gpsMatch(e.n_location_match, e.n_location_mismatch)}</p>
 
           <div>

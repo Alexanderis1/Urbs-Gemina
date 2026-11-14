@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     TOOL_API_CITIZEN_KEY: Deno.env.get("TOOL_API_CITIZEN_KEY") ?? "",
     ORCHESTRATOR_URL: Deno.env.get("ORCHESTRATOR_URL") ?? "",
   };
-  const plan = planForward(path, tier, body, env);
+  const plan = planForward(path, tier, body, env, userId);
   if (!plan.ok) return json(plan.status, { detail: plan.reason });
 
   if ("voice" in plan) {
@@ -62,6 +62,40 @@ Deno.serve(async (req) => {
     if (!r.ok) return json(502, { detail: `ElevenLabs HTTP ${r.status}` });
     const { signed_url } = (await r.json()) as { signed_url: string };
     return json(200, { signed_url });
+  }
+
+  if ("submit" in plan) {
+    // Citizen report: rate limit, screen with Claude (tool screen_report), then store. Rejected reports are kept
+    // for audit with status 'rejected' and never shown on the staff map; their photo is deleted.
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const since = new Date(Date.now() - 3600_000).toISOString();
+    const { count } = await admin.from("citizen_reports").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", since);
+    if ((count ?? 0) >= 10) return json(429, { detail: "too many reports in the last hour" });
+    let photoUrl: string | null = null;
+    if (plan.submit.photo_path) {
+      const { data } = await admin.storage.from("report-photos").createSignedUrl(plan.submit.photo_path, 300);
+      if (!data?.signedUrl) return json(422, { detail: "photo not found: upload it first" });
+      photoUrl = data.signedUrl;
+    }
+    let screening: Record<string, unknown> = { verdict: "review", reasons: [], photo: "no_photo", note: "screening not available" };
+    if (plan.key) {
+      const r = await fetch(plan.screenUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${plan.key}` },
+        body: JSON.stringify({ category: plan.submit.category, subtype: plan.submit.subtype, text: plan.submit.description, photo_url: photoUrl }),
+      }).catch(() => null);
+      const env = r?.ok ? ((await r.json()) as { status?: string; result?: Record<string, unknown> }) : null;
+      if (env?.status === "ok" && env.result) screening = env.result;
+    }
+    const rejected = screening.verdict === "reject";
+    if (rejected && plan.submit.photo_path) await admin.storage.from("report-photos").remove([plan.submit.photo_path]);
+    const { data, error } = await admin
+      .from("citizen_reports")
+      .insert({ ...plan.submit, photo_path: rejected ? null : plan.submit.photo_path, user_id: userId, status: rejected ? "rejected" : "new", screening })
+      .select("id")
+      .single();
+    if (error) return json(422, { detail: error.message });
+    return json(200, { stored: true, id: data.id, verdict: screening.verdict, reasons: screening.reasons ?? [], note: screening.note ?? "" });
   }
 
   if ("table" in plan) {

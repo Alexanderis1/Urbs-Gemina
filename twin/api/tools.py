@@ -312,6 +312,21 @@ def _verify_signal(rt: ToolRuntime, req: m.VerifySignalIn, role: str) -> dict[st
     return _delegate("verify_signal", "agents.signal_check", "verify_event", "WS7 (agents)", inputs, run)
 
 
+def _screen_report(rt: ToolRuntime, req: m.ScreenReportIn, role: str) -> dict[str, Any]:
+    inputs = {"category": req.category, "subtype": req.subtype, "chars": len(req.text), "photo": bool(req.photo_url)}
+    refused = _office_only(rt, "screen_report", inputs, role)
+    if refused is not None:
+        return refused
+    cfg = load_signal_config(rt.settings.paths.config / "signals.yaml")
+
+    def run(screen: Callable[..., dict[str, Any]]) -> dict[str, Any]:
+        out = screen(category=req.category, subtype=req.subtype, text=req.text, photo_url=req.photo_url, cfg=cfg)
+        return rt.envelope("screen_report", inputs, out, {"citizen_reports": "real"},
+                           [Source(id="citizen_report", retrieved_at=utc_now())], list(out.get("warnings", [])))
+
+    return _delegate("screen_report", "agents.report_screen", "screen_report", "citizen-reports", inputs, run)
+
+
 TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("resolve_place", m.ResolvePlaceIn, lambda rt, req, role: resolve_place(rt, req.text)),
     ToolSpec("context_check", m.ContextCheckIn,
@@ -345,6 +360,7 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("sport_coverage", m.SportCoverageIn, _sport_coverage, owner="WS10"),
     ToolSpec("signal_events", m.SignalEventsIn, _signal_events, owner="citizen-reports"),
     ToolSpec("verify_signal", m.VerifySignalIn, _verify_signal, owner="citizen-reports"),
+    ToolSpec("screen_report", m.ScreenReportIn, _screen_report, owner="citizen-reports"),
 ]}
 
 
