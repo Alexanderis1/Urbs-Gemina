@@ -127,3 +127,13 @@ def test_more_rain_more_water(tmp_path: Path) -> None:
 def test_radar_rain_without_data_is_not_available(tmp_path: Path) -> None:
     out = run_rain({"source": "radar", "duration_h": 1}, tmp_path)
     assert out["status"] == "not_available"
+
+
+def test_rain_result_lists_trouble_spots_ranked_by_low_ground_and_history(tmp_path: Path) -> None:
+    out = run_rain({"rain_mm": 120, "duration_h": 1}, tmp_path)
+    ts = out["result"]["trouble_spots"]
+    assert ts["spots"] and "AUC" in ts["method"]
+    assert ts["spots"][0]["low_ground_m"] < 0  # the hollow comes first
+    assert out["data_kinds"]["call_out_history"] in ("real", "not_available")
+    hot = out["result"]["hotspots"][0]
+    assert "low_ground_m" in hot and "past_call_outs" in hot

@@ -1,0 +1,233 @@
+[
+ {
+  "efficiency": 0.3,
+  "radius_m": 150.0,
+  "events": [
+   {
+    "id": "2024-09-03",
+    "flooded_km2_p50": {
+     "1": 0.326,
+     "5": 0.353,
+     "6": 0.543
+    },
+    "reported_hit_rate": 0.727,
+    "random_street_hit_rate": 0.522,
+    "places": [
+     {
+      "street": "VIA VITTOR PISANI",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "PIAZZA DEI PRATI DEGLI STROZZI",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO CESARE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "CORSO D'ITALIA",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "VIA DEL TRITONE",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "LUNGOTEVERE IN SASSIA",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA DELLE FORNACI",
+      "status": "outside the rain area"
+     },
+     {
+      "station": "Lepanto",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "station": "Manzoni",
+      "municipio": "1",
+      "hit": true
+     },
+     {
+      "street": "VIA SICULIANA",
+      "municipio": "6",
+      "hit": true
+     },
+     {
+      "street": "VIA CASILINA",
+      "near": "VIA BORGHESIANA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA DI TOR BELLA MONACA",
+      "near": "VIA CASILINA",
+      "municipio": "6",
+      "hit": false
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   },
+   {
+    "id": "2011-09-19",
+    "flooded_km2_p50": {
+     "7": 0.263,
+     "5": 0.282,
+     "6": 0.475
+    },
+    "reported_hit_rate": 0.75,
+    "random_street_hit_rate": 0.333,
+    "places": [
+     {
+      "station": "San Giovanni",
+      "municipio": "7",
+      "hit": false
+     },
+     {
+      "station": "Ponte Lungo",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Colli Albani",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Porta Furba/Quadraro",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Numidio Quadrato",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "station": "Lucio Sestio",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIALE GIULIO AGRICOLA",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "VIA PRENESTINA",
+      "near": "VIALE PALMIRO TOGLIATTI",
+      "municipio": "5",
+      "hit": false
+     }
+    ]
+   },
+   {
+    "id": "2023-06-14",
+    "flooded_km2_p50": {
+     "3": 0.698,
+     "5": 0.292,
+     "6": 0.544,
+     "1": 0.163
+    },
+    "reported_hit_rate": 0.25,
+    "random_street_hit_rate": 0.354,
+    "places": [
+     {
+      "street": "VIA DELLA BUFALOTTA",
+      "near": "PIAZZA MONTE GENNARO",
+      "municipio": "3",
+      "hit": false
+     },
+     {
+      "street": "SALITA DELLA MARCIGLIANA",
+      "near": "VIA DELLO SCALO DI SETTEBAGNI",
+      "municipio": "3",
+      "hit": false
+     },
+     {
+      "street": "VIA DEI PRATI FISCALI VECCHIA",
+      "municipio": "3",
+      "hit": true
+     },
+     {
+      "street": "VIA GUGLIELMO SANSONI",
+      "municipio": "5",
+      "hit": false
+     },
+     {
+      "street": "VIA TIBURTINA",
+      "near": "PIAZZALE VALERIO MASSIMO",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "CORSO TRIESTE",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "CIRCONVALLAZIONE NOMENTANA",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "VIA FRASSINETO",
+      "near": "VIALE DELLE GALLINE BIANCHE",
+      "status": "outside the rain area"
+     }
+    ]
+   },
+   {
+    "id": "2024-09-09",
+    "flooded_km2_p50": {
+     "6": 0.612,
+     "9": 0.876,
+     "7": 0.318,
+     "14": 0.278,
+     "3": 0.587
+    },
+    "reported_hit_rate": 0.333,
+    "random_street_hit_rate": 0.307,
+    "places": [
+     {
+      "station": "Cinecitta'",
+      "municipio": "7",
+      "hit": false
+     },
+     {
+      "station": "Ponte Lungo",
+      "municipio": "7",
+      "hit": true
+     },
+     {
+      "street": "PIAZZA SEMPIONE",
+      "municipio": "3",
+      "hit": false
+     },
+     {
+      "station": "Manzoni",
+      "status": "outside the rain area"
+     },
+     {
+      "street": "PIAZZA DI S. EMERENZIANA",
+      "status": "outside the rain area"
+     }
+    ]
+   }
+  ],
+  "dry_check": {
+   "1": 0.077,
+   "7": 0.089
+  }
+ }
+]

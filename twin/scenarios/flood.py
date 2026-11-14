@@ -22,7 +22,7 @@ from twin.providers.base import BBox
 from twin.scenarios import config, impacts, layers
 from twin.scenarios.area import Area
 from twin.scenarios.data import ScenarioData
-from twin.scenarios import hydro, sewer
+from twin.scenarios import hydro, sewer, susceptibility
 from twin.scenarios.terrain import BoolArray, FloatArray, Grid, load_dtm, mask_to_geojson, rasterize_mask
 
 
@@ -635,6 +635,14 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
                                    if float(h["level"] - h["zs"][0]) > float(cfg["deep_hollow_m"]) else None),
                          "underpasses": _near(under, lons[0], lats[0], 150.0)})
     hotspots.sort(key=lambda h: -h["max_depth_m"]["p50"])
+    ts_cfg = cfg["trouble_spots"]
+    call_outs = susceptibility.load_call_outs(str(ts_cfg["call_out_file"]))
+    spots = susceptibility.trouble_spots(grid, in_area, sealed, call_outs, ts_cfg)
+    for h in hotspots:
+        hr, hc = grid.rowcol([h["lon"]], [h["lat"]])
+        h["low_ground_m"] = round(float(spots["low_ground"][hr[0], hc[0]]), 1) if hr[0] >= 0 else None
+        h["past_call_outs"] = (int(spots["past"][hr[0], hc[0]]) if spots["past"] is not None and hr[0] >= 0
+                               else None)
     wet_p50 &= in_area
     probability = np.where(in_area, probability, 0.0)
     totals = depth.sum(axis=1)
@@ -646,6 +654,7 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
         "flooded_km2_p50": round(float(wet_p50.sum()) * grid.cell_area / 1e6, 3),
         "total_depth_index": impacts.quantiles(totals.tolist()),
         "footprint_p50": mask_to_geojson(grid, wet_p50),
+        "trouble_spots": {"spots": spots["spots"], "method": str(ts_cfg["method"])},
     }
     result["sewer"] = _sewer_summary(grid, in_area_flat, eff, inlet, served, blocked, outfalls,
                                      surcharge_total, surcharge_mean, surcharge_seen)
@@ -653,7 +662,8 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
     result["sensitive_sites"] = impacts.sensitive_sites(grid, probability, 0.2)
     kinds = {"terrain": str(grid.source.get("kind", "estimated")), "rain": rain_kind, "imperviousness": sealed_kind,
              "drainage": "estimated", "outfalls": "real" if outfalls is not None else "not_available", "census": "real" if result["residents"] is not None else "not_available",
-             "sensitive_sites": "real" if result["sensitive_sites"] is not None else "not_available"}
+             "sensitive_sites": "real" if result["sensitive_sites"] is not None else "not_available",
+             "call_out_history": spots["history"]}
     warnings += [
         "Sewer capacity follows Rome's design rules on the terrain (Comune di Roma 2000) times an efficiency "
         "assumption (C=35); the real pipe map is not open, so pipes are taken to follow the terrain.",
@@ -662,6 +672,11 @@ def run_rain_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) ->
     ]
     if under is None:
         warnings.append("Underpass layer not loaded yet: hotspots are not matched to underpasses.")
+    warnings.append("Which street floods: the pond-and-sewer map has weak street-level skill against 10 years of "
+                    "real call-outs; use 'trouble_spots' (low ground plus past call-outs) to choose where to send "
+                    "pumps and patrols first.")
+    if call_outs is None:
+        warnings.append("Civil-protection call-out log not loaded: trouble spots use low ground only.")
     if outfalls is None:
         warnings.append("Sewer outfall layer not loaded (scripts/fetch_sewer_layers.py): river backflow is left out.")
     if stage is not None:
