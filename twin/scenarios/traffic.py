@@ -128,11 +128,6 @@ def street_names(net: Path) -> set[str]:
     return {str(e["name"]) for e in _edges(net).values() if e["name"]}
 
 
-def _is_geo(net: Path) -> bool:
-    loc = ET.parse(net).getroot().find("location")
-    return loc is not None and loc.get("projParameter", "!") != "!"
-
-
 def _closed_edges(change: Mapping[str, Any], edges: Mapping[str, Mapping[str, Any]]) -> list[str]:
     close = change.get("close") or {}
     wanted = [str(e) for e in close.get("edges", [])]
@@ -310,16 +305,53 @@ def _filter_trips(src: Path, dst: Path, closed: set[str]) -> int:
     return dropped
 
 
-def _midpoints(geo_net: Path | None) -> dict[str, tuple[float, float]]:
-    if geo_net is None:
-        return {}
-    out: dict[str, tuple[float, float]] = {}
-    for eid, edge in _edges(geo_net).items():
+def _edge_geometry(net: Path) -> tuple[dict[str, tuple[float, float]], dict[str, list[tuple[float, float]]]]:
+    """Edge midpoints and shapes in WGS84 degrees, from the network's own projection and offset.
+
+    SUMO stores x, y in metres shifted by ``netOffset``; the projected coordinate is (x - offset) in the
+    ``projParameter`` CRS. Networks without a projection give no coordinates rather than wrong ones.
+    """
+    root = ET.parse(net).getroot()
+    loc = root.find("location")
+    proj = loc.get("projParameter", "!") if loc is not None else "!"
+    if loc is None or proj == "!":
+        return {}, {}
+    from rasterio.crs import CRS  # type: ignore[import-untyped]
+    from rasterio.warp import transform  # type: ignore[import-untyped]
+
+    ox, oy = (float(v) for v in loc.get("netOffset", "0,0").split(","))
+    ids: list[str] = []
+    counts: list[int] = []
+    xs: list[float] = []
+    ys: list[float] = []
+    for eid, edge in _edges(net).items():
         pts = [p.split(",") for p in str(edge["shape"]).split()]
-        if pts:
-            mid = pts[len(pts) // 2]
-            out[eid] = (round(float(mid[0]), 6), round(float(mid[1]), 6))
-    return out
+        if not pts:
+            continue
+        ids.append(eid)
+        counts.append(len(pts))
+        xs += [float(p[0]) - ox for p in pts]
+        ys += [float(p[1]) - oy for p in pts]
+    if not xs:
+        return {}, {}
+    lon, lat = transform(CRS.from_proj4(proj), "EPSG:4326", xs, ys)
+    mids: dict[str, tuple[float, float]] = {}
+    lines: dict[str, list[tuple[float, float]]] = {}
+    k = 0
+    for eid, count in zip(ids, counts):
+        line = [(round(float(lon[k + i]), 6), round(float(lat[k + i]), 6)) for i in range(count)]
+        lines[eid] = line
+        mids[eid] = line[len(line) // 2]
+        k += count
+    return mids, lines
+
+
+def _bbox(points: Sequence[tuple[float, float]]) -> list[float] | None:
+    """[west, south, east, north] of the points, for the map to frame the run."""
+    if not points:
+        return None
+    return [min(p[0] for p in points), min(p[1] for p in points), max(p[0] for p in points),
+            max(p[1] for p in points)]
 
 
 def run_road_closure(area: Area, change: Mapping[str, Any], data: ScenarioData) -> dict[str, Any]:
@@ -376,11 +408,7 @@ def run_traffic_event(area: Area, change: Mapping[str, Any], data: ScenarioData)
             (work / "works.edg.xml").write_text(patch, encoding="utf-8")
             cmd += ["-e", str(work / "works.edg.xml")]
         _run(cmd)
-        geo_net = None
-        if _is_geo(net):
-            geo_net = work / "geo.net.xml"
-            _run([netconvert, "-s", str(net), "--proj.plain-geo", "true", "-o", str(geo_net)])
-        midpoints = _midpoints(geo_net)
+        midpoints, shapes = _edge_geometry(net)
         event_info: dict[str, Any] | None = None
         if isinstance(event, Mapping):
             destinations = [e for e in _event_destinations(event, edges, midpoints, float(cfg["event_radius_m"]))
@@ -483,6 +511,11 @@ def run_traffic_event(area: Area, change: Mapping[str, Any], data: ScenarioData)
             "replicates": n, "trips_left_out": dropped, "congestion_points": congestion,
             "baseline": sides["baseline"], "variant": sides["variant"], "difference": sides["difference"],
             "changed_roads": changed,
+            "closed_streets": {"type": "MultiLineString",
+                               "coordinates": [[list(p) for p in shapes[e]] for e in
+                                               list(closed) + [str(w["edge"]) for w in works] if e in shapes]},
+            "map_bbox": _bbox([p for e in list(closed) + [str(w["edge"]) for w in works] + hot[:10]
+                               + top[:10] if e in shapes for p in shapes[e]]),
             "demand_anchor": {"loop_stations": used_loops, "scale": round(scale, 3),
                               "insertion_density_veh_per_h_per_lane_km": round(density, 2)},
             "speed_check": speed_check,
