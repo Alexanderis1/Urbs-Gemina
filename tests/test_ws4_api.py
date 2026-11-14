@@ -288,3 +288,13 @@ def test_ask_serialises_citations(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     rt = ToolRuntime(settings=Settings.load(), store=LayerStore(raw_dir=tmp_path))
     body = TestClient(create_app(rt, api_keys={})).post("/ask", json={"question": "ciao"}).json()
     assert body["citations"] == [{"line": 1, "kind": "run", "ref": "abc", "cite_mode": "auto"}]
+
+
+def test_envelope_accepts_hypothetical_scenario_inputs() -> None:
+    """What-if inputs (a 3 m river rise, a 38 °C day) are labelled 'hypothetical' by WS6."""
+    from twin.api.models import EnvelopeOut
+
+    env = EnvelopeOut(run_id="x", tool="run_scenario", status="ok", inputs={}, result={},
+                      data_kinds={"river_level": "hypothetical", "terrain": "estimated"},
+                      sources=[], synthetic=False, warnings=[])
+    assert env.data_kinds["river_level"] == "hypothetical"

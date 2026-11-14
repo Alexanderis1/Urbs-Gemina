@@ -156,7 +156,8 @@ class EnvelopeOut(BaseModel):
     reason: str | None = Field(default=None, description="Why the status is not ok")
     inputs: dict[str, Any]
     result: Any
-    data_kinds: dict[str, Literal["real", "estimated", "simulated", "not_available"]]
+    data_kinds: dict[str, Literal["real", "estimated", "simulated", "hypothetical", "not_available"]] = Field(
+        description="hypothetical: a what-if input chosen by the user (scenario variants only)")
     sources: list[SourceOut]
     synthetic: bool
     warnings: list[str]

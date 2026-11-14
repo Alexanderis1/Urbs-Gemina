@@ -79,10 +79,12 @@
           "real",
           "estimated",
           "simulated",
+          "hypothetical",
           "not_available"
         ],
         "type": "string"
       },
+      "description": "hypothetical: a what-if input chosen by the user (scenario variants only)",
       "title": "Data Kinds",
       "type": "object"
     },
