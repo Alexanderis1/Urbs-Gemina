@@ -1,0 +1,124 @@
+/* Urbs Gemina design system. Reasoning in web/docs/design-system.md; code-side tokens in src/lib/theme.ts. */
+@import "@fontsource/titillium-web/latin-400.css";
+@import "@fontsource/titillium-web/latin-600.css";
+@import "@fontsource/titillium-web/latin-700.css";
+@import "@fontsource/roboto-mono/latin-400.css";
+@import "@fontsource/roboto-mono/latin-500.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Institutional (light): Designers Italia palette. PA blue #0066CC, navy #17324D. */
+  :root {
+    color-scheme: light;
+    --c-canvas: 240 244 248;
+    --c-surface: 255 255 255;
+    --c-sunken: 244 247 250;
+    --c-line: 213 220 228;
+    --c-line-strong: 168 180 193;
+    --c-ink: 23 50 77;
+    --c-muted: 85 103 121;
+    --c-primary: 0 102 204;
+    --c-primary-hover: 0 89 179;
+    --c-primary-soft: 229 240 250;
+    --c-link: 0 102 204;
+    --c-chrome: 23 50 77;
+    --c-chrome-deep: 15 36 56;
+    --c-chrome-ink: 255 255 255;
+    --c-chrome-muted: 178 196 213;
+    --c-chrome-line: 46 74 102;
+    --c-real: 0 121 79;
+    --c-estimated: 143 86 0;
+    --c-simulated: 110 63 196;
+    --c-whatif: 0 112 127;
+    --c-danger: 194 42 68;
+    --c-shadow: 23 50 77;
+  }
+  /* Operations room (dark): same hues on a navy ground, for control-room screens. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --c-canvas: 12 22 32;
+    --c-surface: 23 38 53;
+    --c-sunken: 17 30 43;
+    --c-line: 43 62 82;
+    --c-line-strong: 70 92 115;
+    --c-ink: 232 238 244;
+    --c-muted: 163 182 200;
+    --c-primary: 0 102 204;
+    --c-primary-hover: 26 121 217;
+    --c-primary-soft: 24 52 82;
+    --c-link: 109 179 255;
+    --c-chrome: 15 27 39;
+    --c-chrome-deep: 9 17 25;
+    --c-chrome-ink: 255 255 255;
+    --c-chrome-muted: 163 182 200;
+    --c-chrome-line: 43 62 82;
+    --c-real: 61 214 155;
+    --c-estimated: 242 178 76;
+    --c-simulated: 181 149 255;
+    --c-whatif: 79 209 221;
+    --c-danger: 255 122 140;
+    --c-shadow: 0 0 0;
+  }
+
+  html, body, #root { height: 100%; }
+  body { @apply bg-canvas font-sans text-ink antialiased; font-feature-settings: "tnum" 1, "lnum" 1; }
+  h1, h2, h3 { @apply font-semibold tracking-tight; }
+  a { @apply text-link underline-offset-2; }
+  code { @apply font-mono text-[0.85em]; }
+  /* One visible focus ring everywhere (AA: 3:1 against both themes). */
+  :focus-visible { outline: 2px solid rgb(var(--c-link)); outline-offset: 2px; border-radius: 2px; }
+  ::selection { background: rgb(var(--c-primary) / 0.25); }
+  * { scrollbar-width: thin; scrollbar-color: rgb(var(--c-line-strong)) transparent; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  }
+}
+
+@layer components {
+  /* Surfaces */
+  .card { @apply rounded border border-line bg-surface p-4 shadow-panel; }
+  .panel { @apply flex h-full shrink-0 flex-col border-line bg-surface; }
+  .panel-body { @apply min-h-0 flex-1 space-y-5 overflow-y-auto p-4; }
+  .map-float { @apply rounded border border-line bg-surface/95 shadow-float backdrop-blur-sm; }
+
+  /* Text */
+  .label { @apply text-2xs font-bold uppercase tracking-[0.08em] text-muted; }
+  .hint { @apply text-xs text-muted; }
+  .num { @apply font-mono tabular-nums; }
+  .page-title { @apply text-xl font-bold text-ink; }
+
+  /* Controls: 2.25rem tall so they are easy to hit, square-ish corners as in Bootstrap Italia. */
+  .btn { @apply inline-flex min-h-9 items-center justify-center gap-2 rounded bg-primary px-3.5 py-1.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-primary-hover active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45; }
+  .btn-ghost { @apply inline-flex min-h-9 items-center justify-center gap-2 rounded border border-line-strong bg-surface px-3.5 py-1.5 text-sm font-semibold text-link transition-colors duration-150 hover:border-link hover:bg-primary-soft active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45; }
+  .btn-quiet { @apply inline-flex min-h-8 items-center justify-center gap-1.5 rounded px-2 py-1 text-sm font-semibold text-muted transition-colors duration-150 hover:bg-sunken hover:text-ink; }
+  .btn-sm { @apply min-h-7 px-2.5 py-1 text-xs; }
+  .input { @apply min-h-9 w-full rounded border border-line-strong bg-surface px-2.5 py-1.5 text-sm text-ink transition-colors duration-150 placeholder:text-muted/70 hover:border-muted focus:border-link focus:outline-none focus:ring-2 focus:ring-link/30; }
+  select.input { @apply cursor-pointer pr-8; }
+  .check { @apply flex cursor-pointer items-center gap-2 text-sm; }
+  .check input { accent-color: rgb(var(--c-primary)); @apply h-4 w-4; }
+  input[type="range"] { accent-color: rgb(var(--c-primary)); }
+
+  /* Tables */
+  .table { @apply w-full border-collapse text-left text-sm; }
+  .table thead th { @apply sticky top-0 z-10 border-b border-line-strong bg-sunken px-3 py-2 text-2xs font-bold uppercase tracking-[0.08em] text-muted; }
+  .table tbody td, .table tbody th { @apply border-b border-line px-3 py-2 align-top; }
+  .table tbody tr { @apply transition-colors duration-100 hover:bg-sunken; }
+
+  /* Loading placeholder */
+  .skeleton { @apply animate-shimmer rounded; background-image: linear-gradient(90deg, rgb(var(--c-line) / 0.5) 25%, rgb(var(--c-line) / 0.9) 50%, rgb(var(--c-line) / 0.5) 75%); background-size: 200% 100%; }
+}
+
+/* MapLibre controls, restyled to match the panels in both themes. */
+.maplibregl-map { font-family: inherit; }
+.maplibregl-ctrl-group { border-radius: 4px !important; background: rgb(var(--c-surface)) !important; box-shadow: 0 2px 6px rgb(var(--c-shadow) / 0.16), 0 0 0 1px rgb(var(--c-line)) !important; overflow: hidden; }
+.maplibregl-ctrl-group button { width: 32px; height: 32px; }
+.maplibregl-ctrl-group button + button { border-top: 1px solid rgb(var(--c-line)) !important; }
+:root[data-theme="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1) brightness(1.6); }
+.maplibregl-ctrl-scale { border-color: rgb(var(--c-muted)) !important; background: rgb(var(--c-surface) / 0.85) !important; color: rgb(var(--c-ink)) !important; font-size: 11px; }
+.maplibregl-ctrl-attrib { background: rgb(var(--c-surface) / 0.85) !important; color: rgb(var(--c-muted)) !important; font-size: 11px; }
+.maplibregl-ctrl-attrib a { color: rgb(var(--c-muted)) !important; }
+:root[data-theme="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }

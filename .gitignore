@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Downloaded and generated data (fetched by scripts, never committed)
+data/raw/
+data/processed/
+data/tiles/
+data/cache/
+# Restricted sources (e.g. Cartoradio, redistribution: false)
+data/restricted/
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+
+# Front end
+node_modules/
+.DS_Store
+data/model/

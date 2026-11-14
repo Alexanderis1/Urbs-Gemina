@@ -1,0 +1,66 @@
+# Assumptions used by the deterministic tools (WS4). Every number has a basis.
+
+data_kind_by_provider_kind:
+  basis: "restricted = Cartoradio, which is itself a model estimate (design proposal 9a)"
+  open: real
+  pa: real
+  simulated: simulated
+  restricted: estimated
+
+# Rule from Alessandro (13 Nov 2026): only traffic loop sensors may be simulated.
+# Any other layer whose active provider is synthetic is refused by the tools and flagged in data_status.
+allowed_simulated_layers: [traffic_flow]
+
+estimate_field:
+  baseline_layer: emf_baseline              # layer name in config/providers.yaml
+  baseline_value_keys: [electricField, e_field_v_per_m, field_v_per_m, value]   # electricField = WS5 / Smart Data Models key
+  baseline_search_radius_m: {value: 150, basis: "one and a half Cartoradio cells (100 m, about 74 m on the ground)"}
+  measurement_layer: emf_measurements      # ARPA Lazio points (real), shown as a reference, not mixed into the estimate
+  measurement_search_radius_m: {value: 500, basis: "a measurement further than a few blocks away says little about this point"}
+  baseline_sigma_db: {value: 3.0, basis: "assumption (C=60): Cartoradio publishes no uncertainty"}
+  baseline_cap_v_per_m: {value: 15.0, basis: "Cartoradio maximum sits exactly on 15.0 in the inspected tile; treat as '15 or more' (C=55)"}
+  receptor_height_m: {value: 1.5, basis: "standard head height for exposure assessment"}
+  default_antenna_height_m: {value: 25.0, basis: "assumption: rooftop mast on a 7-storey building"}
+  model: "free-space far field, isotropic (worst case, no antenna pattern, no building loss)"
+  monte_carlo: {samples: 4000, area_samples: 400, seed: 20261113, basis: "fixed seed so results are reproducible"}
+  area_max_points: {value: 400, basis: "cap on sample points for an area summary"}
+
+geocoder:
+  nominatim_url: "https://nominatim.openstreetmap.org/search"
+  user_agent: "urbs-gemina/0.1 (open-source hackathon prototype)"
+  timeout_s: 10
+  max_results: 3
+
+query_layer:
+  default_limit: 500
+  max_limit: 5000
+  window_minutes: {value: 15, basis: "one provider cadence step or more for live layers"}
+  belief_history_hours: {value: 3, basis: "readings older than a few relax time constants no longer move a belief layer"}
+  stale_feed_minutes: {value: 15, basis: "a snapshot feed older than one query window has no live readings (WS3)"}
+  aggregate_cell_m: {value: 500, basis: "citizen tier sees counts on a 500 m grid, not single sites"}
+
+api:
+  # Keys come from the environment variable URBS_API_KEYS as "key:role,key:role".
+  # No key or an unknown key means the citizen tier.
+  roles: [citizen, office]
+  # Layers whose single records are visible to the office tier only.
+  office_only_detail_layers: [antenna_register, emf_measurements]
+
+sports:                                   # wiring of the WS10 tools (Challenge 04)
+  facilities_file: processed/sports/facilities.geojson   # written by: python -m twin.modules.sports.pipeline build
+  # Population comes from data/processed/census_sections.geojson (WS1): sez_id, residents, children_0_14, municipio, zone
+
+exposure:
+  # Which thresholds.yaml entry each named threshold reads, per belief layer (WS5 layer names).
+  thresholds:
+    emf:
+      attention_value: [emf, attention_value_v_per_m]
+      exposure_limit: [emf, exposure_limit_v_per_m]
+    air_no2:
+      no2_hourly_limit: [air_quality, no2_hourly_limit_ug_m3]
+      no2_annual_limit: [air_quality, no2_annual_limit_ug_m3]
+    air_pm10:
+      pm10_daily_limit: [air_quality, pm10_daily_limit_ug_m3]
+      pm10_annual_limit: [air_quality, pm10_annual_limit_ug_m3]
+    air_pm25:
+      pm25_annual_limit: [air_quality, pm25_annual_limit_ug_m3]

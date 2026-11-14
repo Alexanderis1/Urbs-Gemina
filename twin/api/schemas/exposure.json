@@ -1,0 +1,68 @@
+{
+  "name": "exposure",
+  "description": "Residents and children living where a layer is above a legal threshold, per municipio, expected value and range.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Residents and children living where a layer is above a legal threshold, per municipio, expected value and range.",
+    "properties": {
+      "layer": {
+        "enum": [
+          "emf",
+          "air_no2",
+          "air_pm10",
+          "air_pm25"
+        ],
+        "title": "Layer",
+        "type": "string"
+      },
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "threshold": {
+        "description": "emf: attention_value | exposure_limit; air_no2: no2_hourly_limit | no2_annual_limit; air_pm10: pm10_daily_limit | pm10_annual_limit; air_pm25: pm25_annual_limit",
+        "maxLength": 60,
+        "minLength": 1,
+        "title": "Threshold",
+        "type": "string"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      }
+    },
+    "required": [
+      "layer",
+      "threshold"
+    ],
+    "title": "ExposureIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/exposure"
+  },
+  "owner": "WS5"
+}

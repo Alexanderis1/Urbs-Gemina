@@ -1,0 +1,18 @@
+{
+  "what": "Observed or reconstructed stage-discharge pairs at the Ripetta gauge after the walls (1900 onward), and flood quantiles, for validating the river flood model",
+  "data_kind": "real",
+  "pairs": [
+    {"event": "2014-01-31 base flow", "stage_m": 7.32, "discharge_m3s": 280, "source": "regional hydrographic office via Federazione Italiana Canottaggio (WS1 tiber_hydraulics.json)", "confidence": 55},
+    {"event": "2004-12", "stage_m": 10.89, "discharge_m3s": 1375, "source": "ISPRA news, Dec 2008", "confidence": 80},
+    {"event": "2008-12-12", "stage_m": 12.55, "discharge_m3s": 1800, "source": "Idrotecnica Italiana; Roma Capitale quoted 12.48 m", "confidence": 75},
+    {"event": "2012-11-14", "stage_m": 13.49, "discharge_m3s": 1933, "source": "ISPRA news, Nov 2012", "confidence": 85},
+    {"event": "1937-12-17", "stage_m": 16.90, "discharge_m3s": 2802, "source": "Calenda et al., ISPRA conference 28 Jun 2017, table of historical peaks (other sources: 16.84 m, 2750 m3/s)", "confidence": 70},
+    {"event": "1915-01", "stage_m": 16.08, "discharge_m3s": 2899, "source": "Calenda et al., ISPRA conference 28 Jun 2017", "confidence": 60},
+    {"event": "1900-12", "stage_m": 16.17, "discharge_m3s": 3106, "source": "Calenda et al., ISPRA conference 28 Jun 2017 (walls nearly complete)", "confidence": 55}
+  ],
+  "quantiles_m3s": {"T50": 2810, "T100": 3090, "T200": 3360, "T300": 3520, "T500": 3730, "T1000": 4000,
+                    "source": "Calenda et al., 'Gestione del rischio d'inondazione a Roma', ISPRA, 28 Jun 2017 (truncated Gumbel on 1400-2000 peaks)"},
+  "onset_of_flooding": {"return_period_years": 175, "discharge_m3s": 3300,
+                        "source": "Fiori et al. 2023, J. Hydrology Regional Studies 101506: in Rome flooding begins with about T=175 years; levees protect up to about T=175; Calenda 2003: walls designed for about 3300 m3/s"},
+  "pgra": "official hazard areas in flood_hazard_pgra.geojson (ISPRA mosaic v5.0): P3 frequent (T 20-50), P2 medium (T 100-200), P1 rare (up to T 500)"
+}

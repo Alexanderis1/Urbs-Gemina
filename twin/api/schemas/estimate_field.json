@@ -1,0 +1,156 @@
+{
+  "name": "estimate_field",
+  "description": "Electric field P5/P50/P95 in V/m and probability of exceeding the legal thresholds, at a point or over an area.",
+  "input_schema": {
+    "$defs": {
+      "Antenna": {
+        "additionalProperties": false,
+        "properties": {
+          "lon": {
+            "maximum": 13.1,
+            "minimum": 12.0,
+            "title": "Lon",
+            "type": "number"
+          },
+          "lat": {
+            "maximum": 42.4,
+            "minimum": 41.4,
+            "title": "Lat",
+            "type": "number"
+          },
+          "height_m": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 300,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Height above ground; default from config",
+            "title": "Height M"
+          },
+          "eirp_w": {
+            "anyOf": [
+              {
+                "maximum": 100000,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Total EIRP in watts",
+            "title": "Eirp W"
+          },
+          "band_mhz": {
+            "anyOf": [
+              {
+                "enum": [
+                  800,
+                  1800,
+                  2100,
+                  3500
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Used for a typical EIRP when eirp_w is missing (assumption)",
+            "title": "Band Mhz"
+          }
+        },
+        "required": [
+          "lon",
+          "lat"
+        ],
+        "title": "Antenna",
+        "type": "object"
+      },
+      "Variant": {
+        "additionalProperties": false,
+        "properties": {
+          "add_antennas": {
+            "items": {
+              "$ref": "#/$defs/Antenna"
+            },
+            "maxItems": 20,
+            "title": "Add Antennas",
+            "type": "array"
+          }
+        },
+        "title": "Variant",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Electric field P5/P50/P95 in V/m and probability of exceeding the legal thresholds, at a point or over an area.",
+    "properties": {
+      "point": {
+        "anyOf": [
+          {
+            "description": "[lon, lat] WGS84",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Point"
+      },
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "variant": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Variant"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Proposed change, e.g. antennas to add"
+      }
+    },
+    "title": "EstimateFieldIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/estimate_field"
+  },
+  "owner": "WS4"
+}

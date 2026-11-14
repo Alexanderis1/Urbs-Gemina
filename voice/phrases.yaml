@@ -1,0 +1,24 @@
+# Fixed sentences the voice layer adds around orchestrator answers.
+# basis: guardrails 2, 3, 6, 7 in docs/guardrails.md (AI disclosure, insufficient data,
+# uncertainty, SIMULATED badge). Wording kept short because it is spoken.
+max_spoken_chars: 700   # basis: about 45 seconds of speech; longer answers stay on screen
+it:
+  insufficient_data: "Dati insufficienti per rispondere con certezza."
+  missing_prefix: "Manca: "
+  missing_on_screen: "I dettagli su cosa manca sono sullo schermo."
+  simulated_note: "Attenzione: questa risposta usa anche dati simulati."
+  error: "Il gemello digitale non risponde in questo momento. Riprova tra poco."
+  briefing_citizen_refused: "Il briefing mattutino è riservato agli uffici. Posso rispondere a una domanda specifica."
+  briefing_intro: "Ecco il briefing del mattino per {area}."
+  briefing_outro: "Fine del briefing. Le fonti sono sullo schermo."
+  truncated: "Il resto è sullo schermo."
+en:
+  insufficient_data: "Insufficient data to answer with confidence."
+  missing_prefix: "Missing: "
+  missing_on_screen: "Details of what is missing are on screen."
+  simulated_note: "Note: this answer also uses simulated data."
+  error: "The digital twin is not responding right now. Please try again shortly."
+  briefing_citizen_refused: "The morning briefing is for offices only. I can answer a specific question."
+  briefing_intro: "Here is the morning briefing for {area}."
+  briefing_outro: "End of briefing. Sources are on screen."
+  truncated: "The rest is on screen."

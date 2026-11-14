@@ -1,0 +1,70 @@
+{
+  "name": "query_layer",
+  "description": "Values of a layer (belief, live/simulated provider, or static context layer) inside an area at a time.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Values of a layer (belief, live/simulated provider, or static context layer) inside an area at a time.",
+    "properties": {
+      "layer": {
+        "maxLength": 80,
+        "minLength": 1,
+        "title": "Layer",
+        "type": "string"
+      },
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      },
+      "time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ISO 8601; default now",
+        "title": "Time"
+      },
+      "limit": {
+        "anyOf": [
+          {
+            "maximum": 5000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Limit"
+      }
+    },
+    "required": [
+      "layer"
+    ],
+    "title": "QueryLayerIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/query_layer"
+  },
+  "owner": "WS4"
+}

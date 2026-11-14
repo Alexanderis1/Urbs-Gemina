@@ -1,0 +1,29 @@
+{
+  "name": "resolve_place",
+  "description": "Turn an address, place name or 'lat, lon' into coordinates, municipio and urban zone.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Turn an address, place name or 'lat, lon' into coordinates, municipio and urban zone.",
+    "properties": {
+      "text": {
+        "maxLength": 300,
+        "minLength": 2,
+        "title": "Text",
+        "type": "string"
+      }
+    },
+    "required": [
+      "text"
+    ],
+    "title": "ResolvePlaceIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/resolve_place"
+  },
+  "owner": "WS4"
+}
