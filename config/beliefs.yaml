@@ -109,14 +109,14 @@ layers:
 
   rain:
     sources: [rain]          # Civil Protection radar (real); rain gauges can be added as a second source
-    prior_field: {source: rain_forecast, entity_types: [WeatherForecast], value_key: precipitation, method: idw}   # Open-Meteo ICON-2I hourly forecast; radar corrects it, then fades back to it
+    prior_field: {source: rain_forecast, entity_types: [WeatherForecast], value_key: precipitation, method: idw, min_sd: 3.0}   # Open-Meteo ICON-2I hourly forecast; radar corrects it, then fades back to it
     unit: mm/h
     entity_types: [WeatherObserved]
     value_key: precipitation
     prior:
       mean: 0.2
-      sd: 1.0
-      basis: "assumption: dry most hours; to be replaced by the forecast"
+      sd: 5.0
+      basis: "assumption: dry most hours, but rain is heavy-tailed: sd 5 mm/h lets a radar cloudburst through (with sd 1 a 35 mm/h radar reading was pulled down to 7)"
     correlation_length_km: 5.0
     relax_tau_hours: 0.5
     min_value: 0
@@ -206,6 +206,12 @@ crowds:
   busy_percentile: 75
   min_agree: 2
   basis: "assumption (C=60): agreement of independent signals is more trustworthy than any single proxy"
+
+flood_watch:
+  heavy_rain_mm_h: 10        # operational, not legal: rain at this rate overwhelms street drains in short bursts
+  watch_probability: 0.3
+  warning_probability: 0.7
+  basis: "assumption (C=60): 10 mm/h is a common 'heavy rain' class (e.g. the Italian civil-protection 'forte' band starts around 10-20 mm/h); probabilities chosen to keep warnings rare"
 
 sensor_health:
   # A station is flagged when its median standardised error against its neighbours is above z_flag

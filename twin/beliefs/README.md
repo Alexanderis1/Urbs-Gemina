@@ -82,3 +82,4 @@ These live in `config/beliefs.yaml`, so a provider with different names needs on
 |---|---|---|
 | People exposed above a threshold | layer x ISTAT 2021 residents and children per cell, by municipio: expected = sum(residents x P(above)); low/high = whole field at P5/P95 | `exposure.exposure` (census via `crowds.census_per_cell`) |
 | Sensor health | leave-one-out prediction of each station from its neighbours; flag median abs z > 3 over 3+ moments, worst first, then re-check | `calibration.sensor_health`, `api.check_sensors` |
+| Flash-flood watch | rain layer P(> 10 mm/h) x ISPRA/PGRA hazard zones (worst class per cell) x OSM road underpasses; "watch" at 30%, "warning" at 70% | `flood.flood_watch` |

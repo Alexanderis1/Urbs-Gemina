@@ -142,6 +142,8 @@ def prior_layer(
                 sigmas = np.array([sd for _, sd in cell_vals])
                 offset[i] = float(values.mean()) - base
                 prior_var[i] = max(float(np.mean(sigmas**2) + values.var()), 1e-6 * spec.prior.variance)
+    if prior_field is not None and spec.prior_field is not None and spec.prior_field.min_sd > 0.0:
+        prior_var = np.maximum(prior_var, spec.prior_field.min_sd**2)
     return BeliefLayer(
         spec=spec,
         resolution=res,

@@ -49,6 +49,8 @@ class FieldSpec:
     #: "bin" = average the map values inside each cell (fine maps like Cartoradio);
     #: "idw" = inverse-distance interpolation to every cell (coarse maps like the CAMS lattice).
     method: str = "bin"
+    #: Floor on the map's error, for maps that understate it (a rain forecast misses cloudbursts).
+    min_sd: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -157,6 +159,7 @@ def load_specs(config_dir: Path = CONFIG_DIR) -> dict[str, LayerSpec]:
                 entity_types=tuple(str(t) for t in field["entity_types"]),
                 value_key=str(field["value_key"]),
                 method=str(field.get("method", "bin")),
+                min_sd=float(field.get("min_sd", 0.0)),
             ),
             allow_simulated=bool(entry.get("allow_simulated", False)),
             aggregate=str(entry.get("aggregate", "none")),
