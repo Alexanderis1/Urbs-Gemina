@@ -35,5 +35,5 @@ def test_every_checked_model_says_how_it_was_checked() -> None:
 
     cfg = config.load("scenarios.yaml")
     for kind, word in (("river_flood", "PGRA"), ("rain_flood", "cloudbursts"), ("chemical_plume", "FAC2"),
-                       ("heatwave", "literature"), ("emergency_access", "118")):
+                       ("heatwave", "stations"), ("emergency_access", "118")):
         assert word in str(config.value(cfg[kind], "calibration")), kind

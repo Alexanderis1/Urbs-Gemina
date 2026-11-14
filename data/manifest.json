@@ -174,78 +174,6 @@
       "redistribution": true,
       "status": "removed 2026-11-13 (rule: only road loops are simulated)"
     },
-    "istat_census": {
-      "kind": "real",
-      "what": "ISTAT 2021 census sections of Roma Capitale (basi territoriali, Lazio file) joined with residents and age classes per section (census at 31 Dec 2021)",
-      "endpoint": "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip ; https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip",
-      "access": "zip download, no key",
-      "licence": "CC BY 4.0 (C=80)",
-      "redistribution": true,
-      "status": "verified (both downloaded 2026-11-13)"
-    },
-    "derived": {
-      "kind": "real",
-      "what": "Layers built from other processed layers by twin/ingest (e.g. the merged sensitive_sites layer); data_kind is inherited from the inputs",
-      "endpoint": "twin/ingest/sensitive_sites.py",
-      "access": "generated from data/processed",
-      "licence": "inherits the licences of its inputs (CC BY for Roma/ISTAT layers, ODbL for OSM rows)",
-      "redistribution": true,
-      "status": "implemented"
-    },
-    "lazio_open_data": {
-      "kind": "real",
-      "what": "Regione Lazio open data portal (CKAN): accredited private health facilities with coordinates",
-      "endpoint": "https://dati.lazio.it",
-      "access": "CSV download, no key",
-      "licence": "Regione Lazio open data; licence not stated on this dataset (C=60), facility names and positions only are kept",
-      "redistribution": true,
-      "status": "verified (downloaded 2026-11-13)"
-    },
-    "indicepa": {
-      "kind": "real",
-      "what": "IndicePA (IPA), national register of public administrations: head-office addresses, geocoded offline on OSM addr:* tags",
-      "endpoint": "https://indicepa.gov.it/ipa-dati",
-      "access": "CKAN text download, no key",
-      "licence": "CC BY 4.0 (C=80)",
-      "redistribution": true,
-      "status": "verified (downloaded 2026-11-13)"
-    },
-    "ispra_flood": {
-      "kind": "real",
-      "what": "ISPRA national mosaic of flood hazard areas, PGRA scenarios P3/P2/P1 (v5.0, 2020)",
-      "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer",
-      "access": "ArcGIS REST query, no key",
-      "licence": "CC BY-SA 4.0",
-      "redistribution": true,
-      "status": "verified (downloaded 2026-11-13); the sdi.isprambiente.it WFS resets cloud connections"
-    },
-    "copernicus_hrl": {
-      "kind": "real",
-      "what": "Copernicus HRL Imperviousness Density 2018 (share of sealed soil, 0-100 %)",
-      "endpoint": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer",
-      "access": "ArcGIS ImageServer exportImage, no key",
-      "licence": "Copernicus open data, free reuse with attribution",
-      "redistribution": true,
-      "status": "verified (downloaded 2026-11-13)"
-    },
-    "salute_open_data": {
-      "kind": "real",
-      "endpoint": "https://www.dati.salute.gov.it",
-      "access": "CSV download, no key",
-      "licence": "Italian Open Data Licence v2.0",
-      "redistribution": true,
-      "status": "verified (downloaded 2026-11-13)",
-      "what": "Ministry of Health open data: hospital beds per structure 2023, family health centres 2022, national pharmacy register (daily); addresses geocoded offline on OSM"
-    },
-    "salute_asl": {
-      "kind": "real",
-      "endpoint": "https://www.dati.salute.gov.it",
-      "access": "CSV download, no key",
-      "licence": "Italian Open Data Licence v2.0",
-      "redistribution": true,
-      "status": "verified (downloaded 2026-11-13)",
-      "what": "Ministry of Health open data: ASL-municipio correspondence with residents 2024 and ASL structures/activity 2022, joined to the Roma Capitale municipi"
-    },
     "sim_applications": {
       "kind": "simulated",
       "what": "Demonstration inbox of new-installation applications",
@@ -380,6 +308,88 @@
       "licence": "public administration document",
       "redistribution": true,
       "status": "verified"
+    },
+    "asti_network_stations": {
+      "name": "ASTI-Network Rome weather stations, hourly, summers 2019-2020 (Cecilia et al., CNR-ISAC)",
+      "kind": "real",
+      "use": "heatwave calibration and validation (scripts/validate_heat.py); daily max/min per station in processed/asti_stations_daily.csv",
+      "endpoint": "https://zenodo.org/records/19454855/files/ASTI-Network_2019-2020_JJA.zip?download=1",
+      "access": "zip, 19.8 MB, md5 0a038685c086d917ca9e705ba6a7e3af; README (contains the author's contact) not kept",
+      "licence": "CC BY 4.0",
+      "redistribution": true,
+      "status": "verified"
+    },
+    "istat_census": {
+      "kind": "real",
+      "what": "ISTAT 2021 census sections of Roma Capitale (basi territoriali, Lazio file) joined with residents and age classes per section (census at 31 Dec 2021)",
+      "endpoint": "https://www.istat.it/storage/cartografia/basi_territoriali/2021/R12_21.zip ; https://esploradati.istat.it/databrowser/DWL/PERMPOP/SUBCOM/Comuni_2021.zip",
+      "access": "zip download, no key",
+      "licence": "CC BY 4.0 (C=80)",
+      "redistribution": true,
+      "status": "verified (both downloaded 2026-11-13)"
+    },
+    "derived": {
+      "kind": "real",
+      "what": "Layers built from other processed layers by twin/ingest (e.g. the merged sensitive_sites layer); data_kind is inherited from the inputs",
+      "endpoint": "twin/ingest/sensitive_sites.py",
+      "access": "generated from data/processed",
+      "licence": "inherits the licences of its inputs (CC BY for Roma/ISTAT layers, ODbL for OSM rows)",
+      "redistribution": true,
+      "status": "implemented"
+    },
+    "lazio_open_data": {
+      "kind": "real",
+      "what": "Regione Lazio open data portal (CKAN): accredited private health facilities with coordinates",
+      "endpoint": "https://dati.lazio.it",
+      "access": "CSV download, no key",
+      "licence": "Regione Lazio open data; licence not stated on this dataset (C=60), facility names and positions only are kept",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
+    },
+    "indicepa": {
+      "kind": "real",
+      "what": "IndicePA (IPA), national register of public administrations: head-office addresses, geocoded offline on OSM addr:* tags",
+      "endpoint": "https://indicepa.gov.it/ipa-dati",
+      "access": "CKAN text download, no key",
+      "licence": "CC BY 4.0 (C=80)",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
+    },
+    "ispra_flood": {
+      "kind": "real",
+      "what": "ISPRA national mosaic of flood hazard areas, PGRA scenarios P3/P2/P1 (v5.0, 2020)",
+      "endpoint": "https://sinacloud.isprambiente.it/arcgisina/rest/services/Alluvioni/Aree_pericolosita_idraulica_/MapServer",
+      "access": "ArcGIS REST query, no key",
+      "licence": "CC BY-SA 4.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13); the sdi.isprambiente.it WFS resets cloud connections"
+    },
+    "copernicus_hrl": {
+      "kind": "real",
+      "what": "Copernicus HRL Imperviousness Density 2018 (share of sealed soil, 0-100 %)",
+      "endpoint": "https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer",
+      "access": "ArcGIS ImageServer exportImage, no key",
+      "licence": "Copernicus open data, free reuse with attribution",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)"
+    },
+    "salute_open_data": {
+      "kind": "real",
+      "endpoint": "https://www.dati.salute.gov.it",
+      "access": "CSV download, no key",
+      "licence": "Italian Open Data Licence v2.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)",
+      "what": "Ministry of Health open data: hospital beds per structure 2023, family health centres 2022, national pharmacy register (daily); addresses geocoded offline on OSM"
+    },
+    "salute_asl": {
+      "kind": "real",
+      "endpoint": "https://www.dati.salute.gov.it",
+      "access": "CSV download, no key",
+      "licence": "Italian Open Data Licence v2.0",
+      "redistribution": true,
+      "status": "verified (downloaded 2026-11-13)",
+      "what": "Ministry of Health open data: ASL-municipio correspondence with residents 2024 and ASL structures/activity 2022, joined to the Roma Capitale municipi"
     },
     "mim_school_buildings": {
       "kind": "real",

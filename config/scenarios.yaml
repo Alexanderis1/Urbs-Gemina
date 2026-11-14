@@ -15,7 +15,7 @@ cache:
   basis: "results are cached by run id so the demo never waits on a slow run"
 
 antenna:
-  heavy: false                # free-space model is cheap, allowed on the whole city
+  heavy: false                # CPU field engine near the site, free space beyond: cheap enough for the whole city
   model: free_space_isotropic
   radius_m:
     value: 300
@@ -35,6 +35,12 @@ antenna:
   exceedance_report_probability:
     value: 0.05
     basis: "assumption: a point is flagged when the chance of exceeding a threshold is 5% or more"
+  physics_reach_m:
+    value: 600
+    basis: "twin/physics loads city-model buildings 600 m around a site (api.WINDOW_M); beyond it the free-space worst case is used"
+  traced_reach_m:
+    value: 290
+    basis: "Sionna ray-traced maps cover 300 m around a traced site (config/physics.yaml); points within this distance go to the engine in their own batch so the traced maps can be used for them"
 
 population_exposure:
   heavy: false
@@ -389,11 +395,11 @@ heatwave:
     basis: "ICON-2I grid spacing: the forecast is read as the average of this neighbourhood, and local differences are added around it"
   coefficients:
     value:
-      day: {impervious: [0.5, 0.5], trees: [0.5, 0.5]}
-      night: {impervious: [3.5, 0.5], trees: [1.2, 0.6]}
-    basis: "literature calibration (C=60): °C change for going from 0 to 100 % sealed ground or tree cover, relative to the neighbourhood average; [mean, sigma]. Rome measurements: night temperature rises linearly with Copernicus imperviousness, 3.4 °C (17 stations, summers 2019-2020; Cecilia et al. 2022, Urban Climate 47:101355, r=0.81 with Tmin, r=0.17 with Tmax) and 3.6 °C (bus-mounted sensors, 53 summer days, 500 m grid; Cecilia et al. 2026, Urban Climate 102832). Daytime contrasts are negligible because the sea breeze ventilates the city; tree canopy cools only in the early morning, up to 0.5 °C for 40 % cover (same 2026 study). The tree term is the extra cooling beyond what imperviousness explains, so its night value is small. Not yet re-fitted on the raw station data (ASTI-Network dataset, Zenodo 19454855)"
+      day: {impervious: [0.0, 0.3], trees: [0.3, 0.3]}
+      night: {impervious_city: [2.9, 0.6], impervious: [0.6, 0.4], trees: [1.2, 0.6]}
+    basis: "station calibration (C=65), °C for going from 0 to 100 %; [mean, sigma]. impervious_city: sealing of the 2.2 km forecast cell, added because the forecast carries no heat island (ICON-2I gives Porta Maggiore only 0.1-0.3 °C warmer at night than the Appia Antica park, on 14 Nov 2026, against about 2 °C in summer station data). impervious / trees: difference of the 100 m cell from that district. Fitted on 17 ASTI-Network rooftop stations, 184 summer days 2019-2020 (scripts/validate_heat.py, eval/scenarios/heat_validation.json): night minimum, district 2.9 and local 0.6, leave-one-station-out error 0.48 °C against 0.69 °C with no model; district sealing explains Rome's nights far better than the block itself, matching Cecilia et al. 2022 (3.4 °C on 1.4 km sealing). Daytime maximum: no reading beats 'every station equals the average' (0.56 °C), so day terms are near zero (sea breeze; Cecilia et al. 2026): the hot-day map follows the forecast. Trees: rooftop stations cannot see canopy cooling, so the street-level value of the bus-sensor study is kept (0.5 °C for 40 % cover at dawn)"
   calibration:
-    value: "literature: Rome station network 2019-2020 and bus-mounted sensors (Cecilia et al. 2022, 2026); not re-fitted on raw data"
+    value: "stations: night minimum fitted on 17 Rome stations, summers 2019-2020, error 0.48 °C on stations left out (0.69 °C without the model); daytime differences are not predicted better than the forecast alone"
     basis: "shown with every result so users know how far the numbers were checked"
   forecast_sigma_c:
     value: 1.5

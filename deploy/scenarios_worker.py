@@ -18,6 +18,9 @@ import modal
 APP_DIR = "/root/app"
 image = (
     modal.Image.debian_slim(python_version="3.12")
+    # eclipse-sumo's binaries (sumo, duarouter) link X11 and GL even without a GUI; without these
+    # duarouter dies silently and randomTrips --validate finds no routes.rou.xml.
+    .apt_install("libx11-6", "libxext6", "libxrender1", "libgl1", "libatomic1")
     .pip_install("PyYAML>=6", "numpy>=1.26", "scipy>=1.10", "rasterio>=1.3", "eclipse-sumo>=1.20",
                  "httpx>=0.27", "pyarrow>=14", "gtfs-realtime-bindings>=1.0", "protobuf>=4")
     .env({"PYTHONPATH": APP_DIR, "URBS_ROOT": APP_DIR})
