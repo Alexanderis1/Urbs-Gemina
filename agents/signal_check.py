@@ -52,7 +52,7 @@ def http_fetch_photo(url: str, max_bytes: int) -> tuple[bytes, str]:
     return data, media
 
 
-def _parse(text: str) -> dict[str, Any]:
+def parse_json_answer(text: str) -> dict[str, Any]:
     match = re.search(r"\{.*\}", text, flags=re.DOTALL)
     if not match:
         return {}
@@ -113,7 +113,7 @@ def verify_event(event: Mapping[str, Any], *, place: str | None, photo_urls: Seq
     }
     model = llm or AnthropicLLM(str(vcfg.get("model_role", "signals")), config=acfg)
     turn = model.step(SYSTEM, [{"role": "user", "content": [*images, {"type": "text", "text": json.dumps(brief, ensure_ascii=False)}]}], [])
-    answer = _parse(turn.text)
+    answer = parse_json_answer(turn.text)
     photo = answer.get("photo") if answer.get("photo") in PHOTO_VERDICTS else "unclear"
     news_verdict = answer.get("news") if answer.get("news") in NEWS_VERDICTS else "no_match"
     if not images:

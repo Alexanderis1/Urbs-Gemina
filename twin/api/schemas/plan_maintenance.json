@@ -1,0 +1,141 @@
+{
+  "name": "plan_maintenance",
+  "description": "Office only. Plan road and sewer crews for reported problems (most urgent first, least driving), vs one trip each.",
+  "input_schema": {
+    "$defs": {
+      "MaintenanceEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "category": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Category",
+            "type": "string"
+          },
+          "category_label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category Label"
+          },
+          "lon": {
+            "maximum": 13.1,
+            "minimum": 12.0,
+            "title": "Lon",
+            "type": "number"
+          },
+          "lat": {
+            "maximum": 42.4,
+            "minimum": 41.4,
+            "title": "Lat",
+            "type": "number"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confidence"
+          },
+          "scored": {
+            "default": true,
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "confirmed": {
+            "default": false,
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "n_reports": {
+            "default": 1,
+            "maximum": 1000,
+            "minimum": 1,
+            "title": "N Reports",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "lon",
+          "lat"
+        ],
+        "title": "MaintenanceEvent",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Office only. Plan road and sewer crews for reported problems (most urgent first, least driving), vs one trip each.",
+    "properties": {
+      "events": {
+        "items": {
+          "$ref": "#/$defs/MaintenanceEvent"
+        },
+        "maxItems": 300,
+        "title": "Events",
+        "type": "array"
+      },
+      "crews": {
+        "additionalProperties": {
+          "type": "integer"
+        },
+        "propertyNames": {
+          "enum": [
+            "roads",
+            "sewers"
+          ]
+        },
+        "title": "Crews",
+        "type": "object"
+      },
+      "shift_hours": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "maximum": 12,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Shift Hours"
+      }
+    },
+    "required": [
+      "events"
+    ],
+    "title": "PlanMaintenanceIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/plan_maintenance"
+  },
+  "owner": "citizen-reports"
+}

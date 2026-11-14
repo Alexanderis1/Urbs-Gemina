@@ -14,11 +14,11 @@
           },
           "category": {
             "enum": [
-              "congestion",
               "flood",
-              "fire",
-              "emergency",
-              "other"
+              "pothole",
+              "traffic",
+              "roadworks",
+              "public_event"
             ],
             "title": "Category",
             "type": "string"

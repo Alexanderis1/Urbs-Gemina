@@ -38,7 +38,7 @@ def cfg() -> dict[str, Any]:
 
 
 def test_config_has_every_category_and_a_basis(cfg: dict[str, Any]) -> None:
-    for cat in ("congestion", "flood", "fire", "emergency", "other"):
+    for cat in ("flood", "pothole", "traffic", "roadworks", "public_event"):
         assert cfg["categories"][cat]["radius_m"] > 0
         assert cat in cfg["twin_checks"]
     assert "basis" in cfg["confidence"] and "basis" in cfg["categories"]
@@ -52,9 +52,9 @@ def test_nearby_reports_of_same_category_merge(cfg: dict[str, Any]) -> None:
 
 
 def test_far_apart_or_other_category_or_late_reports_stay_separate(cfg: dict[str, Any]) -> None:
-    raw = [rep("a"), rep("far", east=2000), rep("fire", category="fire", minute=1),
-           rep("late", category="emergency", minute=0), rep("late2", category="emergency", minute=0)]
-    raw[-1]["time"] = "2026-11-14T08:00:00Z"  # 3 h later, window is 60 min
+    raw = [rep("a"), rep("far", east=2000), rep("fire", category="pothole", minute=1),
+           rep("late", category="traffic", minute=0), rep("late2", category="traffic", minute=0)]
+    raw[-1]["time"] = "2026-11-14T08:00:00Z"  # 3 h later, window is 90 min
     clusters = cluster_reports(parse_reports(raw, cfg), cfg)
     assert sorted(len(c.report_ids) for c in clusters) == [1, 1, 1, 1, 1]
 
@@ -100,7 +100,7 @@ def test_twin_and_checks_move_confidence_both_ways(cfg: dict[str, Any]) -> None:
 
 
 def test_twin_evidence_reads_layers_and_labels_simulated(cfg: dict[str, Any]) -> None:
-    [c] = cluster_reports(parse_reports([rep("a", category="congestion")], cfg), cfg)
+    [c] = cluster_reports(parse_reports([rep("a", category="traffic")], cfg), cfg)
     calls: list[str] = []
 
     def read_layer(layer: str, area: dict[str, Any]) -> dict[str, Any]:
@@ -129,12 +129,12 @@ def test_twin_read_failure_never_crashes(cfg: dict[str, Any]) -> None:
 
 
 def test_signal_events_result_is_anonymous_and_sorted(cfg: dict[str, Any]) -> None:
-    raw = [rep("a"), rep("b", minute=2), rep("z", category="fire", east=3000)]
+    raw = [rep("a"), rep("b", minute=2), rep("z", category="pothole", east=3000)]
     out = signal_events(raw, cfg, now="2026-11-14T05:30:00Z")
     events = out["events"]
     assert [e["n_reports"] for e in events] == [2, 1]  # most confident first
     first = events[0]
-    assert first["id"].startswith("sig-") and first["category_label"] == "Allagamento"
+    assert first["id"].startswith("sig-") and first["category_label"] == "Allagamento o fogna"
     assert "r-a" not in str(first) and "r-b" not in str(first)  # reporter keys never leave the tool
     assert first["texts"] == ["acqua alta", "acqua alta"]
     assert first["stale"] is False
@@ -220,3 +220,35 @@ def test_mismatched_photo_does_not_raise_confidence(cfg: dict[str, Any]) -> None
     assert p_good["confidence"] > p_bad["confidence"]
     assert p_bad["n_location_mismatch"] == 2 and p_good["n_location_match"] == 2
     assert p_bad["confidence"] <= cfg["confidence"]["prior"] + 1e-9
+
+
+# --- round 2 (14 Nov): Alessandro's report types -------------------------------------------------------------
+
+def test_public_events_are_listed_without_a_score(cfg: dict[str, Any]) -> None:
+    raw = [rep("e1", category="public_event"), rep("e2", category="public_event", minute=4)]
+    [event] = signal_events(raw, cfg, now="2026-11-14T05:30:00Z")["events"]
+    assert event["scored"] is False and event["confidence"] is None and event["level"] == "not_scored"
+    assert event["n_reports"] == 2
+
+
+def test_subtypes_are_counted(cfg: dict[str, Any]) -> None:
+    raw = [{**rep("a", category="traffic"), "subtype": "bus"}, {**rep("b", category="traffic", minute=2), "subtype": "bus"},
+           {**rep("c", category="traffic", minute=3), "subtype": "incident"}, {**rep("d", category="traffic", minute=4), "subtype": "nonsense"}]
+    out = signal_events(raw, cfg, now="2026-11-14T05:30:00Z")
+    [event] = out["events"]
+    assert event["subtypes"] == {"bus": 2, "incident": 1}
+    assert event["n_reports"] == 4  # an unknown subtype keeps the report, without the subtype
+
+
+def test_potholes_a_week_apart_are_the_same_hole(cfg: dict[str, Any]) -> None:
+    a = rep("a", category="pothole")
+    b = {**rep("b", category="pothole", east=10), "time": "2026-11-18T05:00:00Z"}
+    far = {**rep("c", category="pothole", east=80), "time": "2026-11-14T06:00:00Z"}
+    events = signal_events([a, b, far], cfg, now="2026-11-18T06:00:00Z")["events"]
+    assert sorted(e["n_reports"] for e in events) == [1, 2]
+
+
+def test_screen_report_tool_is_office_only() -> None:
+    client = _client()
+    body = {"category": "pothole", "text": "Buca davanti al civico 3"}
+    assert client.post("/tools/screen_report", json=body).json()["status"] == "refused"

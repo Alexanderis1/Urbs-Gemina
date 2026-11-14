@@ -65,6 +65,8 @@
   }
 
   html, body, #root { height: 100%; }
+  /* The app fills the window and scrolls inside its own panels; the page itself never scrolls away from the header. */
+  body { overflow: hidden; }
   body { @apply bg-canvas font-sans text-ink antialiased; font-feature-settings: "tnum" 1, "lnum" 1; }
   h1, h2, h3 { @apply font-semibold tracking-tight; }
   a { @apply text-link underline-offset-2; }

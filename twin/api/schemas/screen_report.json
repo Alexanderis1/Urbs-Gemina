@@ -1,0 +1,67 @@
+{
+  "name": "screen_report",
+  "description": "Office only (called by the Lovable Cloud function when a resident sends a report): Claude screens it first.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Office only (called by the Lovable Cloud function when a resident sends a report): Claude screens it first.",
+    "properties": {
+      "category": {
+        "enum": [
+          "flood",
+          "pothole",
+          "traffic",
+          "roadworks",
+          "public_event"
+        ],
+        "title": "Category",
+        "type": "string"
+      },
+      "subtype": {
+        "anyOf": [
+          {
+            "maxLength": 40,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Subtype"
+      },
+      "text": {
+        "default": "",
+        "maxLength": 280,
+        "title": "Text",
+        "type": "string"
+      },
+      "photo_url": {
+        "anyOf": [
+          {
+            "maxLength": 2000,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "short-lived signed URL from Lovable Cloud storage",
+        "title": "Photo Url"
+      }
+    },
+    "required": [
+      "category"
+    ],
+    "title": "ScreenReportIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/screen_report"
+  },
+  "owner": "citizen-reports"
+}

@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import { PolygonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import { PolygonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { AlertTriangle, Building2, Map as MapIcon, type LucideIcon } from "lucide-react";
 import { CityMap, type MapFocus } from "@/map/CityMap";
 import { AreaPicker } from "@/components/AreaPicker";
 import { RunMeta } from "@/components/RunMeta";
+import { ResourceDetail, ResourceHover } from "@/components/MarkerCard";
+import { markerLayers, pickedMarker, type Marker } from "@/map/markers";
+import { describeResource, layerGlyph } from "@/lib/resource";
+import { TWIN_START_ZOOM } from "@/lib/twinOverlay";
 import { KindBadge } from "@/components/Badge";
 import { Callout, Field, LegendRamp, MapFloat, Panel, Section, Skeleton, Spinner, Workspace } from "@/components/ui";
 import { areaLabel, areaToArg, type Area } from "@/lib/area";
@@ -17,14 +21,12 @@ import {
   areaBounds,
   areaForLayer,
   availableMetrics,
-  describeItem,
-  dotRadiusPx,
   firstSentence,
   formatValue,
   metricInfo,
+  MAX_VALUE_LABELS,
   normalizeLayer,
   pointStyle,
-  showValueLabels,
   valueExtent,
   type MapData,
   type MapItem,
@@ -80,14 +82,14 @@ const T = texts({
     emptyArea: "No data in this area right now",
     incomplete: (shown: string, total: string, things: string) =>
       `Thinned view: ${shown} of ${total} ${things}, picked evenly across the area. Pick a municipio, an urban zone or draw an area to see them all.`,
-    onePer: "One dot per",
+    onePer: "One marker per",
     site: "site",
     record: "record",
     valueShown: "Value shown",
     sameEverywhere: "Same value everywhere:",
-    biggerDot: "Bigger dot = more sites.",
+    biggerDot: "Taller column = more sites.",
     faded: "Faded = less certain",
-    outlined: "Outlined = simulated",
+    outlined: "Purple outline = simulated",
   },
   it: {
     cellsWord: "celle",
@@ -129,14 +131,14 @@ const T = texts({
     emptyArea: "Nessun dato in quest'area adesso",
     incomplete: (shown: string, total: string, things: string) =>
       `Vista ridotta: ${shown} di ${total} ${things}, scelti in modo uniforme nell'area. Scegli un municipio, una zona urbanistica o disegna un'area per vederli tutti.`,
-    onePer: "Un punto per",
+    onePer: "Un segnaposto per",
     site: "sito",
     record: "record",
     valueShown: "Valore mostrato",
     sameEverywhere: "Stesso valore ovunque:",
-    biggerDot: "Punto più grande = più siti.",
+    biggerDot: "Colonna più alta = più siti.",
     faded: "Sbiadito = meno certo",
-    outlined: "Con contorno = simulato",
+    outlined: "Contorno viola = simulato",
   },
 });
 
@@ -158,7 +160,7 @@ function LayerRow({
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-start gap-2.5 rounded border px-2.5 py-1.5 transition-colors duration-150 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-link ${
+      className={`relative flex cursor-pointer items-start gap-2.5 rounded border px-2.5 py-1.5 transition-colors duration-150 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-link ${
         checked ? "border-link bg-primary-soft" : "border-transparent hover:border-line hover:bg-sunken"
       }`}
     >
@@ -172,9 +174,6 @@ function LayerRow({
     </label>
   );
 }
-
-/** "#rrggbb" to [r, g, b], for a deck.gl outline in the panel surface colour. */
-const hexRgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
 
 /** Legend title from the data itself: the value's plain name, cell size and unit. */
 function legendTitle(d: MapData): string {
@@ -207,7 +206,11 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const [drawing, setDrawing] = useState(false);
   const [draft, setDraft] = useState<[number, number][]>([]);
   const [radius, setRadius] = useState<{ lon: number; lat: number; radius_m: number } | null>(null);
-  const [hover, setHover] = useState<{ x: number; y: number; item: MapItem } | null>(null);
+  const [hover, setHover] = useState<{ x: number; y: number; item: MapItem; id?: string } | null>(null);
+  /** The thing whose detail card is open (after a click or tap). */
+  const [selected, setSelected] = useState<{ item: MapItem; id?: string } | null>(null);
+  const [zoom, setZoom] = useState<number>(TWIN_START_ZOOM);
+  const [camera, setCamera] = useState<MapFocus | null>(null);
   /** The value shown, for layers whose sensors report several. Null = the usual one. */
   const [metric, setMetric] = useState<string | null>(null);
   useEffect(() => setMetric(null), [layer]);
@@ -240,6 +243,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
 
   useEffect(() => {
     setHover(null);
+    setSelected(null);
     if (!layer) {
       setBusy(false);
       return setEnv(null);
@@ -263,13 +267,33 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const data = useMemo(() => (env && isOk(env) ? normalizeLayer(env.result, metric ?? undefined) : null), [env, metric]);
   // The camera frames the municipio, zone or drawn area the answer is for. Keyed on the box, so a reload does not move it again.
   const boundsKey = env && isOk(env) ? JSON.stringify(areaBounds(env.result)) : "null";
-  const focus = useMemo<MapFocus | null>(() => {
+  useEffect(() => {
     const bounds = JSON.parse(boundsKey) as ReturnType<typeof areaBounds>;
-    return bounds ? { bounds, pitch: 45 } : null;
+    setCamera(bounds ? { bounds, pitch: 45 } : null);
   }, [boundsKey]);
   const extent = useMemo(() => (data ? valueExtent(data.items) : null), [data]);
   // Fading only means something when the tool returned an uncertainty for at least one item.
   const hasUncertainty = useMemo(() => !!data?.items.some((i) => i.uncertainty > 0), [data]);
+
+  // Points become 3D markers on the city model: a column from the exact spot, a badge or the value on top.
+  const markers = useMemo<Marker<MapItem>[]>(() => {
+    if (!data || data.kind !== "points" || !extent) return [];
+    const { min: lo, max: hi } = extent;
+    const norm = (v: number) => (hi > lo ? (v - lo) / (hi - lo) : 0.5);
+    const style = pointStyle(data);
+    const glyph = layerGlyph(layer);
+    // A handful of readings: write each value on its column, so nobody has to hover to read the city.
+    const written = style !== "sites" && data.items.length <= MAX_VALUE_LABELS;
+    return data.items.map((i, n) => ({
+      id: i.id ?? String(n),
+      position: i.position!,
+      color: style === "sites" ? palette.point : rampColor(norm(i.value)),
+      level: style === "sites" ? null : norm(i.value),
+      ...(written ? { text: formatValue(i.value) } : { glyph }),
+      synthetic: i.synthetic,
+      data: i,
+    }));
+  }, [data, extent, layer, palette]);
 
   const layers = useMemo(() => {
     const out: Layer[] = [];
@@ -281,7 +305,6 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
       const floor = ALPHA_FLOOR[theme];
       const alpha = (i: MapItem) =>
         showUncertainty ? confidenceAlpha(i.value ? i.uncertainty / Math.abs(i.value) : i.uncertainty, maxU, floor) : 200;
-      const dark = theme === "dark";
       if (data.kind === "hex") {
         out.push(
           new H3HexagonLayer<MapItem>({
@@ -300,57 +323,23 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
             updateTriggers: { getFillColor: [showUncertainty, lo, hi, maxU, theme], getLineColor: [lo, hi] },
           }),
         );
-      } else {
-        const style = pointStyle(data);
-        const sized = style === "sized";
-        const site = style === "sites";
-        // Dark edge on the light map, light edge on the dark one: a dot stands out from the buildings under it.
-        const edge = hexRgb(palette.text.ink);
-        out.push(
-          new ScatterplotLayer<MapItem>({
-            id: "points",
-            data: data.items,
-            getPosition: (i) => i.position!,
-            // Dots stay solid enough to read over the buildings, even when the reading is uncertain.
-            getFillColor: (i) => (site ? [...palette.point, 230] : [...rampColor(norm(i.value)), Math.max(alpha(i), 190)]),
-            getRadius: (i) => (sized ? Math.sqrt(i.value) * 70 : 40),
-            radiusUnits: "meters",
-            radiusMinPixels: dotRadiusPx(data.items.length),
-            stroked: true,
-            getLineColor: (i) => (i.synthetic ? [...palette.simulated, 255] : [...edge, dark ? 230 : 190]),
-            lineWidthMinPixels: 1,
-            getLineWidth: (i) => (i.synthetic ? 2.5 : 1.5),
-            lineWidthUnits: "pixels",
-            pickable: true,
-            updateTriggers: {
-              getFillColor: [showUncertainty, lo, hi, maxU, theme, data.metric],
-              getLineColor: [theme],
-            },
-          }),
-        );
-        // A handful of sensors: write each value next to its dot, so nobody has to hover to read the city.
-        if (showValueLabels(data)) {
-          out.push(
-            new TextLayer<MapItem>({
-              id: "point-values",
-              data: data.items,
-              getPosition: (i) => i.position!,
-              getText: (i) => formatValue(i.value),
-              getSize: 12,
-              getColor: [...edge, 255],
-              getPixelOffset: [0, -20],
-              fontFamily: '"Titillium Web", sans-serif',
-              fontWeight: 600,
-              background: true,
-              getBackgroundColor: [...hexRgb(palette.surface), 235],
-              getBorderColor: [...edge, 90],
-              getBorderWidth: 1,
-              backgroundPadding: [5, 2],
-              updateTriggers: { getText: [data.metric], getColor: [theme], getBackgroundColor: [theme], getBorderColor: [theme] },
-            }),
-          );
-        }
       }
+    }
+    out.push(...markerLayers(markers, { id: "pts", zoom, palette, selectedId: selected?.id, hoveredId: hover?.id }));
+    if (data?.kind === "hex" && selected?.item.h3) {
+      out.push(
+        new H3HexagonLayer<MapItem>({
+          id: "belief-selected",
+          data: [selected.item],
+          getHexagon: (c) => c.h3!,
+          filled: false,
+          extruded: false,
+          stroked: true,
+          getLineColor: [...accent, 255],
+          lineWidthUnits: "pixels",
+          getLineWidth: 3,
+        }),
+      );
     }
     if (radius) {
       out.push(
@@ -391,7 +380,7 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
       );
     }
     return out;
-  }, [data, extent, showUncertainty, area, draft, drawing, radius, theme, palette]);
+  }, [data, extent, markers, zoom, selected, hover?.id, showUncertainty, area, draft, drawing, radius, theme, palette]);
 
   const toggleDraw = () => {
     if (drawing && draft.length >= 3) {
@@ -402,9 +391,18 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   };
 
   const onHover = (info: PickingInfo) => {
-    const id = info.layer?.id;
-    if (info.object && (id === "belief" || id === "points")) setHover({ x: info.x, y: info.y, item: info.object as MapItem });
+    const marker = pickedMarker<MapItem>(info, "pts");
+    if (marker) setHover({ x: info.x, y: info.y, item: marker.data, id: marker.id });
+    else if (info.object && info.layer?.id === "belief") setHover({ x: info.x, y: info.y, item: info.object as MapItem });
     else setHover(null);
+  };
+  const onPick = (info: PickingInfo) => {
+    if (drawing) return;
+    const marker = pickedMarker<MapItem>(info, "pts");
+    if (marker) setSelected({ item: marker.data, id: marker.id });
+    else if (info.object && info.layer?.id === "belief") setSelected({ item: info.object as MapItem });
+    else setSelected(null);
+    setHover(null);
   };
 
   const kind = layer && env ? env.data_kinds[layer] : undefined;
@@ -413,7 +411,8 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
   const refusal = env && !isOk(env) ? firstSentence(env.reason ?? t.noData) : null;
   const things = data?.kind === "hex" ? t.cellsWord : t.pointsWord;
   const unit = data?.unit ? ` ${data.unit}` : "";
-  const hovered = hover && data ? describeItem(hover.item, data) : null;
+  const hovered = hover && data ? describeResource(hover.item, data, layer) : null;
+  const detail = selected && data ? describeResource(selected.item, data, layer) : null;
 
   const panel = (
     <Panel
@@ -534,8 +533,10 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
         layers={layers}
         buildingView={buildingView}
         showTrees={showTrees}
-        focus={focus}
+        focus={camera}
         onHover={onHover}
+        onPick={onPick}
+        onZoomStep={setZoom}
         onClick={drawing ? (p) => setDraft((d) => [...d, [p.lon, p.lat]]) : undefined}
       />
 
@@ -640,24 +641,15 @@ export default function CityView({ audience = "staff" }: { audience?: Experience
         </MapFloat>
       )}
 
-      {hover && hovered && (hovered.title || hovered.lines.length > 0) && (
-        <div
-          className="map-float pointer-events-none absolute z-20 max-w-xs px-2.5 py-1.5 text-xs"
-          style={{ left: hover.x + 14, top: hover.y + 14 }}
-          role="tooltip"
-        >
-          {hovered.title && <div className="font-semibold text-ink">{hovered.title}</div>}
-          {hovered.lines.map((l, i) => (
-            <div key={l} className={i === 0 ? "font-semibold text-ink" : "text-muted"}>
-              {l}
-            </div>
-          ))}
-          {hovered.synthetic && (
-            <div className="mt-1">
-              <KindBadge kind="simulated" />
-            </div>
-          )}
-        </div>
+      {hover && hovered && <ResourceHover x={hover.x} y={hover.y} resource={hovered} kind={kind} />}
+      {detail && (
+        <ResourceDetail
+          resource={detail}
+          kind={kind}
+          staff={staff}
+          onClose={() => setSelected(null)}
+          onZoomTo={detail.position ? () => setCamera({ lon: detail.position![0], lat: detail.position![1], zoom: 16.5, pitch: 60 }) : undefined}
+        />
       )}
     </Workspace>
   );
