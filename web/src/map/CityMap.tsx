@@ -11,6 +11,7 @@ import { MAP_PALETTE, type Theme } from "@/lib/theme";
 import { useTheme } from "@/lib/useTheme";
 import { texts, tr } from "@/lib/i18n";
 import { buildingAnchor, labelAnchor, OVER_TWIN, TWIN_START_ZOOM, twinVisible } from "@/lib/twinOverlay";
+import { zoomStep } from "@/lib/markers";
 
 // Base maps: Positron for the light theme, Dark for the operations-room theme (both OpenFreeMap, no key).
 const STYLE_URLS: Record<Theme, string> = {
@@ -149,9 +150,15 @@ export function CityMap({
   buildingView = "plain",
   showTrees = false,
   onZoom,
+  onZoomStep,
   onHover,
+  onPick,
 }: {
   layers: Layer[];
+  /** Optional: called when a pickable deck.gl item is clicked or tapped (object is undefined on empty map). */
+  onPick?: (info: PickingInfo) => void;
+  /** Called while zooming, each time the zoom passes a quarter step: 3D markers keep their size on screen with it. */
+  onZoomStep?: (zoom: number) => void;
   /** Optional: called when the pointer moves over a pickable deck.gl item (object is undefined when over nothing). */
   onHover?: (info: PickingInfo) => void;
   buildingView?: BuildingView;
@@ -173,6 +180,10 @@ export function CityMap({
   zoomRef.current = onZoom;
   const hoverRef = useRef(onHover);
   hoverRef.current = onHover;
+  const pickRef = useRef(onPick);
+  pickRef.current = onPick;
+  const stepRef = useRef(onZoomStep);
+  stepRef.current = onZoomStep;
   const { theme } = useTheme();
   const themeRef = useRef(theme);
   themeRef.current = theme;
@@ -208,6 +219,7 @@ export function CityMap({
         // Pointer cursor over something that has details, only on screens that show them.
         map.getCanvas().style.cursor = info.object ? "pointer" : "";
       },
+      onClick: (info) => pickRef.current?.(info),
     });
     map.addControl(overlay);
     // Start with the credits folded behind the (i) button so they do not cover the map legend; one click opens them.
@@ -222,7 +234,12 @@ export function CityMap({
     map.on("sourcedata", foldCredits);
     map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
     map.on("zoomend", () => zoomRef.current?.(map.getZoom()));
-    const checkTwin = () => setTwinShown(twinVisible(map.getZoom()));
+    let step = NaN;
+    const checkTwin = () => {
+      setTwinShown(twinVisible(map.getZoom()));
+      const next = zoomStep(map.getZoom());
+      if (next !== step) stepRef.current?.((step = next));
+    };
     map.on("zoom", checkTwin);
     checkTwin();
     mapRef.current = map;
