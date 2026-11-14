@@ -31,3 +31,11 @@ export function confidenceAlpha(variance: number, maxVariance: number, floor: nu
   if (maxVariance <= 0) return 200;
   return Math.max(floor, Math.round(220 - 180 * Math.min(1, variance / maxVariance)));
 }
+
+/** Fill strength (0-255) of an area drawn over the 3D city: the colour reads, the buildings still show through. */
+export const AREA_ALPHA = 120;
+
+/** Scales an opacity made for a flat map (200 = full) to the see-through strength used over the 3D city. */
+export function areaAlpha(alpha: number): number {
+  return Math.round((alpha * AREA_ALPHA) / 200);
+}

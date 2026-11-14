@@ -1,13 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl, { type Map as MlMap, type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { Protocol } from "pmtiles";
+import { Building2 } from "lucide-react";
 import { onMapAction } from "@/lib/mapbus";
 import { buildingColor, type BuildingView } from "@/lib/buildingStyles";
 import { MAP_PALETTE, type Theme } from "@/lib/theme";
 import { useTheme } from "@/lib/useTheme";
+import { buildingAnchor, labelAnchor, OVER_TWIN, TWIN_START_ZOOM, twinVisible } from "@/lib/twinOverlay";
 
 // Base maps: Positron for the light theme, Dark for the operations-room theme (both OpenFreeMap, no key).
 const STYLE_URLS: Record<Theme, string> = {
@@ -65,7 +67,8 @@ function addBuildings(map: MlMap, theme: Theme) {
   const palette = MAP_PALETTE[theme];
   if (map.getLayer("g0-extrusion") || map.getLayer("osm-buildings-3d")) return;
   const style = map.getStyle() as StyleSpecification;
-  const firstSymbol = style.layers.find((l) => l.type === "symbol")?.id;
+  // Under the data and under the names: base map < buildings < data < street and place names.
+  const firstSymbol = buildingAnchor(style.layers);
   if (G0_PMTILES) {
     // WS2 G0 block model (twin/model/README.md): source-layer "buildings", height in "height_m", zoom 12-16.
     map.addSource("g0", {
@@ -133,7 +136,8 @@ function addBuildings(map: MlMap, theme: Theme) {
 export function CityMap({
   layers,
   onClick,
-  initialZoom = 11,
+  // Whole-city screens open at the widest view that still shows the 3D buildings.
+  initialZoom = TWIN_START_ZOOM,
   pitch = 50,
   focus,
   buildingView = "plain",
@@ -166,6 +170,10 @@ export function CityMap({
   const { theme } = useTheme();
   const themeRef = useRef(theme);
   themeRef.current = theme;
+  // The first name layer of the current base map: data is drawn just under it.
+  const [nameLayer, setNameLayer] = useState<string | undefined>(undefined);
+  // False when the view is too wide for the building tiles: the screen then offers one click back to them.
+  const [twinShown, setTwinShown] = useState(true);
 
   useEffect(() => {
     if (!el.current) return;
@@ -208,6 +216,9 @@ export function CityMap({
     map.on("sourcedata", foldCredits);
     map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
     map.on("zoomend", () => zoomRef.current?.(map.getZoom()));
+    const checkTwin = () => setTwinShown(twinVisible(map.getZoom()));
+    map.on("zoom", checkTwin);
+    checkTwin();
     mapRef.current = map;
     if (import.meta.env.DEV) (window as unknown as { __urbsMap?: MlMap }).__urbsMap = map;
     overlayRef.current = overlay;
@@ -230,7 +241,10 @@ export function CityMap({
     let cancelled = false;
     void loadStyle(theme).then((style) => {
       if (cancelled || mapRef.current !== map) return;
-      map.once("style.load", () => addBuildings(map, theme));
+      map.once("style.load", () => {
+        addBuildings(map, theme);
+        setNameLayer(labelAnchor(map.getStyle().layers));
+      });
       // diff: false, so "style.load" always fires (a diff against an identical fallback style would not).
       map.setStyle(style, { diff: false });
     });
@@ -239,9 +253,12 @@ export function CityMap({
     };
   }, [theme, initialZoom, pitch]);
 
+  // Every data layer is drawn on top of the 3D city (a building never hides it) and under the names.
   useEffect(() => {
-    overlayRef.current?.setProps({ layers });
-  }, [layers]);
+    overlayRef.current?.setProps({
+      layers: layers.map((l) => l.clone({ beforeId: nameLayer, parameters: { ...OVER_TWIN, ...l.props.parameters } } as object)),
+    });
+  }, [layers, nameLayer]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -264,5 +281,19 @@ export function CityMap({
     else map.flyTo({ center: [focus.lon, focus.lat], zoom: focus.zoom, pitch: focus.pitch ?? 55 });
   }, [focus]);
 
-  return <div ref={el} className="h-full w-full" />;
+  return (
+    <div className="relative h-full w-full">
+      <div ref={el} className="h-full w-full" />
+      {G0_PMTILES && !twinShown && (
+        <button
+          type="button"
+          className="map-float absolute bottom-20 right-3 z-10 flex animate-fade-in items-center gap-2 px-3 py-2 text-xs font-semibold text-link hover:underline"
+          onClick={() => mapRef.current?.easeTo({ zoom: TWIN_START_ZOOM, duration: 600 })}
+        >
+          <Building2 className="h-4 w-4" aria-hidden="true" />
+          Zoom in to see the 3D buildings
+        </button>
+      )}
+    </div>
+  );
 }

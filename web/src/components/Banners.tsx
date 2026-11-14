@@ -2,6 +2,7 @@ import { Sparkles } from "lucide-react";
 import { isDirectMode, isSampleMode } from "@/api/client";
 import { shortId } from "@/lib/format";
 import { useSession } from "@/lib/runlog";
+import { useServiceStatus } from "@/lib/serviceStatus";
 
 /** Always on screen: who made this and that AI is involved. */
 export function AiDisclosure() {
@@ -42,17 +43,30 @@ export function SampleModeBanner() {
   );
 }
 
+/** Shown while the live service wakes up after a pause, so a slow first answer does not look like a failure. */
+export function WakingBanner() {
+  const waking = useServiceStatus() === "waking";
+  if (isSampleMode || !waking) return null;
+  return (
+    <div role="status" className="animate-fade-in border-b border-primary/30 bg-primary-soft px-4 py-1 text-center text-xs font-semibold text-link">
+      The live service is waking up after a pause. The first answer can take two to three minutes; this screen keeps trying by itself.
+    </div>
+  );
+}
+
 /** Bottom strip: connection, tier, number of tool runs and the latest run id (the audit trail at a glance). */
 export function StatusBar() {
   const { tier, runs } = useSession();
-  const c = connectionState();
+  const waking = useServiceStatus() === "waking";
+  const base = connectionState();
+  const c = waking && base.tone === "live" ? { ...base, label: "Live service · waking up" } : base;
   const last = runs[0];
   return (
     <footer className="flex items-center gap-4 border-t border-line bg-surface px-4 py-1 text-2xs text-muted">
       <span className="flex items-center gap-1.5" title={c.detail}>
         <span className="relative flex h-2 w-2">
-          {c.tone === "live" && <span className="absolute inset-0 animate-pulse-ring rounded-full bg-real" />}
-          <span className={`relative h-2 w-2 rounded-full ${c.tone === "live" ? "bg-real" : "bg-estimated"}`} />
+          {c.tone === "live" && <span className={`absolute inset-0 animate-pulse-ring rounded-full ${waking ? "bg-estimated" : "bg-real"}`} />}
+          <span className={`relative h-2 w-2 rounded-full ${c.tone === "live" && !waking ? "bg-real" : "bg-estimated"}`} />
         </span>
         <span className="font-semibold text-ink">{c.label}</span>
       </span>
