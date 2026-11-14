@@ -67,7 +67,7 @@ class SimLoopsProvider:
         positions: list[tuple[float, float, str | None]]
         if stations_path is not None and stations_path.exists():
             positions = read_station_points(stations_path)
-            self._positions_note = f"stations at signalised junctions on major roads ({stations_path.name})"
+            self._positions_note = f"stations at the real positions of Roma Capitale traffic sensors ({stations_path.name}); counts simulated"
         else:
             positions = [(rng.uniform(min_lon, max_lon), rng.uniform(min_lat, max_lat), None)
                          for _ in range(n_stations)]

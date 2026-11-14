@@ -9,13 +9,12 @@ simulators:
 
   loops:
     seed: 42
-    n_stations: {value: 93, basis: "mirrors the 93 real Roma Mobilita loop stations (design proposal section 8)"}
+    n_stations: {value: 93, basis: "the 93 real Roma Capitale traffic sensors (DIPMOB:SensoriTraffico)"}
     # Committed seed built by `python -m twin.providers.build_seeds loops`:
     # centrally controlled vehicle signals on major roads (Roma Capitale layers).
     # Placeholder positions inside the city bbox are used only if it is missing.
     stations_path: twin/providers/simulated/seed_data/loop_stations.geojson
-    snap_to_road_m: {value: 40, basis: "assumption: a signal this close to a major road controls it"}
-    min_spacing_m: {value: 600, basis: "assumption: spreads 93 stations over the network instead of clustering downtown"}
+    snap_to_road_m: {value: 60, basis: "assumption: a sensor this close to a major road measures it; otherwise class 'default'"}
     peak_flow_vph:   # per station, both directions
       motorway: {min: 3000, max: 6000}
       trunk: {min: 2000, max: 4000}

@@ -33,7 +33,7 @@ rows; `registry.DATA_KIND` gives the real / estimated / simulated label.
 
 ## How sensors are placed and fused
 
-- **Loop stations (simulated)**: 93 vehicle signals run by a central traffic-control
+- **Loop stations (simulated)**: the 93 real Roma Capitale traffic sensor positions (`DIPMOB:SensoriTraffico`); only the counts are simulated. Earlier: 93 vehicle signals run by a central traffic-control
   system (Omnia, Tmacs, Sigma...) on motorway-to-secondary roads, from Roma Capitale's
   `DIPMOB:Semafori` and `DIPPC:grande_viabilita`, spread at least 600 m apart.
   Free speed and peak flow follow the road class (C=65 that loops sit at such junctions).
