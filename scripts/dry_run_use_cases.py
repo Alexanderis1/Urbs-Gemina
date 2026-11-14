@@ -24,7 +24,7 @@ from agents.use_cases import load_use_cases, run_steps  # noqa: E402
 
 EXAMPLES: dict[str, dict[str, Any]] = {
     "municipio_briefing": {"area": "municipio:1"},
-    "civil_protection_alert": {"area": "municipio:11"},
+    "civil_protection_alert": {"area": "municipio:1"},
     "heat_plan_elderly": {"area": "municipio:5", "params": {"tmax_c": 38, "tmin_c": 25}},
     "site_risk_check": {"place": "Ospedale Sandro Pertini"},
     "event_planning": {"place": "Circo Massimo", "params": {"attendees": 60000}},

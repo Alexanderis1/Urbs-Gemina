@@ -282,3 +282,27 @@ def test_voice_answers_do_not_repeat_the_ai_disclosure() -> None:
     chat = orch.ask(TwinQuestion(question="Colosseo", tier="citizen", language="it", use_case="citizen_area_info"))
     assert "intelligenza artificiale" not in voice.text
     assert "intelligenza artificiale" in chat.text
+
+
+class TwoLineLLM:
+    """A good cited line and a line with an invented figure, every time it is asked."""
+
+    def step(self, system: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> LLMTurn:
+        prompt = str(messages[0]["content"])
+        ids = [line.split("run_id: ")[1][:12] for line in prompt.splitlines() if line.startswith("run_id: ")]
+        text = (f"- A school lies 182 m away [run:{ids[1]}].\n"
+                f"- About 4321 residents live nearby [run:{ids[1]}].")
+        return LLMTurn(text=text, tool_calls=[], assistant_content=[{"type": "text", "text": text}], stop_reason="end_turn")
+
+
+def test_untraceable_lines_are_withheld_not_the_whole_note() -> None:
+    rep = run_use_case("site_risk_check", llm=TwoLineLLM(), gateway=FakeGateway(), place="Via del Corso 1", language="en")
+    assert rep.verified
+    assert "182 m" in rep.text and "4321" not in rep.text
+    assert any("withheld" in m for m in rep.missing)
+
+
+def test_decision_language_still_blocks_everything() -> None:
+    llm = CitingLLM(text="- The antenna is prohibited here.\n- Nothing else.")
+    rep = run_use_case("antenna_permit", llm=llm, gateway=FakeGateway(), place="Via del Corso 1")
+    assert not rep.verified and "prohibited" not in rep.text

@@ -289,6 +289,33 @@ def _check(text: str, by_id: Mapping[str, Mapping[str, Any]], cfg: AgentConfig, 
     return text, report, auto_lines
 
 
+#: Problems that concern one figure on one line: that line can be withheld. Anything else (decision wording,
+#: a missing estimate label...) blocks the whole note.
+_LINE_LOCAL = frozenset({"uncited_number", "untraced_number", "unknown_citation", "mismatched_entity"})
+
+
+def _withhold_lines(text: str, report: VerifierReport, by_id: Mapping[str, Mapping[str, Any]], cfg: AgentConfig,
+                    question: str, language: str) -> tuple[str, VerifierReport, list[int], int]:
+    """Last resort after the rewrite: drop only the lines whose figure cannot be traced, then verify again.
+
+    The officer is told how many lines were withheld. The note is kept only if what remains passes the
+    verifier and still holds at least one line that is not a heading."""
+    if not report.problems or any(p.code not in _LINE_LOCAL for p in report.problems):
+        return text, report, [], 0
+    bad = [p.sentence.strip() for p in report.problems if p.sentence.strip()]
+    lines = text.split("\n")
+    kept = [ln for ln in lines if not any(b and (b in ln or ln.strip() and ln.strip() in b) for b in bad)]
+    withheld = len(lines) - len(kept)
+    body = [ln for ln in kept if ln.strip() and not ln.lstrip().startswith("#")
+            and not re.fullmatch(r"\s*\*\*[^*]+\*\*\s*", ln)]
+    if not withheld or not body:
+        return text, report, [], 0
+    new_text, new_report, auto_lines = _check("\n".join(kept), by_id, cfg, question, language)
+    if not new_report.ok:
+        return text, report, [], 0
+    return new_text, new_report, auto_lines, withheld
+
+
 def run_use_case(use_case: str, *, llm: LLM, gateway: ToolGateway, area: Any = None, place: str | None = None,
                  params: Mapping[str, Any] | None = None, language: str = "it", tier: str = "office",
                  question: str = "", config: AgentConfig | None = None) -> UseCaseReport:
@@ -335,6 +362,14 @@ def run_use_case(use_case: str, *, llm: LLM, gateway: ToolGateway, area: Any = N
             text, report, auto_lines = _check(turn.text, by_id, cfg, ask, language)
     except ModelRefused:
         text, report = "", VerifierReport(problems=[Problem("model_refused", "the model declined the request")])
+
+    withheld = 0
+    if not report.ok and text.strip():
+        text, report, auto_lines, withheld = _withhold_lines(text, report, by_id, cfg, ask, language)
+    if withheld:
+        warnings.append(f"{withheld} line(s) withheld: a figure could not be traced to a tool run")
+        skipped.append({"step": "narrative", "tool": "verifier", "label": "note",
+                        "reason": f"{withheld} line(s) withheld because a figure could not be traced to a tool run"})
 
     if report.ok and text.strip():
         from agents.orchestrator import _drop_self_disclosure
