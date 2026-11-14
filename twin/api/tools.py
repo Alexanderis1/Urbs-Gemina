@@ -15,7 +15,11 @@ from twin.tools.area import AreaTooLarge, resolve_area
 from twin.tools.layers import LayerSnapshot
 from twin.tools.crowds_exposure import (check_sensors_tool, crowds_view, exposure_count, flood_watch_tool,
                                         heat_watch_tool, schools_check, site_values_at)
+from twin.tools.citizen import air_here, city_heatmap, emf_here
 from twin.tools.data_status import data_status
+from twin.tools.heat_here import heat_here
+from twin.tools.places_open import places_open
+from twin.tools.transport_now import transport_now
 from twin.tools.envelope import Source, ToolError, make_envelope, utc_now
 from twin.tools.estimate_field import estimate_field
 from twin.tools.permit_context import run_context_check
@@ -375,6 +379,16 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("sports_facilities", m.SportsFacilitiesIn, _sports_facilities, owner="WS10"),
     ToolSpec("sport_coverage", m.SportCoverageIn, _sport_coverage, owner="WS10"),
     ToolSpec("signal_events", m.SignalEventsIn, _signal_events, owner="citizen-reports"),
+    ToolSpec("air_here", m.AirHereIn, lambda rt, req, role: air_here(rt, req.point, req.time), owner="citizen-services"),
+    ToolSpec("emf_here", m.EmfHereIn, lambda rt, req, role: emf_here(rt, req.point, req.time), owner="citizen-services"),
+    ToolSpec("city_heatmap", m.CityHeatmapIn,
+             lambda rt, req, role: city_heatmap(rt, req.layer, req.time, req.resolution), owner="citizen-services"),
+    ToolSpec("heat_here", m.HeatHereIn, lambda rt, req, role: heat_here(rt, req.point, req.time), owner="citizen-services"),
+    ToolSpec("places_open", m.PlacesOpenIn,
+             lambda rt, req, role: places_open(rt, req.kind, req.at, req.point, req.radius_m, req.sport),
+             owner="citizen-services"),
+    ToolSpec("transport_now", m.TransportNowIn, lambda rt, req, role: transport_now(rt, _dump(req.area)),
+             owner="citizen-services"),
     ToolSpec("verify_signal", m.VerifySignalIn, _verify_signal, owner="citizen-reports"),
     ToolSpec("screen_report", m.ScreenReportIn, _screen_report, owner="citizen-reports"),
     ToolSpec("plan_maintenance", m.PlanMaintenanceIn, _plan_maintenance, owner="citizen-reports"),

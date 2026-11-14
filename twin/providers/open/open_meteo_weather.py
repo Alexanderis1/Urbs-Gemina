@@ -34,6 +34,7 @@ PROFILES: dict[str, tuple[str, dict[str, str]]] = {
         "wind_speed_10m": "wind_speed_ms",
         "wind_direction_10m": "wind_direction_deg",
         "temperature_2m": "temperature_c",
+        "relative_humidity_2m": "humidity_pct",
     }),
 }
 

@@ -312,3 +312,48 @@ class EnvelopeOut(BaseModel):
     synthetic: bool
     warnings: list[str]
     cached: bool = False
+
+
+class AirHereIn(Strict):
+    """Citizen: air quality at a point now (NO2, PM10, PM2.5, O3) with the EEA index level and the legal reference values."""
+
+    point: Point
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class EmfHereIn(Strict):
+    """Citizen: estimated radio-frequency electric field at a point, with its level and the legal values."""
+
+    point: Point
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class CityHeatmapIn(Strict):
+    """Citizen: whole-city heat map of one layer on a coarse grid (value, range and level per cell, plus a legend). road_speed at a future time = predicted congestion."""
+
+    layer: Literal["air_no2", "air_pm10", "air_pm25", "air_o3", "emf", "road_speed"]
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+    resolution: int | None = Field(default=None, ge=6, le=9, description="H3 resolution; default from config")
+
+
+class HeatHereIn(Strict):
+    """Citizen: heat risk today at a point (apparent temperature) and where to cool off at that hour: open climate refuges and cooler open-air spots within a short walk."""
+
+    point: Point
+    time: str | None = Field(default=None, description="ISO 8601 hour to plan for; default the day's hottest hour (or now if it has passed)")
+
+
+class PlacesOpenIn(Strict):
+    """Citizen: sports venues (optionally for one sport) or museums and galleries open at a chosen day and time, nearest first, with their opening hours."""
+
+    kind: Literal["sport", "museum"]
+    at: str | None = Field(default=None, description="ISO 8601 date and time; default now")
+    point: Point | None = None
+    radius_m: float | None = Field(default=None, gt=0, le=30_000, description="only with point; default from config")
+    sport: str | None = Field(default=None, max_length=60, description="Italian or English name, e.g. 'nuoto', 'calcio', 'tennis'")
+
+
+class TransportNowIn(Strict):
+    """Citizen: live notices on Rome's streets and lines (works, closures, line deviations, strikes, events) placed on the street they name, with the feed's freshness. Congestion: city_heatmap on road_speed."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)

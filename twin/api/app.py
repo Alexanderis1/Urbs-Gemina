@@ -23,6 +23,7 @@ from twin.api.jobs import Jobs, modal_store
 from twin.api.models import AskIn, EnvelopeOut
 from twin.api.orchestrator import TierOrchestrator
 from twin.api.tools import TOOLS, ToolSpec, tool_schema
+from twin.tools.citizen import prewarm as citizen_prewarm
 from twin.tools.envelope import ToolError
 from twin.tools.runtime import ToolRuntime
 
@@ -98,6 +99,7 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
         def run() -> None:
             try:
                 log.info("warm-up: %s", get_runtime().warm())
+                log.info("citizen layers: %s", citizen_prewarm(get_runtime()))
             except Exception:  # noqa: BLE001 - best effort
                 log.exception("warm-up failed")
 

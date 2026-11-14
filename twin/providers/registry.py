@@ -17,6 +17,7 @@ from twin.providers.open.dpc_radar import DpcRadarProvider
 from twin.providers.open.arpa_points import ArpaPointsProvider
 from twin.providers.open.eea import EeaHourlyProvider
 from twin.providers.open.gbfs import GbfsProvider
+from twin.providers.open.gtfs_alerts import RomaGtfsAlertsProvider
 from twin.providers.open.gtfs_rt import RomaGtfsRtProvider
 from twin.providers.open.gtfs_schedule import RomaGtfsScheduleProvider
 from twin.providers.open.ingv import IngvEarthquakeProvider
@@ -49,6 +50,7 @@ FACTORIES: dict[str, Factory] = {
     # open, real
     "roma_gtfs_rt": RomaGtfsRtProvider,
     "roma_gtfs_schedule": RomaGtfsScheduleProvider,
+    "roma_gtfs_alerts": RomaGtfsAlertsProvider,
     "ingv_earthquakes": IngvEarthquakeProvider,
     "eea_hourly": EeaHourlyProvider,
     "dpc_radar": DpcRadarProvider,
@@ -75,6 +77,7 @@ DATA_KIND: dict[str, DataKind] = {
     "est_register": "estimated",
     "roma_gtfs_rt": "real",
     "roma_gtfs_schedule": "estimated",
+    "roma_gtfs_alerts": "real",
     "ingv_earthquakes": "real",
     "eea_hourly": "real",
     "dpc_radar": "real",
