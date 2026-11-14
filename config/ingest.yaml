@@ -535,6 +535,38 @@ layers:
   sitap_art136_cd:       {source: sitap, type_name: "sitap_ws_clone:LAZIO_art_136_c_d", data_kind: real, theme: landscape, clip_to_city: true}
   sitap_art136_ab:       {source: sitap, type_name: "sitap_ws_clone:LAZIO_art_136_a_b", data_kind: real, theme: landscape, clip_to_city: true, notes: "type name guessed from the c_d layer; marked not_available if wrong"}
 
+  # --- Civil protection, climate and night-time layers for the use-case playbooks (14 Nov night) ---
+  # Found in the Roma Capitale GeoServer capabilities; all official, read on 2026-11-14.
+  civil_protection_areas:  {source: roma_geoserver, type_name: "DIPPC:422_AreePC_2026", data_kind: real, theme: civil_protection,
+                            options: {wfs_version: "2.0.0"},  # 1.0.0 fails: "variable not found in subplan target list"
+                            notes: "Emergency plan areas: A waiting (primary/secondary), B reception, C shelters, D staging (1018 areas)"}
+  landslide_areas:         {source: roma_geoserver, type_name: "DIPPC:303_Aree_inFrana", data_kind: real, theme: civil_protection,
+                            notes: "Landslide areas with risk class R (PAI)"}
+  wildfire_interface:      {source: roma_geoserver, type_name: "DIPPC:305_AreeInterfaccia_R3-R4_xMunicipio", data_kind: real, theme: civil_protection,
+                            options: {wfs_version: "2.0.0"},
+                            notes: "Urban-vegetation interface areas at fire risk R3-R4, per municipio"}
+  underground_cavities:    {source: roma_geoserver, type_name: "DIPPC:308_01_CavitaSotterranee", data_kind: real, theme: civil_protection,
+                            notes: "Known underground cavities (sinkhole context); geometry only"}
+  civil_protection_events:
+    source: roma_geoserver
+    type_name: "DIPPC:300_Eventi_STORICI"
+    data_kind: real
+    theme: civil_protection
+    # Health-emergency help (4.00) and assistance to people (5.00) are points at the homes of the people helped:
+    # personal data, never ingested. Kept: geological, weather/flood and fire interventions.
+    exclude: {tipologia: ["4.00 EMERGENZE BIO-SANITARIE", "5.00 EMERGENZE DA EVENTI ANTROPICI E CONCORSO AL SISTEMA PC"]}
+    options: {keep_columns: [tipologia, sottotipol, anno, "data inizi", "data fine", municipi]}
+    notes: "Past civil-protection interventions 2013-2022 (street flooding, fallen trees, fires, sinkholes, landslides)"
+  climate_refuges_indoor:  {source: roma_geoserver, type_name: "GABSIN:al_chiuso", data_kind: real, theme: climate,
+                            options: {keep_columns: [tipo, nome, indirizzo, municipio, orari, chiusura_e, accessibil, aria_cond]},
+                            notes: "Indoor cool places (libraries, civic centres) of the Roma climate-refuge map; contacts dropped"}
+  drinking_fountains:      {source: roma_geoserver, type_name: "GABSIN:fontanelle_rifugi_climatici", data_kind: real, theme: climate,
+                            options: {keep_columns: [idgis, d_tipo]}}
+  cold_plan_shelters:      {source: roma_geoserver, type_name: "DIPPC:accoglienza_piano_freddo", data_kind: real, theme: civil_protection,
+                            notes: "Piano Freddo reception points for people without a home (sites, not people)"}
+  movida_zones:            {source: roma_geoserver, type_name: "DIPPC:mappa_roma_notte_zonemovida", data_kind: real, theme: night}
+  park_and_ride:           {source: roma_geoserver, type_name: "DIPMOB:ParcheggiScambio", data_kind: real, theme: mobility}
+
 # Live public feeds. Each pull stores the raw bytes under data/snapshots/<feed>/
 # with its SHA-256 in data/snapshots/<feed>/index.jsonl. Parsing is done by the
 # WS3 providers, which can read these snapshot files.

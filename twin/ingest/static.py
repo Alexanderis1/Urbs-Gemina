@@ -41,13 +41,16 @@ Entry = dict[str, Any]
 
 # --- Download -----------------------------------------------------------------
 
-def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None) -> str:
-    """WFS 1.0.0 GetFeature in EPSG:4326 (lon, lat order) as GeoJSON."""
+def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None, version: str = "1.0.0") -> str:
+    """WFS GetFeature in EPSG:4326 (lon, lat order) as GeoJSON; 1.0.0 unless the layer asks for 2.0.0.
+
+    GeoServer keeps lon, lat order for the short "EPSG:4326" name in 2.0.0 too (checked on the Roma server).
+    """
     params = {
         "service": "WFS",
-        "version": "1.0.0",
+        "version": version,
         "request": "GetFeature",
-        "typeName": type_name,
+        "typeNames" if version.startswith("2") else "typeName": type_name,
         "srsName": "EPSG:4326",
         "outputFormat": "application/json",
     }
@@ -117,7 +120,7 @@ def _download(layer: LayerSpec, catalog: Catalog, fetch: Fetch) -> tuple[bytes, 
     if source.protocol == "wfs":
         assert layer.type_name is not None
         bbox = catalog.city_bbox if layer.clip_to_city else None
-        url = wfs_url(source.urls[0], layer.type_name, bbox)
+        url = wfs_url(source.urls[0], layer.type_name, bbox, str(layer.options.get("wfs_version", "1.0.0")))
         return fetch(HttpRequest(url)), url
     if source.protocol == "overpass":
         tiles = split_bbox(catalog.city_bbox, int(layer.options.get("tiles", 1)))
