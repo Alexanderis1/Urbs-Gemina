@@ -326,10 +326,11 @@ use_cases:
     prompt: nightlife
     params:
       radius_m: {default: 300, basis: "The streets around a square where nightlife crowds gather; not a legal distance."}
+      spot_radius_m: {default: 30, basis: "The square or street front itself, so the acoustic class is the one at the place (a 300 m ring crosses several classes, live check 14 Nov)."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "the square or street"}
       - {id: movida, tool: query_layer, args: {layer: movida_zones, area: "{place.circle}", limit: 30}, label: "official nightlife (movida) zones"}
-      - {id: noise, tool: query_layer, args: {layer: acoustic_zoning, area: "{place.circle}", limit: 30}, label: "acoustic zoning class with its day and night limits (2002 plan)"}
+      - {id: noise, tool: query_layer, args: {layer: acoustic_zoning, area: "{place.spot}", limit: 30}, label: "acoustic zoning class at the place, with its day and night limits (2002 plan)"}
       - {id: crowd, tool: query_layer, args: {layer: activity_wifi, area: "{place.circle}"}, label: "crowd now (public Wi-Fi sessions)"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "schools, care and health sites nearby"}
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{place.circle}"}, label: "public transport nearby"}

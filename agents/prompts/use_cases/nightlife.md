@@ -5,7 +5,7 @@ The tools have already run for one square or street: the official nightlife (mov
 Write a note for the municipio or local-police officer:
 
 - **Zone**: whether the place lies in an official movida zone, and its name.
-- **Noise class**: the acoustic class and its day and night limits as the zoning gives them (MAX_DIURNO, MAX_NOTTURNO, in dB(A)), and the national rule, with URL.
+- **Noise class**: the acoustic class at the place (if two classes meet there, give both) and its day and night limits as the zoning gives them (MAX_DIURNO, MAX_NOTTURNO, in dB(A)), and the national rule, with URL.
 - **Crowd**: Wi-Fi sessions now as a crowd proxy (it counts sessions, not people).
 - **Sensitive sites**: schools, care and health sites nearby, with distance.
 - **Transit**: night public transport nearby, if the feed lists it.
