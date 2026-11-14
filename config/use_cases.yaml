@@ -16,6 +16,7 @@
 #   {<step id>.<name>}      polygon of radius params.<name>_radius_m, e.g. {place.district}, {place.traffic}
 #                           (heavy runs on a road network; a test keeps each under its kind's area cap)
 # Static feature layers carry limit: 30 (the count stays the full total; config/agents.yaml model_view trims the rest).
+# group_by: <property> adds counts over every feature in the area (e.g. how many interface areas are R4), not only the listed 30.
 # A step whose refs cannot be filled (e.g. the place was not found) is skipped, and the reason is
 # handed to the model and to the officer. A step that fails or is not available is reported, not hidden.
 
@@ -25,6 +26,12 @@ defaults:
   # Area used when a playbook needs one and the caller gave none (whole-city default, CLAUDE.md).
   area: city
   basis: "CLAUDE.md: whole city by default; heavy simulations take an operating area."
+  # {when.<name>} in step args = the next time this local clock time comes round, in UTC.
+  moments:
+    timezone: Europe/Rome
+    tonight: "03:00"
+    afternoon: "15:00"
+    basis: "Night minimum is usually reached just before dawn, the day maximum mid-afternoon (Rome Urbe climate); a forecast layer answers for one time only (live check 14 Nov: the cold note had no night minimum)."
 
 use_cases:
 
@@ -37,10 +44,11 @@ use_cases:
     prompt: briefing
     steps:
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{area}"}, label: "public transport delays"}
+      - {id: schedule, tool: query_layer, args: {layer: transit_schedule, area: "{area}", limit: 30}, label: "buses and trams running by the timetable now (estimated; the fallback when the live feed is stale)"}
       - {id: traffic, tool: query_layer, args: {layer: traffic_flow, area: "{area}"}, label: "road traffic (simulated loops)"}
       - {id: air, tool: query_layer, args: {layer: air_quality, area: "{area}"}, label: "air quality stations"}
       - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: city}, label: "rain forecast, next hours (coarse grid over all of Rome)"}
-      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature and wind forecast (coarse grid over all of Rome)"}
+      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city, time: "{when.afternoon}"}, label: "temperature and wind forecast for the next afternoon around 15:00 (coarse grid over all of Rome)"}
       - {id: river, tool: query_layer, args: {layer: river_discharge, area: city}, label: "Tiber and Aniene discharge forecast"}
       - {id: news, tool: news_search, args: {query: "disservizi chiusure scioperi {area_label} Roma oggi"}, label: "disruption news (unverified)"}
       - {id: data, tool: data_status, args: {}, label: "which layers are real, estimated or simulated"}
@@ -65,7 +73,7 @@ use_cases:
       - {id: underpasses, tool: query_layer, args: {layer: road_underpasses_osm, area: "{area}", limit: 30}, label: "road underpasses"}
       - {id: pgra, tool: query_layer, args: {layer: flood_hazard_pgra, area: "{area}", limit: 30}, label: "official flood hazard areas (PGRA)"}
       - {id: landslides, tool: query_layer, args: {layer: landslide_areas, area: "{area}", limit: 30}, label: "official landslide areas"}
-      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30}, label: "emergency plan areas (A waiting, B reception, C shelters, D staging)"}
+      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30, group_by: class_are}, label: "emergency plan areas (A waiting, B reception, C shelters, D staging)"}
       - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{area}", change: {service: ambulance, flood: {kind: rain_flood, change: {source: forecast, duration_h: "{params.duration_h}"}}}},
          label: "ambulance reach with flooded roads closed"}
       - {id: alerts, tool: news_search, args: {query: "allerta meteo protezione civile Roma {area_label}"}, label: "official alerts and news (unverified)"}
@@ -83,7 +91,7 @@ use_cases:
       tmin_c: {default: null, basis: "Optional what-if night minimum, used with tmax_c."}
       cover_added_pct: {default: 10, basis: "Same default as the heatwave engine (percentage points of tree cover added); what-if only."}
     steps:
-      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature forecast (coarse grid over all of Rome)"}
+      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city, time: "{when.afternoon}"}, label: "temperature forecast for the next afternoon around 15:00 (coarse grid over all of Rome)"}
       - {id: heat, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast, tmax_c: "{?params.tmax_c}", tmin_c: "{?params.tmin_c}"}},
          label: "heat by street, residents over 65 above thresholds (forecast, or the officer's what-if temperatures)"}
       - {id: trees, tool: run_scenario, args: {kind: heatwave, area: "{area}", change: {temperature: forecast, tmax_c: "{?params.tmax_c}", tmin_c: "{?params.tmin_c}", plant_trees: {cover_added_pct: "{params.cover_added_pct}"}}},
@@ -116,8 +124,8 @@ use_cases:
       - {id: underpasses, tool: query_layer, args: {layer: road_underpasses_osm, area: "{place.circle}", limit: 30}, label: "road underpasses within the ring"}
       - {id: landslides, tool: query_layer, args: {layer: landslide_areas, area: "{place.circle}", limit: 30}, label: "official landslide areas within the ring"}
       - {id: cavities, tool: query_layer, args: {layer: underground_cavities, area: "{place.circle}", limit: 30}, label: "known underground cavities within the ring (sinkhole context)"}
-      - {id: past, tool: query_layer, args: {layer: civil_protection_events, area: "{place.circle}", limit: 30}, label: "past civil-protection interventions within the ring, 2013-2022 (floods, trees down, fires, sinkholes)"}
-      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{place.circle}", limit: 30}, label: "emergency plan areas within the ring (waiting, reception, staging)"}
+      - {id: past, tool: query_layer, args: {layer: civil_protection_events, area: "{place.circle}", limit: 30, group_by: sottotipol}, label: "past civil-protection interventions within the ring, 2013-2022 (floods, trees down, fires, sinkholes)"}
+      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{place.circle}", limit: 30, group_by: class_are}, label: "emergency plan areas within the ring (waiting, reception, staging)"}
       - {id: air, tool: query_layer, args: {layer: air_quality, area: "{place.municipio}"}, label: "air quality in its municipio"}
       - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{place.district}", change: {service: ambulance, flood: {kind: rain_flood, change: {source: forecast, duration_h: "{params.duration_h}"}}}},
          label: "ambulance reach in the district around it, with roads flooded by the forecast rain closed"}
@@ -196,6 +204,7 @@ use_cases:
       - {id: rain, tool: query_layer, args: {layer: rain_forecast, area: city}, label: "rain forecast (coarse grid over all of Rome)"}
       - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature forecast (coarse grid over all of Rome)"}
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{place.circle}"}, label: "public transport nearby"}
+      - {id: schedule, tool: query_layer, args: {layer: transit_schedule, area: "{place.circle}", limit: 30}, label: "lines running nearby by the timetable (estimated; used when the live feed is stale)"}
       - {id: pharmacies, tool: query_layer, args: {layer: pharmacies_roma, area: "{place.circle}", limit: 30}, label: "pharmacies nearby"}
       - {id: health, tool: query_layer, args: {layer: emergency_hospitals, area: "{place.municipio}", limit: 30}, label: "emergency hospitals"}
     basis: "Coordinator brief (14 Nov): citizen Q&A. Aggregated, public layers only; the API applies the citizen tier itself."
@@ -216,7 +225,7 @@ use_cases:
          label: "toxic cloud with the forecast wind (Gaussian plume ensemble)"}
       - {id: zones, tool: query_layer, args: {layer: seveso_damage_zones, area: "{area}", limit: 30}, label: "official damage zones of the external emergency plans"}
       - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{area}", limit: 30}, label: "emergency hospitals"}
-      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30}, label: "emergency plan areas (waiting, reception, shelters)"}
+      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30, group_by: class_are}, label: "emergency plan areas (waiting, reception, shelters)"}
       - {id: news, tool: news_search, args: {query: "incidente stabilimento {place} Roma"}, label: "news about the plant (unverified)"}
       - {id: law, tool: legal_lookup, args: {question: "piano di emergenza esterna stabilimenti a rischio incidente rilevante D.Lgs. 105/2015 Prefettura di Roma"}, label: "external emergency plan rules"}
     basis: "Quality round (14 Nov): the chemical_plume engine (WS6) and the Seveso layers had no use case. The place is the plant name as in seveso_perimeters (e.g. 'Energas')."
@@ -248,6 +257,7 @@ use_cases:
     prompt: strike_day
     steps:
       - {id: transit, tool: query_layer, args: {layer: transit, area: "{area}"}, label: "public transport delays (GTFS-RT)"}
+      - {id: schedule, tool: query_layer, args: {layer: transit_schedule, area: "{area}", limit: 30}, label: "buses and trams running by the timetable now (estimated; the fallback when the live feed is stale)"}
       - {id: transit_belief, tool: query_layer, args: {layer: transit_delay, area: "{area}"}, label: "transit delay map with uncertainty"}
       - {id: roads, tool: query_layer, args: {layer: road_speed, area: "{area}"}, label: "road speed map (simulated loops fused)"}
       - {id: scooters, tool: query_layer, args: {layer: micromobility, area: "{area}"}, label: "shared e-scooters available"}
@@ -264,7 +274,7 @@ use_cases:
     needs: [place]
     prompt: roadworks
     params:
-      street: {default: null, basis: "Optional: the street the works close, exactly as named on the road network (e.g. 'Via Nazionale'). Without it the traffic run is skipped."}
+      street: {default: null, type: text, basis: "Optional: the street the works close, exactly as named on the road network (e.g. 'Via Nazionale'). Without it the traffic run is skipped."}
       radius_m: {default: 200, basis: "A block around the worksite: heritage, sensitive sites and ground hazards; not a legal distance."}
       worksite_radius_m: {default: 40, basis: "A typical urban worksite fence closing one junction or one block; the officer's plan gives the real footprint."}
       district_radius_m: {default: 2500, basis: "Road-network district for emergency reach: about 20 km2, under the 40 km2 heavy-run limit."}
@@ -273,7 +283,7 @@ use_cases:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "where the works are"}
       - {id: context, tool: context_check, args: {point: "{place.point}", radius_m: "{params.radius_m}"}, label: "heritage and landscape constraints, sensitive sites around the worksite"}
       - {id: cavities, tool: query_layer, args: {layer: underground_cavities, area: "{place.circle}", limit: 30}, label: "known underground cavities (sinkhole context)"}
-      - {id: past, tool: query_layer, args: {layer: civil_protection_events, area: "{place.circle}", limit: 30}, label: "past civil-protection interventions nearby, 2013-2022 (sinkholes, flooding, trees down)"}
+      - {id: past, tool: query_layer, args: {layer: civil_protection_events, area: "{place.circle}", limit: 30, group_by: sottotipol}, label: "past civil-protection interventions nearby, 2013-2022 (sinkholes, flooding, trees down)"}
       - {id: traffic, tool: run_scenario, args: {kind: traffic_event, area: "{place.traffic}", change: {close: {street: "{params.street}"}}},
          label: "traffic with the street closed (SUMO, synthetic demand)"}
       - {id: access, tool: run_scenario, args: {kind: emergency_access, area: "{place.district}", change: {service: ambulance, closed_area: "{place.worksite}"}},
@@ -291,11 +301,11 @@ use_cases:
     needs: [area]
     prompt: cold_plan
     steps:
-      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature and wind forecast (coarse grid over all of Rome)"}
-      - {id: shelters, tool: query_layer, args: {layer: cold_plan_shelters, area: "{area}", limit: 30}, label: "Piano Freddo reception points (sites)"}
+      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city, time: "{when.tonight}"}, label: "temperature and wind forecast for tonight around 03:00 (coarse grid over all of Rome)"}
+      - {id: shelters, tool: query_layer, args: {layer: cold_plan_shelters, area: "{area}", limit: 30, group_by: tipologia}, label: "Piano Freddo reception points (sites)"}
       - {id: indoor, tool: query_layer, args: {layer: climate_refuges_indoor, area: "{area}", limit: 30}, label: "indoor public places (libraries, civic centres)"}
       - {id: hospitals, tool: query_layer, args: {layer: emergency_hospitals, area: "{area}", limit: 30}, label: "emergency hospitals"}
-      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30}, label: "civil-protection reception structures and areas"}
+      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30, group_by: class_are}, label: "civil-protection reception structures and areas"}
       - {id: news, tool: news_search, args: {query: "piano freddo Roma Capitale accoglienza senza dimora {area_label}"}, label: "Piano Freddo notices (unverified)"}
       - {id: alerts, tool: news_search, args: {query: "allerta gelo neve ghiaccio Roma protezione civile"}, label: "frost and ice alerts (unverified)"}
     basis: "Round 3 (14 Nov): the Piano Freddo runs from November; its official reception points are on the Roma civil-protection GeoServer."
@@ -308,11 +318,11 @@ use_cases:
     needs: [area]
     prompt: wildfire
     steps:
-      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city}, label: "temperature, wind and humidity forecast (coarse grid over all of Rome)"}
-      - {id: interface, tool: query_layer, args: {layer: wildfire_interface, area: "{area}", limit: 30}, label: "official interface areas at fire risk R3-R4"}
+      - {id: weather, tool: query_layer, args: {layer: weather_forecast, area: city, time: "{when.afternoon}"}, label: "temperature and wind forecast for the next afternoon around 15:00 (coarse grid over all of Rome)"}
+      - {id: interface, tool: query_layer, args: {layer: wildfire_interface, area: "{area}", limit: 30, group_by: rischio}, label: "official interface areas at fire risk R3-R4"}
       - {id: protected, tool: query_layer, args: {layer: protected_areas, area: "{area}", limit: 30}, label: "protected natural areas"}
       - {id: parks, tool: query_layer, args: {layer: parks_municipal, area: "{area}", limit: 30}, label: "municipal parks"}
-      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30}, label: "emergency plan waiting and reception areas"}
+      - {id: muster, tool: query_layer, args: {layer: civil_protection_areas, area: "{area}", limit: 30, group_by: class_are}, label: "emergency plan waiting and reception areas"}
       - {id: news, tool: news_search, args: {query: "incendio Roma {area_label} vigili del fuoco"}, label: "recent fires (unverified)"}
       - {id: law, tool: legal_lookup, args: {question: "periodo di massima pericolosità incendi boschivi Regione Lazio divieti"}, label: "high-risk season rules"}
     basis: "Round 3 (14 Nov): 3,315 interface fires and 1,077 roadside vegetation fires in the Roma civil-protection log 2013-2022; the official R3-R4 interface map had no use case."
@@ -350,7 +360,7 @@ use_cases:
       home_radius_m: {default: 60, basis: "The building and its street front, for 'is my address in a hazard area'."}
     steps:
       - {id: place, tool: resolve_place, args: {text: "{place}"}, label: "the address"}
-      - {id: waiting, tool: query_layer, args: {layer: civil_protection_areas, area: "{place.circle}", limit: 30}, label: "emergency plan areas within walking distance"}
+      - {id: waiting, tool: query_layer, args: {layer: civil_protection_areas, area: "{place.circle}", limit: 30, group_by: class_are}, label: "emergency plan areas within walking distance"}
       - {id: flood, tool: query_layer, args: {layer: flood_hazard_pgra, area: "{place.home}", limit: 30}, label: "official flood hazard areas at the address"}
       - {id: landslide, tool: query_layer, args: {layer: landslide_areas, area: "{place.home}", limit: 30}, label: "official landslide areas at the address"}
       - {id: seveso, tool: query_layer, args: {layer: seveso_damage_zones, area: "{place.home}", limit: 30}, label: "industrial-accident plan zones at the address"}

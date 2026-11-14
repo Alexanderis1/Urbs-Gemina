@@ -13,6 +13,8 @@ export interface UseCase {
   needs: ("area" | "place")[];
   /** Option name -> default (null = optional, no default). */
   params: Record<string, string | number | boolean | null>;
+  /** Option name -> "text" | "number", when the server says (older servers do not). */
+  paramTypes: Record<string, "text" | "number">;
   /** Plain labels of the tool steps, in the order the server runs them. */
   steps: string[];
 }
@@ -38,12 +40,16 @@ export function parseUseCases(raw: unknown): UseCase[] {
     if (isObj(r.params))
       for (const [k, v] of Object.entries(r.params))
         if (v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean") params[k] = v;
+    const paramTypes: UseCase["paramTypes"] = {};
+    if (isObj(r.param_types))
+      for (const [k, v] of Object.entries(r.param_types)) if (v === "text" || v === "number") paramTypes[k] = v;
     out.push({
       id: r.id,
       title,
       summary: bilingual(r.summary) ?? { en: "", it: "" },
       needs: (Array.isArray(r.needs) ? r.needs : []).filter((n): n is "area" | "place" => n === "area" || n === "place"),
       params,
+      paramTypes,
       steps: (Array.isArray(r.steps) ? r.steps : []).filter((s): s is string => typeof s === "string"),
     });
   }
@@ -65,7 +71,7 @@ const UNIT_SUFFIX: [string, string][] = [
   ["_pct", "%"],
 ];
 
-/** Form fields for a use case's options. A null default is an optional number (as in the server's config). */
+/** Form fields for a use case's options. The server's type wins; otherwise a null default is an optional number. */
 export function paramFields(uc: UseCase): ParamField[] {
   return Object.entries(uc.params).map(([key, def]) => {
     const hit = UNIT_SUFFIX.find(([suffix]) => key.endsWith(suffix));
@@ -73,7 +79,7 @@ export function paramFields(uc: UseCase): ParamField[] {
       key,
       label: humanise(hit ? key.slice(0, -hit[0].length) : key),
       unit: hit?.[1] ?? "",
-      numeric: def === null || typeof def === "number",
+      numeric: uc.paramTypes[key] ? uc.paramTypes[key] === "number" : def === null || typeof def === "number",
       initial: def === null ? "" : String(def),
     };
   });

@@ -7,7 +7,7 @@ loaded ``Settings`` so its parameters come from config, not code.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Any, Callable, Literal, Mapping
 
 import yaml
 
@@ -132,3 +132,9 @@ def build_providers(config: dict[str, str], skip_unknown: bool = True,
             if not skip_unavailable:
                 raise
     return active
+
+
+def data_kind_of(provider_id: str, provider_kind: str, by_provider_kind: Mapping[str, Any]) -> str:
+    """real | estimated | simulated of a provider's data: its own label above wins over the generic
+    provider-kind mapping (an *open* forecast or model is estimated, not real)."""
+    return str(DATA_KIND.get(provider_id) or by_provider_kind.get(provider_kind, "real"))

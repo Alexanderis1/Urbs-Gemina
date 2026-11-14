@@ -16,8 +16,10 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -91,6 +93,26 @@ def load_use_cases(path: Path = USE_CASES_PATH) -> dict[str, UseCase]:
 def default_area(path: Path = USE_CASES_PATH) -> str:
     doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     return str((doc.get("defaults") or {}).get("area", "city"))
+
+
+def moments(now: datetime | None = None, path: Path = USE_CASES_PATH) -> dict[str, str]:
+    """``{when.<name>}`` refs: the next local clock time of each name in defaults.moments, as UTC ISO.
+
+    A forecast layer answers for one time, so 'tonight' and 'this afternoon' are what a cold or fire note needs.
+    """
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    spec = dict((doc.get("defaults") or {}).get("moments") or {})
+    zone = ZoneInfo(str(spec.pop("timezone", "Europe/Rome")))
+    spec.pop("basis", None)
+    local = (now or datetime.now(timezone.utc)).astimezone(zone)
+    out: dict[str, str] = {}
+    for name, clock in spec.items():
+        hour, minute = (int(x) for x in str(clock).split(":"))
+        at = local.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if at <= local:
+            at = (local + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+        out[name] = at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return out
 
 
 def area_label(area: Any, language: str = "it") -> str:
@@ -206,7 +228,8 @@ def _fence(env: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_steps(uc: UseCase, *, gateway: ToolGateway, area: Any = None, place: str | None = None,
-              params: Mapping[str, Any] | None = None, language: str = "it") -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+              params: Mapping[str, Any] | None = None, language: str = "it",
+              now: datetime | None = None) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     """Run the playbook's tool steps. Returns (envelopes, skipped steps with reasons)."""
     if "place" in uc.needs and not (place and place.strip()):
         raise UseCaseError(f"use case '{uc.id}' needs a place (address or place name)")
@@ -218,7 +241,7 @@ def run_steps(uc: UseCase, *, gateway: ToolGateway, area: Any = None, place: str
     rings = {k[: -len("_radius_m")]: float(v) for k, v in merged.items()
              if k.endswith("_radius_m") and k != "radius_m" and v}
     ctx: dict[str, Any] = {"params": merged, "area": area, "area_label": area_label(area, language),
-                           "place": place.strip() if place else None}
+                           "place": place.strip() if place else None, "when": moments(now)}
     runs: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
     for step in uc.steps:

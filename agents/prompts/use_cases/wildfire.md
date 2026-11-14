@@ -1,11 +1,11 @@
 # Wildfire risk at the urban edge
 
-The tools have already run: the temperature, wind and humidity forecast, the official interface areas at fire risk R3-R4, protected natural areas, municipal parks, the emergency plan waiting and reception areas, recent fire news, and the regional rules for the high-risk season.
+The tools have already run: the temperature and wind forecast for the next afternoon, the official interface areas at fire risk R3-R4, protected natural areas, municipal parks, the emergency plan waiting and reception areas, recent fire news, and the regional rules for the high-risk season.
 
 Write a note for the civil-protection officer:
 
-- **Weather**: day maximum, wind speed and humidity from the forecast, with range. Hot, dry and windy together raise the risk; say which of these hold.
-- **Where**: how many R3-R4 interface areas the area has and how many are R4 (rischio), and the protected areas and large parks next to homes, by name.
+- **Weather**: afternoon temperature and wind speed from the forecast, with range. Heat and wind together raise the risk; the forecast has no humidity, so do not judge dryness.
+- **Where**: how many R3-R4 interface areas the area has and how many are R4 (from counts_by rischio, which counts every area, not only the listed ones), and the protected areas and large parks next to homes, by name.
 - **Plan areas**: waiting and reception areas by name and type.
 - **Recent fires**: what the news reports, with URL, unverified.
 - **Season rules**: whether the regional high-risk period is in force and what it forbids, with URL.

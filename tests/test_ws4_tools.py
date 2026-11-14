@@ -297,6 +297,16 @@ def test_query_static_layer_finds_a_polygon_that_covers_the_whole_area(runtime: 
     assert env["result"]["features"]["features"][0]["properties"]["PERICOLOSITA"] == "P3"
 
 
+def test_query_static_layer_counts_by_a_property_over_all_features(runtime: ToolRuntime) -> None:
+    """A truncated list cannot say how many areas are R4; group_by counts every feature in the area."""
+    runtime.store.add("wildfire_interface", fc(*[feat(square(20, cx=10.0 * i), rischio="R4" if i < 3 else "R3")
+                                                 for i in range(7)], feat(square(20, cx=9000), rischio="R4")),
+                      sha256="w1")
+    env = query_layer(runtime, "wildfire_interface", area=square(500), limit=2, group_by="rischio")
+    assert env["result"]["count"] == 7 and env["result"]["truncated"] is True
+    assert env["result"]["counts_by"] == {"rischio": {"R4": 3, "R3": 4}}
+
+
 def test_query_simulated_provider_layer_is_flagged(runtime: ToolRuntime) -> None:
     env = query_layer(runtime, "traffic_flow", area="city", time="2026-11-13T08:00:00Z")
     assert env["synthetic"] is True
@@ -332,6 +342,35 @@ def test_data_status_lists_every_configured_layer(runtime: ToolRuntime) -> None:
     assert rows["emf_baseline"]["data_kind"] == "estimated"
     assert set(env["data_kinds"].values()) <= DATA_KINDS
     assert env["synthetic"] is True
+
+
+def test_model_and_forecast_providers_are_labelled_estimated_not_real(runtime: ToolRuntime) -> None:
+    """An open forecast or model (Open-Meteo, CAMS, GloFAS, the GTFS timetable) is not a measurement."""
+    from twin.providers.registry import DATA_KIND
+
+    rows = {row["layer"]: row for row in data_status(runtime)["result"]["layers"]}
+    for layer, provider_id in runtime.settings.providers.items():
+        expected = DATA_KIND.get(provider_id)
+        if expected and rows[layer].get("status") == "active":
+            assert rows[layer]["data_kind"] == expected, (layer, provider_id)
+    assert rows["weather_forecast"]["data_kind"] == "estimated"
+
+
+def test_query_layer_labels_a_forecast_estimated(runtime: ToolRuntime, monkeypatch: pytest.MonkeyPatch) -> None:
+    from twin.providers.base import Observation, ProviderInfo
+
+    class Forecast:
+        def describe(self) -> ProviderInfo:
+            return ProviderInfo(id="om_weather_forecast", kind="open", layer="weather_forecast",
+                                licence="CC BY 4.0", cadence="hourly", synthetic=False)
+
+        def fetch(self, bbox: Any, start: Any, end: Any) -> list[Observation]:
+            return []
+
+    runtime.settings.providers["weather_forecast"] = "om_weather_forecast"
+    runtime.providers["weather_forecast"] = Forecast()  # type: ignore[assignment]
+    env = query_layer(runtime, "weather_forecast", area="city")
+    assert env["data_kinds"]["weather_forecast"] == "estimated"
 
 
 # --- permit report --------------------------------------------------------

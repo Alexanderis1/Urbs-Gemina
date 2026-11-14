@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Mapping
 
 from twin.providers.base import ProviderNotConfigured
+from twin.providers.registry import data_kind_of
 from twin.tools.area import Area, resolve_area
 from twin.tools.context_check import distance_to_geometry_m
 from twin.tools.envelope import Source, ToolError, utc_now
@@ -113,13 +114,15 @@ def _aggregate(points: list[tuple[float, float]], cell_m: float) -> list[dict[st
 
 
 def query_layer(runtime: ToolRuntime, layer: str, area: Any = "city", time: str | None = None,
-                limit: int | None = None, role: Role = "office") -> dict[str, Any]:
+                limit: int | None = None, role: Role = "office", group_by: str | None = None) -> dict[str, Any]:
     cfg = runtime.settings.tools.get("query_layer", {})
     max_limit = int(cfg.get("max_limit", 5000))
     limit = min(int(limit or cfg.get("default_limit", 500)), max_limit)
     at = parse_time(time)
     resolved = resolve_area(area, runtime.store, runtime.settings)
     inputs = {"layer": layer, "area": area, "time": at.isoformat(), "limit": limit, "role": role}
+    if group_by:
+        inputs["group_by"] = group_by
     office_only = set(runtime.settings.tools.get("api", {}).get("office_only_detail_layers", []))
     aggregate = role != "office" and layer in office_only
     sources: list[Source] = [resolved.source] if resolved.source else []
@@ -143,6 +146,10 @@ def query_layer(runtime: ToolRuntime, layer: str, area: Any = "city", time: str 
     result = {"type": "features", "area": resolved.describe(), "count": len(features),
               "features": {"type": "FeatureCollection", "features": features[:limit]},
               "truncated": len(features) > limit}
+    if group_by:
+        # Counted over every feature in the area, not only the listed ones (static layers only).
+        tally = Counter(str((f.get("properties") or {}).get(group_by)) for f in features)
+        result["counts_by"] = {group_by: dict(tally.most_common())}
     return runtime.envelope(TOOL, inputs, result, {layer: kind}, [*sources, snapshot.source()],
                          ["Features are included when one of their vertices lies inside the area, or when a "
                           "polygon contains the area's first vertex (an area inside a large zone)."])
@@ -226,7 +233,7 @@ def _provider_layer(runtime: ToolRuntime, layer: str, area: Area, at: datetime, 
         return runtime.envelope(TOOL, inputs, {"type": "observations", "provider": provider_id},
                                 {layer: "not_available"}, sources, status="not_available",
                                 reason=f"Provider '{provider_id}' failed: {type(error).__name__}: {error}")
-    kind = str(runtime.settings.tools["data_kind_by_provider_kind"].get(info.kind, "real"))
+    kind = data_kind_of(provider_id, info.kind, runtime.settings.tools["data_kind_by_provider_kind"])
     latest: dict[str, Any] = {}
     for obs in observations:
         if obs.entity_id not in latest or obs.observed_at > latest[obs.entity_id].observed_at:

@@ -7,7 +7,7 @@ Write a risk sheet for the officer, one short section each:
 1. **The site**: address, municipio, urban zone.
 2. **Flood**: whether the ring touches a PGRA hazard area and which class; underpasses nearby.
 3. **Ground**: landslide areas and underground cavities within the ring (cavities are sinkhole context, not a forecast).
-4. **Past events**: how many civil-protection interventions the log holds within the ring, and the kinds and years of the listed ones (sottotipol, anno).
+4. **Past events**: how many civil-protection interventions the log holds within the ring, by kind (counts_by sottotipol), and the years of the listed ones (anno).
 5. **Industrial**: whether it lies in a Seveso damage zone, and which plant and zone.
 6. **Air**: the current reading in its municipio, with stations and uncertainty.
 7. **Emergency reach**: residents the ambulance reaches within the target time in the district around the site, before and after the roads flooded by the forecast rain are closed.

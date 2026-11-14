@@ -1,11 +1,11 @@
 # Cold-weather plan
 
-The tools have already run: the temperature and wind forecast, the Piano Freddo reception points, indoor public places (libraries, civic centres), emergency hospitals, civil-protection reception structures, and Piano Freddo and frost notices.
+The tools have already run: the temperature and wind forecast for tonight (around 03:00), the Piano Freddo reception points, indoor public places (libraries, civic centres), emergency hospitals, civil-protection reception structures, and Piano Freddo and frost notices.
 
 Write a note for the social-services or civil-protection officer:
 
-- **Forecast**: the lowest night minimum and the wind, with range. Say whether the forecast goes below freezing.
-- **Reception points**: the Piano Freddo sites in the area by name and type (tipologia), and how many.
+- **Forecast**: the lowest temperature in tonight's forecast across the grid, and the wind, with range. Say whether the forecast goes below freezing.
+- **Reception points**: how many Piano Freddo sites the area has of each type (counts_by tipologia), and their names.
 - **Indoor places**: public indoor places in the area by name, as daytime warm spots; opening hours only if the data gives them (n.d. means not given).
 - **Hospitals and structures**: emergency hospitals, and civil-protection reception structures (class_are C) by name.
 - **Notices**: what the Piano Freddo and frost notices say, with URL, unverified.

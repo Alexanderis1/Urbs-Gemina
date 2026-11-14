@@ -5,7 +5,7 @@ The tools have already run: live transit delays, the transit delay map with unce
 Write a note for the mobility officer:
 
 - **Strike**: date, hours and guaranteed time bands from the notices, with URL, unverified.
-- **Transit now**: typical delay and worst lines, with uncertainty; if the feed is stale or empty, say so.
+- **Transit now**: typical delay and worst lines, with uncertainty; if the live feed is stale or empty, say so and give how many vehicles the timetable has running, labelled "timetable, estimated" (during a strike far fewer may actually run).
 - **Roads**: speeds against usual, labelled simulated.
 - **Alternatives**: e-scooters available in the area now; park-and-ride car parks with their places (POST_TOT) and the line they serve (TPL), noting that a metro-only car park helps only if the metro runs.
 - **Crowding**: Wi-Fi activity as a crowd proxy (it counts sessions, not people).
