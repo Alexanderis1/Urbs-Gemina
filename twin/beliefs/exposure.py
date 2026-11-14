@@ -5,7 +5,7 @@ children per cell, grouped by municipio. Three numbers per group:
 
 - ``expected``: sum over cells of residents x probability that the cell is above the threshold;
 - ``low`` / ``high``: the same count if the true field sat at the low (P5) or high
-  (P95) end of its range everywhere at once. Errors of nearby cells move
+  (P95) end of its range everywhere at once, widened if needed to contain ``expected``. Errors of nearby cells move
   together, so this band is wider, and more honest, than an independent-cells range.
 
 The threshold is passed in by the caller (thresholds live in config/thresholds.yaml).
@@ -82,10 +82,17 @@ def exposure(
 
 
 def _count(people: np.ndarray, p: np.ndarray, low: np.ndarray, high: np.ndarray) -> dict[str, int]:
+    """Expected count plus a band that always contains it.
+
+    Many cells with a small chance each (below 5%) add up to an expected count
+    while no single cell's P95 crosses the threshold; the band is widened to
+    include the expected value so it never reads as "6, between 0 and 0".
+    """
+    expected = int(round(float((people * p).sum())))
     return {
-        "expected": int(round(float((people * p).sum()))),
-        "low": int(people[low].sum()),
-        "high": int(people[high].sum()),
+        "expected": expected,
+        "low": min(int(people[low].sum()), expected),
+        "high": max(int(people[high].sum()), expected),
     }
 
 

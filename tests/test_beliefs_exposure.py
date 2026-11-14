@@ -119,3 +119,13 @@ def test_heat_watch_uses_the_configured_threshold(tmp_path: Path) -> None:
     out = heat_watch(layer, census_per_cell(census_file(tmp_path), cells))
     assert out["inputs"]["threshold"] == 32.0
     assert "elderly_75_plus_above" in out["result"]["city"]
+
+
+def test_band_always_contains_the_expected_count() -> None:
+    from twin.beliefs.exposure import _count
+
+    people = np.full(100, 10.0)
+    p = np.full(100, 0.01)  # small chance everywhere: expected 10, but no cell's P95 crosses
+    none = np.zeros(100, dtype=bool)
+    band = _count(people, p, none, none)
+    assert band == {"expected": 10, "low": 0, "high": 10}
