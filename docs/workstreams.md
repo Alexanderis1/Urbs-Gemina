@@ -37,7 +37,7 @@ One thread per workstream. Each brief is self-contained. The design hub thread (
    **Census sections** (`data/processed/census_sections.geojson`): WS1 joins ISTAT 2021 population to the section polygons and renames fields at ingest to `sez_id` (str), `residents` (int), `children_0_14` (int), `municipio` (int 1-15), `zone` (str). Consumers (WS4, WS6, WS10, WS5) read these names only; no guessing of ISTAT field names downstream.
 6. **Answer contract**: `agents/prompts/answer_contract.md`.
 7. **Orchestrator hand-over** (chat and voice both use it; WS7 implements, WS8 and WS9 consume), implemented by WS7 in `agents/contract.py` (PR #6); voice and web import from there:
-   `ask(TwinQuestion{question, tier, language, area, mode, conversation_id}) -> TwinAnswer{text, verified, run_ids, sources, data_kinds, synthetic, missing, map_actions}`. `tier` (citizen | office) is set server-side, never by the caller or the model. `run_ids` are the tool envelope run ids.
+   `ask(TwinQuestion{question, tier, language, area, mode, conversation_id}) -> TwinAnswer{text, verified, run_ids, sources, data_kinds, synthetic, missing, map_actions, citations}`. `citations` (added 13 Nov, optional, default empty) = `[{line, kind, ref, cite_mode: "explicit"|"auto"}]`, shown as the tool trace in the Ask screen. `tier` (citizen | office) is set server-side, never by the caller or the model. `run_ids` are the tool envelope run ids.
 8. **Map actions**: `map_actions` entries are `{"tool": <client tool name>, "args": {...}}`; client tools listed in `voice/client_tools.json` (`fly_to`, `show_area`, `show_layer`, `show_radius`, `open_screen`). WS8's map implements them for both chat and voice.
 
 ---

@@ -41,53 +41,93 @@ layers:
     calibration: {method: loso, note: "only meaningful once real loop data (pa_datex) replaces sim_loops"}
     basis: "assumption: congestion is correlated along about one km of street network; it changes within half an hour"
 
+  # The three air layers start from the CAMS forecast corrected for its measured bias in Rome, and
+  # their spread, reach and memory are LEARNED from 2026 EEA history by maximum likelihood
+  # (scripts/fit_air_fusion.py -> docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)). Re-run the script to refresh them.
   air_no2:
     sources: [air_quality]   # EEA/ARPA Lazio stations (real). Sensor.Community has no NO2.
-    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: no2, method: idw}   # CAMS forecast via Open-Meteo, 0.1 deg lattice
+    prior_field:             # CAMS forecast via Open-Meteo, 0.1 deg lattice, corrected: start = offset + scale x CAMS + road term
+      source: air_quality_model
+      entity_types: [AirQualityForecast]
+      value_key: no2
+      method: idw
+      offset: {value: 13.61, basis: "learned: CAMS reads 14.6 ug/m3 where Rome stations read 22.8 (a 10 km model misses traffic NO2), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
+      scale: {value: 0.624, basis: "learned, same fit (least squares, 69,924 hourly pairs, with the road term)"}
+      covariate:             # land-use regression (twin/beliefs/landuse.py): + coef x (road metres within 100 m - center)
+        file: no2_lur_covariates.csv
+        coef: {value: 0.01202, basis: "learned: +1.2 ug/m3 per 100 m of motor road within 100 m; explains the stations' lasting differences (spread 6.4 -> 3.7 ug/m3 on stations left out); Overture roads, ESCAPE method"}
+        center: {value: 607.2, basis: "mean road length within 100 m of the 13 stations, so the station average is unchanged"}
+      sd: {value: 9.26, basis: "learned: error at a station after bias and road term, shared 5.7 + local 7.3 ug/m3, station error removed"}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: no2
     prior:
-      mean: 30
+      mean: 23
       sd: 15
-      basis: "assumption: Rome annual NO2 is around 20-45 ug/m3 at urban stations; to be replaced by the Open-Meteo/CAMS forecast"
-    correlation_length_km: 3.0
-    relax_tau_hours: 3.0
+      basis: "used only where the CAMS map is missing: 2026 mean of Rome EEA stations (22.8 ug/m3) and their spread"
+    correlation_length_km: {value: 41.28, basis: "learned (maximum likelihood): once roads are accounted for, the shared error is city-wide"}
+    spatial_share: {value: 0.379, basis: "learned: 38% of the remaining error is shared across the city, 62% is local"}
+    relax_tau_hours: {value: 4.9, basis: "learned: a station's error keeps correlation 0.84 / 0.67 / 0.53 / 0.29 after 1 / 2 / 3 / 6 h"}
     min_value: 0
-    calibration: {method: loso, note: ""}
-    basis: "assumption: urban NO2 background varies over a few km; hourly values persist a few hours"
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 90%, error spread 0.97, RMSE 9.3 ug/m3 (before this upgrade 12.8)"}
+    basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm10:
     sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
-    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: pm10, method: idw}
+    prior_field:
+      source: air_quality_model
+      entity_types: [AirQualityForecast]
+      value_key: pm10
+      method: idw
+      offset: {value: 6.98, basis: "learned: CAMS reads 18.7 where Rome stations read 22.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
+      scale: {value: 0.807, basis: "learned, same fit (2,950 daily pairs)"}
+      sd: {value: 4.71, basis: "learned: corrected-CAMS error at a station; almost all of it is shared city-wide"}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm10
     prior:
-      mean: 25
-      sd: 12
-      basis: "assumption: Rome annual PM10 is around 20-30 ug/m3; to be replaced by the CAMS forecast"
-    correlation_length_km: 6.0
-    relax_tau_hours: 6.0
+      mean: 22
+      sd: 9
+      basis: "used only where the CAMS map is missing: 2026 mean of Rome EEA stations (22.1 ug/m3) and their spread"
+    correlation_length_km:
+      value: 50.0
+      basis: "learned: the maximum-likelihood reach is beyond the 50 km cap, i.e. on a given day CAMS is off by the same amount across Rome"
+    spatial_share: {value: 0.991, basis: "learned: almost no street-scale PM10 error beyond the stations' own measurement error"}
+    history_hours: {value: 48, basis: "EEA PM10/PM2.5 are daily means; on 14 Nov 00:30 UTC the latest was for 12 Nov (about 25 h late)"}
+    relax_tau_hours: {value: 43.6, basis: "learned: daily error correlation 0.55 after 1 day, 0.34 after 2 (PM is regional and slow)"}
     min_value: 0
-    calibration: {method: loso, note: ""}
-    basis: "assumption: PM10 is more regional than NO2, so it spreads further and lasts longer"
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 83%, error spread 1.27, RMSE 4.0 (old settings 5.0, too wide)"}
+    basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   air_pm25:
     sources: [air_quality, air_quality_citizen]   # EEA stations + Sensor.Community (40% sigma, doubled at humidity >= 80%)
-    prior_field: {source: air_quality_model, entity_types: [AirQualityForecast], value_key: pm25, method: idw}
+    prior_field:
+      source: air_quality_model
+      entity_types: [AirQualityForecast]
+      value_key: pm25
+      method: idw
+      offset: {value: 3.66, basis: "learned: CAMS reads 12.4 where Rome stations read 11.1 ug/m3 (daily means), docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"}
+      scale: {value: 0.602, basis: "learned, same fit (1,805 daily pairs, 8 stations)"}
+      sd: {value: 2.9, basis: "learned: corrected-CAMS error at a station; mostly shared city-wide"}
+    wind: {source: weather_forecast, max_stretch: 2.0, full_at_ms: 5.0}   # assumption (C=65): plumes spread twice as far along a 5 m/s wind as across it
     unit: ug/m3
     entity_types: [AirQualityObserved]
     value_key: pm25
     prior:
-      mean: 14
-      sd: 7
-      basis: "assumption: Rome annual PM2.5 is around 10-18 ug/m3; to be replaced by the CAMS forecast"
-    correlation_length_km: 8.0
-    relax_tau_hours: 6.0
+      mean: 11
+      sd: 5
+      basis: "used only where the CAMS map is missing: 2026 mean of Rome EEA stations (11.1 ug/m3) and their spread"
+    correlation_length_km:
+      value: 50.0
+      basis: "learned: maximum-likelihood reach beyond the 50 km cap (city-wide daily offset)"
+    spatial_share: {value: 0.936, basis: "learned: 94% of the error is shared across the city"}
+    history_hours: {value: 48, basis: "EEA PM2.5 are daily means published about a day late (as PM10)"}
+    relax_tau_hours: {value: 40.8, basis: "learned: daily error correlation 0.50 after 1 day, 0.33 after 2"}
     min_value: 0
-    calibration: {method: loso, note: ""}
-    basis: "assumption: PM2.5 is largely regional background"
+    calibration: {method: loso, note: "held-out Sep-Nov 2026: coverage 84%, error spread 1.27, RMSE 2.9 (old settings 3.9, too wide)"}
+    basis: "learned from real data, docs/air_fusion_fit.md (fit Jan-Aug 2026, checked Sep-Nov 2026 on 13 EEA stations)"
 
   transit_delay:
     sources: [transit]       # GTFS-RT trip updates (real)
@@ -106,13 +146,14 @@ layers:
 
   rain:
     sources: [rain]          # Civil Protection radar (real); rain gauges can be added as a second source
+    prior_field: {source: rain_forecast, entity_types: [WeatherForecast], value_key: precipitation, method: idw, min_sd: 3.0}   # Open-Meteo ICON-2I hourly forecast; radar corrects it, then fades back to it
     unit: mm/h
     entity_types: [WeatherObserved]
     value_key: precipitation
     prior:
       mean: 0.2
-      sd: 1.0
-      basis: "assumption: dry most hours; to be replaced by the forecast"
+      sd: 5.0
+      basis: "assumption: dry most hours, but rain is heavy-tailed: sd 5 mm/h lets a radar cloudburst through (with sd 1 a 35 mm/h radar reading was pulled down to 7)"
     correlation_length_km: 5.0
     relax_tau_hours: 0.5
     min_value: 0
@@ -174,6 +215,70 @@ layers:
       - "Wi-Fi data runs about one day behind: 'now' shows yesterday's same hour"
       - "only cells with a City hotspot carry data (about 580 sites; 94 had sessions on 12 Nov 2026)"
     basis: "real counts at fixed sites; no spreading to cells without a hotspot"
+
+  transit_supply:
+    # Expected public-transport supply: buses and trams the timetable says are in each cell right now.
+    sources: [transit_schedule]   # roma_gtfs_schedule: ScheduledVehicle, one item per running trip, interpolated between stops
+    aggregate: count
+    aggregate_window_minutes: 5
+    unit: vehicles/cell
+    entity_types: [ScheduledVehicle]
+    value_key: scheduledVehicles
+    prior:
+      mean: 0
+      sd: 2
+      basis: "assumption: about 1,100 vehicles at 08:30 over thousands of cells, most cells have none"
+    correlation_length_km: 0
+    relax_tau_hours: 0.5
+    min_value: 0
+    calibration: {method: none, note: "timetable, not observed: shows planned supply, not what actually runs"}
+    caveats:
+      - "transit supply is the timetable (planned), not live positions; the live bus feed is used where it works"
+    basis: "planned positions from the official GTFS timetable"
+
+  temperature:
+    # Air temperature at 2 m: the forecast map interpolated to every cell. No live street stations yet.
+    sources: []
+    prior_field: {source: weather_forecast, entity_types: [WeatherForecast], value_key: temperature_c, method: idw, min_sd: 1.0}
+    unit: degC
+    entity_types: [WeatherObserved]
+    value_key: temperature
+    prior:
+      mean: 18
+      sd: 8
+      basis: "assumption: Rome yearly mean about 16-18 degC; only used where the forecast map is missing"
+    correlation_length_km: 3.0
+    relax_tau_hours: 3.0
+    min_value: -20
+    calibration: {method: none, note: "forecast only, no live temperature stations connected"}
+    caveats:
+      - "temperature is the weather forecast (Open-Meteo), not measured in the street; urban heat islands are not resolved"
+    basis: "forecast lattice; min_sd 1 degC because a 2 m forecast is rarely better than that"
+
+heat:
+  threshold_c: 32
+  basis: "assumption (C=55): around 32 degC the Italian heat-health bulletins start flagging risk for the elderly; real bulletins use perceived temperature"
+
+crowds:
+  # Signals shown side by side in the crowds view; a cell is 'busy' when at least min_agree
+  # of them are above their own city-wide percentile (among cells where that signal has data).
+  signals: [wifi_sessions, activity, transit_supply]
+  busy_percentile: 75
+  min_agree: 2
+  basis: "assumption (C=60): agreement of independent signals is more trustworthy than any single proxy"
+
+flood_watch:
+  heavy_rain_mm_h: 10        # operational, not legal: rain at this rate overwhelms street drains in short bursts
+  watch_probability: 0.3
+  warning_probability: 0.7
+  basis: "assumption (C=60): 10 mm/h is a common 'heavy rain' class (e.g. the Italian civil-protection 'forte' band starts around 10-20 mm/h); probabilities chosen to keep warnings rare"
+
+sensor_health:
+  # A station is flagged when its median standardised error against its neighbours is above z_flag
+  # over at least min_moments moments. Worst first, removed, then re-checked.
+  z_flag: 3.0
+  min_moments: 3
+  basis: "assumption: 3 standard deviations is rare by chance (about 0.3% per reading); the median over several moments ignores one-off spikes"
 
 calibration_rules:
   interval: 0.90            # we check the 90% range

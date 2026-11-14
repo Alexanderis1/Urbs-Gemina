@@ -41,19 +41,22 @@ Entry = dict[str, Any]
 
 # --- Download -----------------------------------------------------------------
 
-def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None, version: str = "1.0.0") -> str:
-    """WFS GetFeature in EPSG:4326 (lon, lat order) as GeoJSON; 1.0.0 unless the layer asks for 2.0.0.
+def wfs_url(base_url: str, type_name: str, bbox: BBox | None = None, native: bool = False,
+            version: str = "1.0.0") -> str:
+    """WFS GetFeature as GeoJSON, in EPSG:4326 (lon, lat order) unless ``native`` keeps the stored CRS.
 
-    GeoServer keeps lon, lat order for the short "EPSG:4326" name in 2.0.0 too (checked on the Roma server).
+    1.0.0 unless the layer asks for 2.0.0 (some Roma GeoServer views fail on 1.0.0). GeoServer keeps lon, lat
+    order for the short "EPSG:4326" name in 2.0.0 too (checked on the Roma server).
     """
     params = {
         "service": "WFS",
         "version": version,
         "request": "GetFeature",
         "typeNames" if version.startswith("2") else "typeName": type_name,
-        "srsName": "EPSG:4326",
         "outputFormat": "application/json",
     }
+    if not native:
+        params["srsName"] = "EPSG:4326"
     if bbox is not None:
         params["bbox"] = ",".join(f"{v:.6f}" for v in bbox) + ",EPSG:4326"
     return base_url + "?" + urllib.parse.urlencode(params)
@@ -120,7 +123,8 @@ def _download(layer: LayerSpec, catalog: Catalog, fetch: Fetch) -> tuple[bytes, 
     if source.protocol == "wfs":
         assert layer.type_name is not None
         bbox = catalog.city_bbox if layer.clip_to_city else None
-        url = wfs_url(source.urls[0], layer.type_name, bbox, str(layer.options.get("wfs_version", "1.0.0")))
+        url = wfs_url(source.urls[0], layer.type_name, None if layer.options.get("true_crs") else bbox,
+                      native=bool(layer.options.get("true_crs")), version=str(layer.options.get("wfs_version", "1.0.0")))
         return fetch(HttpRequest(url)), url
     if source.protocol == "overpass":
         tiles = split_bbox(catalog.city_bbox, int(layer.options.get("tiles", 1)))
@@ -211,7 +215,12 @@ def _frame_from_zip(raw: bytes, filters: dict[str, Any]) -> Any:
 def _to_frame(layer: LayerSpec, catalog: Catalog, raw: bytes) -> Any:
     protocol = catalog.sources[layer.source].protocol
     if protocol in ("wfs", "arcgis_features"):
-        return _frame_from_features(_parse_geojson(raw).get("features", []))
+        frame = _frame_from_features(_parse_geojson(raw).get("features", []))
+        true_crs = layer.options.get("true_crs")
+        if true_crs:
+            # The server labels the layer with the wrong CRS: read the native numbers in the real one.
+            frame = frame.set_crs(str(true_crs), allow_override=True).to_crs("EPSG:4326")
+        return frame
     if protocol in ("overpass", "osm_extract"):
         return _frame_from_features(overpass_to_geojson(json.loads(raw))["features"])
     return _frame_from_zip(raw, layer.filter)
@@ -248,6 +257,41 @@ def _table_frame(layer: LayerSpec, catalog: Catalog, fetch: Fetch, entry: Entry)
         frame, report = geocoded_frame(rows, options, AddressIndex(addresses, roads))
     entry.update(report)
     return frame
+
+
+def _repair(geometry: Any) -> Any:
+    """make_valid, keeping only parts of the original dimension (no stray lines in polygons)."""
+    import shapely  # type: ignore[import-untyped,import-not-found,unused-ignore]
+
+    fixed = shapely.make_valid(geometry)
+    if fixed.geom_type != "GeometryCollection":
+        return fixed
+    dimension = shapely.get_dimensions(geometry)
+    parts = [p for p in shapely.get_parts(fixed) if shapely.get_dimensions(p) == dimension]
+    return shapely.union_all(parts) if parts else None
+
+
+def clean_geometries(frame: Any, bbox: BBox, keep: list[str]) -> tuple[Any, dict[str, Any]]:
+    """Drop features without geometry or entirely outside the city, repair invalid ones and
+    drop columns that are empty in every row. Returns (frame, counts for the manifest)."""
+    from shapely.geometry import box  # type: ignore[import-untyped,import-not-found,unused-ignore]
+
+    geometry = frame.geometry
+    present = geometry.notna() & ~geometry.is_empty
+    frame = frame[present].copy()
+    invalid = ~frame.geometry.is_valid
+    if invalid.any():
+        frame.loc[invalid, frame.geometry.name] = frame.geometry[invalid].apply(_repair)
+        frame = frame[frame.geometry.notna() & ~frame.geometry.is_empty]
+    inside = frame.geometry.intersects(box(*bbox))
+    outside = int((~inside).sum())
+    frame = frame[inside]
+    empty = [c for c in frame.columns
+             if c != frame.geometry.name and c not in keep and len(frame)
+             and (frame[c].isna() | (frame[c].astype(str).str.strip() == "")).all()]
+    frame = frame.drop(columns=empty)
+    return frame, {"dropped_no_geometry": int((~present).sum()), "repaired_geometries": int(invalid.sum()),
+                   "dropped_outside_city": outside, "dropped_empty_columns": empty}
 
 
 # --- One layer ----------------------------------------------------------------
@@ -301,6 +345,10 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
                 entry["excluded_rows"] = entry.get("excluded_rows", 0) + int(excluded.sum())
                 frame = frame[~excluded]
 
+        if catalog.sources[layer.source].protocol != "derived":
+            frame, cleaning = clean_geometries(frame, catalog.city_bbox, list(layer.options.get("keep_columns") or []))
+            entry["cleaning"] = cleaning
+
         columns = [c for c in frame.columns if c != frame.geometry.name]
         dropped = personal_columns(columns, catalog.privacy_patterns, layer.drop_fields)
         frame = frame.drop(columns=dropped)
@@ -308,6 +356,9 @@ def ingest_layer(layer: LayerSpec, catalog: Catalog, fetch: Fetch, out_dir: Path
             # Cut polygons that reach beyond the city bbox (e.g. a flood plain along the Tiber).
             frame = frame.clip(catalog.city_bbox)
             frame = frame[~frame.geometry.is_empty]
+        rename = {str(k): str(v) for k, v in (layer.options.get("rename_columns") or {}).items()}
+        if rename:
+            frame = frame.rename(columns=rename)
         keep = layer.options.get("keep_columns")
         if keep:
             # A short, stable schema for other workstreams; missing tags become empty columns.

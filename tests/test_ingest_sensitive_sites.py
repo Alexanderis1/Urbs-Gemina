@@ -110,3 +110,12 @@ def test_official_registers_come_before_osm_and_keep_their_row_label(tmp_path: P
     ministry = by_id["public_bodies_ipa:m_it"]
     assert (ministry.category, ministry.subtype, ministry.data_kind) == ("government", "ministry", "estimated")
     assert "osm_sensitive_pois:node/2" not in by_id and "osm_sensitive_pois:node/9" not in by_id
+
+
+def test_identical_records_in_one_layer_are_kept_once(tmp_path: Path) -> None:
+    same = {"denominazione": "IC VIA X", "geometry": Point(12.48, 41.89)}
+    write(tmp_path, "schools_state", [{"feature_id": "s.1", **same}, {"feature_id": "s.2", **same},
+                                      {"feature_id": "s.3", "denominazione": "LICEO Y", "geometry": Point(12.48, 41.89)}])
+    frame, report = build_sensitive_sites(LAYER, tmp_path)
+    assert sorted(frame["name"]) == ["IC VIA X", "LICEO Y"]  # same place, different school: both kept
+    assert report["dropped_identical"] == 1
