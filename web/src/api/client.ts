@@ -3,6 +3,7 @@ import { mockTool } from "./mock";
 import { mockSportTool, SPORT_TOOLS, type SportTool } from "./mockSport";
 import type { Envelope, ToolName } from "./types";
 import { SUPABASE_URL, supabase } from "@/integrations/supabase/client";
+import { settleJob, type JobReply } from "@/lib/jobs";
 import { callWithWakeUp } from "@/lib/retry";
 import { getServiceStatus, setServiceStatus } from "@/lib/serviceStatus";
 
@@ -24,8 +25,34 @@ export const isSampleMode = PROXY === "" && DIRECT === "";
 
 const PUBLISHABLE = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ?? "";
 
-/** POST to the edge function with the signed-in user's token (or the public key when signed out). */
+/**
+ * POST to the edge function with the signed-in user's token (or the public key when signed out).
+ * A request that runs long comes back as a job (HTTP 202): this waits for it and returns the final answer,
+ * so callers see one ordinary response (see lib/jobs.ts).
+ */
 export async function proxyFetch(path: string, body: unknown): Promise<Response> {
+  const res = await post(path, body);
+  if (res.status !== 202) return res;
+  const first: JobReply = { status: 202, body: await res.clone().json().catch(() => null) };
+  runningJobs += 1;
+  try {
+    const last = await settleJob(first, readJob, { onRunning: () => setServiceStatus("working") });
+    return last === first ? res : new Response(JSON.stringify(last.body ?? null), { status: last.status, headers: { "content-type": "application/json" } });
+  } finally {
+    runningJobs -= 1;
+    if (runningJobs === 0 && getServiceStatus() === "working") setServiceStatus("ready");
+  }
+}
+
+/** Long runs being waited for right now (the "working" notice stays until the last one ends). */
+let runningJobs = 0;
+
+async function readJob(path: string): Promise<JobReply> {
+  const res = DIRECT ? await fetch(`${DIRECT}${path}`) : await post(path, {});
+  return { status: res.status, body: await res.json().catch(() => null) };
+}
+
+async function post(path: string, body: unknown): Promise<Response> {
   if (DIRECT) {
     // Citizen tier, no credentials. /ask gets the TwinQuestion as is (the API sets the tier from the missing key).
     return fetch(`${DIRECT}${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -82,5 +109,5 @@ async function postTool<R>(tool: string, inputs: Record<string, unknown>): Promi
 /** Reads a list from the API (GET when talking to it directly; the edge function takes a POST and forwards a GET). */
 export async function proxyRead(path: string): Promise<Response> {
   if (DIRECT) return fetch(`${DIRECT}${path}`);
-  return proxyFetch(path, {});
+  return post(path, {});
 }

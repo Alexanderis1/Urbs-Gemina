@@ -53,14 +53,17 @@ describe("ready-made use cases", () => {
       mode: "question",
       conversation_id: "c1",
       use_case: "event_planning",
-      params: { attendees: 30000, radius_m: 400, discipline: "calcio" },
+      // The service looks the place up from params.place; the question alone is not enough.
+      params: { place: "Circo Massimo", attendees: 30000, radius_m: 400, discipline: "calcio" },
     });
   });
 
   it("builds the /ask body for an area and names the task in the officer's language", () => {
     const [uc] = parseUseCases([briefing]) as [UseCase];
     const input = { place: "", area: { type: "municipio", id: "5" } as const, values: {}, language: "en" as const, conversationId: null };
-    expect(buildUseCaseQuestion(uc, input)).toMatchObject({ question: "Morning municipio briefing: Municipio V", area: "municipio:5", params: {} });
+    const body = buildUseCaseQuestion(uc, input);
+    expect(body).toMatchObject({ question: "Morning municipio briefing: Municipio V", area: "municipio:5" });
+    expect(body.params).toEqual({});
     expect(useCaseTurnLabel(uc, input)).toBe("Morning municipio briefing · Municipio V");
   });
 });

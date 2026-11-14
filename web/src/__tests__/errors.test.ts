@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { errorText, isNetworkError } from "@/lib/errors";
 import { setLang } from "@/lib/i18n";
+import { JobError } from "@/lib/jobs";
 
 describe("errorText", () => {
   it("turns a browser network failure into a plain sentence", () => {
@@ -21,6 +22,23 @@ describe("errorText", () => {
   it("never returns an empty message", () => {
     expect(errorText(undefined)).toBe("Something went wrong. Try again.");
     expect(errorText(new Error(""))).toBe("Something went wrong. Try again.");
+  });
+});
+
+describe("a long run that ends without a result", () => {
+  it("says what happened in plain words, and is not treated as a sleeping service", () => {
+    expect(errorText(new JobError("timeout"))).toMatch(/taking longer than expected/);
+    expect(errorText(new JobError("lost"))).toMatch(/lost track/);
+    expect(errorText(new JobError("unreachable"))).toMatch(/could not be reached/);
+    for (const code of ["timeout", "lost", "unreachable"] as const) expect(isNetworkError(new JobError(code))).toBe(false);
+  });
+  it("speaks Italian", () => {
+    setLang("it");
+    try {
+      expect(errorText(new JobError("timeout"))).toMatch(/più tempo del previsto/);
+    } finally {
+      setLang("en");
+    }
   });
 });
 

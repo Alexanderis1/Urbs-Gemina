@@ -135,6 +135,8 @@ const needsPlace = (uc: UseCase) => uc.needs.includes("place");
 
 export function buildUseCaseQuestion(uc: UseCase, input: UseCaseInput): UseCaseQuestionBody {
   const params: Record<string, string | number> = {};
+  // The service finds the place from params.place (the question text alone gives "place not found").
+  if (needsPlace(uc) && input.place.trim()) params.place = input.place.trim();
   for (const f of paramFields(uc)) {
     const v = (input.values[f.key] ?? f.initial).trim();
     if (!v) continue;

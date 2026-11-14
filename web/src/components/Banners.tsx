@@ -22,6 +22,8 @@ const T = texts({
     liveDetail: "Live data through the secure office gateway.",
     waking: "Live service · waking up",
     wakingBanner: "The live service is waking up after a pause. The first answer can take two to three minutes; this screen keeps trying by itself.",
+    working: "Live service · working",
+    workingBanner: "The live service is working on this request. A first answer after a pause, or a large simulation, can take a few minutes; the result appears here by itself.",
     signedInAs: "Signed in as",
     staff: "city staff",
     resident: "resident",
@@ -44,6 +46,8 @@ const T = texts({
     liveDetail: "Dati live attraverso l'accesso protetto degli uffici.",
     waking: "Servizio live · in avvio",
     wakingBanner: "Il servizio live si sta riavviando dopo una pausa. La prima risposta può richiedere due o tre minuti; questa schermata riprova da sola.",
+    working: "Servizio live · al lavoro",
+    workingBanner: "Il servizio live sta lavorando a questa richiesta. La prima risposta dopo una pausa, o una simulazione grande, può richiedere qualche minuto; il risultato appare qui da solo.",
     signedInAs: "Accesso come",
     staff: "personale del Comune",
     resident: "cittadino",
@@ -87,13 +91,13 @@ export function SampleModeBanner() {
   );
 }
 
-/** Shown while the live service wakes up after a pause, so a slow first answer does not look like a failure. */
+/** Shown while the live service wakes up or works on a long run, so a slow answer does not look like a failure. */
 export function WakingBanner() {
-  const waking = useServiceStatus() === "waking";
-  if (isSampleMode || !waking) return null;
+  const status = useServiceStatus();
+  if (isSampleMode || (status !== "waking" && status !== "working")) return null;
   return (
     <div role="status" className="animate-fade-in border-b border-primary/30 bg-primary-soft px-4 py-1 text-center text-xs font-semibold text-link">
-      {tr(T).wakingBanner}
+      {status === "waking" ? tr(T).wakingBanner : tr(T).workingBanner}
     </div>
   );
 }
@@ -102,9 +106,10 @@ export function WakingBanner() {
 export function StatusBar() {
   const { tier, runs } = useSession();
   const t = tr(T);
-  const waking = useServiceStatus() === "waking";
+  const status = useServiceStatus();
+  const waking = status === "waking" || status === "working";
   const base = connectionState();
-  const c = waking && base.tone === "live" ? { ...base, label: t.waking } : base;
+  const c = waking && base.tone === "live" ? { ...base, label: status === "waking" ? t.waking : t.working } : base;
   const last = runs[0];
   return (
     <footer className="flex items-center gap-4 border-t border-line bg-surface px-4 py-1 text-2xs text-muted">

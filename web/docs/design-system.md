@@ -81,6 +81,11 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     An incomplete answer says how many items arrived out of how many.
 26. **No call is started more than twice.** After a missing answer the service is woken with a light request and
     the call runs once more; a request the service cannot serve is not repeated (every start costs money).
+27. **A long run is waited for, not repeated.** When a request runs long the service answers "still running" with
+    a job id. The screen then reads that job every 4 seconds until the result is ready and shows it as a normal
+    answer; a blue strip says "the live service is working on this request". Reading a job starts nothing. The
+    wait ends after 15 minutes, or when the job is lost, with a plain sentence (`src/lib/jobs.ts`,
+    `src/lib/errors.ts`). Through the staff gateway the job is read with the caller's own key (`/jobs/<id>`).
 
 
 ## Two experiences
