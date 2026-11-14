@@ -25,8 +25,10 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("fastapi>=0.110", "pydantic>=2", "PyYAML>=6", "numpy>=1.26", "h3>=4", "httpx>=0.27", "anthropic>=2.8",
                  # WS3 live providers (Cartoradio GeoTIFF, register fit, GTFS-RT, EEA parquet)
-                 "rasterio>=1.3", "scipy>=1.10", "pyarrow>=14", "gtfs-realtime-bindings>=1.0", "protobuf>=4")
-    .env({"PYTHONPATH": APP_DIR, "URBS_ROOT": APP_DIR})
+                 "rasterio>=1.3", "scipy>=1.10", "pyarrow>=14", "gtfs-realtime-bindings>=1.0", "protobuf>=4",
+                 "mapbox-earcut>=1.0")  # twin/physics (PR #13)
+    # Heavy scenario kinds (SUMO, floods, plumes) run in deploy/scenarios_worker.py, which scales to zero.
+    .env({"PYTHONPATH": APP_DIR, "URBS_ROOT": APP_DIR, "URBS_SCENARIO_WORKER": "modal"})
     .add_local_dir("twin", f"{APP_DIR}/twin", ignore=["**/__pycache__"])
     .add_local_dir("config", f"{APP_DIR}/config")
     .add_local_dir("scripts", f"{APP_DIR}/scripts", ignore=["**/__pycache__"])
