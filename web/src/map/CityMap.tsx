@@ -155,8 +155,11 @@ export function CityMap({
   onPick,
 }: {
   layers: Layer[];
-  /** Optional: called when a pickable deck.gl item is clicked or tapped (object is undefined on empty map). */
-  onPick?: (info: PickingInfo) => void;
+  /**
+   * Optional: called on every click or tap with what was under it (object is undefined on empty map).
+   * A click on an item belongs to the item and is not also passed to `onClick`, unless this returns false.
+   */
+  onPick?: (info: PickingInfo) => boolean | void;
   /** Called while zooming, each time the zoom passes a quarter step: 3D markers keep their size on screen with it. */
   onZoomStep?: (zoom: number) => void;
   /** Optional: called when the pointer moves over a pickable deck.gl item (object is undefined when over nothing). */
@@ -219,7 +222,6 @@ export function CityMap({
         // Pointer cursor over something that has details, only on screens that show them.
         map.getCanvas().style.cursor = info.object ? "pointer" : "";
       },
-      onClick: (info) => pickRef.current?.(info),
     });
     map.addControl(overlay);
     // Start with the credits folded behind the (i) button so they do not cover the map legend; one click opens them.
@@ -232,7 +234,16 @@ export function CityMap({
       map.off("sourcedata", foldCredits);
     };
     map.on("sourcedata", foldCredits);
-    map.on("click", (e) => clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }));
+    map.on("click", (e) => {
+      // A click or tap on a marker belongs to the marker (its card opens); it is not also a click on the map under it.
+      // Asked here rather than remembered from a hover, because a touch screen has no hover.
+      if (pickRef.current) {
+        const info = overlay.pickObject({ x: e.point.x, y: e.point.y, radius: 4 });
+        const taken = pickRef.current(info ?? ({ x: e.point.x, y: e.point.y, object: undefined, layer: null } as unknown as PickingInfo));
+        if (info?.object && taken !== false) return;
+      }
+      clickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng });
+    });
     map.on("zoomend", () => zoomRef.current?.(map.getZoom()));
     let step = NaN;
     const checkTwin = () => {

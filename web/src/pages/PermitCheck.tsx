@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import { ScatterplotLayer } from "@deck.gl/layers";
+import type { PickingInfo } from "@deck.gl/core";
 import { CityMap } from "@/map/CityMap";
+import { markerLayers, pickedMarker } from "@/map/markers";
+import { ResourceHover } from "@/components/MarkerCard";
+import type { Resource } from "@/lib/resource";
+import { TWIN_START_ZOOM } from "@/lib/twinOverlay";
 import { RangeBar } from "@/components/RangeBar";
 import { RunMeta } from "@/components/RunMeta";
 import { Callout, EmptyState, Field, MapFloat, Panel, Section, Skeleton, Spinner, Stat, Workspace } from "@/components/ui";
@@ -50,6 +55,9 @@ const T = texts({
     probExceed: "Probability of exceeding",
     model: (m: string) => `Model: ${m}`,
     contextRadius: (m: number) => `Context radius ${m} m`,
+    proposedSite: "Proposed antenna site",
+    radiusFact: "Checked within",
+    sensitiveFact: "Sensitive sites within the radius",
   },
   it: {
     operatorNote: "<!-- Dati dell'istanza inseriti dall'operatore -->",
@@ -85,6 +93,9 @@ const T = texts({
     probExceed: "Probabilità di superamento",
     model: (m: string) => `Modello: ${m}`,
     contextRadius: (m: number) => `Raggio del contesto ${m} m`,
+    proposedSite: "Sito proposto per l'antenna",
+    radiusFact: "Verificato entro",
+    sensitiveFact: "Siti sensibili entro il raggio",
   },
 });
 
@@ -113,6 +124,9 @@ export default function PermitCheck() {
   // The application is typed in by the officer (there is no synthetic permit inbox).
   const [app, setApp] = useState<Application>({ operator: "", height_m: "", technology: "", reference: "" });
   const [band, setBand] = useState<string>("");
+  /** Zoom in quarter steps: the 3D marker keeps its size on screen with it. */
+  const [zoom, setZoom] = useState(TWIN_START_ZOOM);
+  const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
 
   const antenna = (lon: number, lat: number) => {
     const a: Record<string, unknown> = { lon, lat };
@@ -197,16 +211,32 @@ export default function PermitCheck() {
         lineWidthMinPixels: 2,
         updateTriggers: { getFillColor: [r, g, b], getLineColor: [r, g, b] },
       }),
-      new ScatterplotLayer({
+      // The proposed antenna: one 3D marker on the city model at the exact spot.
+      ...markerLayers([{ id: "site", position: centre, color: palette.accent, level: null, glyph: "antenna", data: site }], {
         id: "site",
-        data: [centre],
-        getPosition: (d: [number, number]) => d,
-        getFillColor: [r, g, b],
-        radiusMinPixels: 7,
-        updateTriggers: { getFillColor: [r, g, b] },
+        zoom,
+        palette,
+        hoveredId: hover ? "site" : null,
       }),
     ];
-  }, [site, ctx, palette]);
+  }, [site, ctx, palette, zoom, hover]);
+
+  // Nearby sensitive places come without coordinates from context_check, so only the site itself is a marker.
+  const siteCard: Resource | null =
+    site && ctx && isOk(ctx) && summary
+      ? {
+          glyph: "antenna",
+          title: site.label,
+          category: t.proposedSite,
+          main: { label: t.sensitiveFact, value: String(summary.sensitiveHits), unit: "" },
+          readings: [{ label: t.sensitiveFact, value: String(summary.sensitiveHits), unit: "" }],
+          facts: [{ label: t.radiusFact, value: `${ctx.result.radius_m} m` }],
+          extra: [],
+          synthetic: false,
+          position: [site.lon, site.lat],
+        }
+      : null;
+  const onHover = (info: PickingInfo) => setHover(pickedMarker(info, "site") ? { x: info.x, y: info.y } : null);
 
   const thresholds = field && isOk(field) ? Object.entries(field.result.exceedance ?? {}) : [];
   const firstLimit = thresholds.find(([, t]) => t.threshold_v_per_m != null);
@@ -391,7 +421,19 @@ export default function PermitCheck() {
         </Panel>
       }
     >
-      <CityMap layers={layers} initialZoom={14} pitch={45} focus={focus} onClick={(p) => void check(p)} />
+      <CityMap
+        layers={layers}
+        initialZoom={14}
+        pitch={45}
+        focus={focus}
+        onZoomStep={setZoom}
+        onHover={onHover}
+        onClick={(p) => {
+          // A click on the site marker itself does not check the same place again.
+          if (!hover) void check(p);
+        }}
+      />
+      {hover && siteCard && <ResourceHover x={hover.x} y={hover.y} resource={siteCard} />}
       {site && (
         <MapFloat position="top-left" className="max-w-sm">
           <div className="text-sm font-semibold">{site.label}</div>

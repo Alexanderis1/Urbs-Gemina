@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Database, Home as HomeIcon, ListChecks, Map as MapIcon, MapPin, MessagesSquare, Search, Sparkles, Trophy, type LucideIcon } from "lucide-react";
+import { ArrowRight, ChevronRight, Database, Home as HomeIcon, ListChecks, Map as MapIcon, MapPin, MessagesSquare, Search, Sparkles, type LucideIcon } from "lucide-react";
 import { buildTwinQuestion, type TwinAnswer } from "@/api/twin";
 import { AnswerText, AnswerTrace } from "@/components/Answer";
+import { GlyphIcon } from "@/components/MarkerCard";
+import { macroAreas } from "@/lib/services";
 import { Callout, Skeleton, Spinner } from "@/components/ui";
 import { StepList, USE_CASE_ICON, useUseCases } from "@/components/UseCases";
 import { dispatchMapAction } from "@/lib/mapbus";
@@ -28,8 +30,13 @@ const T = texts({
     builtInSummary: "Air, rain, public transport and health services nearby, in plain words.",
     builtInQuestion: (p: string) => `What should a resident know about the area around ${p}: air, rain, public transport and health services nearby?`,
     kicker: "Public information service",
-    title: "What is happening around you in Rome",
-    lead: "Type your address or neighbourhood. The city's digital twin answers from open data and says where each fact comes from. No account is needed.",
+    title: "Rome around you, now",
+    lead: "Air, traffic, sport, culture and reports to the city. From open data, with the source of every fact. No account is needed.",
+    services: "Services",
+    askTitle: "Ask about your area",
+    askLead: "Type your address or neighbourhood and get a short summary in plain words.",
+    infoOnly: "Information only, not an alert service.",
+    call112: "In an emergency call 112.",
     addressLabel: "Address or neighbourhood in Rome",
     addressPlaceholder: "Address or neighbourhood, e.g. Via Nazionale 194",
     looking: "Looking…",
@@ -54,8 +61,13 @@ const T = texts({
     builtInSummary: "Aria, pioggia, trasporto pubblico e servizi sanitari vicini, in parole semplici.",
     builtInQuestion: (p: string) => `Che cosa deve sapere un cittadino sulla zona intorno a ${p}: aria, pioggia, trasporto pubblico e servizi sanitari vicini?`,
     kicker: "Servizio pubblico di informazione",
-    title: "Che cosa succede intorno a te a Roma",
-    lead: "Scrivi il tuo indirizzo o il tuo quartiere. Il gemello digitale della città risponde con dati aperti e dice da dove viene ogni informazione. Non serve un account.",
+    title: "Roma intorno a te, adesso",
+    lead: "Aria, traffico, sport, cultura e segnalazioni alla città. Da dati aperti, con la fonte di ogni informazione. Non serve un account.",
+    services: "Servizi",
+    askTitle: "Chiedi della tua zona",
+    askLead: "Scrivi il tuo indirizzo o il tuo quartiere e ricevi un breve riepilogo in parole semplici.",
+    infoOnly: "Solo informazioni, non un servizio di allerta.",
+    call112: "In caso di emergenza chiama il 112.",
     addressLabel: "Indirizzo o quartiere di Roma",
     addressPlaceholder: "Indirizzo o quartiere, ad es. Via Nazionale 194",
     looking: "Sto cercando…",
@@ -79,7 +91,6 @@ const T = texts({
 
 const EXPLORE: { screen: ScreenId; icon: LucideIcon }[] = [
   { screen: "city", icon: MapIcon },
-  { screen: "sport", icon: Trophy },
   { screen: "ask", icon: MessagesSquare },
   { screen: "honesty", icon: Database },
 ];
@@ -90,7 +101,10 @@ type State =
   | { status: "done"; title: string; answer: TwinAnswer }
   | { status: "error"; text: string };
 
-/** The residents' front page: type an address, pick a topic, read the answer. No account, no jargon. */
+/**
+ * The residents' front page, mobile first: the four macro-areas with their services, then a question about
+ * one's own address, then the rest of the city. No account, no jargon.
+ */
 export default function Home() {
   const askTwin = useAskTwin();
   const t = tr(T);
@@ -124,11 +138,53 @@ export default function Home() {
   return (
     <div className="h-full overflow-y-auto">
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-4xl animate-rise-in space-y-5 px-5 py-8">
-          <div className="space-y-2">
+        <div className="mx-auto max-w-4xl animate-rise-in space-y-4 px-4 py-5 md:space-y-5 md:px-5 md:py-8">
+          <div className="space-y-1.5">
             <p className="label">{t.kicker}</p>
-            <h1 className="text-3xl font-bold leading-tight">{t.title}</h1>
-            <p className="max-w-2xl text-base text-muted">{t.lead}</p>
+            <h1 className="text-2xl font-bold leading-tight md:text-3xl">{t.title}</h1>
+            <p className="max-w-2xl text-sm text-muted md:text-base">{t.lead}</p>
+          </div>
+          <div aria-label={t.services} role="list" className="grid gap-3 md:grid-cols-2">
+            {macroAreas().map((area) => (
+              <section key={area.screen} role="listitem" className="overflow-hidden rounded border border-line bg-surface shadow-panel">
+                <Link
+                  to={PUBLIC_SCREENS.find((p) => p.id === area.screen)!.path}
+                  className="flex items-center gap-3 px-3.5 py-3 transition-colors duration-150 hover:bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
+                >
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${area.tone}`}>
+                    <GlyphIcon glyph={area.glyph} className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-lg font-bold leading-tight text-ink">{area.title}</span>
+                    <span className="block text-sm text-muted">{area.summary}</span>
+                  </span>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
+                </Link>
+                <ul className="border-t border-line">
+                  {area.services.map((sv) => (
+                    <li key={sv.id} className="border-b border-line last:border-b-0">
+                      <Link
+                        to={sv.to}
+                        className="flex min-h-12 items-center gap-3 px-3.5 py-2 transition-colors duration-150 hover:bg-primary-soft focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
+                      >
+                        <GlyphIcon glyph={sv.glyph} className="h-4 w-4 text-link" />
+                        <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-link">{sv.title}</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-line bg-surface">
+        <div className="mx-auto max-w-4xl space-y-3 px-4 py-5 md:px-5">
+          <div className="space-y-1">
+            <h2 className="text-base font-bold">{t.askTitle}</h2>
+            <p className="text-sm text-muted">{t.askLead}</p>
           </div>
           <form
             className="space-y-4"
@@ -191,7 +247,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-4xl space-y-6 px-5 py-6">
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-5 md:px-5 md:py-6">
         <div aria-live="polite">
           {state.status === "busy" && (
             <article className="card animate-rise-in space-y-3">
@@ -263,6 +319,9 @@ export default function Home() {
             })}
           </div>
         </section>
+        <p className="text-xs text-muted md:hidden">
+          {t.infoOnly} <span className="font-semibold text-ink">{t.call112}</span>
+        </p>
       </div>
     </div>
   );

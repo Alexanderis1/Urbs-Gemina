@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session as AuthSession } from "@supabase/supabase-js";
-import { callTool } from "@/api/client";
+import { callTool, type CitizenTool } from "@/api/client";
 import type { Envelope, ToolName } from "@/api/types";
 import type { SportTool } from "@/api/mockSport";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,7 @@ interface Session {
   auth: AuthSession | null;
   runs: LoggedRun[];
   /** Calls a tool and records the run (session audit log and tool trace). */
-  run: <R = Record<string, unknown>>(tool: ToolName | SportTool, inputs: Record<string, unknown>) => Promise<Envelope<R>>;
+  run: <R = Record<string, unknown>>(tool: ToolName | SportTool | CitizenTool, inputs: Record<string, unknown>) => Promise<Envelope<R>>;
 }
 
 const Ctx = createContext<Session | null>(null);
@@ -63,7 +63,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const run = useCallback(
-    async <R,>(tool: ToolName | SportTool, inputs: Record<string, unknown>) => {
+    async <R,>(tool: ToolName | SportTool | CitizenTool, inputs: Record<string, unknown>) => {
       // The tier is not sent: the edge function takes it from the session.
       const env = await callTool<R>(tool, inputs);
       setRuns((r) => [{ at: new Date().toISOString(), tier, env: env as Envelope }, ...r].slice(0, 200));

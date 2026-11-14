@@ -86,6 +86,29 @@ Not used on purpose: glows, neon, gradients on controls, glass effects, animated
     answer; a blue strip says "the live service is working on this request". Reading a job starts nothing. The
     wait ends after 15 minutes, or when the job is lost, with a plain sentence (`src/lib/jobs.ts`,
     `src/lib/errors.ts`). Through the staff gateway the job is read with the caller's own key (`/jobs/<id>`).
+28. **No flat dots: 3D markers on the city model** (Alessandro, 14 Nov). Every point is a column rising from its
+    exact spot, with a round glyph badge on top (places) or its value (readings); the column of a reading is as
+    tall as its value. Columns are real 3D (buildings in front hide them); badges, values and the footprint on
+    the ground always show. Sizes follow the zoom so a marker keeps its size on screen. More than 400 markers
+    are drawn slim, and only the one under the pointer and the chosen one carry a badge
+    (`src/lib/markers.ts`, `src/map/markers.ts`, glyphs in `src/map/markerGlyphs.ts`).
+29. **Hover says what it is, a click says everything.** The card under the pointer has the glyph, the name, the
+    type, the main value and the data label. A click or tap opens the detail card (a card at the right on a desk
+    screen, a sheet from the bottom on a phone) with every fact in plain labels, all readings with their range,
+    when it was updated, and "Zoom here". Staff also get the source's own fields. Contact details are never
+    shown (`src/lib/resource.ts`, `src/components/MarkerCard.tsx`). A click on a marker is not also a click on
+    the map under it.
+30. **The residents' service is mobile first and organised in four macro-areas** (Alessandro, 14 Nov): Ambiente,
+    Trasporti, Sociale, Segnala. With Home they are a bar at the bottom of a phone and tabs on a desk screen;
+    the home page lists every service of each area as a question a resident would ask (`src/lib/services.ts`).
+    Map screens put the map on top and the answer in a sheet under it (`MapScreen` in
+    `src/components/CitizenMap.tsx`).
+31. **"Here" on top of the whole city.** The resident's position (phone GPS, or a tap on the map; kept only in
+    the browser tab) is a 3D marker; the answer for that point is one large value with its level in words, its
+    likely range and the reference values, all given by the citizen tools (`air_here`, `emf_here`,
+    `city_heatmap`, `transport_now`, `places_open`). The interface holds no threshold. When a citizen tool is
+    not in the live service, the screen falls back to the layer tools and says what is missing
+    (`src/lib/useCitizenData.ts`, `src/lib/here.ts`).
 
 
 ## Two experiences

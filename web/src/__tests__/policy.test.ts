@@ -87,6 +87,11 @@ describe("live API routes", () => {
     expect(planForward("/jobs/../tools/x", "office", {}, env)).toMatchObject({ ok: false, status: 404 });
     expect(planForward("/jobs/", "office", {}, env)).toMatchObject({ ok: false, status: 404 });
   });
+  it("lets residents call the citizen services", () => {
+    for (const tool of ["air_here", "emf_here", "city_heatmap", "transport_now", "places_open"]) {
+      expect(planForward(`/tools/${tool}`, "citizen", { point: [12.48, 41.9] }, env)).toMatchObject({ ok: true, url: `https://api.example/tools/${tool}` });
+    }
+  });
   it("knows the permit_report tool", () => {
     expect(planForward("/tools/permit_report", "office", {}, env)).toMatchObject({ ok: true });
   });

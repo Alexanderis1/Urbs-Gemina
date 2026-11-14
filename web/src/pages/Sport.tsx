@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
-import type { Layer } from "@deck.gl/core";
+import type { Layer, PickingInfo } from "@deck.gl/core";
 import { Trophy, X } from "lucide-react";
 import { CityMap } from "@/map/CityMap";
+import { markerLayers, pickedMarker, type Marker } from "@/map/markers";
+import { ResourceHover } from "@/components/MarkerCard";
+import type { Resource, ResourceFact } from "@/lib/resource";
+import { TWIN_START_ZOOM } from "@/lib/twinOverlay";
 import { Callout, Field, MapFloat, Panel, Section, Segmented, Stat, Workspace } from "@/components/ui";
 import { useTheme } from "@/lib/useTheme";
 import { KindBadge } from "@/components/Badge";
@@ -59,6 +63,10 @@ export default function Sport() {
   const [municipio, setMunicipio] = useState("");
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [zoom, setZoom] = useState(11.5);
+  /** Zoom in quarter steps: the 3D markers keep their size on screen with it. */
+  const [markerZoom, setMarkerZoom] = useState(TWIN_START_ZOOM);
+  /** The facility or the what-if gym under the pointer. */
+  const [hover, setHover] = useState<{ x: number; y: number; id: string; resource: Resource } | null>(null);
   const [ftype, setFtype] = useState("");
   const [selected, setSelected] = useState<SportFeature | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,6 +148,10 @@ export default function Sport() {
             stroked: true,
             lineWidthMinPixels: 2,
           }),
+          ...markerLayers(
+            [{ id: "gym", position: [gym.lon, gym.lat], color: palette.whatIf, level: null, glyph: "sport", data: gym }],
+            { id: "wif", zoom: markerZoom, palette, hoveredId: hover?.id },
+          ),
         );
     }
     if (shouldCluster(pts.length, zoom)) {
@@ -161,44 +173,46 @@ export default function Sport() {
         }),
       );
     } else {
+      // One 3D marker per facility: a column on the city model with a sport badge on top; grey when not usable.
+      const markers: Marker<SportFeature>[] = pts.map((f) => ({
+        id: f.properties.facility_id,
+        position: f.geometry!.coordinates,
+        color: isInactive(f) ? palette.inactive : palette.point,
+        level: null,
+        glyph: "sport",
+        synthetic: f.properties.synthetic,
+        data: f,
+      }));
       out.push(
-        new ScatterplotLayer({
-          id: "facilities",
-          data: pts,
-          getPosition: (f: SportFeature) => f.geometry!.coordinates,
-          getFillColor: (f: SportFeature) =>
-            f.properties.facility_id === selected?.properties.facility_id
-              ? [...palette.accent, 255]
-              : isInactive(f)
-                ? [...palette.inactive, 170]
-                : [...palette.point, 255],
-          radiusMinPixels: pts.length > 3000 ? 3 : 5,
-          pickable: true,
-          onClick: ({ object }) => {
-            if (object) setSelected(object as SportFeature);
-            return true;
-          },
-          updateTriggers: { getFillColor: [selected, palette] },
+        ...markerLayers(markers, {
+          id: "fac",
+          zoom: markerZoom,
+          palette,
+          selectedId: selected?.properties.facility_id ?? null,
+          hoveredId: hover?.id,
         }),
       );
-      // Selected facility: larger with a white outline, so it stands out even when accent equals point.
-      if (selected?.geometry)
-        out.push(
-          new ScatterplotLayer({
-            id: "facility-selected",
-            data: [selected],
-            getPosition: (f: SportFeature) => f.geometry!.coordinates,
-            getFillColor: [...palette.accent, 255],
-            getLineColor: [255, 255, 255, 255],
-            stroked: true,
-            lineWidthMinPixels: 2,
-            radiusMinPixels: 9,
-            updateTriggers: { getFillColor: [palette] },
-          }),
-        );
     }
     return out;
-  }, [shown, tab, coverage, gym, selected, zoom, palette]);
+  }, [shown, tab, coverage, gym, selected, zoom, markerZoom, hover?.id, palette]);
+
+  const onHover = (info: PickingInfo) => {
+    const fac = pickedMarker<SportFeature>(info, "fac");
+    if (fac) return setHover({ x: info.x, y: info.y, id: fac.id, resource: facilityResource(fac.data) });
+    const g = pickedMarker<{ lon: number; lat: number }>(info, "wif");
+    if (g) return setHover({ x: info.x, y: info.y, id: g.id, resource: gymResource(g.data) });
+    setHover(null);
+  };
+  const onPick = (info: PickingInfo) => {
+    const fac = pickedMarker<SportFeature>(info, "fac");
+    if (fac) setSelected(fac.data);
+    setHover(null);
+  };
+  // A click on a marker opens it; it does not move the what-if gym.
+  const onMapClick = (p: { lon: number; lat: number }) => {
+    if (hover) return;
+    setGym({ lon: p.lon, lat: p.lat });
+  };
 
   async function runWhatIf() {
     if (!gym) return;
@@ -353,7 +367,16 @@ export default function Sport() {
         )
       }
     >
-      <CityMap layers={layers} pitch={30} onZoom={setZoom} onClick={tab === "deserts" ? (p) => setGym({ lon: p.lon, lat: p.lat }) : undefined} />
+      <CityMap
+        layers={layers}
+        pitch={30}
+        onZoom={setZoom}
+        onZoomStep={setMarkerZoom}
+        onHover={onHover}
+        onPick={onPick}
+        onClick={tab === "deserts" ? onMapClick : undefined}
+      />
+      {hover && <ResourceHover x={hover.x} y={hover.y} resource={hover.resource} kind={hover.resource.synthetic ? "simulated" : undefined} />}
       <MapFloat position="bottom-left">
         <div className="label mb-1">{t.mapKey}</div>
         <ul className="space-y-1 text-xs">
@@ -379,6 +402,49 @@ export default function Sport() {
       </MapFloat>
     </Workspace>
   );
+}
+
+/** What the hover card says about a facility. Contact details (phone, email, people) are never shown. */
+function facilityResource(f: SportFeature): Resource {
+  const p = f.properties;
+  const t = tr(T);
+  const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const facts: ResourceFact[] = [];
+  const add = (label: string, value: string | undefined) => {
+    if (value) facts.push({ label, value });
+  };
+  add(t.type, typeLabel(p.type));
+  add(t.disciplines, p.disciplines.map((d) => d.replace(/_/g, " ")).join(", ") || undefined);
+  add(t.address, text(p.fields.address?.value));
+  add("Municipio", p.municipio ? roman(Number(p.municipio)) : undefined);
+  add(t.accessibleLabel, p.accessible === true ? t.yes : p.accessible === false ? t.no : t.notKnown);
+  add(t.hours, text(p.fields.hours?.value));
+  add(t.status, p.closed ? t.statusClosed : isInactive(f) ? t.statusNoAccess : t.statusUsable);
+  return {
+    glyph: "sport",
+    title: displayName(f),
+    category: p.kind.replace(/_/g, " "),
+    readings: [],
+    facts,
+    extra: [],
+    synthetic: p.synthetic,
+    position: f.geometry?.coordinates,
+    id: p.facility_id,
+  };
+}
+
+function gymResource(g: { lon: number; lat: number }): Resource {
+  const t = tr(T);
+  return {
+    glyph: "sport",
+    title: t.gymName,
+    category: t.whatIfTitle,
+    readings: [],
+    facts: [{ label: t.whatIfBadge, value: t.gymAt(g.lat.toFixed(4), g.lon.toFixed(4)) }],
+    extra: [],
+    synthetic: false,
+    position: [g.lon, g.lat],
+  };
 }
 
 function facilitySubtitle(f: SportFeature): string {

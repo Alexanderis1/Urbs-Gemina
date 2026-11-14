@@ -37,14 +37,17 @@ New screens are assembled from `src/components/ui.tsx`; colours come from the to
 
 The app has two front doors (see `docs/design-system.md`, "Two experiences"):
 
-- **Public service** (no account, PA-blue header): My area (address in, plain answer out), City map, Sport, Ask, About the data.
+- **Public service** (no account, PA-blue header, mobile first): Home with the four macro-areas, Ambiente (air and
+  electromagnetic fields at your position on the city heatmap), Trasporti (traffic now and predicted, roadworks, closures,
+  strikes), Sociale (sport and museums at a chosen day and time), Segnala (reports with a photo); plus City map, Ask and
+  About the data.
 - **Operations workspace** (city staff, navy header): City, Ask, Permit, Scenarios, Sport, Data, Admin.
 
 Staff sign in at `/staff`. With Lovable Cloud the role comes from `user_roles`; without it the page has a demo button.
 
 ## Screens
 
-City view (3D map of Rome, live sensor-fusion layers as cells and sensor layers as dots drawn on the buildings, area picker incl. drawing, time slider, uncertainty toggle) ·
+City view (3D map of Rome, live sensor-fusion layers as cells, places and sensors as 3D markers rising from the buildings with hover and click cards, area picker incl. drawing, time slider, uncertainty toggle) ·
 Ask (ready-made tasks from `/use_cases`, orchestrator chat with run ids, sources, data kinds and map buttons) ·
 Permit check (address → 300 m circle → context list → field range → downloadable cited report) ·
 Scenario lab (river flood, heavy rain and sewers, heatwave, chemical plume, emergency access, road closure,
