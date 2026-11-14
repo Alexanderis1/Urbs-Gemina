@@ -24,7 +24,14 @@ With Lovable Cloud it goes through the `tools` edge function instead, which adds
 | `VITE_SAMPLE_MODE` | `1` = placeholder data, no network |
 | `VITE_TREES_PMTILES_URL` | Tree crowns (default: the R2 copy; `off` to disable) |
 | `VITE_BUILDINGS_PMTILES_URL` | G0 block model (`buildings.pmtiles`, 144 MB, not committed). Empty = the public copy on Cloudflare R2; `osm` = base-map OSM buildings; `/buildings.pmtiles` = a local copy in `web/public/` |
-| `VITE_BASEMAP_STYLE` | Base map style (OpenFreeMap, no key). If unreachable the map falls back to a plain background |
+| `VITE_BASEMAP_STYLE`, `VITE_BASEMAP_STYLE_DARK` | Base map styles for the light and dark themes (OpenFreeMap Positron and Dark, no key). If unreachable the map falls back to a plain background |
+
+## Look and feel
+
+Italian PA design system (Titillium Web, PA blue, AA contrast) blended with a map-centred operational layout.
+Two themes: light "Institutional" (default) and dark "Operations room" (button in the header).
+Tokens, components, vocabulary and the decisions log are in [`docs/design-system.md`](docs/design-system.md).
+New screens are assembled from `src/components/ui.tsx`; colours come from the tokens, never hard-coded.
 
 ## Screens
 
