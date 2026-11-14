@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import numpy as np
 import pytest
@@ -53,3 +54,23 @@ def test_capped_cells_are_lower_bounds() -> None:
 def test_mast_height_from_roof() -> None:
     assert refit.mast_height(roof_m=22.0, on_building=True) == pytest.approx(22.0 + refit.mast_offset_m())
     assert refit.mast_height(roof_m=None, on_building=False) == pytest.approx(refit.tower_height_m())
+
+
+def test_refit_settings_read_once_per_process(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The fit asks for mast heights once per site; re-reading YAML each time cost ~140 s live."""
+    from twin.providers.estimated import refit as refit_module
+    from twin.providers.settings import Settings
+
+    calls = {"n": 0}
+    real_load = Settings.load
+
+    def counting_load(*args: Any, **kwargs: Any) -> Settings:
+        calls["n"] += 1
+        return real_load(*args, **kwargs)
+
+    refit_module._refit_section.cache_clear()
+    monkeypatch.setattr(Settings, "load", staticmethod(counting_load))
+    for _ in range(50):
+        refit_module.tower_height_m()
+        refit_module.mast_offset_m()
+    assert calls["n"] == 1
