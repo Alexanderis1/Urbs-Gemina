@@ -22,7 +22,7 @@ def square(side_m: float) -> dict[str, Any]:
     return {"type": "Polygon", "coordinates": [ring]}
 
 
-DISTRICT = square(2000.0)
+DISTRICT = square(1700.0)  # under the 3 km2 SUMO limit
 CLOSE = {"close": {"edges": ["B2C2", "C2B2"]}}
 
 
@@ -32,6 +32,22 @@ def test_closure_refuses_the_whole_city(tmp_path: Path) -> None:
     assert out["status"] == "refused"
     assert "km2" in out["reason"]
     assert not list(tmp_path.glob("*.json"))
+
+
+def test_sumo_kinds_refuse_a_whole_municipio_before_calling_the_worker(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A synchronous SUMO run over about 3 km2 outlasts the API's time limit: refuse it with a clear reason."""
+    from twin.scenarios import remote
+
+    called: list[str] = []
+    monkeypatch.setattr(remote, "enabled", lambda: True)
+    monkeypatch.setattr(remote, "call", lambda kind, *a, **k: called.append(kind) or {"status": "ok"})
+    for kind, change in (("road_closure", CLOSE), ("traffic_event", {"event": {"edges": ["B2C2"], "attendees": 100}})):
+        out = engine.run(kind, square(2500.0), change, data=ScenarioData(road_network=Path("x.net.xml")),
+                         cache_dir=tmp_path)
+        assert out["status"] == "refused", kind
+        assert "3 km2" in out["reason"] and "smaller" in out["reason"]
+    assert called == []
 
 
 def test_missing_network_is_not_available_and_not_cached(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
