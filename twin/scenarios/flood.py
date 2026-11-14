@@ -11,7 +11,7 @@ drain capacity and infiltration gives each hotspot's P5 / P50 / P95 depth.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from typing import Any, Mapping, Sequence
 
@@ -119,6 +119,8 @@ class Stage:
     level_m: dict[str, float] | None = None  # P5 / P50 / P95 on the gauge
     discharge_m3s: float | None = None
     alerts: dict[str, float] | None = None  # probability of reaching each official alert level
+    return_period_years: int | None = None
+    scenario: str | None = None  # plain label of a named what-if, e.g. "200-year flood ..."
 
 
 def _rating(gauge: Mapping[str, Any], discharge: FloatArray, noise: bool = True) -> FloatArray:
@@ -170,6 +172,8 @@ def _stage(change: Mapping[str, Any], data: ScenarioData, warnings: list[str]) -
     stage_sigma = float(cfg["stage_sigma_m"])
     if "rise_m" in change:
         return Stage(river, float(change["rise_m"]), stage_sigma, "hypothetical")
+    if "return_period_years" in change:
+        return _return_period_stage(change, str(gauge_id or cfg["return_periods"]["default_gauge"]), warnings)
     if gauge_id is None:
         raise ValueError("river_flood change needs 'rise_m', or 'gauge' with 'level_m', 'discharge_m3s', "
                          "'forecast_day' (YYYY-MM-DD or 'peak') or 'live': true")
@@ -204,6 +208,25 @@ def _stage(change: Mapping[str, Any], data: ScenarioData, warnings: list[str]) -
                      _alerts(str(gauge_id), levels))
     raise ValueError("river_flood change needs 'rise_m', or 'gauge' with 'level_m', 'discharge_m3s', "
                      "'forecast_day' (YYYY-MM-DD or 'peak') or 'live': true")
+
+
+def _return_period_stage(change: Mapping[str, Any], gauge_id: str, warnings: list[str]) -> Stage:
+    """A named what-if: the flood expected once in T years, from the official discharge quantiles."""
+    cfg = _cfg("river_flood")
+    table: Mapping[str, Any] = cfg["return_periods"]["discharge_m3s"]
+    years = int(change["return_period_years"])
+    known = table.get(gauge_id) or {}
+    if years not in {int(k) for k in known}:
+        raise ValueError(f"return_period_years for {gauge_id} must be one of "
+                         f"{', '.join(str(int(k)) for k in known) or 'none'}")
+    q = float({int(k): v for k, v in known.items()}[years])
+    inner = dict(change)
+    inner.pop("return_period_years")
+    stage = _stage({**inner, "gauge": gauge_id, "discharge_m3s": q}, ScenarioData(), warnings)
+    label = f"{years}-year flood ({q:,.0f} m3/s at {gauge_id})"
+    warnings.insert(0, f"Scenario, not a forecast: the {label}, the flood expected on average once in {years} "
+                       f"years ({cfg['return_periods']['source']}).")
+    return replace(stage, return_period_years=years, scenario=label)
 
 
 def _official(grid: Grid, data: ScenarioData) -> dict[str, BoolArray] | None:
@@ -399,6 +422,7 @@ def run_river_flood(area: Area, change: Mapping[str, Any], data: ScenarioData) -
         "river": river, "rise_m": round(rise, 2), "sigma_m": round(sigma, 2),
         "gauge": stage.gauge, "gauge_level_m": stage.level_m, "discharge_m3s": stage.discharge_m3s,
         "alert_probability": stage.alerts,
+        "return_period_years": stage.return_period_years, "scenario": stage.scenario,
         "flooded_km2": {k: round(float(m.sum()) * grid.cell_area / 1e6, 3) for k, m in footprints.items()},
         "baseline_flooded_km2": round(float(baseline.sum()) * grid.cell_area / 1e6, 3),
         "footprint_p50": mask_to_geojson(grid, footprints["p50"]),

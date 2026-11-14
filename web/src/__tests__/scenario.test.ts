@@ -66,6 +66,16 @@ describe("scenario catalogue", () => {
 });
 
 describe("change objects for the new kinds", () => {
+  it("river flood: the 200-year flood scenario is the default", async () => {
+    const { SCENARIOS } = await import("@/lib/scenario");
+    const spec = SCENARIOS.find((x) => x.id === "river_flood")!;
+    expect(buildScenarioChange("river_flood", { ...spec.defaults })).toEqual({ gauge: "tevere_ripetta", return_period_years: 200 });
+    expect(buildScenarioChange("river_flood", { mode: "return", return_period: "500" })).toEqual({
+      gauge: "tevere_ripetta",
+      return_period_years: 500,
+    });
+  });
+
   it("river flood: rise, gauge level or forecast", () => {
     expect(buildScenarioChange("river_flood", { mode: "rise", rise_m: "3" })).toEqual({ rise_m: 3 });
     expect(buildScenarioChange("river_flood", { mode: "level", gauge: "tevere_ripetta", level_m: "14" })).toEqual({
