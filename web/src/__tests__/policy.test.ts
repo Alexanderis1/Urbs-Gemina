@@ -111,9 +111,35 @@ describe("live API routes", () => {
 describe("citizen report tools", () => {
   const env = { TOOL_API_URL: "https://api.example", TOOL_API_OFFICE_KEY: "o", TOOL_API_CITIZEN_KEY: "", ORCHESTRATOR_URL: "" };
   it("are office only", () => {
-    for (const tool of ["signal_events", "verify_signal"]) {
+    for (const tool of ["signal_events", "verify_signal", "plan_maintenance"]) {
       expect(planForward(`/tools/${tool}`, "citizen", {}, env)).toMatchObject({ ok: false, status: 403 });
       expect(planForward(`/tools/${tool}`, "office", { reports: [] }, env)).toMatchObject({ ok: true, key: "o" });
     }
+  });
+});
+
+describe("citizen report submission", () => {
+  const env = { TOOL_API_URL: "https://api.example", TOOL_API_OFFICE_KEY: "o", TOOL_API_CITIZEN_KEY: "", ORCHESTRATOR_URL: "" };
+  const uid = "11111111-1111-1111-1111-111111111111";
+  const photo = `${uid}/22222222-2222-2222-2222-222222222222.jpg`;
+  const good = { category: "pothole", description: "Buca profonda", lon: 12.48, lat: 41.89, photo_path: photo, photo_source: "camera", photo_gps_distance_m: 0, photo_age_min: 0 };
+
+  it("needs a signed-in resident and goes to screening with the office key", () => {
+    expect(planForward("/reports/submit", "citizen", good, env, null)).toMatchObject({ ok: false, status: 401 });
+    expect(planForward("/reports/submit", "citizen", good, env, uid)).toMatchObject({ ok: true, screenUrl: "https://api.example/tools/screen_report", key: "o" });
+  });
+  it("requires GPS, a photo with its own GPS check, and the resident's own folder", () => {
+    expect(planForward("/reports/submit", "citizen", { ...good, lat: 45.4 }, env, uid)).toMatchObject({ ok: false });
+    expect(planForward("/reports/submit", "citizen", { ...good, photo_path: null }, env, uid)).toMatchObject({ ok: false });
+    expect(planForward("/reports/submit", "citizen", { ...good, photo_gps_distance_m: null }, env, uid)).toMatchObject({ ok: false });
+    expect(planForward("/reports/submit", "citizen", { ...good, photo_path: `33333333-3333-3333-3333-333333333333/22222222-2222-2222-2222-222222222222.jpg` }, env, uid)).toMatchObject({ ok: false });
+  });
+  it("public events need no photo; types with kinds need one", () => {
+    expect(planForward("/reports/submit", "citizen", { category: "public_event", description: "Concerto in piazza", lon: 12.48, lat: 41.89 }, env, uid)).toMatchObject({ ok: true });
+    expect(planForward("/reports/submit", "citizen", { ...good, category: "traffic" }, env, uid)).toMatchObject({ ok: false });
+    expect(planForward("/reports/submit", "citizen", { ...good, category: "traffic", subtype: "bus" }, env, uid)).toMatchObject({ ok: true });
+  });
+  it("the screening tool cannot be called from the browser", () => {
+    expect(planForward("/tools/screen_report", "office", {}, env)).toMatchObject({ ok: false });
   });
 });

@@ -6,6 +6,7 @@ import type { Envelope } from "@/api/types";
 import { supabase } from "@/integrations/supabase/client";
 import { callWithWakeUp } from "@/lib/retry";
 import sample from "@/api/sampleSignals.json";
+import samplePlan from "@/api/sampleMaintenance.json";
 import {
   readPhotoMeta,
   toToolReports,
@@ -16,6 +17,7 @@ import {
   type SignalEventsResult,
   type StaffReportRow,
   type Verification,
+  type MaintenancePlan,
 } from "@/lib/signals";
 
 export const PHOTO_BUCKET = "report-photos";
@@ -94,18 +96,28 @@ export function demoLocalSignedIn(): boolean {
 
 // ---- Sending ------------------------------------------------------------------------------------------------
 
-export async function submitReport(d: ReportDraft): Promise<{ id: string; live: boolean }> {
-  if (!d.category || !d.gps || !d.photo || !d.photoSource || d.photoGpsDistanceM === null || d.photoAgeMin === null)
-    throw new Error("incomplete report");
+export interface SubmitResult {
+  id: string | null;
+  live: boolean;
+  verdict: "accept" | "review" | "reject";
+  reasons: string[];
+  note: string;
+}
+
+/** Uploads the photo (already without metadata), then the server screens the report with Claude and stores it. */
+export async function submitReport(d: ReportDraft): Promise<SubmitResult> {
+  if (!d.category || !d.gps) throw new Error("incomplete report");
+  const hasPhoto = d.photo !== null && d.photoSource !== null && d.photoGpsDistanceM !== null && d.photoAgeMin !== null;
   const row = {
     category: d.category,
+    subtype: d.subtype,
     description: d.description.trim(),
     lon: d.gps.lon,
     lat: d.gps.lat,
     gps_accuracy_m: d.gps.accuracy_m,
-    photo_source: d.photoSource,
-    photo_gps_distance_m: d.photoGpsDistanceM,
-    photo_age_min: d.photoAgeMin,
+    photo_source: hasPhoto ? d.photoSource : null,
+    photo_gps_distance_m: hasPhoto ? d.photoGpsDistanceM : null,
+    photo_age_min: hasPhoto ? d.photoAgeMin : null,
   };
   if (!supabase) {
     const id = crypto.randomUUID();
@@ -116,16 +128,21 @@ export async function submitReport(d: ReportDraft): Promise<{ id: string; live: 
     } catch {
       // demo only
     }
-    return { id, live: false };
+    return { id, live: false, verdict: "accept", reasons: [], note: "" };
   }
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("not signed in");
-  const path = `${u.user.id}/${crypto.randomUUID()}.jpg`;
-  const up = await supabase.storage.from(PHOTO_BUCKET).upload(path, d.photo, { contentType: "image/jpeg", upsert: false });
-  if (up.error) throw new Error(up.error.message);
-  const { data, error } = await supabase.from("citizen_reports").insert({ ...row, photo_path: path }).select("id").single();
-  if (error) throw new Error(error.message);
-  return { id: String((data as { id: string }).id), live: true };
+  let photo_path: string | null = null;
+  if (hasPhoto && d.photo) {
+    photo_path = `${u.user.id}/${crypto.randomUUID()}.jpg`;
+    const up = await supabase.storage.from(PHOTO_BUCKET).upload(photo_path, d.photo, { contentType: "image/jpeg", upsert: false });
+    if (up.error) throw new Error(up.error.message);
+  }
+  const res = await proxyFetch("/reports/submit", { ...row, photo_path });
+  const body = (await res.json().catch(() => ({}))) as Partial<SubmitResult> & { detail?: string };
+  if (!res.ok) throw new Error(body.detail ?? `HTTP ${res.status}`);
+  const verdict = body.verdict === "reject" || body.verdict === "review" ? body.verdict : "accept";
+  return { id: body.id ?? null, live: true, verdict, reasons: body.reasons ?? [], note: body.note ?? "" };
 }
 
 function readLocal(): Record<string, unknown>[] {
@@ -143,7 +160,7 @@ export async function loadStaffReports(): Promise<StaffReportRow[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("citizen_reports_staff")
-    .select("id,category,description,lon,lat,photo_path,photo_gps_distance_m,photo_age_min,status,created_at,reporter_key")
+    .select("id,category,subtype,description,lon,lat,photo_path,photo_gps_distance_m,photo_age_min,status,created_at,reporter_key,screen_photo")
     .order("created_at", { ascending: false })
     .limit(2000);
   if (error) throw new Error(error.message);
@@ -189,10 +206,18 @@ export async function verifyEvent(e: SignalEvent, place: string | null, urls: st
   return env.result as Verification;
 }
 
-export async function setReportsStatus(ids: string[], status: "confirmed" | "dismissed"): Promise<void> {
+export async function setReportsStatus(ids: string[], status: "confirmed" | "dismissed" | "fixed"): Promise<void> {
   if (!supabase) return;
   for (const id of ids) {
     const { error } = await supabase.rpc("set_report_status", { report_id: id, new_status: status });
     if (error) throw new Error(error.message);
   }
+}
+
+/** Crew plan for the events on screen. Without Lovable Cloud: the sample plan for the sample events. */
+export async function planMaintenance(events: Record<string, unknown>[], crews: { roads: number; sewers: number }): Promise<{ plan: MaintenancePlan; sample: boolean }> {
+  if (!supabase) return { plan: samplePlan as unknown as MaintenancePlan, sample: true };
+  const env = await postTool<MaintenancePlan>("plan_maintenance", { events: events.slice(0, 300), crews });
+  if ((env.status ?? "ok") !== "ok") throw new Error(env.reason ?? "plan_maintenance not available");
+  return { plan: env.result as MaintenancePlan, sample: false };
 }

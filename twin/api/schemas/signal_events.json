@@ -15,11 +15,11 @@
           },
           "category": {
             "enum": [
-              "congestion",
               "flood",
-              "fire",
-              "emergency",
-              "other"
+              "pothole",
+              "traffic",
+              "roadworks",
+              "public_event"
             ],
             "title": "Category",
             "type": "string"
@@ -48,6 +48,19 @@
             "minLength": 1,
             "title": "Reporter",
             "type": "string"
+          },
+          "subtype": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtype"
           },
           "has_photo": {
             "default": false,

@@ -30,3 +30,10 @@ Staff never see who reported: the database view gives an opaque key per account 
 3. Redeploy the `tools` edge function (it now lets office users call the two tools).
 
 Without Lovable Cloud the app shows a sample: made-up reports (`scripts/make_sample_signals.py`), events computed by the real tool, labelled SAMPLE.
+
+## Round 2 (14 Nov 2026, Alessandro)
+
+- **Report types**: flood or sewer, pothole, traffic and transport (incident, blocked traffic, bus, metro), worksite not on the map, public event (description only, photo optional). Links from the citizen menu: `/segnala?tipo=flood|pothole|traffic|roadworks|public_event`.
+- **Screening before storing** (`agents/report_screen.py`, tool `screen_report`, model `screen` = Haiku 5.5, one cheap call per report): text matching the injection patterns is rejected before any model call; text and photo are fenced as untrusted data; the model has no tools and answers a fixed JSON shape; it can only label. A reject needs a listed reason (inappropriate, offensive, personal data, off topic, not matching the type, likely false, spam); anything malformed or an API failure goes to staff review, never straight to accepted. Rejected reports are kept for audit with their photo deleted and never reach the staff map.
+- **The browser cannot write reports any more**: `/reports/submit` in the `tools` edge function validates (GPS required, photo rule, own photo folder, 10 reports per hour), screens, then stores with the service role. Migration `20261114081500_citizen_reports_types_screening.sql`.
+- **Public events** are listed for staff without an "is this real" score. Potholes, worksites and sewer reports stay on the staff view for 30 days until fixed.

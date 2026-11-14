@@ -1,0 +1,34 @@
+{
+  "name": "transport_now",
+  "description": "Citizen: live notices on Rome's streets and lines (works, closures, line deviations, strikes, events) placed on the street they name, with the feed's freshness. Congestion: city_heatmap on road_speed.",
+  "input_schema": {
+    "additionalProperties": false,
+    "description": "Citizen: live notices on Rome's streets and lines (works, closures, line deviations, strikes, events) placed on the street they name, with the feed's freshness. Congestion: city_heatmap on road_speed.",
+    "properties": {
+      "area": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        ],
+        "default": "city",
+        "description": "Operating area: 'city', 'municipio:<n>' (1-15), 'zone:<CODE>' (urban-zone code, upper case) or a GeoJSON Polygon/MultiPolygon in WGS84 [lon, lat].",
+        "title": "Area"
+      }
+    },
+    "title": "TransportNowIn",
+    "type": "object"
+  },
+  "output_schema": {
+    "$ref": "envelope.json"
+  },
+  "http": {
+    "method": "POST",
+    "path": "/tools/transport_now"
+  },
+  "owner": "citizen-services"
+}

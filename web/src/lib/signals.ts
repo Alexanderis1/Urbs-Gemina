@@ -3,8 +3,25 @@
 // never here. This file only reads the photo's own GPS and time, measures how far they are from the device GPS,
 // and prepares the anonymous rows the staff tool needs.
 
-export const CATEGORIES = ["congestion", "flood", "fire", "emergency", "other"] as const;
+// Report types chosen by Alessandro (14 Nov 2026). Same ids as config/signals.yaml and the edge function.
+export const CATEGORIES = ["flood", "pothole", "traffic", "roadworks", "public_event"] as const;
 export type Category = (typeof CATEGORIES)[number];
+
+/** What the resident picks inside a type (none = no choice). */
+export const SUBTYPES: Record<Category, readonly string[]> = {
+  flood: ["flood", "sewer"],
+  pothole: [],
+  traffic: ["incident", "congestion", "bus", "metro"],
+  roadworks: [],
+  public_event: [],
+};
+
+/** Public events can be sent with a description only. */
+export const PHOTO_REQUIRED: Record<Category, boolean> = { flood: true, pothole: true, traffic: true, roadworks: true, public_event: false };
+
+export function isCategory(v: string | null): v is Category {
+  return v !== null && (CATEGORIES as readonly string[]).includes(v);
+}
 
 export type PhotoSource = "camera" | "gallery";
 
@@ -24,6 +41,9 @@ export interface PhotoMeta {
 /** What the browser stores for one report (no name, no e-mail, no raw photo coordinates). */
 export interface ReportDraft {
   category: Category | null;
+  subtype: string | null;
+  /** The resident chose to send without a photo (only where a photo is optional). */
+  skipPhoto: boolean;
   description: string;
   gps: GpsFix | null;
   photo: Blob | null;
@@ -34,6 +54,8 @@ export interface ReportDraft {
 
 export const EMPTY_DRAFT: ReportDraft = {
   category: null,
+  subtype: null,
+  skipPhoto: false,
   description: "",
   gps: null,
   photo: null,
@@ -83,9 +105,10 @@ export type DraftStep = "login" | "category" | "gps" | "photo" | "text" | "confi
 /** The first step that is not complete yet ("confirm" when everything is ready). */
 export function nextStep(d: ReportDraft, signedIn: boolean): DraftStep {
   if (!signedIn) return "login";
-  if (!d.category) return "category";
+  if (!d.category || (SUBTYPES[d.category].length > 0 && !(d.subtype && SUBTYPES[d.category].includes(d.subtype)))) return "category";
   if (!d.gps || !inRome(d.gps.lat, d.gps.lon)) return "gps";
-  if (!d.photo || d.photoGpsDistanceM === null || d.photoAgeMin === null) return "photo";
+  const photoDone = d.photo !== null && d.photoGpsDistanceM !== null && d.photoAgeMin !== null;
+  if (!photoDone && (PHOTO_REQUIRED[d.category] || !d.skipPhoto)) return "photo";
   if (d.description.trim().length < 3 || d.description.length > MAX_DESCRIPTION) return "text";
   return "confirm";
 }
@@ -210,13 +233,15 @@ export function readPhotoMeta(buf: ArrayBuffer): PhotoMeta {
 export interface StaffReportRow {
   id: string;
   category: Category;
+  subtype: string | null;
+  screen_photo: string | null;
   description: string;
   lon: number;
   lat: number;
   photo_path: string | null;
   photo_gps_distance_m: number | null;
   photo_age_min: number | null;
-  status: "new" | "confirmed" | "dismissed";
+  status: "new" | "confirmed" | "dismissed" | "fixed";
   created_at: string;
   reporter_key: string;
 }
@@ -224,10 +249,11 @@ export interface StaffReportRow {
 /** The anonymous report the signal_events tool takes. Dismissed reports are left out. */
 export function toToolReports(rows: StaffReportRow[]): Record<string, unknown>[] {
   return rows
-    .filter((r) => r.status !== "dismissed")
+    .filter((r) => r.status !== "dismissed" && r.status !== "fixed")
     .map((r) => ({
       id: r.id,
       category: r.category,
+      ...(r.subtype ? { subtype: r.subtype } : {}),
       lon: r.lon,
       lat: r.lat,
       time: r.created_at,
@@ -240,7 +266,7 @@ export function toToolReports(rows: StaffReportRow[]): Record<string, unknown>[]
     }));
 }
 
-export type Level = "likely" | "probable" | "unconfirmed";
+export type Level = "likely" | "probable" | "unconfirmed" | "not_scored";
 
 export interface TwinEvidence {
   layer: string;
@@ -263,6 +289,8 @@ export interface SignalEvent {
   id: string;
   category: Category;
   category_label: string;
+  scored: boolean;
+  subtypes: Record<string, number>;
   lon: number;
   lat: number;
   radius_m: number;
@@ -279,7 +307,7 @@ export interface SignalEvent {
   texts: string[];
   twin: TwinEvidence[];
   checks: { photo?: string; news?: string };
-  confidence: number;
+  confidence: number | null;
   level: Level;
   factors: Factor[];
 }
@@ -301,5 +329,60 @@ export interface Verification {
 
 /** Colour of an event on the map by level: [r, g, b]. */
 export function levelColour(level: Level): [number, number, number] {
+  if (level === "not_scored") return [0, 112, 127];
   return level === "likely" ? [204, 51, 51] : level === "probable" ? [230, 140, 0] : [120, 130, 145];
+}
+
+// ---- Maintenance mission plan (tool plan_maintenance) ---------------------------------------------------------
+
+export interface PlanStop {
+  id: string;
+  kind: string;
+  label: string;
+  lon: number;
+  lat: number;
+  priority: number;
+  arrive_min: number;
+}
+
+export interface CrewRoute {
+  crew: string;
+  crew_type: "roads" | "sewers";
+  depot: string;
+  depot_lon: number;
+  depot_lat: number;
+  stops: PlanStop[];
+  km: number;
+  hours: number;
+  cost_eur: number;
+}
+
+export interface MaintenancePlan {
+  routes: CrewRoute[];
+  unserved: { id: string; reason: string }[];
+  skipped: { id: string; reason: string }[];
+  total: { stops: number; km: number; hours: number; cost_eur: number };
+  baseline: { km: number; hours: number; cost_eur: number; what: string };
+  savings: { km_pct: number; hours_pct: number; cost_pct: number };
+  depots: { id: string; name: string; lon: number; lat: number }[];
+}
+
+/** Events the planner needs (anonymous, no texts or photos). Confirmed = an officer confirmed one of its reports. */
+export function toPlanEvents(events: SignalEvent[], confirmedIds: Set<string>): Record<string, unknown>[] {
+  return events.map((e) => ({
+    id: e.id,
+    category: e.category,
+    category_label: e.category_label,
+    lon: e.lon,
+    lat: e.lat,
+    confidence: e.confidence,
+    scored: e.scored,
+    confirmed: e.report_ids.some((r) => confirmedIds.has(r)),
+    n_reports: e.n_reports,
+  }));
+}
+
+/** A crew route as a closed path depot -> stops -> depot. */
+export function routePath(r: CrewRoute): [number, number][] {
+  return [[r.depot_lon, r.depot_lat], ...r.stops.map((s) => [s.lon, s.lat] as [number, number]), [r.depot_lon, r.depot_lat]];
 }

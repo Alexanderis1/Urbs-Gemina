@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   EMPTY_DRAFT,
+  routePath,
+  toPlanEvents,
   checkPhoto,
   exifDate,
   nextStep,
@@ -104,7 +106,8 @@ describe("guided steps", () => {
   it("walks login, category, GPS, photo, text, confirm", () => {
     expect(nextStep(EMPTY_DRAFT, false)).toBe("login");
     expect(nextStep(EMPTY_DRAFT, true)).toBe("category");
-    const d1 = { ...EMPTY_DRAFT, category: "flood" as const };
+    expect(nextStep({ ...EMPTY_DRAFT, category: "flood" }, true)).toBe("category"); // flood or sewer?
+    const d1 = { ...EMPTY_DRAFT, category: "flood" as const, subtype: "sewer" };
     expect(nextStep(d1, true)).toBe("gps");
     const d2 = { ...d1, gps: GPS };
     expect(nextStep(d2, true)).toBe("photo");
@@ -113,18 +116,34 @@ describe("guided steps", () => {
     expect(nextStep({ ...d3, description: "Sottopasso allagato" }, true)).toBe("confirm");
   });
   it("does not accept a device position outside Rome", () => {
-    expect(nextStep({ ...EMPTY_DRAFT, category: "fire", gps: { ...GPS, lat: 45.46, lon: 9.19 } }, true)).toBe("gps");
+    expect(nextStep({ ...EMPTY_DRAFT, category: "pothole", gps: { ...GPS, lat: 45.46, lon: 9.19 } }, true)).toBe("gps");
+  });
+  it("a public event can skip the photo, a pothole cannot", () => {
+    const base = { ...EMPTY_DRAFT, gps: GPS, skipPhoto: true, description: "Concerto in piazza" };
+    expect(nextStep({ ...base, category: "public_event" }, true)).toBe("confirm");
+    expect(nextStep({ ...base, category: "pothole" }, true)).toBe("photo");
   });
 });
 
 describe("staff rows", () => {
   it("become anonymous tool reports and skip dismissed ones", () => {
     const row: StaffReportRow = {
-      id: "r1", category: "flood", description: "acqua", lon: 12.48, lat: 41.89, photo_path: "u/p.jpg",
+      id: "r1", category: "flood", subtype: "sewer", screen_photo: "consistent", description: "acqua", lon: 12.48, lat: 41.89, photo_path: "u/p.jpg",
       photo_gps_distance_m: 20, photo_age_min: 3, status: "new", created_at: "2026-11-14T05:00:00Z", reporter_key: "k1",
     };
     const out = toToolReports([row, { ...row, id: "r2", status: "dismissed" }]);
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({ id: "r1", reporter: "k1", has_photo: true, photo_gps_distance_m: 20, time: row.created_at });
+  });
+});
+
+describe("maintenance plan helpers", () => {
+  it("sends anonymous events with the confirmed flag and closes each route at its depot", () => {
+    const ev = { id: "sig-1", category: "pothole", category_label: "Buca", lon: 12.5, lat: 41.9, confidence: 0.3, scored: true, report_ids: ["r1"], n_reports: 2, texts: ["x"] };
+    const [out] = toPlanEvents([ev as never], new Set(["r1"]));
+    expect(out).toEqual({ id: "sig-1", category: "pothole", category_label: "Buca", lon: 12.5, lat: 41.9, confidence: 0.3, scored: true, confirmed: true, n_reports: 2 });
+    const path = routePath({ crew: "roads-1", crew_type: "roads", depot: "d", depot_lon: 12.4, depot_lat: 41.8, stops: [{ id: "a", kind: "pothole", label: "", lon: 12.5, lat: 41.9, priority: 1, arrive_min: 5 }], km: 1, hours: 1, cost_eur: 1 });
+    expect(path[0]).toEqual(path[path.length - 1]);
+    expect(path).toHaveLength(3);
   });
 });

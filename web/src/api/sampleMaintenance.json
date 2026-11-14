@@ -1,0 +1,250 @@
+{
+ "routes": [
+  {
+   "crew": "roads-1",
+   "crew_type": "roads",
+   "depot": "depot_est",
+   "depot_lon": 12.56,
+   "depot_lat": 41.89,
+   "stops": [
+    {
+     "id": "sig-78dddd3d59",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.52915,
+     "lat": 41.87515,
+     "priority": 0.729,
+     "arrive_min": 14
+    },
+    {
+     "id": "sig-a4e8bc7c05",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.461225,
+     "lat": 41.865,
+     "priority": 0.729,
+     "arrive_min": 84
+    },
+    {
+     "id": "sig-70abea25ae",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.449825,
+     "lat": 41.8712,
+     "priority": 0.729,
+     "arrive_min": 135
+    },
+    {
+     "id": "sig-1487e9d653",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.510225,
+     "lat": 41.9012,
+     "priority": 0.729,
+     "arrive_min": 207
+    },
+    {
+     "id": "sig-a180db3e4b",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.524325,
+     "lat": 41.9118,
+     "priority": 0.729,
+     "arrive_min": 259
+    }
+   ],
+   "km": 28.9,
+   "hours": 5.36,
+   "cost_eur": 526
+  },
+  {
+   "crew": "roads-2",
+   "crew_type": "roads",
+   "depot": "depot_nord",
+   "depot_lon": 12.49,
+   "depot_lat": 41.95,
+   "stops": [
+    {
+     "id": "sig-4e472a2c32",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.501125,
+     "lat": 41.9405,
+     "priority": 0.729,
+     "arrive_min": 6
+    },
+    {
+     "id": "sig-a5eda15387",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.535525,
+     "lat": 41.8869,
+     "priority": 0.729,
+     "arrive_min": 81
+    },
+    {
+     "id": "sig-d78f267360",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.547825,
+     "lat": 41.8781,
+     "priority": 0.729,
+     "arrive_min": 132
+    },
+    {
+     "id": "sig-ad6e435180",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.559025,
+     "lat": 41.8705,
+     "priority": 0.729,
+     "arrive_min": 183
+    },
+    {
+     "id": "sig-a6e8a96896",
+     "kind": "pothole",
+     "label": "Buca in strada",
+     "lon": 12.430525,
+     "lat": 41.8902,
+     "priority": 0.729,
+     "arrive_min": 277
+    }
+   ],
+   "km": 40.2,
+   "hours": 5.99,
+   "cost_eur": 593
+  },
+  {
+   "crew": "sewers-1",
+   "crew_type": "sewers",
+   "depot": "depot_nord",
+   "depot_lon": 12.49,
+   "depot_lat": 41.95,
+   "stops": [
+    {
+     "id": "sig-85dbcdc2d1",
+     "kind": "flood",
+     "label": "Allagamento o fogna",
+     "lon": 12.47,
+     "lat": 41.94505,
+     "priority": 1.0935,
+     "arrive_min": 8
+    },
+    {
+     "id": "sig-1b50dfc9e8",
+     "kind": "flood",
+     "label": "Allagamento o fogna",
+     "lon": 12.515,
+     "lat": 41.86005,
+     "priority": 1.0935,
+     "arrive_min": 114
+    },
+    {
+     "id": "sig-9f30050c50",
+     "kind": "flood",
+     "label": "Allagamento o fogna",
+     "lon": 12.54,
+     "lat": 41.90005,
+     "priority": 1.0935,
+     "arrive_min": 196
+    },
+    {
+     "id": "sig-0899cd856f",
+     "kind": "flood",
+     "label": "Allagamento o fogna",
+     "lon": 12.520533,
+     "lat": 41.923033,
+     "priority": 1.3695,
+     "arrive_min": 269
+    }
+   ],
+   "km": 32.1,
+   "hours": 5.78,
+   "cost_eur": 568
+  }
+ ],
+ "unserved": [
+  {
+   "id": "sig-cd2c6a4a8e",
+   "reason": "does not fit in this shift"
+  },
+  {
+   "id": "sig-f2a25d96ff",
+   "reason": "does not fit in this shift"
+  }
+ ],
+ "skipped": [
+  {
+   "id": "sig-1a9f91939c",
+   "reason": "confidence below 45% and not confirmed"
+  },
+  {
+   "id": "sig-1c0cc9af65",
+   "reason": "confidence below 45% and not confirmed"
+  },
+  {
+   "id": "sig-6e16930f10",
+   "reason": "not a crew job"
+  },
+  {
+   "id": "sig-b1b7dd7ad4",
+   "reason": "confidence below 45% and not confirmed"
+  },
+  {
+   "id": "sig-f897eedce5",
+   "reason": "not a crew job"
+  }
+ ],
+ "total": {
+  "stops": 14,
+  "km": 101.2,
+  "hours": 17.12,
+  "cost_eur": 1687
+ },
+ "baseline": {
+  "km": 228.4,
+  "hours": 36.69,
+  "cost_eur": 3622,
+  "what": "one crew trip per citizen report, from the nearest depot (no merging, no routing)"
+ },
+ "savings": {
+  "km_pct": 55.7,
+  "hours_pct": 53.3,
+  "cost_pct": 53.4
+ },
+ "depots": [
+  {
+   "id": "depot_nord",
+   "name": "Deposito nord (ipotetico)",
+   "lon": 12.49,
+   "lat": 41.95
+  },
+  {
+   "id": "depot_est",
+   "name": "Deposito est (ipotetico)",
+   "lon": 12.56,
+   "lat": 41.89
+  },
+  {
+   "id": "depot_sud",
+   "name": "Deposito sud (ipotetico)",
+   "lon": 12.48,
+   "lat": 41.83
+  },
+  {
+   "id": "depot_ovest",
+   "name": "Deposito ovest (ipotetico)",
+   "lon": 12.41,
+   "lat": 41.89
+  }
+ ],
+ "assumptions": {
+  "speed_kmh": 18,
+  "detour_factor": 1.35,
+  "cost_per_crew_hour_eur": 95,
+  "cost_per_km_eur": 0.6,
+  "basis": "assumption (C=45): Rome average urban speed ~18 km/h for service vans; detour factor 1.3-1.4 is typical for dense street grids; crew cost from typical Italian public works rates (two workers ~35 EUR/h each plus van)",
+  "depots_basis": "hypothetical: four yards inside the GRA, one per quadrant; the real yards are not in open data",
+  "shift_hours": 6.0
+ }
+}

@@ -48,6 +48,7 @@ class Report:
     text: str = ""
     photo_ref: str | None = None
     location: str = "missing"   # photo GPS/time vs device GPS: match | mismatch | missing
+    subtype: str | None = None
 
 
 @dataclass
@@ -126,6 +127,11 @@ def location_check(distance_m: float | None, age_min: float | None, cfg: Mapping
     return "match" if ok else "mismatch"
 
 
+def _subtype(spec: Mapping[str, Any], value: Any) -> str | None:
+    known = spec.get("subtypes") or {}
+    return str(value) if value is not None and str(value) in known else None
+
+
 def _opt_float(value: Any) -> float | None:
     return None if value is None else float(value)
 
@@ -150,7 +156,8 @@ def parse_reports(raw: Iterable[Mapping[str, Any]], cfg: Mapping[str, Any],
                               text=str(item.get("text") or "")[:max_chars],
                               photo_ref=str(item["photo_ref"]) if item.get("photo_ref") else None,
                               location=location_check(_opt_float(item.get("photo_gps_distance_m")),
-                                                      _opt_float(item.get("photo_age_min")), cfg)))
+                                                      _opt_float(item.get("photo_age_min")), cfg),
+                              subtype=_subtype(cats[category], item.get("subtype"))))
         except (KeyError, TypeError, ValueError) as error:
             if warnings is not None:
                 warnings.append(f"report {rid} dropped: {error}")
@@ -307,13 +314,21 @@ def signal_events(raw_reports: Iterable[Mapping[str, Any]], cfg: Mapping[str, An
     cats = categories(cfg)
     events: list[dict[str, Any]] = []
     for cluster in clusters:
-        twin = twin_evidence(cluster, cfg, read_layer) if read_layer is not None else []
-        score = score_cluster(cluster, cfg, twin, (checks or {}).get(cluster.id))
+        scored = bool(cats[cluster.category].get("scored", True))
+        twin = twin_evidence(cluster, cfg, read_layer) if read_layer is not None and scored else []
+        score: dict[str, Any] = (score_cluster(cluster, cfg, twin, (checks or {}).get(cluster.id)) if scored
+                                 else {"confidence": None, "level": "not_scored", "factors": []})
+        subtypes: dict[str, int] = {}
+        for r in cluster.reports:
+            if r.subtype:
+                subtypes[r.subtype] = subtypes.get(r.subtype, 0) + 1
         lon, lat = cluster.centre
         events.append({
             "id": cluster.id,
             "category": cluster.category,
             "category_label": cats[cluster.category].get("label", cluster.category),
+            "scored": scored,
+            "subtypes": subtypes,
             "lon": round(lon, 6), "lat": round(lat, 6),
             "radius_m": round(cluster.radius_m),
             "first_seen": cluster.first_seen.isoformat(), "last_seen": cluster.last_seen.isoformat(),
@@ -329,5 +344,5 @@ def signal_events(raw_reports: Iterable[Mapping[str, Any]], cfg: Mapping[str, An
             "checks": dict((checks or {}).get(cluster.id) or {}),
             **score,
         })
-    events.sort(key=lambda e: (-e["confidence"], -e["n_reports"], e["id"]))
+    events.sort(key=lambda e: (not e["scored"], -(e["confidence"] or 0.0), -e["n_reports"], e["id"]))
     return {"events": events, "n_reports": len(reports), "as_of": at.isoformat(), "warnings": warnings}

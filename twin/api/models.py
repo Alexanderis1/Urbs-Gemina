@@ -199,11 +199,12 @@ class CitizenReport(Strict):
     """One citizen report, anonymised: 'reporter' is an opaque key (one per account), never a name."""
 
     id: str = Field(min_length=1, max_length=80)
-    category: Literal["congestion", "flood", "fire", "emergency", "other"]
+    category: Literal["flood", "pothole", "traffic", "roadworks", "public_event"]
     lon: float = Field(ge=12.0, le=13.1)
     lat: float = Field(ge=41.4, le=42.4)
     time: str = Field(min_length=10, max_length=40, description="ISO 8601")
     reporter: str = Field(min_length=1, max_length=80)
+    subtype: str | None = Field(default=None, max_length=40)
     has_photo: bool = False
     text: str = Field(default="", max_length=280)
     photo_ref: str | None = Field(default=None, max_length=300, description="storage path of the photo, if any")
@@ -227,12 +228,45 @@ class SignalEventsIn(Strict):
 
 class SignalEvent(Strict):
     id: str = Field(min_length=1, max_length=40)
-    category: Literal["congestion", "flood", "fire", "emergency", "other"]
+    category: Literal["flood", "pothole", "traffic", "roadworks", "public_event"]
     category_label: str | None = Field(default=None, max_length=80)
     lon: float = Field(ge=12.0, le=13.1)
     lat: float = Field(ge=41.4, le=42.4)
     first_seen: str = Field(max_length=40)
     texts: list[str] = Field(default_factory=list, max_length=20)
+
+
+class ScreenReportIn(Strict):
+    """Office only (called by the Lovable Cloud function when a resident sends a report): Claude screens it first."""
+
+    category: Literal["flood", "pothole", "traffic", "roadworks", "public_event"]
+    subtype: str | None = Field(default=None, max_length=40)
+    text: str = Field(default="", max_length=280)
+    photo_url: str | None = Field(default=None, max_length=2000, description="short-lived signed URL from Lovable Cloud storage")
+
+
+def _default_crews() -> dict[Literal["roads", "sewers"], int]:
+    return {"roads": 2, "sewers": 1}
+
+
+class MaintenanceEvent(Strict):
+    id: str = Field(min_length=1, max_length=80)
+    category: str = Field(min_length=1, max_length=40)
+    category_label: str | None = Field(default=None, max_length=80)
+    lon: float = Field(ge=12.0, le=13.1)
+    lat: float = Field(ge=41.4, le=42.4)
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    scored: bool = True
+    confirmed: bool = False
+    n_reports: int = Field(default=1, ge=1, le=1000)
+
+
+class PlanMaintenanceIn(Strict):
+    """Office only. Plan road and sewer crews for reported problems (most urgent first, least driving), vs one trip each."""
+
+    events: list[MaintenanceEvent] = Field(max_length=300)
+    crews: dict[Literal["roads", "sewers"], int] = Field(default_factory=_default_crews)
+    shift_hours: float | None = Field(default=None, gt=0, le=12)
 
 
 class VerifySignalIn(Strict):
@@ -278,3 +312,48 @@ class EnvelopeOut(BaseModel):
     synthetic: bool
     warnings: list[str]
     cached: bool = False
+
+
+class AirHereIn(Strict):
+    """Citizen: air quality at a point now (NO2, PM10, PM2.5, O3) with the EEA index level and the legal reference values."""
+
+    point: Point
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class EmfHereIn(Strict):
+    """Citizen: estimated radio-frequency electric field at a point, with its level and the legal values."""
+
+    point: Point
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
+class CityHeatmapIn(Strict):
+    """Citizen: whole-city heat map of one layer on a coarse grid (value, range and level per cell, plus a legend). road_speed at a future time = predicted congestion."""
+
+    layer: Literal["air_no2", "air_pm10", "air_pm25", "air_o3", "emf", "road_speed"]
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+    resolution: int | None = Field(default=None, ge=6, le=9, description="H3 resolution; default from config")
+
+
+class HeatHereIn(Strict):
+    """Citizen: heat risk today at a point (apparent temperature) and where to cool off at that hour: open climate refuges and cooler open-air spots within a short walk."""
+
+    point: Point
+    time: str | None = Field(default=None, description="ISO 8601 hour to plan for; default the day's hottest hour (or now if it has passed)")
+
+
+class PlacesOpenIn(Strict):
+    """Citizen: sports venues (optionally for one sport) or museums and galleries open at a chosen day and time, nearest first, with their opening hours."""
+
+    kind: Literal["sport", "museum"]
+    at: str | None = Field(default=None, description="ISO 8601 date and time; default now")
+    point: Point | None = None
+    radius_m: float | None = Field(default=None, gt=0, le=30_000, description="only with point; default from config")
+    sport: str | None = Field(default=None, max_length=60, description="Italian or English name, e.g. 'nuoto', 'calcio', 'tennis'")
+
+
+class TransportNowIn(Strict):
+    """Citizen: live notices on Rome's streets and lines (works, closures, line deviations, strikes, events) placed on the street they name, with the feed's freshness. Congestion: city_heatmap on road_speed."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)

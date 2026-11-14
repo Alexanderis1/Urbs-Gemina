@@ -89,6 +89,10 @@ open:
     delay_sigma_s: {value: 60.0, basis: "assumption, used only when the feed gives no 'uncertainty' (Roma's gives about 30 s)"}
     timeout_s: 30
 
+  roma_gtfs_alerts:
+    service_alerts_url: https://romamobilita.it/sites/default/files/rome_rtgtfs_service_alerts_feed.pb
+    timeout_s: 30
+
   roma_gtfs_schedule:
     static_gtfs_url: https://romamobilita.it/wp-content/uploads/shared/rome_static_gtfs.zip
     cache_hours: {value: 12, basis: "the timetable zip is republished about once a day"}

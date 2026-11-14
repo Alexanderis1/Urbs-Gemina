@@ -150,6 +150,14 @@ layers:
     selectors: ['nwr["leisure"="playground"]']
     notes: "No official playground layer exists; OSM is incomplete"
 
+  # --- Culture (citizen app: museums and galleries open at a chosen time) -----
+  museums_osm:
+    source: osm
+    data_kind: real
+    theme: culture
+    selectors: ['nwr["tourism"="museum"]', 'nwr["tourism"="gallery"]']
+    notes: "Museums and art galleries with OSM opening_hours where mapped (no open official list with hours for Rome was reachable on 14 Nov 2026)"
+
   # --- Antenna seeds (used by WS3 sim_register) ------------------------------
   masts_osm:
     source: osm

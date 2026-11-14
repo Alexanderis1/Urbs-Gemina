@@ -15,12 +15,17 @@ from twin.tools.area import AreaTooLarge, resolve_area
 from twin.tools.layers import LayerSnapshot
 from twin.tools.crowds_exposure import (check_sensors_tool, crowds_view, exposure_count, flood_watch_tool,
                                         heat_watch_tool, schools_check, site_values_at)
+from twin.tools.citizen import air_here, city_heatmap, emf_here
 from twin.tools.data_status import data_status
+from twin.tools.heat_here import heat_here
+from twin.tools.places_open import places_open
+from twin.tools.transport_now import transport_now
 from twin.tools.envelope import Source, ToolError, make_envelope, utc_now
 from twin.tools.estimate_field import estimate_field
 from twin.tools.permit_context import run_context_check
 from twin.tools.query_layer import query_layer
 from twin.tools.resolve_place import resolve_place
+from twin.tools.maintenance import plan_maintenance
 from twin.tools.signals import load_signal_config, signal_events
 from twin.tools.runtime import ToolRuntime
 
@@ -312,6 +317,36 @@ def _verify_signal(rt: ToolRuntime, req: m.VerifySignalIn, role: str) -> dict[st
     return _delegate("verify_signal", "agents.signal_check", "verify_event", "WS7 (agents)", inputs, run)
 
 
+def _screen_report(rt: ToolRuntime, req: m.ScreenReportIn, role: str) -> dict[str, Any]:
+    inputs = {"category": req.category, "subtype": req.subtype, "chars": len(req.text), "photo": bool(req.photo_url)}
+    refused = _office_only(rt, "screen_report", inputs, role)
+    if refused is not None:
+        return refused
+    cfg = load_signal_config(rt.settings.paths.config / "signals.yaml")
+
+    def run(screen: Callable[..., dict[str, Any]]) -> dict[str, Any]:
+        out = screen(category=req.category, subtype=req.subtype, text=req.text, photo_url=req.photo_url, cfg=cfg)
+        return rt.envelope("screen_report", inputs, out, {"citizen_reports": "real"},
+                           [Source(id="citizen_report", retrieved_at=utc_now())], list(out.get("warnings", [])))
+
+    return _delegate("screen_report", "agents.report_screen", "screen_report", "citizen-reports", inputs, run)
+
+
+def _plan_maintenance(rt: ToolRuntime, req: m.PlanMaintenanceIn, role: str) -> dict[str, Any]:
+    inputs = {"events": len(req.events), "crews": dict(req.crews), "shift_hours": req.shift_hours}
+    refused = _office_only(rt, "plan_maintenance", inputs, role)
+    if refused is not None:
+        return refused
+    cfg = load_signal_config(rt.settings.paths.config / "signals.yaml")
+    max_crews = int(cfg["maintenance"].get("max_crews", 10))
+    crews: dict[str, int] = {str(k): max(0, min(int(v), max_crews)) for k, v in req.crews.items()}
+    out = plan_maintenance([_dump(e) for e in req.events], cfg, crews, req.shift_hours)
+    warnings = ["Distances are straight lines times a detour factor, not the road network; depots are hypothetical.",
+                "Costs use assumed crew and van rates (config/signals.yaml maintenance)."]
+    return rt.envelope("plan_maintenance", inputs, out, {"citizen_reports": "real", "crew_routes": "estimated"},
+                       [Source(id="citizen_reports", retrieved_at=utc_now())], warnings)
+
+
 TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("resolve_place", m.ResolvePlaceIn, lambda rt, req, role: resolve_place(rt, req.text)),
     ToolSpec("context_check", m.ContextCheckIn,
@@ -344,7 +379,19 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
     ToolSpec("sports_facilities", m.SportsFacilitiesIn, _sports_facilities, owner="WS10"),
     ToolSpec("sport_coverage", m.SportCoverageIn, _sport_coverage, owner="WS10"),
     ToolSpec("signal_events", m.SignalEventsIn, _signal_events, owner="citizen-reports"),
+    ToolSpec("air_here", m.AirHereIn, lambda rt, req, role: air_here(rt, req.point, req.time), owner="citizen-services"),
+    ToolSpec("emf_here", m.EmfHereIn, lambda rt, req, role: emf_here(rt, req.point, req.time), owner="citizen-services"),
+    ToolSpec("city_heatmap", m.CityHeatmapIn,
+             lambda rt, req, role: city_heatmap(rt, req.layer, req.time, req.resolution), owner="citizen-services"),
+    ToolSpec("heat_here", m.HeatHereIn, lambda rt, req, role: heat_here(rt, req.point, req.time), owner="citizen-services"),
+    ToolSpec("places_open", m.PlacesOpenIn,
+             lambda rt, req, role: places_open(rt, req.kind, req.at, req.point, req.radius_m, req.sport),
+             owner="citizen-services"),
+    ToolSpec("transport_now", m.TransportNowIn, lambda rt, req, role: transport_now(rt, _dump(req.area)),
+             owner="citizen-services"),
     ToolSpec("verify_signal", m.VerifySignalIn, _verify_signal, owner="citizen-reports"),
+    ToolSpec("screen_report", m.ScreenReportIn, _screen_report, owner="citizen-reports"),
+    ToolSpec("plan_maintenance", m.PlanMaintenanceIn, _plan_maintenance, owner="citizen-reports"),
 ]}
 
 
