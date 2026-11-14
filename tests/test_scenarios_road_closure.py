@@ -247,3 +247,75 @@ def test_random_trips_says_when_the_router_wrote_nothing(tmp_path: Path, monkeyp
     cfg = {"duration_s": 600, "min_trip_distance_m": 300, "fringe_factor": 5}
     with pytest.raises(RuntimeError, match="duarouter"):
         traffic._random_trips(tmp_path, tmp_path / "x.net.xml", tmp_path / "out.trips.xml", 1, 10.0, cfg, {}, tmp_path)
+
+
+def _net_xml(path: Path) -> None:
+    """A hand-written SUMO network in UTM 33N with a net offset, two edges near Piazza Venezia."""
+    ox, oy = -290000.0, -4640000.0  # SUMO stores x + offset; real UTM = x - offset
+    x0, y0 = 290600.0 - 290000.0, 4641800.0 - 4640000.0  # about 12.48 E, 41.90 N
+    path.write_text(
+        '<net version="1.20"><location netOffset="{:.2f},{:.2f}" convBoundary="0,0,1000,1000" '
+        'origBoundary="12,41,13,42" projParameter="+proj=utm +zone=33 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>'
+        '<edge id="A" from="1" to="2" name="Via Uno"><lane id="A_0" index="0" speed="13.9" length="200" '
+        'shape="{:.2f},{:.2f} {:.2f},{:.2f}"/></edge>'
+        '<edge id="B" from="2" to="3" name="Via Due"><lane id="B_0" index="0" speed="13.9" length="200" '
+        'shape="{:.2f},{:.2f} {:.2f},{:.2f}"/></edge></net>'.format(
+            ox, oy, x0, y0, x0 + 200, y0, x0 + 200, y0, x0 + 200, y0 + 200), encoding="utf-8")
+
+
+def test_edge_coordinates_are_wgs84_degrees(tmp_path: Path) -> None:
+    from twin.scenarios.traffic import _edge_geometry
+
+    net = tmp_path / "geo.net.xml"
+    _net_xml(net)
+    mids, lines = _edge_geometry(net)
+    lon, lat = mids["A"]
+    assert 12.47 < lon < 12.50 and 41.89 < lat < 41.92  # degrees, not network metres
+    assert len(lines["B"]) == 2 and all(12.4 < p[0] < 12.6 and 41.8 < p[1] < 42.0 for p in lines["B"])
+    plain = tmp_path / "plain.net.xml"
+    plain.write_text(net.read_text().replace('projParameter="+proj=utm', 'projParameter="!" x="'), encoding="utf-8")
+    assert _edge_geometry(plain) == ({}, {})  # no projection: no coordinates rather than wrong ones
+
+
+def _grid_osm(path: Path) -> None:
+    """A 4 x 4 street grid of about 150 m around Piazza Venezia, with names."""
+    xml = ['<?xml version="1.0"?><osm version="0.6">']
+    step_lat, step_lon = 0.00135, 0.0018
+    for r in range(4):
+        for c in range(4):
+            xml.append(f'<node id="{1 + r * 4 + c}" lat="{41.895 + r * step_lat:.6f}" '
+                       f'lon="{12.480 + c * step_lon:.6f}" version="1"/>')
+    way = 100
+    for r in range(4):
+        refs = "".join(f'<nd ref="{1 + r * 4 + c}"/>' for c in range(4))
+        xml.append(f'<way id="{way}" version="1">{refs}<tag k="highway" v="secondary"/>'
+                   f'<tag k="name" v="Via Est Ovest {r}"/></way>')
+        way += 1
+    for c in range(4):
+        refs = "".join(f'<nd ref="{1 + r * 4 + c}"/>' for r in range(4))
+        xml.append(f'<way id="{way}" version="1">{refs}<tag k="highway" v="secondary"/>'
+                   f'<tag k="name" v="Via Nord Sud {c}"/></way>')
+        way += 1
+    xml.append("</osm>")
+    path.write_text("".join(xml), encoding="utf-8")
+
+
+@needs_sumo
+def test_results_on_a_real_network_carry_degrees_and_a_closed_street_footprint(tmp_path: Path) -> None:
+    from twin.scenarios.traffic import build_network
+
+    osm = tmp_path / "grid.osm"
+    _grid_osm(osm)
+    net = build_network(osm, tmp_path / "grid.net.xml")
+    out = engine.run("road_closure", DISTRICT, {"close": {"street": "Via Est Ovest 1"}},
+                     data=ScenarioData(road_network=net), use_cache=False)
+    assert out["status"] == "ok", out.get("reason")
+    r = out["result"]
+    rows = r["changed_roads"] + r["congestion_points"]
+    assert rows and all(12.47 < p["lon"] < 12.49 and 41.89 < p["lat"] < 41.90 for p in rows if "lon" in p)
+    assert any("lon" in p for p in rows)
+    foot = r["closed_streets"]
+    assert foot["type"] == "MultiLineString" and foot["coordinates"]
+    assert all(12.47 < x < 12.49 and 41.89 < y < 41.90 for line in foot["coordinates"] for x, y in line)
+    w, s, e, n = r["map_bbox"]
+    assert 12.47 < w < e < 12.49 and 41.89 < s < n < 41.90
