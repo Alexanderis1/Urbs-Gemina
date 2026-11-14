@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { Mic, Square } from "lucide-react";
 import { isSampleMode, proxyFetch } from "@/api/client";
-import { buildClientTools, CITIZEN_AGENT_ID, conversationCallbacks } from "@/lib/voice";
+import { buildClientTools, CITIZEN_AGENT_ID, conversationCallbacks, micProblem } from "@/lib/voice";
 import { useSession } from "@/lib/runlog";
 import { errorText } from "@/lib/errors";
 import { texts, tr } from "@/lib/i18n";
@@ -19,6 +19,8 @@ const T = texts({
     stop: "Stop",
     button: "Voice assistant",
     unavailable: "Voice assistant not available:",
+    micDenied: "the browser is blocking the microphone for this site. Click the padlock next to the address, set Microphone to Allow, then reload the page.",
+    micMissing: "no microphone found. Connect one and try again.",
   },
   it: {
     connecting: "Connessione…",
@@ -31,6 +33,8 @@ const T = texts({
     stop: "Ferma",
     button: "Assistente vocale",
     unavailable: "Assistente vocale non disponibile:",
+    micDenied: "il browser blocca il microfono per questo sito. Clicca il lucchetto accanto all'indirizzo, imposta Microfono su Consenti e ricarica la pagina.",
+    micMissing: "nessun microfono trovato. Collegane uno e riprova.",
   },
 });
 
@@ -55,7 +59,10 @@ export function VoiceButton() {
   const { tier, auth } = useSession();
   const clientTools = useMemo(() => buildClientTools(), []);
   const [error, setError] = useState<string | null>(null);
-  const conversation = useConversation({ clientTools, ...conversationCallbacks(setError) });
+  const conversation = useConversation({ clientTools, ...conversationCallbacks((m) => {
+    const mic = micProblem(m);
+    setError(mic === "denied" ? t.micDenied : mic === "missing" ? t.micMissing : m);
+  }) });
   const connecting = conversation.status === "connecting";
   const live = conversation.status === "connected" || connecting;
   // The office agent needs the edge function (a signed-in office user). The demo tier switch alone does not unlock it.
@@ -74,7 +81,8 @@ export function VoiceButton() {
         await conversation.startSession({ agentId: CITIZEN_AGENT_ID, connectionType: "websocket" });
       }
     } catch (e) {
-      setError(errorText(e));
+      const mic = micProblem(e);
+      setError(mic === "denied" ? t.micDenied : mic === "missing" ? t.micMissing : errorText(e));
     }
   }
 
