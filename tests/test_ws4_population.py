@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from twin.tools.crowds_exposure import (check_sensors_tool, crowds_view, exposure_count, flood_watch_tool,
-                                        heat_watch_tool, site_values_at)
+                                        heat_watch_tool, schools_check, site_values_at)
 from twin.tools.envelope import ToolError
 from twin.tools.layers import LayerStore
 from twin.tools.runtime import ToolRuntime
@@ -28,7 +28,7 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     seen: dict[str, Any] = {}
     spec = types.SimpleNamespace(sources=(types.SimpleNamespace(layer="air_quality"),), prior_field=None)
     api = types.ModuleType("twin.beliefs.api")
-    api.layer_names = lambda: ["air_no2", "emf", "temperature", "rain"]  # type: ignore[attr-defined]
+    api.layer_names = lambda: ["air_no2", "air_pm10", "air_pm25", "emf", "temperature", "rain"]  # type: ignore[attr-defined]
 
     def build_layer(name: str, cells: Any, providers: Any, start: Any, end: Any, **kw: Any) -> Any:
         seen["build"] = (name, list(cells), providers)
@@ -38,7 +38,8 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     grid = types.ModuleType("twin.beliefs.grid")
     grid.cells_in_polygon = lambda geometry, res: ["c1", "c2"]  # type: ignore[attr-defined]
     bconfig = types.ModuleType("twin.beliefs.config")
-    bconfig.load_specs = lambda: {"air_no2": spec, "emf": spec, "temperature": spec, "rain": spec}  # type: ignore[attr-defined]
+    bconfig.load_specs = lambda: {name: spec for name in ("air_no2", "air_pm10", "air_pm25", "emf", "temperature",  # type: ignore[attr-defined]
+                                                          "rain")}
     bconfig.grid_resolution = lambda: 9  # type: ignore[attr-defined]
     crowds = types.ModuleType("twin.beliefs.crowds")
 
@@ -91,7 +92,22 @@ def fake_ws5(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 
     api.check_sensors = check_sensors  # type: ignore[attr-defined]
     api.adapt = lambda obs, source, spec: iter(obs)  # type: ignore[attr-defined]
-    for mod in (api, grid, bconfig, crowds, exposure, sites, flood):
+    schools = types.ModuleType("twin.beliefs.schools")
+
+    def schools_to_check(layers: Any, path: Any, census: Any, top: int = 10) -> Any:
+        seen["schools"] = (layers, path, census, top)
+        return _part(schools=[{"name": "Visconti"}])
+
+    schools.schools_to_check = schools_to_check  # type: ignore[attr-defined]
+    micro = types.ModuleType("twin.beliefs.microclimate")
+    micro.raster_mean_per_cell = lambda path, cells: {"c1": 1.0}  # type: ignore[attr-defined]
+
+    def apply_microclimate(layer: Any, tree: Any, seal: Any) -> Any:
+        seen["micro"] = True
+        return "LAYER+MICRO"
+
+    micro.apply_microclimate = apply_microclimate  # type: ignore[attr-defined]
+    for mod in (api, grid, bconfig, crowds, exposure, sites, flood, schools, micro):
         monkeypatch.setitem(sys.modules, mod.__name__, mod)
     return seen
 
@@ -173,6 +189,12 @@ def test_heat_watch_adds_ages_and_health_sites(runtime: ToolRuntime, fake_ws5: d
     assert env["status"] == "ok" and env["tool"] == "heat_watch"
     assert str(fake_ws5["ages"]).endswith("census_ages.csv")
     assert fake_ws5["heat"][1] == {"c1": {"residents": 10, "health_sites": 2}}
+    assert "micro" not in fake_ws5  # no rasters in tmp: microclimate skipped with a warning
+    assert any("microclimate" in w.lower() for w in env["warnings"])
+    for name in ("tree_cover_2018.tif", "imperviousness_2018.tif"):
+        (tmp_path / "processed" / name).write_bytes(b"")
+    heat_watch_tool(runtime, SQUARE)
+    assert fake_ws5["heat"][0] == "LAYER+MICRO"
 
 
 def test_flood_watch_caches_the_hazard_lookup(runtime: ToolRuntime, fake_ws5: dict[str, Any], tmp_path: Path) -> None:
@@ -184,3 +206,15 @@ def test_flood_watch_caches_the_hazard_lookup(runtime: ToolRuntime, fake_ws5: di
     assert env["status"] == "ok" and env["tool"] == "flood_watch"
     assert fake_ws5["flood"] == ({"c1": "P3"}, {"c2": 1})
     assert len(fake_ws5["hazard_calls"]) == 1
+
+
+def test_schools_to_check_uses_the_configured_legal_limits(runtime: ToolRuntime, fake_ws5: dict[str, Any],
+                                                           tmp_path: Path) -> None:
+    (tmp_path / "processed" / "sensitive_sites.geojson").write_text('{"type": "FeatureCollection", "features": []}')
+    runtime.providers = {"air_quality": object()}  # type: ignore[dict-item]
+    env = schools_check(runtime, SQUARE, top=5)
+    assert env["status"] == "ok" and env["tool"] == "schools_to_check"
+    layers, _, census, top = fake_ws5["schools"]
+    assert {k: v[1] for k, v in layers.items()} == {"air_no2": 200.0, "air_pm10": 50.0, "air_pm25": 25.0}
+    assert top == 5 and census == {"c1": {"residents": 10}}
+    assert env["result"]["limits"]["air_no2"]["name"] == "no2_hourly_limit"

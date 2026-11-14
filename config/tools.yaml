@@ -64,3 +64,11 @@ exposure:
       pm10_annual_limit: [air_quality, pm10_annual_limit_ug_m3]
     air_pm25:
       pm25_annual_limit: [air_quality, pm25_annual_limit_ug_m3]
+
+schools_to_check:
+  # Legal limit used per pollutant when ranking schools (names from exposure.thresholds above).
+  # The shortest averaging period is used, the closest to the twin's near-instantaneous estimates.
+  limits:
+    air_no2: no2_hourly_limit
+    air_pm10: pm10_daily_limit
+    air_pm25: pm25_annual_limit

@@ -14,7 +14,7 @@ from twin.modules.antennas.report import build_permit_report
 from twin.tools.area import AreaTooLarge, resolve_area
 from twin.tools.layers import LayerSnapshot
 from twin.tools.crowds_exposure import (check_sensors_tool, crowds_view, exposure_count, flood_watch_tool,
-                                        heat_watch_tool, site_values_at)
+                                        heat_watch_tool, schools_check, site_values_at)
 from twin.tools.data_status import data_status
 from twin.tools.envelope import ToolError, make_envelope, utc_now
 from twin.tools.estimate_field import estimate_field
@@ -278,6 +278,8 @@ TOOLS: dict[str, ToolSpec] = {spec.name: spec for spec in [
              owner="WS5"),
     ToolSpec("flood_watch", m.FloodWatchIn, lambda rt, req, role: flood_watch_tool(rt, _dump(req.area), req.time),
              owner="WS5"),
+    ToolSpec("schools_to_check", m.SchoolsToCheckIn,
+             lambda rt, req, role: schools_check(rt, _dump(req.area), req.top, req.time), owner="WS5"),
     ToolSpec("run_scenario", m.RunScenarioIn, _run_scenario, owner="WS6"),
     ToolSpec("legal_lookup", m.LegalLookupIn, _legal_lookup, owner="WS7"),
     ToolSpec("find_dataset", m.FindDatasetIn, _find_dataset, owner="WS7"),

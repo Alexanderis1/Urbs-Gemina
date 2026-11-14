@@ -124,6 +124,14 @@ class FloodWatchIn(Strict):
     time: str | None = Field(default=None, description="ISO 8601; default now")
 
 
+class SchoolsToCheckIn(Strict):
+    """Schools ranked by how close the air (NO2, PM10, PM2.5) comes to its legal limits, worst first."""
+
+    area: Area = Field(default="city", description=AREA_DESCRIPTION)
+    top: int = Field(default=10, ge=1, le=100)
+    time: str | None = Field(default=None, description="ISO 8601; default now")
+
+
 class RunScenarioIn(Strict):
     """Run a what-if scenario on an operating area: baseline vs variant with ranges."""
 

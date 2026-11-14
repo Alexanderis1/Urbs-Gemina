@@ -204,6 +204,22 @@ def _processed(runtime: ToolRuntime, name: str) -> Path:
     return runtime.settings.paths.data / "processed" / name
 
 
+def _with_microclimate(runtime: ToolRuntime, belief: Any, cells: list[str], warnings: list[str]) -> Any:
+    """Shift the forecast temperature by tree cover and sealed soil per cell (WS5), when the rasters exist."""
+    rasters = [_processed(runtime, "tree_cover_2018.tif"), _processed(runtime, "imperviousness_2018.tif")]
+    mods = _ws5("microclimate")
+    if mods is None or not all(path.exists() for path in rasters):
+        warnings.append("Microclimate (tree cover, sealed soil) not applied: the forecast is used as is.")
+        return belief
+    micro = mods[0]
+    try:
+        return micro.apply_microclimate(belief, micro.raster_mean_per_cell(rasters[0], cells),
+                                        micro.raster_mean_per_cell(rasters[1], cells))
+    except Exception as error:  # noqa: BLE001 - optional refinement; keep the plain forecast
+        warnings.append(f"Microclimate not applied ({type(error).__name__}): the forecast is used as is.")
+        return belief
+
+
 def heat_watch_tool(runtime: ToolRuntime, area: Any = "city", time: str | None = None) -> dict[str, Any]:
     """Elderly residents and health/care sites where it is likely above the heat threshold (WS5 heat_watch)."""
     inputs = {"area": area, "time": time}
@@ -222,6 +238,7 @@ def heat_watch_tool(runtime: ToolRuntime, area: Any = "city", time: str | None =
         return runtime.envelope("heat_watch", inputs, None, {"temperature": "not_available"}, [], feed_warnings,
                                 status="not_available", reason=built)
     belief, _, cells = built
+    belief = _with_microclimate(runtime, belief, cells, feed_warnings)
     ages = _processed(runtime, "census_ages.csv")
     if not ages.exists():
         feed_warnings.append("Census age table not built: elderly counts are missing.")
@@ -266,3 +283,39 @@ def flood_watch_tool(runtime: ToolRuntime, area: Any = "city", time: str | None 
     hazard, underpasses = _FLOOD_CACHE[key]
     part = flood.flood_watch(belief, hazard, underpasses)
     return _wrap(runtime, "flood_watch", inputs, part, resolved, {}, feed_warnings)
+
+
+def schools_check(runtime: ToolRuntime, area: Any = "city", top: int = 10, time: str | None = None
+                  ) -> dict[str, Any]:
+    """Schools ranked by how close the air (NO2, PM10, PM2.5) comes to its legal limits (WS5 schools_to_check)."""
+    inputs = {"area": area, "top": top, "time": time}
+    chosen: dict[str, str] = dict(runtime.settings.tools.get("schools_to_check", {}).get("limits", {}))
+    limits = {layer: threshold_for(runtime, layer, name) for layer, name in chosen.items()}
+    mods = _ws5("api", "grid", "config", "crowds", "schools")
+    if mods is None:
+        return _not_wired(runtime, "schools_to_check", inputs)
+    crowds, schools = mods[3], mods[4]
+    sites = _processed(runtime, "sensitive_sites.geojson")
+    census_path = _census_path(runtime)
+    if not sites.exists() or not census_path.exists():
+        return runtime.envelope("schools_to_check", inputs, None, {"sensitive_sites": "not_available"}, [], [],
+                                status="not_available", reason="Sensitive sites or census (WS1) not built yet.")
+    resolved = resolve_area(area, runtime.store, runtime.settings)
+    feed_warnings: list[str] = []
+    layers: dict[str, tuple[Any, float]] = {}
+    cells: list[str] = []
+    at = None
+    for layer, limit in limits.items():
+        built = _belief(runtime, layer, resolved, time, feed_warnings)
+        if isinstance(built, str):
+            feed_warnings.append(f"{layer}: {built}")
+            continue
+        belief, at, cells = built
+        layers[layer] = (belief, limit["value"])
+    if not layers or at is None:
+        return runtime.envelope("schools_to_check", inputs, None, {name: "not_available" for name in limits}, [],
+                                feed_warnings, status="not_available", reason="No air-quality layer could be built.")
+    part = schools.schools_to_check(layers, sites, crowds.census_per_cell(census_path, cells), top=top)
+    averaging = [_averaging_warning(limits[name], at) for name in layers]
+    return _wrap(runtime, "schools_to_check", inputs, part, resolved, {"limits": limits},
+                 feed_warnings + averaging[:1])
