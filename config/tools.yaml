@@ -45,6 +45,12 @@ api:
   roles: [citizen, office]
   # Layers whose single records are visible to the office tier only.
   office_only_detail_layers: [antenna_register, emf_measurements]
+  # Callers without an office key (the public app, or anyone with the URL) get a budget for the
+  # endpoints that cost money: /ask runs Claude, run_scenario runs Modal workers. Office key: no limit.
+  rate_limits:
+    ask: {per_client: 20, global: 240, window_s: 600}
+    scenario: {per_client: 10, global: 120, window_s: 600}
+  rate_limits_basis: "assumption (C=50): a resident asks a handful of questions per visit; the public app reaches the API through the Lovable gateway, so many residents can share one address, hence a generous per-client budget and a global cap of about one Claude call every 2.5 s per container"
 
 sports:                                   # wiring of the WS10 tools (Challenge 04)
   facilities_file: processed/sports/facilities.geojson   # written by: python -m twin.modules.sports.pipeline build

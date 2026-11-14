@@ -54,10 +54,30 @@ def enabled() -> bool:
     return os.environ.get(ENV_SWITCH, "").lower() == "modal"
 
 
-def call(kind: str, area: Any, change: Mapping[str, Any], data: ScenarioData) -> dict[str, Any]:
-    """Run one scenario in the Modal worker and return its envelope."""
+#: Errors raised by the scenario code itself (bad input): retrying cannot help.
+INPUT_ERRORS = (ValueError, KeyError, TypeError)
+#: One more try after a pause: the first call after idle can fail while the worker starts or is preempted.
+RETRY_PAUSE_S = 5.0
+
+
+def call(kind: str, area: Any, change: Mapping[str, Any], data: ScenarioData,
+         attempts: int = 2, sleep: Any = None) -> dict[str, Any]:
+    """Run one scenario in the Modal worker and return its envelope (retries a failed start once)."""
+    import time
+
     import modal  # type: ignore[import-not-found,import-untyped,unused-ignore]
 
-    function = modal.Function.from_name(APP_NAME, FUNCTION_NAME)
-    out: dict[str, Any] = function.remote(kind, area, dict(change), to_spec(data))
-    return out
+    pause = sleep or time.sleep
+    spec = to_spec(data)
+    for attempt in range(attempts):
+        try:
+            function = modal.Function.from_name(APP_NAME, FUNCTION_NAME)
+            out: dict[str, Any] = function.remote(kind, area, dict(change), spec)
+            return out
+        except INPUT_ERRORS:
+            raise
+        except Exception:  # noqa: BLE001 - worker starting, preempted or network blip
+            if attempt == attempts - 1:
+                raise
+            pause(RETRY_PAUSE_S)
+    raise AssertionError("unreachable")

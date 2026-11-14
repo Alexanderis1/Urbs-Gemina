@@ -20,12 +20,14 @@ from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
 from twin.api.jobs import Jobs, modal_store
+from twin.api.ratelimit import RateLimiter
 from twin.api.models import AskIn, EnvelopeOut
 from twin.api.orchestrator import TierOrchestrator
 from twin.api.tools import TOOLS, ToolSpec, tool_schema
 from twin.tools.citizen import prewarm as citizen_prewarm
 from twin.tools.envelope import ToolError
 from twin.tools.runtime import ToolRuntime
+from twin.tools.settings import default_paths, load_yaml
 
 log = logging.getLogger("urbs.api")
 ROLES = ("citizen", "office")
@@ -40,6 +42,20 @@ def parse_keys(raw: str | None) -> dict[str, str]:
         if key.strip() and role.strip() in ROLES:
             keys[key.strip()] = role.strip()
     return keys
+
+
+def rate_limits() -> dict[str, Any]:
+    """``api.rate_limits`` from config/tools.yaml (bucket -> per_client, global, window_s)."""
+    limits = load_yaml(default_paths().config / "tools.yaml").get("api", {}).get("rate_limits", {}) or {}
+    return {k: v for k, v in limits.items() if isinstance(v, dict)}
+
+
+def client_id(request: Request) -> str:
+    """The caller's address: first X-Forwarded-For hop (set by Modal's proxy), else the socket peer."""
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 
 def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | None = None) -> FastAPI:
@@ -59,6 +75,21 @@ def create_app(runtime: ToolRuntime | None = None, api_keys: dict[str, str] | No
             log.exception("unhandled error on %s", request.url.path)
             return JSONResponse(status_code=500, content={"error": f"{type(error).__name__}: {error}",
                                                           "path": request.url.path})
+
+    limiter = RateLimiter(rate_limits())
+    limited_paths = {"/ask": "ask", "/tools/run_scenario": "scenario"}
+
+    @app.middleware("http")
+    async def rate_limit(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        """Callers without an office key get a budget for Claude questions and scenario runs (twin/api/ratelimit.py)."""
+        bucket = limited_paths.get(request.url.path) if request.method == "POST" else None
+        if bucket is not None:
+            wait = limiter.check(bucket, client_id(request), get_role(request.headers.get("authorization")))
+            if wait is not None:
+                return JSONResponse(status_code=429, headers={"Retry-After": str(int(wait) + 1)},
+                                    content={"error": f"Too many requests: try again in {int(wait) + 1} s, "
+                                                      "or use an office key.", "path": request.url.path})
+        return await call_next(request)
 
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"],
                        allow_headers=["Authorization", "Content-Type"])

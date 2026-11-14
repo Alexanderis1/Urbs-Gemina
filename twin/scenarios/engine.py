@@ -119,8 +119,11 @@ def run(kind: str, area: AreaArg, change: Mapping[str, Any], data: ScenarioData 
     if isolate and spec.isolate and remote.enabled():
         try:
             out = remote.call(kind, area, change, data)
+        except remote.INPUT_ERRORS as exc:
+            return _not_ok(inputs, snapshots, "refused", f"Scenario input not usable: {exc}")
         except Exception as exc:  # noqa: BLE001 - worker down or not deployed: say so, never hang the API
-            return _not_ok(inputs, snapshots, "not_available", f"Scenario worker unavailable: {exc}")
+            return _not_ok(inputs, snapshots, "not_available",
+                           f"Scenario worker unavailable (it may be starting up; try again in a minute): {exc}")
         if use_cache and out.get("status") == "ok":
             cache.put(directory, rid, out)
         return out
