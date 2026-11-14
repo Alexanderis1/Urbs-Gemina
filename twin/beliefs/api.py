@@ -28,7 +28,7 @@ import numpy as np
 from twin.beliefs.calibration import CalibrationReport, CalibrationRules, leave_one_station_out
 from twin.beliefs.config import LayerSpec, SourceSpec, load_calibration_rules, load_specs
 from twin.beliefs.grid import bbox_of_cells, cell_boundary
-from twin.beliefs.layer import BeliefLayer, assimilate, prior_layer
+from twin.beliefs.layer import BeliefLayer, assimilate, prior_layer, with_wind
 from twin.providers.base import Observation, Provider, ProviderNotConfigured
 
 Z95 = NormalDist().inv_cdf(0.95)
@@ -48,6 +48,7 @@ def build_layer(
     spec: LayerSpec | None = None,
     prior_provider: Provider | None = None,
     sources: Sequence[SourceSpec] | None = None,
+    wind_provider: Provider | None = None,
 ) -> BeliefLayer:
     """Starting map at ``start``, then every reading of the providers up to ``end``.
 
@@ -66,11 +67,25 @@ def build_layer(
     bbox = bbox_of_cells(cells)
     field = list(prior_provider.fetch(bbox, start, end)) if prior_provider is not None else None
     layer = prior_layer(spec, cells, start, prior_field=field)
+    if wind_provider is not None and spec.wind is not None:
+        layer = _apply_wind(layer, list(wind_provider.fetch(bbox, start, end)), start)
     readings: list[Observation] = list(observations or [])
     for i, p in enumerate(providers):
         source = sources[i] if sources is not None else None
         readings.extend(adapt(p.fetch(bbox, start, end), source, spec))
     return assimilate(layer, readings, until=end)
+
+
+def _apply_wind(layer: BeliefLayer, forecast: Sequence[Observation], at: datetime) -> BeliefLayer:
+    """City-average wind from the forecast hour closest to ``at`` (vector mean of the lattice)."""
+    points = [o for o in forecast if "wind_speed_ms" in o.values and "wind_direction_deg" in o.values]
+    if not points:
+        return layer
+    best = min({o.observed_at for o in points}, key=lambda t: abs((t - at).total_seconds()))
+    points = [o for o in points if o.observed_at == best]
+    u = sum(o.values["wind_speed_ms"] * math.sin(math.radians(o.values["wind_direction_deg"])) for o in points) / len(points)
+    v = sum(o.values["wind_speed_ms"] * math.cos(math.radians(o.values["wind_direction_deg"])) for o in points) / len(points)
+    return with_wind(layer, math.hypot(u, v), math.degrees(math.atan2(u, v)))
 
 
 def adapt(observations: Iterable[Observation], source: SourceSpec | None, spec: LayerSpec) -> Iterator[Observation]:
@@ -115,11 +130,12 @@ def layer_payload(
     pairs = [(providers[s.layer], s) for s in spec.sources if s.layer in providers]
     feeds = [p for p, _ in pairs]
     prior = providers.get(spec.prior_field.source) if spec.prior_field is not None else None
+    wind = providers.get(spec.wind.source) if spec.wind is not None else None
     if not feeds and prior is None:
         wanted = ", ".join(spec.source_layers) or "none configured"
         return not_available(name, f"no real source is connected for this layer yet (sources: {wanted})")
     try:
-        layer = build_layer(name, cells, feeds, start, end, spec=spec, prior_provider=prior, sources=[s for _, s in pairs])
+        layer = build_layer(name, cells, feeds, start, end, spec=spec, prior_provider=prior, sources=[s for _, s in pairs], wind_provider=wind)
     except ProviderNotConfigured as exc:
         return not_available(name, str(exc))
     return query(layer, threshold=threshold)
@@ -201,6 +217,9 @@ def query(layer: BeliefLayer, cells: Sequence[str] | None = None, threshold: flo
             "grid": f"h3:{layer.resolution}",
             "method": "P1: per-cell Bayesian update + kriging of residuals (sensor fusion weighted by sigma), relaxing to the starting map",
             "n_observations": layer.n_observations,
+            "wind": None
+            if layer.wind_axis_deg is None
+            else {"axis_deg": round(layer.wind_axis_deg, 1), "stretch": round(layer.wind_stretch, 2)},
             "calibration": calibration.status,
             "calibration_report": calibration.as_dict(),
             "cells": rows(layer, cells, threshold),

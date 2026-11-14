@@ -30,6 +30,8 @@ Project rule (Alessandro, 13 Nov 2026): only traffic loops may be simulated. Eve
 | activity (proxy, C=40) | ~1 per cell | `micromobility`: parked Bird scooters counted per cell (empty covered cells count as 0). Not a people count |
 | wifi_sessions | 0 | `activity_wifi`: City Wi-Fi sessions per hotspot and hour (real, a lower bound on people, one day behind) |
 
+Starting maps (`prior_field`) use the forecast hour closest to the layer time. Rain starts from the Open-Meteo forecast and the radar corrects it, fading back to the forecast after `relax_tau_hours`. Air layers stretch spreading along the wind axis from `weather_forecast` (up to 2x at 5 m/s, assumption C=65); the wind used is reported in `result.wind`.
+
 Sensor fusion: a layer can list several `sources` (a source can read a related value, e.g. bus speed, with `scale`/`offset`/`extra_sd`/`drop_below`); every reading is weighted by its own `sigma`, so a precise station counts more than a low-cost sensor. `api.layer_payload(name, cells, start, end, providers)` picks the sources from the config and returns `not_available` when none is connected.
 
 Labels: a layer built from any simulated reading is `simulated` and `synthetic=True`; otherwise `estimated`. EMF and activity are always `uncalibrated` until real measurements exist.
